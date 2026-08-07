@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The app is now SchemaStudio, a fork of TablePro. Stored settings, connections, and window state start fresh because the app now uses its own storage location and no data is migrated from TablePro.
+- New app icon, with light, dark, and tinted variants.
 
 ### Removed
 
