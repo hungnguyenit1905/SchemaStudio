@@ -6,7 +6,7 @@
 import Darwin
 import Foundation
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("PluginInstaller helpers", .serialized)
 struct PluginInstallerHelpersTests {

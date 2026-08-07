@@ -10,7 +10,7 @@ import AppKit
 import Foundation
 import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Theme Definition")
 struct ThemeDefinitionTests {

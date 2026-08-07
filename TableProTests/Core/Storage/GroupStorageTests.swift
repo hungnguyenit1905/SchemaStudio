@@ -4,7 +4,7 @@
 //
 
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 import XCTest
 import TableProSyncTransport
 

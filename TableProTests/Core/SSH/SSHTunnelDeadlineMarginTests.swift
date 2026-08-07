@@ -10,7 +10,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("SSH tunnel deadline margin")

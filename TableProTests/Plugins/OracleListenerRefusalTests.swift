@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Oracle listener refusal detail")
 struct OracleListenerRefusalTests {

@@ -8,7 +8,7 @@ import Network
 import os
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("SOCKS proxy manager", .serialized)
 struct SOCKSProxyManagerTests {

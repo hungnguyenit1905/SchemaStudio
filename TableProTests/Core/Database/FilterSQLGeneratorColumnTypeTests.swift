@@ -6,7 +6,7 @@
 import Foundation
 import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Filter SQL Generator Column Types")
 struct FilterSQLGeneratorColumnTypeTests {

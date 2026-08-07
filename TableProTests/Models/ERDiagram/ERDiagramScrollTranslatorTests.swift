@@ -1,7 +1,7 @@
 import CoreGraphics
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("ERDiagramScrollTranslator")
 struct ERDiagramScrollTranslatorTests {

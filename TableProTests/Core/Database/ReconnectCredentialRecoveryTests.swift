@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 import TableProPluginKit
 
 @Suite("Reconnect credential recovery", .serialized)

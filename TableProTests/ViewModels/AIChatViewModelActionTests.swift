@@ -9,7 +9,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("AIChatViewModel Action Dispatch")
 @MainActor

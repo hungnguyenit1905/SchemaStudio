@@ -1,6 +1,6 @@
 import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("DatabaseType Redis Properties")
 struct DatabaseTypeRedisTests {

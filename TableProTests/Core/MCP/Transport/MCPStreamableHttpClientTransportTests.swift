@@ -1,7 +1,7 @@
 import Foundation
 import TableProPluginKit
 import Network
-@testable import TablePro
+@testable import SchemaStudio
 import XCTest
 
 final class MCPStreamableHttpClientTransportTests: XCTestCase {

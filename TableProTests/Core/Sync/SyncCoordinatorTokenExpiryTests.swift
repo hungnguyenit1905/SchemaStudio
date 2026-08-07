@@ -6,7 +6,7 @@
 import CloudKit
 import Foundation
 import TableProSyncTransport
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("Sync coordinator token expiry")

@@ -6,7 +6,7 @@
 import Foundation
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @MainActor
 @Suite("Connection form tunnel exclusivity")

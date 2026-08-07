@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("ERDiagramCanvasContainerView scroll routing")
 @MainActor

@@ -7,7 +7,7 @@
 
 import Foundation
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("Table Query Builder - Filtered Query Fallback")

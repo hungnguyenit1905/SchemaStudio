@@ -8,7 +8,7 @@
 //  actor's synchronous fast path must not diverge.
 //
 
-@testable import TablePro
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
 

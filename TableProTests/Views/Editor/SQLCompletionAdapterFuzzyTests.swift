@@ -6,7 +6,7 @@
 //
 
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("SQL Completion Fuzzy Matching")

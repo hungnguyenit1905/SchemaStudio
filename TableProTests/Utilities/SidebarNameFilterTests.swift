@@ -3,7 +3,7 @@
 //  TableProTests
 //
 
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 struct SidebarNameFilterTests {

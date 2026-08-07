@@ -3,7 +3,7 @@ import TableProImport
 import Testing
 import TableProSyncTransport
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Connection Import Service")
 @MainActor

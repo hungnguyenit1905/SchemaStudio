@@ -8,7 +8,7 @@ import TableProPluginKit
 import Testing
 import TableProSyncTransport
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("ConnectionStorage sync delete ordering")
 @MainActor

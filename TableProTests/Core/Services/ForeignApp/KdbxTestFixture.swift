@@ -6,7 +6,7 @@
 import CommonCrypto
 import Compression
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 
 /// Builds a synthetic KDBX 3.1 file matching JetBrains' layout so the reader can
 /// be exercised end to end without a real `c.kdbx`. ChaCha20 inner stream,

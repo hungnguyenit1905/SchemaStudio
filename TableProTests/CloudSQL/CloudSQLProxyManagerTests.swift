@@ -7,7 +7,7 @@ import Darwin
 import Foundation
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 final class FakeCloudSQLProxyRunner: SupervisedProcessRunner, @unchecked Sendable {
     enum Behavior {

@@ -9,7 +9,7 @@ import Foundation
 import TableProPluginKit
 import SwiftUI
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 private final class SidebarMockClipboard: ClipboardProvider {
     var lastWrittenText: String?

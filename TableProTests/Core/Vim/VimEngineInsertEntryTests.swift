@@ -7,7 +7,7 @@
 
 import XCTest
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 
 @MainActor
 final class VimEngineInsertEntryTests: XCTestCase {

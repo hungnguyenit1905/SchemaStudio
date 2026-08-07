@@ -1,6 +1,6 @@
 import Foundation
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 
 actor RecordingResponderSink: MCPResponderSink {
     struct WriteJsonRecord {

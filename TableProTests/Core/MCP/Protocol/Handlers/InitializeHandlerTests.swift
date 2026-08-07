@@ -1,6 +1,6 @@
 import Foundation
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 import XCTest
 
 final class InitializeHandlerTests: XCTestCase {

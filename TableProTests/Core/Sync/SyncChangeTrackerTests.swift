@@ -7,7 +7,7 @@ import Foundation
 import Testing
 import TableProSyncTransport
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("SyncChangeTracker")
 @MainActor

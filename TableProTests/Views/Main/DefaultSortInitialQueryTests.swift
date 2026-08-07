@@ -2,7 +2,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Default sort resolves before the first table query is dispatched")
 @MainActor

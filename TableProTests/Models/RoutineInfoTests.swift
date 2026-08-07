@@ -6,7 +6,7 @@
 import Foundation
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("RoutineInfo Identity")
 struct RoutineInfoTests {

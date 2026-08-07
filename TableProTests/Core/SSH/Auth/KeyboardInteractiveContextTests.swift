@@ -12,7 +12,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 private final class StubTOTPProvider: TOTPProvider, @unchecked Sendable {
     private(set) var attemptsSeen: [Int] = []

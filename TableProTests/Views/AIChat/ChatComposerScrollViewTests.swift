@@ -4,7 +4,7 @@
 //
 
 import AppKit
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @MainActor

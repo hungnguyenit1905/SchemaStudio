@@ -4,7 +4,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 private final class MockRegistryProtocol: URLProtocol, @unchecked Sendable {

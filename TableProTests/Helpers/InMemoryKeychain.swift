@@ -4,7 +4,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 
 final class InMemoryKeychain: KeychainStoring, @unchecked Sendable {
     private let lock = NSLock()

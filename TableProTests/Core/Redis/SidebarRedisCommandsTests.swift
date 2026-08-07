@@ -17,7 +17,7 @@
 import Foundation
 import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 // No testable public API available for sidebar Redis commands.
 // All helper methods are private to MainContentCoordinator.

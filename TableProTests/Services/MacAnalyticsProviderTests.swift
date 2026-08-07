@@ -7,7 +7,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @MainActor
 @Suite("MacAnalyticsProvider write-once timestamp semantics")

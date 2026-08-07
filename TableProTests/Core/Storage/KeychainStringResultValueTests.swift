@@ -5,7 +5,7 @@
 
 import Foundation
 import os
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("KeychainStringResult.value")

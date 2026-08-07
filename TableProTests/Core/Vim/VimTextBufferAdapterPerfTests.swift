@@ -9,7 +9,7 @@
 import AppKit
 import CodeEditTextView
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("VimTextBufferAdapter Incremental LineCount")

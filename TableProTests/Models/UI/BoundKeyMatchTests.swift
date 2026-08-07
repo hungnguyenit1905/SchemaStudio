@@ -1,5 +1,5 @@
 import AppKit
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("BoundKey Event Matching")

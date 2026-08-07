@@ -1,6 +1,6 @@
 import Foundation
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 
 actor StubAlwaysAllowAuthenticator: MCPAuthenticator {
     private let principal: MCPPrincipal
