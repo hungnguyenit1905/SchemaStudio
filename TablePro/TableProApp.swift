@@ -147,13 +147,6 @@ struct AppMenuCommands: Commands {
         focusedActions ?? commandRegistry.current
     }
 
-    private var sidebarLayoutBinding: Binding<SidebarLayout> {
-        Binding(
-            get: { actions?.sidebarLayout ?? .flat },
-            set: { actions?.setSidebarLayout($0) }
-        )
-    }
-
     private var showObjectCommentsBinding: Binding<Bool> {
         Binding(
             get: { settingsManager.general.showObjectComments },
@@ -702,15 +695,6 @@ struct AppMenuCommands: Commands {
             .disabled(!(actions?.isConnected ?? false))
 
             Divider()
-
-            Picker(selection: sidebarLayoutBinding) {
-                Text("Sidebar as List").tag(SidebarLayout.flat)
-                Text("Sidebar as Tree").tag(SidebarLayout.tree)
-            } label: {
-                Text("Sidebar Layout")
-            }
-            .pickerStyle(.inline)
-            .disabled(!(actions?.canSwitchSidebarLayout ?? false))
 
             Toggle(String(localized: "Show Object Comments"), isOn: showObjectCommentsBinding)
 

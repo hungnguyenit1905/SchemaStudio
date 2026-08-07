@@ -50,6 +50,10 @@ extension DatabaseTreeOutlineCoordinator {
                 setExpanded(child, searching || (viewModel(for: connectionId)?.isRecentsExpanded ?? true))
                 continue
             }
+            if case .schema = child.kind {
+                applyExpansion(toSchemasOf: connectionNode, searching: searching)
+                return
+            }
             guard case .database(let connectionId, let metadata) = child.kind,
                   let context = context(for: connectionId) else { continue }
             let databaseKey = ConnectionDatabaseKey(connectionId: connectionId, database: metadata.name)
@@ -177,9 +181,19 @@ extension DatabaseTreeOutlineCoordinator {
 
     private func loadDatabases(connectionId: UUID) {
         guard let context = context(for: connectionId), context.isConnected else { return }
-        guard isIdle(service.databaseListState(for: connectionId)) else { return }
-        Task {
-            await service.loadDatabases(connectionId: connectionId, databaseType: context.databaseType)
+        switch context.groupingStrategy {
+        case .flat:
+            loadObjects(connectionId: connectionId, database: container(for: context), schema: nil)
+        case .hierarchicalSchema:
+            let database = container(for: context)
+            if isIdle(service.schemaListState(connectionId: connectionId, database: database)) {
+                Task { await service.loadSchemas(connectionId: connectionId, database: database) }
+            }
+        default:
+            guard isIdle(service.databaseListState(for: connectionId)) else { return }
+            Task {
+                await service.loadDatabases(connectionId: connectionId, databaseType: context.databaseType)
+            }
         }
     }
 

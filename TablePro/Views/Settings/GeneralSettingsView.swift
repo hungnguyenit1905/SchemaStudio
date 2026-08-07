@@ -12,7 +12,6 @@ struct GeneralSettingsView: View {
 
     @State private var initialLanguage: AppLanguage?
     @State private var showResetConfirmation = false
-    @AppStorage(SidebarPersistenceKey.defaultLayout) private var defaultSidebarLayout: SidebarLayout = .flat
 
     private static let standardTimeouts = [10, 20, 30, 40, 50, 60, 90, 120, 180, 300, 600]
 
@@ -58,12 +57,6 @@ struct GeneralSettingsView: View {
 
                 Toggle("Show object comments", isOn: $settings.showObjectComments)
                     .help("Shows database object comments next to tables in the sidebar and in grid column headers.")
-
-                Picker("Default layout for new connections:", selection: $defaultSidebarLayout) {
-                    Text("List").tag(SidebarLayout.flat)
-                    Text("Tree").tag(SidebarLayout.tree)
-                }
-                .help(String(localized: "Layout for new connections on servers that support a database tree. Switch the current connection from the View menu."))
             }
 
             Section("Query Execution") {

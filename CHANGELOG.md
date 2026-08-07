@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The sidebar lists every saved connection, grouped into the same folders as the welcome window. Expanding a connection connects it and loads its databases.
 - The app is now SchemaStudio, a fork of TablePro. Stored settings, connections, and window state start fresh because the app now uses its own storage location and no data is migrated from TablePro.
 - New app icon, with light, dark, and tinted variants.
 
 ### Removed
 
+- The "Sidebar as List" and "Sidebar as Tree" options, along with the default layout setting. Every connection now uses one tree.
 - Automatic updates. The app no longer checks for or installs updates, and the "Check for Updates" command is gone.
 - Anonymous usage reporting, along with the "Share anonymous usage data" setting. The app sends no telemetry.
 - License activation and Team Library sync. Both required a service this fork does not run, so Pro features report as unavailable.

@@ -98,7 +98,7 @@ extension DatabaseTreeOutlineCoordinator {
                 kind: .recentSection(connectionId: connectionId)
             ))
         }
-        nodes += databaseNodes(context: context)
+        nodes += objectLevelNodes(context: context)
         if nodes.isEmpty {
             switch service.databaseListState(for: connectionId) {
             case .idle, .loading: return [statusNode(parentId: parentId, status: .loading)]
@@ -107,6 +107,26 @@ extension DatabaseTreeOutlineCoordinator {
             }
         }
         return nodes
+    }
+
+    /// A connection with no container level (SQLite and anything else the
+    /// plugin reports as `.flat` or `.hierarchicalSchema`) hangs its objects
+    /// straight off the connection. Those still read through this service, using
+    /// the session's own browse database as the cache key, so the whole tree
+    /// stays on one metadata cache.
+    private func objectLevelNodes(context: SidebarNodeContext) -> [DatabaseTreeNode] {
+        switch context.groupingStrategy {
+        case .flat:
+            return objectNodes(context: context, database: container(for: context), schema: nil)
+        case .hierarchicalSchema:
+            return schemaNodes(context: context, database: container(for: context))
+        default:
+            return databaseNodes(context: context)
+        }
+    }
+
+    func container(for context: SidebarNodeContext) -> String {
+        DatabaseManager.shared.activeSessions[context.connectionId]?.resolvedBrowseDatabase ?? ""
     }
 
     private func databaseNodes(context: SidebarNodeContext) -> [DatabaseTreeNode] {

@@ -221,4 +221,59 @@ struct MultiConnectionTreeTests {
         let second = ConnectionTreeBuilder.children(ofFolder: nil, groups: [], connections: [connection])
         #expect(first[0].id == second[0].id)
     }
+
+    // MARK: - Grouping strategies
+
+    /// Every strategy has to resolve inside one tree now that the flat and
+    /// hierarchical SwiftUI branches are gone. `.flat` and `.hierarchicalSchema`
+    /// carry no container level, which is what keeps SQLite in the sidebar.
+    @Test(
+        "Each grouping strategy resolves its own shape",
+        arguments: [
+            (GroupingStrategy.byDatabase, false),
+            (GroupingStrategy.bySchema, true),
+            (GroupingStrategy.flat, false),
+            (GroupingStrategy.hierarchicalSchema, false)
+        ]
+    )
+    func strategyResolvesPerConnection(strategy: GroupingStrategy, schemaLevel: Bool) throws {
+        let connection = TestFixtures.makeConnection(name: "any", type: .mysql)
+        let resolver = makeResolver(connections: [connection], strategies: [.mysql: strategy])
+
+        let context = try #require(resolver.context(for: connection.id))
+        #expect(context.groupingStrategy == strategy)
+        #expect(context.supportsSchemaLevel == schemaLevel)
+    }
+
+    @Test("A SQLite connection and a MySQL one resolve different shapes side by side")
+    func sqliteAndMysqlCoexist() throws {
+        let sqlite = TestFixtures.makeConnection(name: "local.db", type: .sqlite)
+        let mysql = TestFixtures.makeConnection(name: "shop", type: .mysql)
+        let resolver = makeResolver(
+            connections: [sqlite, mysql],
+            strategies: [.sqlite: .flat, .mysql: .byDatabase]
+        )
+
+        let sqliteContext = try #require(resolver.context(for: sqlite.id))
+        let mysqlContext = try #require(resolver.context(for: mysql.id))
+
+        #expect(sqliteContext.groupingStrategy == .flat)
+        #expect(mysqlContext.groupingStrategy == .byDatabase)
+        #expect(!sqliteContext.supportsSchemaLevel)
+        #expect(!mysqlContext.supportsSchemaLevel)
+    }
+
+    @Test("Both appear in the same tree, so neither is filtered out of the top level")
+    func bothTypesShareOneTree() {
+        let sqlite = TestFixtures.makeConnection(name: "local.db", type: .sqlite)
+        let mysql = TestFixtures.makeConnection(name: "shop", type: .mysql)
+
+        let nodes = ConnectionTreeBuilder.children(
+            ofFolder: nil, groups: [], connections: [sqlite, mysql]
+        )
+
+        let ids = Set(nodes.compactMap(\.connectionId))
+        #expect(ids == [sqlite.id, mysql.id])
+    }
 }
+
