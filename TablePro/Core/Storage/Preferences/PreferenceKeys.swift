@@ -6,10 +6,10 @@
 import Foundation
 
 enum PreferenceKeys {
-    static let linkedFolders = DefaultsKey<[LinkedFolder]>("com.TablePro.linkedFolders")
-    static let linkedSQLFolders = DefaultsKey<[LinkedSQLFolder]>("com.TablePro.linkedSQLFolders")
-    static let selectedSettingsPane = DefaultsKey<String>("com.TablePro.settings.selectedPane")
-    static let rowInspectorJsonFieldHeight = DefaultsKey<Double>("com.TablePro.rightSidebar.jsonFieldHeight")
+    static let linkedFolders = DefaultsKey<[LinkedFolder]>("com.SchemaStudio.linkedFolders")
+    static let linkedSQLFolders = DefaultsKey<[LinkedSQLFolder]>("com.SchemaStudio.linkedSQLFolders")
+    static let selectedSettingsPane = DefaultsKey<String>("com.SchemaStudio.settings.selectedPane")
+    static let rowInspectorJsonFieldHeight = DefaultsKey<Double>("com.SchemaStudio.rightSidebar.jsonFieldHeight")
 
     static let registeredKeyNames: [String] = [
         linkedFolders.name,
@@ -19,10 +19,10 @@ enum PreferenceKeys {
     ]
 
     static func columnDisplayFormats(_ scope: TableScope) -> DefaultsKey<[String: ValueDisplayFormat]> {
-        DefaultsKey("com.TablePro.columns.displayFormat." + scope.storageComponent)
+        DefaultsKey("com.SchemaStudio.columns.displayFormat." + scope.storageComponent)
     }
 
     static func recentTables(connectionId: UUID) -> DefaultsKey<[RecentTableEntry]> {
-        DefaultsKey("com.TablePro.recentTables." + connectionId.uuidString)
+        DefaultsKey("com.SchemaStudio.recentTables." + connectionId.uuidString)
     }
 }

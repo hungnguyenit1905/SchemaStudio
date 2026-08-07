@@ -6,7 +6,7 @@
 import Foundation
 import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("RegistryClient Configurable URL", .serialized)
 @MainActor
@@ -22,7 +22,7 @@ struct RegistryClientURLTests {
 
     @Test("customRegistryURLKey has expected value")
     func customURLKeyConstant() {
-        #expect(RegistryClient.customRegistryURLKey == "com.TablePro.customRegistryURL")
+        #expect(RegistryClient.customRegistryURLKey == "com.SchemaStudio.customRegistryURL")
     }
 
     @Test("setting a custom URL via UserDefaults is supported")

@@ -4,7 +4,7 @@ import os
 @MainActor
 @Observable
 final class ServerDashboardViewModel {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ServerDashboard")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ServerDashboard")
 
     // MARK: - Configuration
 

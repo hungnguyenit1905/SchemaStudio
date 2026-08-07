@@ -936,7 +936,7 @@ final class PluginMetadataRegistry: @unchecked Sendable {
         if let registryDefault = defaultSnapshots[typeId] {
             resolved = resolved.withIsDownloadable(registryDefault.isDownloadable)
             if Self.declaresLegacySchemaOnlyRouting(resolved, registryDefault: registryDefault) {
-                Logger(subsystem: "com.TablePro", category: "PluginMetadataRegistry").notice(
+                Logger(subsystem: "com.SchemaStudio", category: "PluginMetadataRegistry").notice(
                     "Plugin '\(typeId, privacy: .public)' declares legacy two-tier switching for a schema-only engine; applying the app's switch routing"
                 )
                 resolved = resolved.withSwitchRouting(from: registryDefault)

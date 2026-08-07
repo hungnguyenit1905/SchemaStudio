@@ -13,7 +13,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("AWS SigV4 primitives")
 struct AWSSigV4Tests {

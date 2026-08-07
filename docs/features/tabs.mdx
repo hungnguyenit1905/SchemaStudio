@@ -46,7 +46,7 @@ The three bulk commands have no shortcut out of the box. Bind them in **Settings
 
 **Close Tabs for Other Databases** closes only windows whose every tab was opened against a database other than the one the connection is on now. It never touches the tab you are looking at, and it is limited to the current connection. Tabs from different databases are meant to coexist, so switching databases never closes anything on its own. On engines that switch schemas instead of databases, such as BigQuery and Oracle, the command reads **Close Tabs for Other Schemas**.
 
-Closing a query tab keeps its SQL in Recently Closed, so an accidental close costs nothing, including when you close a whole group at once. TablePro asks before closing only when unsaved work would be lost, such as pending data edits, pending structure changes, or unsaved edits to a `.sql` file on disk. A bulk close asks once per window that has something to lose, and cancelling stops the rest.
+Closing a query tab keeps its SQL in Recently Closed, so an accidental close costs nothing, including when you close a whole group at once. SchemaStudio asks before closing only when unsaved work would be lost, such as pending data edits, pending structure changes, or unsaved edits to a `.sql` file on disk. A bulk close asks once per window that has something to lose, and cancelling stops the rest.
 
 <Note>
 Window tabs cannot be pinned. Pinning exists for result tabs inside a query tab (`Cmd+Option+P`, see [Keyboard Shortcuts](/features/keyboard-shortcuts)).

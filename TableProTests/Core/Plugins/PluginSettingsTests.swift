@@ -6,7 +6,7 @@
 import Foundation
 import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("PluginSettingsStorage")
 struct PluginSettingsStorageTests {
@@ -255,7 +255,7 @@ struct DisabledPluginsMigrationTests {
     @Test("migration moves legacy key to namespaced key")
     func migrationMovesKey() {
         let testKey = "disabledPlugins"
-        let namespacedKey = "com.TablePro.disabledPlugins"
+        let namespacedKey = "com.SchemaStudio.disabledPlugins"
         let defaults = UserDefaults.standard
 
         // Save current state
@@ -295,7 +295,7 @@ struct DisabledPluginsMigrationTests {
     @Test("migration is no-op when legacy key absent")
     func migrationNoOpWhenAbsent() {
         let testKey = "disabledPlugins"
-        let namespacedKey = "com.TablePro.disabledPlugins"
+        let namespacedKey = "com.SchemaStudio.disabledPlugins"
         let defaults = UserDefaults.standard
 
         let savedNamespaced = defaults.stringArray(forKey: namespacedKey)
@@ -331,7 +331,7 @@ struct DisabledPluginsMigrationTests {
     @Test("migration preserves namespaced key when both keys exist")
     func migrationPreservesNamespacedWhenBothExist() {
         let testKey = "disabledPlugins"
-        let namespacedKey = "com.TablePro.disabledPlugins"
+        let namespacedKey = "com.SchemaStudio.disabledPlugins"
         let defaults = UserDefaults.standard
 
         let savedNamespaced = defaults.stringArray(forKey: namespacedKey)

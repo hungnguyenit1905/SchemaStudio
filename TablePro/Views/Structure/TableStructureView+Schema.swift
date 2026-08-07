@@ -58,7 +58,7 @@ extension TableStructureView {
             AlertHelper.showErrorSheet(
                 title: String(localized: "Safe Mode Is Read-Only"),
                 message: String(
-                    localized: "Cannot save schema changes: TablePro's Safe Mode is set to read-only for this connection."
+                    localized: "Cannot save schema changes: SchemaStudio's Safe Mode is set to read-only for this connection."
                 ),
                 window: coordinator?.contentWindow
             )

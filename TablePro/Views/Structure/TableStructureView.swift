@@ -15,8 +15,8 @@ import UniformTypeIdentifiers
 
 /// View displaying table structure with DataGridView
 struct TableStructureView: View {
-    static let logger = Logger(subsystem: "com.TablePro", category: "TableStructureView")
-    static let structurePasteboardType = NSPasteboard.PasteboardType("com.TablePro.structure")
+    static let logger = Logger(subsystem: "com.SchemaStudio", category: "TableStructureView")
+    static let structurePasteboardType = NSPasteboard.PasteboardType("com.SchemaStudio.structure")
     let tableName: String
     let connection: DatabaseConnection
     let databaseName: String

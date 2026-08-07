@@ -1,18 +1,18 @@
 ---
 title: Testing a Custom Plugin
-description: Load a locally built driver plugin in a debug build of TablePro
+description: Load a locally built driver plugin in a debug build of SchemaStudio
 ---
 
-When you write your own driver plugin (see [Plugin Development](/development/plugin-development)), you can run it in a local build of TablePro before publishing it to the [Plugin Registry](/development/plugin-registry).
+When you write your own driver plugin (see [Plugin Development](/development/plugin-development)), you can run it in a local build of SchemaStudio before publishing it to the [Plugin Registry](/development/plugin-registry).
 
 ## How plugin loading works
 
-TablePro loads plugins from two locations and treats them differently:
+SchemaStudio loads plugins from two locations and treats them differently:
 
 - **Inside the app bundle** (`PlugIns/`): built-in plugins. No signature check runs.
-- **User plugins directory** (`~/Library/Application Support/TablePro/Plugins`): user-installed plugins. Each bundle must be signed by the same Apple team as the running app, or the app rejects it with "Plugin code signature verification failed" (shown under a "Plugin Installation Failed" alert when installing).
+- **User plugins directory** (`~/Library/Application Support/SchemaStudio/Plugins`): user-installed plugins. Each bundle must be signed by the same Apple team as the running app, or the app rejects it with "Plugin code signature verification failed" (shown under a "Plugin Installation Failed" alert when installing).
 
-The required team comes from the app's own signature. A plugin built by the same Xcode as your local app build carries your team, so your local build accepts it. A release build of TablePro rejects it, because your team is not TablePro's; release users get plugins through the registry, where CI signs every binary.
+The required team comes from the app's own signature. A plugin built by the same Xcode as your local app build carries your team, so your local build accepts it. A release build of SchemaStudio rejects it, because your team is not SchemaStudio's; release users get plugins through the registry, where CI signs every binary.
 
 Do not reuse a built-in plugin's bundle ID. Installing such a plugin fails with a conflict error, and during discovery the copy with the higher version wins; on a version tie the built-in wins and the user copy is deleted.
 
@@ -22,7 +22,7 @@ Do not reuse a built-in plugin's bundle ID. Installing such a plugin fails with 
 scripts/install-plugin-dev.sh MyDriverPlugin
 ```
 
-The script finds `MyDriverPlugin.tableplugin` in DerivedData, copies it into the user plugins directory, and writes the registry metadata sidecar. Relaunch TablePro to load it.
+The script finds `MyDriverPlugin.tableplugin` in DerivedData, copies it into the user plugins directory, and writes the registry metadata sidecar. Relaunch SchemaStudio to load it.
 
 <Warning>
 Do not modify the copied bundle, for example by patching its `Info.plist`. Any edit invalidates the code signature and dyld refuses to load the executable. If the plugin's `TableProMinAppVersion` is newer than your built app, bump the app's `MARKETING_VERSION` and rebuild the app instead.
@@ -30,7 +30,7 @@ Do not modify the copied bundle, for example by patching its `Info.plist`. Any e
 
 ## Alternative: bundle it into the app
 
-Add your `.tableplugin` to the **Copy Plug-Ins** build phase of the **TablePro** target (Build Phases tab), then run with `Cmd+R`. The plugin lands in the app's `PlugIns/` directory and loads as a built-in plugin, so no signature check runs; the phase also re-signs it with your debug identity as it copies (`CodeSignOnCopy`).
+Add your `.tableplugin` to the **Copy Plug-Ins** build phase of the **SchemaStudio** target (Build Phases tab), then run with `Cmd+R`. The plugin lands in the app's `PlugIns/` directory and loads as a built-in plugin, so no signature check runs; the phase also re-signs it with your debug identity as it copies (`CodeSignOnCopy`).
 
 Remove it from the phase after testing so it does not ride into a release build.
 

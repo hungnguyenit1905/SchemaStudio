@@ -6,7 +6,7 @@ public struct ResourcesListHandler: MCPMethodHandler {
     public static let requiredScopes: Set<MCPScope> = [.resourcesRead]
     public static let allowedSessionStates: Set<MCPSessionAllowedState> = [.ready]
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.Resources")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.Resources")
 
     private let services: MCPToolServices
 

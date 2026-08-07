@@ -8,7 +8,7 @@ import os
 import SwiftUI
 
 struct LicenseSection: View {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "LicenseSection")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LicenseSection")
 
     private let licenseManager = LicenseManager.shared
 
@@ -39,8 +39,6 @@ struct LicenseSection: View {
                         .foregroundStyle(.orange)
                     Text(String(format: String(localized: "License expires in %lld day(s)"), days))
                     Spacer()
-                    Link(String(localized: "Renew"), destination: LicenseConstants.pricingURL)
-                        .controlSize(.small)
                 }
                 .padding(6)
                 .background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 6))
@@ -172,12 +170,6 @@ struct LicenseSection: View {
                     }
                     .disabled(licenseKeyInput.trimmingCharacters(in: .whitespaces).isEmpty || isActivating)
                 }
-            }
-
-            HStack {
-                Spacer()
-                Link("Purchase License", destination: LicenseConstants.pricingURL)
-                    .font(.subheadline)
             }
         }
     }

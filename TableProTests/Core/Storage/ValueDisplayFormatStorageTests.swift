@@ -4,7 +4,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("ValueDisplayFormatStorage")
@@ -43,7 +43,7 @@ struct ValueDisplayFormatStorageTests {
         let (storage, defaults) = try makeStorage()
         let conn = UUID()
         let target = scope("public", connectionId: conn)
-        let legacyKey = "com.TablePro.columns.displayFormat.\(conn.uuidString).orders"
+        let legacyKey = "com.SchemaStudio.columns.displayFormat.\(conn.uuidString).orders"
         defaults.set(try JSONEncoder().encode(["id": ValueDisplayFormat.uuid]), forKey: legacyKey)
 
         #expect(storage.load(for: target) == ["id": .uuid])

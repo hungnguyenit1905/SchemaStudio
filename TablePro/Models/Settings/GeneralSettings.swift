@@ -55,7 +55,6 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
 struct GeneralSettings: Codable, Equatable {
     var startupBehavior: StartupBehavior
     var language: AppLanguage
-    var automaticallyCheckForUpdates: Bool
 
     /// Query execution timeout in seconds (0 = no limit)
     var queryTimeoutSeconds: Int
@@ -72,7 +71,6 @@ struct GeneralSettings: Codable, Equatable {
     static let `default` = GeneralSettings(
         startupBehavior: .reopenLast,
         language: .system,
-        automaticallyCheckForUpdates: true,
         queryTimeoutSeconds: 60,
         shareAnalytics: true,
         showRecentTables: false,
@@ -82,7 +80,6 @@ struct GeneralSettings: Codable, Equatable {
     init(
         startupBehavior: StartupBehavior = .reopenLast,
         language: AppLanguage = .system,
-        automaticallyCheckForUpdates: Bool = true,
         queryTimeoutSeconds: Int = 60,
         shareAnalytics: Bool = true,
         showRecentTables: Bool = false,
@@ -90,7 +87,6 @@ struct GeneralSettings: Codable, Equatable {
     ) {
         self.startupBehavior = startupBehavior
         self.language = language
-        self.automaticallyCheckForUpdates = automaticallyCheckForUpdates
         self.queryTimeoutSeconds = queryTimeoutSeconds
         self.shareAnalytics = shareAnalytics
         self.showRecentTables = showRecentTables
@@ -101,7 +97,6 @@ struct GeneralSettings: Codable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         startupBehavior = try container.decode(StartupBehavior.self, forKey: .startupBehavior)
         language = try container.decodeIfPresent(AppLanguage.self, forKey: .language) ?? .system
-        automaticallyCheckForUpdates = try container.decodeIfPresent(Bool.self, forKey: .automaticallyCheckForUpdates) ?? true
         queryTimeoutSeconds = try container.decodeIfPresent(Int.self, forKey: .queryTimeoutSeconds) ?? 60
         shareAnalytics = try container.decodeIfPresent(Bool.self, forKey: .shareAnalytics) ?? true
         showRecentTables = try container.decodeIfPresent(Bool.self, forKey: .showRecentTables) ?? false

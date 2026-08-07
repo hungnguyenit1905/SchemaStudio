@@ -13,7 +13,7 @@ run_quiet() {
     rm -f "$logfile"
 }
 
-# Build static libpq and OpenSSL for TablePro
+# Build static libpq and OpenSSL for SchemaStudio
 #
 # Produces architecture-specific and universal static libraries in Libs/:
 #   libpq_arm64.a, libpq_x86_64.a, libpq_universal.a

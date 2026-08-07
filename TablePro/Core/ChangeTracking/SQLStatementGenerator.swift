@@ -18,7 +18,7 @@ struct ParameterizedStatement {
 
 /// Generates SQL statements from data changes
 struct SQLStatementGenerator {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SQLStatementGenerator")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SQLStatementGenerator")
 
     let tableName: String
     let columns: [String]

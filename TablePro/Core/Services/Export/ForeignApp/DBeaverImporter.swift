@@ -11,7 +11,7 @@ import TableProImport
 import TableProPluginKit
 
 struct DBeaverImporter: ForeignAppImporter {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "DBeaverImporter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "DBeaverImporter")
 
     let id = "dbeaver"
     let displayName = "DBeaver"

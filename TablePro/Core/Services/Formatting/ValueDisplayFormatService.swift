@@ -13,7 +13,7 @@ import os
 final class ValueDisplayFormatService {
     static let shared = ValueDisplayFormatService()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ValueDisplayFormat")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ValueDisplayFormat")
 
     private var autoDetectedFormats: [String: ValueDisplayFormat] = [:]
 

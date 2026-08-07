@@ -1,7 +1,7 @@
 import Foundation
 
 struct PrivilegeExpansionStore {
-    private static let prefix = "com.TablePro.usersRoles.expanded."
+    private static let prefix = "com.SchemaStudio.usersRoles.expanded."
 
     private let defaults: UserDefaults
     private let key: String

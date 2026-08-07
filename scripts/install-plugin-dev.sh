@@ -24,7 +24,7 @@ TARGET="${1:-ElasticsearchDriverPlugin}"
 BUNDLE="${TARGET}.tableplugin"
 DEST_DIR="${HOME}/Library/Application Support/TablePro/Plugins"
 
-SRC="$(find "${HOME}/Library/Developer/Xcode/DerivedData/TablePro-"*/Build/Products/Debug \
+SRC="$(find "${HOME}/Library/Developer/Xcode/DerivedData/SchemaStudio-"*/Build/Products/Debug \
   -maxdepth 1 -name "${BUNDLE}" -print 2>/dev/null | head -n 1)"
 
 if [[ -z "${SRC}" ]]; then
@@ -33,7 +33,7 @@ if [[ -z "${SRC}" ]]; then
 fi
 
 PRODUCTS_DIR="$(dirname "${SRC}")"
-APP_PLIST="${PRODUCTS_DIR}/TablePro.app/Contents/Info.plist"
+APP_PLIST="${PRODUCTS_DIR}/SchemaStudio.app/Contents/Info.plist"
 APP_VERSION="$([[ -f "${APP_PLIST}" ]] && /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${APP_PLIST}" || echo "0.0.0")"
 PLUGIN_MIN="$(/usr/libexec/PlistBuddy -c 'Print :TableProMinAppVersion' "${SRC}/Contents/Info.plist" 2>/dev/null || echo "0.0.0")"
 BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "${SRC}/Contents/Info.plist")"
@@ -51,5 +51,5 @@ if [[ "$(printf '%s\n%s\n' "${PLUGIN_MIN}" "${APP_VERSION}" | sort -V | head -n1
     echo "The app will reject it as 'app version too old'. Bump MARKETING_VERSION to ${PLUGIN_MIN}"
     echo "and rebuild the app. Do not edit the plugin Info.plist (it breaks code signing)."
 else
-    echo "Relaunch TablePro to load it."
+    echo "Relaunch SchemaStudio to load it."
 fi

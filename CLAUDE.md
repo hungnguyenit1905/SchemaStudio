@@ -18,7 +18,13 @@ These govern every decision — code, architecture, tooling, and process:
 
 ## Project Overview
 
-TablePro is a native macOS database client (SwiftUI + AppKit) — a fast, lightweight alternative to TablePlus. macOS 14.0+, Swift 5.9, Universal Binary (arm64 + x86_64).
+SchemaStudio is a native macOS database client (SwiftUI + AppKit), a hard fork of TablePro. macOS 14.0+, Swift 5.9, Universal Binary (arm64 + x86_64).
+
+**Fork note**: SchemaStudio is a hard fork of [TableProApp/TablePro](https://github.com/TableProApp/TablePro).
+The product identity is renamed, but the plugin ABI is deliberately NOT: the framework name
+`TableProPluginKit`, the `TableProPluginKitVersion` Info.plist key, and all `com.TablePro.<Name>`
+plugin bundle IDs stay as they are, because every built plugin hard-links the framework by name.
+The source folder `TablePro/` also keeps its name. Do not "finish the rename" in those places.
 
 - **Source**: `TablePro/` — `Core/` (business logic, services), `Views/` (UI), `Models/` (data structures), `ViewModels/`, `Extensions/`, `Theme/`
 - **Plugins**: `Plugins/` — `.tableplugin` bundles + `TableProPluginKit` shared framework.
@@ -26,19 +32,19 @@ TablePro is a native macOS database client (SwiftUI + AppKit) — a fast, lightw
     - **Registry-only**: MongoDB, Oracle, DuckDB, MSSQL, Cassandra, Etcd, CloudflareD1, DynamoDB, BigQuery, LibSQL, Snowflake, Elasticsearch. Distributed via [TableProApp/plugins](https://github.com/TableProApp/plugins) `plugins.json`, installed into the user plugins directory.
 - **C bridges**: Each plugin contains its own C bridge module (e.g., `Plugins/MySQLDriverPlugin/CMariaDB/`, `Plugins/PostgreSQLDriverPlugin/CLibPQ/`)
 - **Static libs**: `Libs/` — pre-built `.a` files. `Libs/ios/` — xcframeworks for iOS. Both downloaded via `scripts/download-libs.sh` (not in git)
-- **SPM deps**: CodeEditSourceEditor (`main` branch, tree-sitter editor), Sparkle (2.8.1, auto-update), OracleNIO. Managed via Xcode, no `Package.swift`.
+- **SPM deps**: CodeEditSourceEditor (`main` branch, tree-sitter editor), OracleNIO. Managed via Xcode, no `Package.swift`. Sparkle is still a resolved dependency but no code imports it: this fork ships no auto-update.
 
 ## Build & Development Commands
 
 ```bash
 # Build (development) — -skipPackagePluginValidation required for SwiftLint plugin in CodeEditSourceEditor
-xcodebuild -project TablePro.xcodeproj -scheme TablePro -configuration Debug build -skipPackagePluginValidation
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio -configuration Debug build -skipPackagePluginValidation
 
 # Clean build
-xcodebuild -project TablePro.xcodeproj -scheme TablePro clean
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio clean
 
 # Build and run
-xcodebuild -project TablePro.xcodeproj -scheme TablePro -configuration Debug build -skipPackagePluginValidation && open build/Debug/TablePro.app
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio -configuration Debug build -skipPackagePluginValidation && open build/Debug/SchemaStudio.app
 
 # Release builds
 scripts/build-release.sh arm64|x86_64|both
@@ -49,10 +55,10 @@ swiftlint --fix                   # Auto-fix
 swiftformat .                     # Format code
 
 # Tests
-xcodebuild -project TablePro.xcodeproj -scheme TablePro test -skipPackagePluginValidation
-xcodebuild -project TablePro.xcodeproj -scheme TablePro test -skipPackagePluginValidation -only-testing:TableProTests/TestClassName
-xcodebuild -project TablePro.xcodeproj -scheme TablePro test -skipPackagePluginValidation -only-testing:TableProTests/TestClassName/testMethodName
-xcodebuild -project TablePro.xcodeproj -scheme TablePro test -skipPackagePluginValidation -only-testing:TableProUITests
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio test -skipPackagePluginValidation
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio test -skipPackagePluginValidation -only-testing:TableProTests/TestClassName
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio test -skipPackagePluginValidation -only-testing:TableProTests/TestClassName/testMethodName
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio test -skipPackagePluginValidation -only-testing:TableProUITests
 
 # DMG
 scripts/create-dmg.sh
@@ -151,7 +157,9 @@ When adding a new method to the driver protocol: add to `PluginDatabaseDriver` (
 
 These have caused real bugs when violated:
 
-**A synced CKRecord field must be deployed to Production before anything writes it**: both apps pin `com.apple.developer.icloud-container-environment` to `Production`, and CloudKit only auto-creates fields in the Development environment. So no build, not even a local Debug one, can create a field on the server. Saving a record that carries a field the Production schema does not declare makes CloudKit reject **that whole record**, and with `isAtomic = false` the rest of the batch still saves, so the symptom is one record type silently never syncing. `ConnectionSyncField` (`Packages/TableProCore/Sources/TableProSyncTransport/ConnectionSyncSchema.swift`) is the single declaration of every `Connection` wire key, and its gated `CKRecord` subscript refuses to write a field that is not `.verified`. A new case defaults to `.unverified`, so a field added without the deploy is inert rather than destructive. To ship one: add the field in CloudKit Console, deploy Development to Production, run `scripts/export-cloudkit-schema.sh`, commit the refreshed `CloudKit/production-schema.ckdb`, then mark the field verified. `ProductionSchemaParityTests` fails if the registry and the snapshot disagree in either direction. This shipped as `isFavorite` (#1452, unconditional on every connection) killing every Mac connection push for two months while the UI reported success (#643).
+**CloudKit sync is disabled in this fork.** The Mac app declares no iCloud container and no environment pin, and `EntitlementsEnvironmentParityTests` guards that. Everything below applies only if sync is re-enabled against a container this project owns; it is kept because the failure mode is silent and expensive.
+
+**A synced CKRecord field must be deployed to Production before anything writes it**: an app that syncs pins `com.apple.developer.icloud-container-environment` to `Production`, and CloudKit only auto-creates fields in the Development environment. So no build, not even a local Debug one, can create a field on the server. Saving a record that carries a field the Production schema does not declare makes CloudKit reject **that whole record**, and with `isAtomic = false` the rest of the batch still saves, so the symptom is one record type silently never syncing. `ConnectionSyncField` (`Packages/TableProCore/Sources/TableProSyncTransport/ConnectionSyncSchema.swift`) is the single declaration of every `Connection` wire key, and its gated `CKRecord` subscript refuses to write a field that is not `.verified`. A new case defaults to `.unverified`, so a field added without the deploy is inert rather than destructive. To ship one: add the field in CloudKit Console, deploy Development to Production, run `scripts/export-cloudkit-schema.sh`, commit the refreshed `CloudKit/production-schema.ckdb`, then mark the field verified. `ProductionSchemaParityTests` fails if the registry and the snapshot disagree in either direction. This shipped as `isFavorite` (#1452, unconditional on every connection) killing every Mac connection push for two months while the UI reported success (#643).
 
 **Sync delete ordering**: In `ConnectionStorage` (and all storage classes), `SyncChangeTracker.markDeleted()` must be called AFTER `saveConnections()`. The `markDeleted` call fires `postChangeNotification` which can trigger a sync. If the file on disk still contains the deleted item when sync runs, it may re-upload the deleted record. Persist first, then notify.
 
@@ -196,7 +204,7 @@ These have caused real bugs when violated:
 | Filter defaults      | UserDefaults     | `FilterSettingsStorage` (default column/operator, panel state) |
 | Filter presets       | UserDefaults     | `FilterPresetStorage`                       |
 | Per-table filters    | JSON files       | `FilterSettingsStorage` (one file per connection + database + schema + table; saves the valid working set, each row's enabled flag included) |
-| Favorite tables      | UserDefaults     | `FavoriteTablesStorage` (per connection + database + schema; iCloud-synced) |
+| Favorite tables      | UserDefaults     | `FavoriteTablesStorage` (per connection + database + schema; still records changes through `SyncChangeTracker`, but sync is disabled in this fork so the data stays on the device) |
 | Tree database filter | UserDefaults     | `DatabaseTreeFilterStorage` (per connection; selected database set, empty = show all; device-local). Live value held in `SharedSidebarState`. |
 | Recent tables        | UserDefaults     | `RecentTablesStore` (per connection, keyed by database, last 10 each; device-local). Live value held in `SharedSidebarState`, recorded at the `QueryTabManager` open chokepoint. |
 | Trusted external links | UserDefaults   | `ExternalConnectionTrustStore` (keyed by database type + host + database + username + URL `name`, never the port; loopback hosts only, enforced on read and write). Consulted by `ExternalConnectionGate` before the external-URL confirmation alert. |
@@ -207,7 +215,7 @@ Use OSLog for all logging, never `print()`. When debugging issues, add structure
 
 ```swift
 import os
-private static let logger = Logger(subsystem: "com.TablePro", category: "ComponentName")
+private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ComponentName")
 ```
 
 ## Code Style

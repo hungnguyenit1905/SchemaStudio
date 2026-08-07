@@ -3,7 +3,7 @@ import TableProImport
 import Testing
 import TableProSyncTransport
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Connection Import Service")
 @MainActor
@@ -502,12 +502,12 @@ struct ConnectionImportServiceTests {
             at: fileURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
-        guard let syncDefaults = UserDefaults(suiteName: "com.TablePro.tests.ConnectionImport.Sync.\(unique)") else {
+        guard let syncDefaults = UserDefaults(suiteName: "com.SchemaStudio.tests.ConnectionImport.Sync.\(unique)") else {
             fatalError("Expected sync defaults suite")
         }
         let metadata = SyncMetadataStorage(userDefaults: syncDefaults)
         let tracker = SyncChangeTracker(metadataStorage: metadata)
-        guard let defaults = UserDefaults(suiteName: "com.TablePro.tests.ConnectionImport.\(unique)") else {
+        guard let defaults = UserDefaults(suiteName: "com.SchemaStudio.tests.ConnectionImport.\(unique)") else {
             fatalError("Expected defaults suite")
         }
         return ConnectionStorage(fileURL: fileURL, userDefaults: defaults, syncTracker: tracker)

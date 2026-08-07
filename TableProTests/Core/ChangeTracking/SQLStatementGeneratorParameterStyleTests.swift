@@ -8,7 +8,7 @@
 import Foundation
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 @testable import TableProPluginKit
 
 @Suite("SQL Statement Generator - Parameter Style")

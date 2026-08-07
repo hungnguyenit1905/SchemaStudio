@@ -18,8 +18,8 @@ final class TeradataTLSTransport: TeradataTransport {
         guard let endpointPort = NWEndpoint.Port(rawValue: options.httpsPort) else {
             throw TeradataWireError.connectionFailed("invalid TLS port \(options.httpsPort)")
         }
-        let queue = DispatchQueue(label: "com.TablePro.teradata.tls")
-        let verifyQueue = DispatchQueue(label: "com.TablePro.teradata.tls.verify")
+        let queue = DispatchQueue(label: "com.SchemaStudio.teradata.tls")
+        let verifyQueue = DispatchQueue(label: "com.SchemaStudio.teradata.tls.verify")
 
         let tlsOptions = NWProtocolTLS.Options()
         let anchors = Self.loadAnchors(options.caCertificatePath)

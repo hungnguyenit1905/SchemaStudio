@@ -11,7 +11,7 @@ Right-click a connection > **Share** > **Export to File...**. Select multiple fi
 
 Exported: name, host, port, database, username, type, SSH/SSL config, color, tags, group, Safe Mode level, Startup Commands, Pre-Connect Script, AI Policy, the Local only flag, the Redis database index, and any driver field the plugin does not mark secret (region, project ID, and so on). Not exported: passwords, key passphrases, TOTP secrets, or any driver field marked secret.
 
-The Share menu also has three copy items. **Copy Connection String** writes a full database URL, and that URL carries the password in plain text, plus the SSH password when the connection tunnels. Treat what it puts on the clipboard as a credential. **Copy TablePro Link** and **Copy as JSON** carry no secrets.
+The Share menu also has three copy items. **Copy Connection String** writes a full database URL, and that URL carries the password in plain text, plus the SSH password when the connection tunnels. Treat what it puts on the clipboard as a credential. **Copy SchemaStudio Link** and **Copy as JSON** carry no secrets.
 
 <Frame caption="Export connections">
   <img className="block dark:hidden" src="/images/connection-export-menu.png" alt="Export connections" />
@@ -24,7 +24,7 @@ The Share menu also has three copy items. **Copy Connection String** writes a fu
 - **File** > **Import from URL...** (paste a database URL, see [Connection URLs](/databases/connection-urls))
 - Right-click empty area > **Import Connections...**
 - Double-click a `.tablepro` file
-- Drag onto TablePro
+- Drag onto SchemaStudio
 
 A preview shows each connection before importing:
 
@@ -43,7 +43,7 @@ Duplicates match by host, port, database, and username, and start unchecked. Che
 
 ## On iPhone
 
-TablePro for iPhone reads and writes the same `.tablepro` file. Import: tap the **more** menu (•••) above the connection list > **Import Connections**, or open a `.tablepro` file from Files or AirDrop. Export: **more** menu > **Export Connections** shares through the system share sheet. Passwords are left out unless you turn on **Include passwords** and set a passphrase.
+SchemaStudio for iPhone reads and writes the same `.tablepro` file. Import: tap the **more** menu (•••) above the connection list > **Import Connections**, or open a `.tablepro` file from Files or AirDrop. Export: **more** menu > **Export Connections** shares through the system share sheet. Passwords are left out unless you turn on **Include passwords** and set a passphrase.
 
 ## Import from Other Apps
 
@@ -69,13 +69,13 @@ Groups and folders carry over. The source app doesn't need to be running. DBeave
 
 ## Share via Link
 
-Right-click a connection > **Share** > **Copy TablePro Link**. Produces a `tablepro://import?...` URL with the name, host, port, type, username, database, and any SSH or SSL settings. No passwords, key passphrases, or TOTP secrets. The recipient opens the link, reviews the prefilled form, adds their own password, and saves.
+Right-click a connection > **Share** > **Copy SchemaStudio Link**. Produces a `tablepro://import?...` URL with the name, host, port, type, username, database, and any SSH or SSL settings. No passwords, key passphrases, or TOTP secrets. The recipient opens the link, reviews the prefilled form, adds their own password, and saves.
 
 ```text
 tablepro://import?name=Staging&host=db.example.com&port=5432&type=PostgreSQL&username=admin
 ```
 
-TablePro also opens `tablepro://connect/<uuid>` URLs that launch a saved connection. There is no menu item for this form; build the URL from the connection's UUID. See [URL Scheme](/external-api/url-scheme#open-a-connection).
+SchemaStudio also opens `tablepro://connect/<uuid>` URLs that launch a saved connection. There is no menu item for this form; build the URL from the connection's UUID. See [URL Scheme](/external-api/url-scheme#open-a-connection).
 
 ## Encrypted Export <sup>Starter</sup>
 
@@ -106,11 +106,11 @@ Press `Cmd+,`, then go to **Settings > Account > Linked Folders > Add Folder...*
 
 ## Team Catalog <sup>Team</sup>
 
-Right-click a connection > **Share** > **Publish to Team Catalog...** writes each selected connection as its own `.tablepro` file into a shared folder. The first time, TablePro asks for the folder: a Git repo, Dropbox folder, or network drive your team shares. Republishing overwrites the file. Passwords, passphrases, and TOTP secrets are never written. Teammates add the same folder as a [Linked Folder](#linked-folders) and get the connections read-only. Part of the [Team plan](/features/team).
+Right-click a connection > **Share** > **Publish to Team Catalog...** writes each selected connection as its own `.tablepro` file into a shared folder. The first time, SchemaStudio asks for the folder: a Git repo, Dropbox folder, or network drive your team shares. Republishing overwrites the file. Passwords, passphrases, and TOTP secrets are never written. Teammates add the same folder as a [Linked Folder](#linked-folders) and get the connections read-only. Part of the [Team plan](/features/team).
 
 ## Environment Variables <sup>Starter</sup>
 
-Use `$VAR` and `${VAR}` in `.tablepro` files. Resolved from TablePro's process environment at connect time, so set variables with `launchctl setenv NAME value` or launch TablePro from a terminal.
+Use `$VAR` and `${VAR}` in `.tablepro` files. Resolved from SchemaStudio's process environment at connect time, so set variables with `launchctl setenv NAME value` or launch SchemaStudio from a terminal.
 
 ```json
 {
@@ -121,7 +121,7 @@ Use `$VAR` and `${VAR}` in `.tablepro` files. Resolved from TablePro's process e
 
 ## Password Sources
 
-Connections in `~/Library/Application Support/TablePro/connections.json` can declare where their password comes from instead of storing it in the Keychain. Useful when a script provisions connections, for example one Docker database per git worktree. The password resolves at connect time and is not synced to iCloud, since the path, variable, or command is specific to one Mac.
+Connections in `~/Library/Application Support/SchemaStudio/connections.json` can declare where their password comes from instead of storing it in the Keychain. Useful when a script provisions connections, for example one Docker database per git worktree. The password resolves at connect time and is not synced to iCloud, since the path, variable, or command is specific to one Mac.
 
 Add a `passwordSource` object to the connection:
 
@@ -148,10 +148,10 @@ When `passwordSource` is set it replaces the Keychain lookup. If resolution fail
 ```
 
 - `onePassword`: runs `op read` on the reference. Sign in to the 1Password CLI first (`op signin`).
-- `vault`: runs `vault kv get` for one field at a path. Set `VAULT_ADDR` and `VAULT_TOKEN` in TablePro's environment.
+- `vault`: runs `vault kv get` for one field at a path. Set `VAULT_ADDR` and `VAULT_TOKEN` in SchemaStudio's environment.
 - `awsSecretsManager`: runs `aws secretsmanager get-secret-value`. Set `jsonKey` to pull one field out of a JSON secret; leave it off to use the whole value.
 
-The CLI tools must be on `PATH`; TablePro also looks in `/usr/local/bin` and `/opt/homebrew/bin`. Same 30 second timeout as `command`.
+The CLI tools must be on `PATH`; SchemaStudio also looks in `/usr/local/bin` and `/opt/homebrew/bin`. Same 30 second timeout as `command`.
 
 ## File Format
 

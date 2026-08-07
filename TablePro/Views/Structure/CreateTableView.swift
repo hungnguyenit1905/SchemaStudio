@@ -29,7 +29,7 @@ private enum CreateTableTab: CaseIterable {
 }
 
 struct CreateTableView: View {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CreateTableView")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CreateTableView")
 
     let connection: DatabaseConnection
     var coordinator: MainContentCoordinator?

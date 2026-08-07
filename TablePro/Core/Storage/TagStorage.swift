@@ -13,9 +13,9 @@ import TableProSyncTransport
 @MainActor
 final class TagStorage {
     static let shared = TagStorage()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "TagStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "TagStorage")
 
-    private let tagsKey = "com.TablePro.tags"
+    private let tagsKey = "com.SchemaStudio.tags"
     private let defaults = UserDefaults.standard
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()

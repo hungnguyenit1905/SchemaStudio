@@ -7,7 +7,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Principal change manager", .serialized)
 @MainActor

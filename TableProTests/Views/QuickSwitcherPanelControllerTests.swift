@@ -5,7 +5,7 @@
 
 import AppKit
 import SwiftUI
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @MainActor

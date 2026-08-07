@@ -10,7 +10,7 @@ import os
 import TableProPluginKit
 
 internal enum EnvVarResolver {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "EnvVarResolver")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "EnvVarResolver")
 
     private static let pattern: NSRegularExpression = {
         let source = #"\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)"#

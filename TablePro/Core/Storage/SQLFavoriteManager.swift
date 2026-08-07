@@ -11,7 +11,7 @@ import TableProSyncTransport
 /// Manages SQL favorites with notifications
 internal final class SQLFavoriteManager: @unchecked Sendable {
     static let shared = SQLFavoriteManager()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SQLFavoriteManager")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SQLFavoriteManager")
 
     private let storage: SQLFavoriteStorage
     private let syncTracker: SyncChangeTracker

@@ -7,14 +7,14 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("FileColumnLayoutPersister")
 @MainActor
 struct FileColumnLayoutPersisterTests {
     private func makeIsolatedPersister() -> (FileColumnLayoutPersister, URL) {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("TableProTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("SchemaStudioTests-\(UUID().uuidString)", isDirectory: true)
         let persister = FileColumnLayoutPersister(storageDirectory: directory)
         return (persister, directory)
     }
@@ -111,7 +111,7 @@ struct FileColumnLayoutPersisterTests {
     @Test("Save survives a fresh persister instance pointed at the same directory")
     func persistenceAcrossInstances() {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("TableProTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("SchemaStudioTests-\(UUID().uuidString)", isDirectory: true)
         defer { cleanup(directory) }
 
         let connectionId = UUID()
@@ -133,7 +133,7 @@ struct FileColumnLayoutPersisterTests {
     @Test("Loading malformed JSON returns nil instead of crashing")
     func malformedJSONRecovers() throws {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("TableProTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("SchemaStudioTests-\(UUID().uuidString)", isDirectory: true)
         defer { cleanup(directory) }
 
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -148,7 +148,7 @@ struct FileColumnLayoutPersisterTests {
     @Test("Saving over a corrupted file replaces it cleanly")
     func malformedJSONIsRecoverableBySave() throws {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("TableProTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("SchemaStudioTests-\(UUID().uuidString)", isDirectory: true)
         defer { cleanup(directory) }
 
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -169,7 +169,7 @@ struct FileColumnLayoutPersisterTests {
     @Test("Clearing the only entry removes the connection's storage file")
     func clearingLastEntryRemovesFile() {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("TableProTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("SchemaStudioTests-\(UUID().uuidString)", isDirectory: true)
         defer { cleanup(directory) }
 
         let persister = FileColumnLayoutPersister(storageDirectory: directory)
@@ -188,7 +188,7 @@ struct FileColumnLayoutPersisterTests {
     @Test("Clearing one of multiple tables keeps the connection file with the rest")
     func clearingOneOfManyKeepsFile() {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("TableProTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("SchemaStudioTests-\(UUID().uuidString)", isDirectory: true)
         defer { cleanup(directory) }
 
         let persister = FileColumnLayoutPersister(storageDirectory: directory)
@@ -210,7 +210,7 @@ struct FileColumnLayoutPersisterTests {
     @Test("Clearing a missing entry is a no-op and never creates a file")
     func clearingMissingEntryIsNoOp() {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("TableProTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("SchemaStudioTests-\(UUID().uuidString)", isDirectory: true)
         defer { cleanup(directory) }
 
         let persister = FileColumnLayoutPersister(storageDirectory: directory)
@@ -302,7 +302,7 @@ struct FileColumnLayoutPersisterTests {
     @Test("Reading an empty JSON object returns nil for any table lookup")
     func emptyEntriesFileReturnsNil() throws {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("TableProTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("SchemaStudioTests-\(UUID().uuidString)", isDirectory: true)
         defer { cleanup(directory) }
 
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -415,11 +415,11 @@ struct FileColumnLayoutPersisterTests {
     @Test("Legacy hidden-columns UserDefaults key migrates into the store on first load")
     func migratesLegacyVisibilityKey() throws {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("TableProTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("SchemaStudioTests-\(UUID().uuidString)", isDirectory: true)
         defer { cleanup(directory) }
         let defaults = try #require(UserDefaults(suiteName: "colvis-\(UUID().uuidString)"))
         let tableKey = key("users", UUID())
-        let legacyKey = "com.TablePro.columns.hiddenColumns." + tableKey.storageKey
+        let legacyKey = "com.SchemaStudio.columns.hiddenColumns." + tableKey.storageKey
         defaults.set(["email", "phone"], forKey: legacyKey)
 
         let persister = FileColumnLayoutPersister(storageDirectory: directory, defaults: defaults)

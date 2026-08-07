@@ -21,7 +21,7 @@ import TableProImport
 import TableProPluginKit
 
 struct BeekeeperStudioImporter: ForeignAppImporter {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "BeekeeperStudioImporter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "BeekeeperStudioImporter")
 
     let id = "beekeeperstudio"
     let displayName = "Beekeeper Studio"

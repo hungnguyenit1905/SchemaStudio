@@ -27,7 +27,7 @@ public struct SwitchDatabaseTool: MCPToolImplementation {
         openWorldHint: false
     )
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.Tools")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.Tools")
 
     public init() {}
 

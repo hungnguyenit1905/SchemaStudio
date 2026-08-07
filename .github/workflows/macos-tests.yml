@@ -7,7 +7,7 @@ on:
       - "Plugins/**"
       - "Packages/**"
       - "TableProTests/**"
-      - "TablePro.xcodeproj/**"
+      - "SchemaStudio.xcodeproj/**"
       - "Libs/**"
       - ".github/workflows/macos-tests.yml"
   push:
@@ -17,7 +17,7 @@ on:
       - "Plugins/**"
       - "Packages/**"
       - "TableProTests/**"
-      - "TablePro.xcodeproj/**"
+      - "SchemaStudio.xcodeproj/**"
       - "Libs/**"
       - ".github/workflows/macos-tests.yml"
   workflow_dispatch:
@@ -29,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  XCODE_PROJECT: TablePro.xcodeproj
-  XCODE_SCHEME: TablePro
+  XCODE_PROJECT: SchemaStudio.xcodeproj
+  XCODE_SCHEME: SchemaStudio
   TEST_DESTINATION: "platform=macOS"
 
 jobs:

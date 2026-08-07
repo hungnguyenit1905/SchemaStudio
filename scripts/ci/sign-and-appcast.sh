@@ -70,7 +70,7 @@ ARCHS=("arm64" "x86_64")
 APPCAST_XMLS=()
 
 for arch in "${ARCHS[@]}"; do
-  ZIP="artifacts/TablePro-${VERSION}-${arch}.zip"
+  ZIP="artifacts/SchemaStudio-${VERSION}-${arch}.zip"
   if [ ! -f "$ZIP" ]; then
     echo "⚠️  Skipping $arch — $ZIP not found"
     continue
@@ -81,7 +81,7 @@ for arch in "${ARCHS[@]}"; do
   cp "$ZIP" "$STAGING/"
 
   # Release notes file matching archive name
-  basename="${STAGING}/TablePro-${VERSION}-${arch}"
+  basename="${STAGING}/SchemaStudio-${VERSION}-${arch}"
   echo "$RELEASE_HTML" > "${basename}.html"
 
   # Copy existing appcast for history preservation (only for first arch)
@@ -151,7 +151,7 @@ fi
 # Sparkle 2.9+ may ignore --download-url-prefix for new entries.
 # Ensure all archive URLs for this version point to the correct GitHub
 # Release download path: .../releases/download/v<VERSION>/<filename>
-sed -i '' -E "s|releases/download/(TablePro-${VERSION}-)|releases/download/v${VERSION}/\1|g" "$FINAL_APPCAST"
+sed -i '' -E "s|releases/download/(SchemaStudio-${VERSION}-)|releases/download/v${VERSION}/\1|g" "$FINAL_APPCAST"
 
 # ---------------------------------------------------------------------------
 # 6. Copy result

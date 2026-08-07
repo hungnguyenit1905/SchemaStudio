@@ -3,13 +3,11 @@
 //  TablePro
 //
 
-import Sparkle
 import SwiftUI
 
 struct GeneralSettingsView: View {
     @Binding var settings: GeneralSettings
     @Binding var tabSettings: TabSettings
-    var updaterBridge: UpdaterBridge
     var onResetAll: () -> Void
 
     @State private var initialLanguage: AppLanguage?
@@ -35,12 +33,12 @@ struct GeneralSettingsView: View {
             }
 
             if let initial = initialLanguage, settings.language != initial {
-                Text("Restart TablePro for the language change to take full effect.")
+                Text("Restart SchemaStudio for the language change to take full effect.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Picker("When TablePro starts:", selection: $settings.startupBehavior) {
+            Picker("When SchemaStudio starts:", selection: $settings.startupBehavior) {
                 ForEach(StartupBehavior.allCases) { behavior in
                     Text(behavior.displayName).tag(behavior)
                 }
@@ -82,26 +80,6 @@ struct GeneralSettingsView: View {
 
             TrustedExternalConnectionsSection()
 
-            Section("Software Update") {
-                Toggle("Automatically check for updates", isOn: $settings.automaticallyCheckForUpdates)
-                    .onChange(of: settings.automaticallyCheckForUpdates) { _, newValue in
-                        updaterBridge.updater.automaticallyChecksForUpdates = newValue
-                    }
-
-                Button("Check for Updates...") {
-                    updaterBridge.checkForUpdates()
-                }
-                .disabled(!updaterBridge.canCheckForUpdates)
-            }
-
-            Section {
-                Toggle("Share anonymous usage data", isOn: $settings.shareAnalytics)
-            } header: {
-                Text("Privacy")
-            } footer: {
-                Text("Help improve TablePro by sharing anonymous usage statistics (no personal data or queries).")
-            }
-
             Section {
                 Button(String(localized: "Reset All Settings to Defaults"), role: .destructive) {
                     showResetConfirmation = true
@@ -118,7 +96,6 @@ struct GeneralSettingsView: View {
         }
         .onAppear {
             if initialLanguage == nil { initialLanguage = settings.language }
-            updaterBridge.updater.automaticallyChecksForUpdates = settings.automaticallyCheckForUpdates
         }
     }
 }
@@ -127,7 +104,6 @@ struct GeneralSettingsView: View {
     GeneralSettingsView(
         settings: .constant(.default),
         tabSettings: .constant(.default),
-        updaterBridge: UpdaterBridge.shared,
         onResetAll: {}
     )
     .frame(width: 450, height: 500)

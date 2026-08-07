@@ -8,7 +8,7 @@
 import Foundation
 import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 // MARK: - StructureChangeManager Undo Integration Tests
 

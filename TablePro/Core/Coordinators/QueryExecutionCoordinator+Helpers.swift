@@ -8,7 +8,7 @@ import Foundation
 import os
 import TableProPluginKit
 
-private let helpersLogger = Logger(subsystem: "com.TablePro", category: "QueryExecutionCoordinator")
+private let helpersLogger = Logger(subsystem: "com.SchemaStudio", category: "QueryExecutionCoordinator")
 
 extension QueryExecutionCoordinator {
     func resolveRowCap(sql: String, tabType: TabType, bypassLimit: Bool = false) -> Int? {

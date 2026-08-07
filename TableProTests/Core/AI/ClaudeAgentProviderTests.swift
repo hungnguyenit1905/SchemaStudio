@@ -4,7 +4,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("ClaudeAgentProvider")
@@ -59,7 +59,7 @@ struct ClaudeAgentProviderTests {
         #expect(args.last == "--dangerously-skip-permissions")
     }
 
-    @Test("An MCP config path allows only TablePro's namespaced tools")
+    @Test("An MCP config path allows only SchemaStudio's namespaced tools")
     func mcpConfigAllowsOnlyTableProTools() {
         let args = ClaudeAgentProvider.inferenceArguments(
             prompt: "hi",
@@ -233,7 +233,7 @@ struct AgentCLIDiscoveryTests {
 
 @Suite("ClaudeAgentMCPBridge")
 struct ClaudeAgentMCPBridgeTests {
-    @Test("The MCP config carries the bearer token and TablePro's server name")
+    @Test("The MCP config carries the bearer token and SchemaStudio's server name")
     func configCarriesScopedToken() throws {
         let endpoint = try #require(URL(string: "http://127.0.0.1:23508/mcp"))
         let payload = try #require(

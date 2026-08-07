@@ -7,7 +7,7 @@ import Foundation
 import os
 
 internal enum LinkedSQLFavoriteWriter {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "LinkedSQLFavoriteWriter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LinkedSQLFavoriteWriter")
 
     enum WriteError: Error {
         case readFailed

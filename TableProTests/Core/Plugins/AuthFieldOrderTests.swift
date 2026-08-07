@@ -10,7 +10,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Auth field ordering")
 struct AuthFieldOrderTests {

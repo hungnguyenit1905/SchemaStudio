@@ -8,7 +8,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("Connection attempt registry")

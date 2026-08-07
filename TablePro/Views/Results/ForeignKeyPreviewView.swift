@@ -38,7 +38,7 @@ struct ForeignKeyPreviewView: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "FKPreview")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "FKPreview")
 
     private var fkInfo: ForeignKeyInfo { model.fkInfo }
     private var cellValue: String? { model.cellValue }

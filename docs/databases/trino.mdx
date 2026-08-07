@@ -1,15 +1,15 @@
 ---
 title: Trino
-description: Connect to a Trino cluster with TablePro's native Swift driver.
+description: Connect to a Trino cluster with SchemaStudio's native Swift driver.
 ---
 
-TablePro connects to Trino with a driver written in native Swift. It speaks the Trino client REST protocol directly over HTTP, so there is no JDBC jar or CLI to install. Queries run over `POST /v1/statement` and TablePro pages through the results until the cluster is done.
+SchemaStudio connects to Trino with a driver written in native Swift. It speaks the Trino client REST protocol directly over HTTP, so there is no JDBC jar or CLI to install. Queries run over `POST /v1/statement` and SchemaStudio pages through the results until the cluster is done.
 
 Presto uses the same protocol under a different header prefix. The current driver targets Trino.
 
 ## Install the plugin
 
-Trino is a registry driver. Pick Trino in the database type chooser and TablePro offers to download it, or install it up front from **Settings > Plugins > Browse > Trino Driver**. The driver loads without restarting the app.
+Trino is a registry driver. Pick Trino in the database type chooser and SchemaStudio offers to download it, or install it up front from **Settings > Plugins > Browse > Trino Driver**. The driver loads without restarting the app.
 
 ## Connection settings
 
@@ -30,13 +30,13 @@ Trino requires TLS for any authentication. If you pick Password or JWT, set an S
 
 ## Catalogs, schemas, and tables
 
-A Trino connection is scoped to a catalog and schema, but every query can name objects in full as `catalog.schema.table`. TablePro shows catalogs from `SHOW CATALOGS`, schemas from `SHOW SCHEMAS`, and tables and columns from each catalog's `information_schema`. Materialized views appear alongside tables and views. Expand a catalog to see its schemas, then a schema to see its tables. Table row counts come from `SHOW STATS`, and table and column comments come from `information_schema` and the `system.metadata` tables.
+A Trino connection is scoped to a catalog and schema, but every query can name objects in full as `catalog.schema.table`. SchemaStudio shows catalogs from `SHOW CATALOGS`, schemas from `SHOW SCHEMAS`, and tables and columns from each catalog's `information_schema`. Materialized views appear alongside tables and views. Expand a catalog to see its schemas, then a schema to see its tables. Table row counts come from `SHOW STATS`, and table and column comments come from `information_schema` and the `system.metadata` tables.
 
 Identifiers are quoted with double quotes. Results page with `OFFSET n ROWS FETCH NEXT m ROWS ONLY`, the order Trino's grammar requires.
 
 ## Types
 
-Trino's type system maps to TablePro's grid as follows:
+Trino's type system maps to SchemaStudio's grid as follows:
 
 - Numbers keep full precision. `bigint` and `decimal` are read as exact text, not floating point.
 - `varbinary` is shown as hex.
@@ -46,7 +46,7 @@ Trino's type system maps to TablePro's grid as follows:
 
 ## Editing rows and schema
 
-Edit cells in the data grid and TablePro writes `INSERT`, `UPDATE`, and `DELETE` back. Trino's `information_schema` reports no primary keys, so the WHERE clause matches on every column of the row as it was read. A row that is not unique across all its columns matches more than one row. Values are written with their Trino type, so a `varchar` holding digits stays quoted and a number stays unquoted. Columns whose type cannot be compared with `=`, such as `array`, `map`, and `row`, are left out of the WHERE clause.
+Edit cells in the data grid and SchemaStudio writes `INSERT`, `UPDATE`, and `DELETE` back. Trino's `information_schema` reports no primary keys, so the WHERE clause matches on every column of the row as it was read. A row that is not unique across all its columns matches more than one row. Values are written with their Trino type, so a `varchar` holding digits stays quoted and a number stays unquoted. Columns whose type cannot be compared with `=`, such as `array`, `map`, and `row`, are left out of the WHERE clause.
 
 The Structure tab creates tables and adds, drops, renames, and retypes columns. Statements run in autocommit, matching how most Trino connectors handle DDL.
 
@@ -70,7 +70,7 @@ Click the Explain dropdown in the query editor to choose:
 
 - **Username & Password** sends HTTP Basic auth. Use it for LDAP or password-file authentication. Requires TLS.
 - **JWT Access Token** sends the token as a bearer credential. Requires TLS.
-- **Client certificate** works with any TLS mode (Preferred, Required, Verify CA, or Verify Identity). Set the Client Certificate and Client Key files in the SSL pane and TablePro presents them for mutual TLS. With SSL off the connection is plain HTTP and no certificate is sent.
+- **Client certificate** works with any TLS mode (Preferred, Required, Verify CA, or Verify Identity). Set the Client Certificate and Client Key files in the SSL pane and SchemaStudio presents them for mutual TLS. With SSL off the connection is plain HTTP and no certificate is sent.
 
 ## Troubleshooting
 
@@ -83,4 +83,4 @@ Click the Explain dropdown in the query editor to choose:
 - No primary keys, indexes, or foreign keys. Trino's `information_schema` does not report them, so the Structure tab's Indexes view is always empty and row edits key on every column.
 - Import is not available. Export works.
 - Kerberos and OAuth 2.0 authentication are not supported.
-- Write support depends on the catalog's connector, not on TablePro.
+- Write support depends on the catalog's connector, not on SchemaStudio.

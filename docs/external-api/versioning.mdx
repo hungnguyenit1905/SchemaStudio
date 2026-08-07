@@ -3,7 +3,7 @@ title: Versioning
 description: Stability policy for the URL scheme, MCP tools, and resource catalog
 ---
 
-The External API follows TablePro's semver. The contract is the URL scheme, the MCP tool catalog, the resource list, and the pairing flow.
+The External API follows SchemaStudio's semver. The contract is the URL scheme, the MCP tool catalog, the resource list, and the pairing flow.
 
 The MCP server accepts three versions from the [MCP spec](https://modelcontextprotocol.io): `2025-03-26`, `2025-06-18`, and `2025-11-25`. On `initialize` the server echoes the version the client asked for. If the client asks for something else, the server returns `2025-11-25` and the client decides whether to use it.
 
@@ -21,11 +21,11 @@ There is no `elicitation` capability. The server does not ask clients for input.
 
 ### What changed in 2025-11-25
 
-`2025-11-25` is the spec version that defines `structuredContent` and tool annotations. TablePro emits both regardless of the negotiated version; clients on older versions ignore the extra fields.
+`2025-11-25` is the spec version that defines `structuredContent` and tool annotations. SchemaStudio emits both regardless of the negotiated version; clients on older versions ignore the extra fields.
 
 - Every `tools/call` result includes `structuredContent` next to `content[]`. Clients on older versions keep reading the text content; newer clients read the typed object directly.
 - `tools/list` returns annotations per tool. `readOnlyHint` and `idempotentHint` mark read tools. `destructiveHint` marks `confirm_destructive_operation`. `openWorldHint` marks tools that reach a live database, such as `execute_query` and `export_data`.
-- `serverInfo` includes `title: "TablePro"`.
+- `serverInfo` includes `title: "SchemaStudio"`.
 
 ## Stability rules
 
@@ -48,7 +48,7 @@ Within a major version, none of the following will happen:
 
 ## Breaking changes
 
-Breaking changes ship only at major TablePro version bumps (e.g. 1.x to 2.x). The 0.x series is pre-1.0; we treat minor versions as the release boundary, but only break with explicit notice.
+Breaking changes ship only at major SchemaStudio version bumps (e.g. 1.x to 2.x). The 0.x series is pre-1.0; we treat minor versions as the release boundary, but only break with explicit notice.
 
 ## Deprecation lifecycle
 
@@ -61,11 +61,11 @@ Breaking changes ship only at major TablePro version bumps (e.g. 1.x to 2.x). Th
 The following are not part of the External API contract and can change at any time without notice:
 
 - Internal MCP message routing details, transport framing, and HTTP path layout under `/v1/internal/*`.
-- The handshake file format at `~/Library/Application Support/TablePro/mcp-handshake.json`. Use the bundled `tablepro-mcp` CLI rather than parsing it yourself.
-- The tokens file format at `~/Library/Application Support/TablePro/mcp-tokens.json`. Tokens are managed via Settings, not the file.
-- Audit log file format at `~/Library/Application Support/TablePro/mcp-audit.db`. Read via the activity log view.
-- The connections file format at `~/Library/Application Support/TablePro/connections.json`. Treat as best-effort. Schema can shift between minor versions; integrations should fall back to MCP `list_connections`.
+- The handshake file format at `~/Library/Application Support/SchemaStudio/mcp-handshake.json`. Use the bundled `tablepro-mcp` CLI rather than parsing it yourself.
+- The tokens file format at `~/Library/Application Support/SchemaStudio/mcp-tokens.json`. Tokens are managed via Settings, not the file.
+- Audit log file format at `~/Library/Application Support/SchemaStudio/mcp-audit.db`. Read via the activity log view.
+- The connections file format at `~/Library/Application Support/SchemaStudio/connections.json`. Treat as best-effort. Schema can shift between minor versions; integrations should fall back to MCP `list_connections`.
 
 ## Reporting issues
 
-If you find a behavior that contradicts these rules, file an issue at [github.com/TableProApp/TablePro](https://github.com/TableProApp/TablePro/issues). Include the TablePro version, the URL or MCP call, expected and actual behavior, and a snippet of the activity log row if relevant.
+If you find a behavior that contradicts these rules, file an issue at [github.com/TableProApp/SchemaStudio](https://github.com/TableProApp/TablePro/issues). Include the SchemaStudio version, the URL or MCP call, expected and actual behavior, and a snippet of the activity log row if relevant.

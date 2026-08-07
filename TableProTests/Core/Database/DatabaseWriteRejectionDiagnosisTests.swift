@@ -4,7 +4,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
 
@@ -71,7 +71,7 @@ struct DatabaseWriteRejectionDiagnosisTests {
         #expect(DatabaseWriteRejectionDiagnosis.classify(PlainError()) == nil)
     }
 
-    @Test("The recovery suggestion blames the server and clears TablePro's Safe Mode")
+    @Test("The recovery suggestion blames the server and clears SchemaStudio's Safe Mode")
     func recoverySuggestionNamesTheServer() throws {
         let error = FakeDriverError(
             pluginErrorMessage: "Cannot execute statement in a READ ONLY transaction.",

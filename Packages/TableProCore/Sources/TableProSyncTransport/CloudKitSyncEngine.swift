@@ -16,14 +16,14 @@ public struct PullResult: Sendable {
 }
 
 public actor CloudKitSyncEngine {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CloudKitSyncEngine")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CloudKitSyncEngine")
 
     private let container: CKContainer?
     private let database: CKDatabase?
     private let zoneID: CKRecordZone.ID
 
-    public static let zoneName = "TableProSync"
-    public static let defaultContainerID = "iCloud.com.TablePro"
+    public static let zoneName = "SchemaStudioSync"
+    public static let defaultContainerID = "iCloud.com.SchemaStudio"
 
     private static let maxBatchSize = 400
     private static let maxRetries = 3

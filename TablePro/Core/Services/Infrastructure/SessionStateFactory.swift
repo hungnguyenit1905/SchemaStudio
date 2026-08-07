@@ -6,7 +6,7 @@
 import Foundation
 import os
 
-private let sessionStateLogger = Logger(subsystem: "com.TablePro", category: "SessionStateFactory")
+private let sessionStateLogger = Logger(subsystem: "com.SchemaStudio", category: "SessionStateFactory")
 
 @MainActor
 enum SessionStateFactory {

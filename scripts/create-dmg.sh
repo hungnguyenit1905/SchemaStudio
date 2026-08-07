@@ -5,7 +5,7 @@
 set -e
 
 # Configuration
-APP_NAME="TablePro"
+APP_NAME="SchemaStudio"
 VERSION="${1:-0.1.13}"
 ARCH="${2:-universal}"
 SOURCE_APP="${3:-build/Release/${APP_NAME}.app}"
@@ -29,8 +29,8 @@ fi
 # Ensure output directory exists
 mkdir -p "build/Release"
 
-# Create a staging copy of the app with the correct name (TablePro.app)
-# This ensures the DMG shows "TablePro.app" regardless of the source name
+# Create a staging copy of the app with the correct name (SchemaStudio.app)
+# This ensures the DMG shows "SchemaStudio.app" regardless of the source name
 STAGING_APP="build/Release/${APP_NAME}.app"
 if [ "$SOURCE_APP" != "$STAGING_APP" ]; then
     echo "📋 Preparing $APP_NAME.app for DMG..."
@@ -232,7 +232,7 @@ echo "✅ DMG signed"
 # Notarize the DMG (opt-in via NOTARIZE=true)
 if [ "$NOTARIZE" = "true" ]; then
     echo "📮 Notarizing DMG..."
-    if xcrun notarytool submit "$FINAL_DMG" --keychain-profile "TablePro" --wait; then
+    if xcrun notarytool submit "$FINAL_DMG" --keychain-profile "SchemaStudio" --wait; then
         xcrun stapler staple "$FINAL_DMG"
         echo "✅ DMG notarized and stapled"
     else

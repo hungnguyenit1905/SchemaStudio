@@ -16,7 +16,7 @@ enum PasswordSource: Codable, Hashable, Sendable {
     case vault(path: String, field: String)
     case awsSecretsManager(secretId: String, jsonKey: String?)
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PasswordSource")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PasswordSource")
 
     private enum CodingKeys: String, CodingKey {
         case kind, path, variable, shell, reference, field, secretId, jsonKey

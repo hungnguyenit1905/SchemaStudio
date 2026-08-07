@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Build DuckDB static library for TablePro
+# Build DuckDB static library for SchemaStudio
 # Usage: ./scripts/build-duckdb.sh [arm64|x86_64|both]
 
 # Quack remote protocol ships as a core extension from DuckDB 1.5.3 onward.

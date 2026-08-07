@@ -4,7 +4,7 @@
 //
 
 import AppKit
-@testable import TablePro
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
 import UniformTypeIdentifiers
@@ -14,7 +14,7 @@ import UniformTypeIdentifiers
 struct ClipboardServiceTests {
     private static let csvType = NSPasteboard.PasteboardType("public.comma-separated-values-text")
     private static let tsvType = NSPasteboard.PasteboardType("public.utf8-tab-separated-values-text")
-    private static let gridRowsType = NSPasteboard.PasteboardType("com.TablePro.gridRows")
+    private static let gridRowsType = NSPasteboard.PasteboardType("com.SchemaStudio.gridRows")
 
     @Test("writeCsv writes string, utf8PlainText, and the CSV UTI")
     func writeCsvWritesCsvUti() {

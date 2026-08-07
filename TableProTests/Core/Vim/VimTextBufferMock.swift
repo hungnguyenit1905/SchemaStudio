@@ -7,7 +7,7 @@
 
 import Foundation
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 
 @MainActor
 final class VimTextBufferMock: VimTextBuffer {

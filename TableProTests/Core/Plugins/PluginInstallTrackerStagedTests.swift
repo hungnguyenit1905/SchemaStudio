@@ -5,7 +5,7 @@
 
 import Foundation
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("PluginInstallTracker staged phase", .serialized)
 @MainActor

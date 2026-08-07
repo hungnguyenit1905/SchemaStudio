@@ -23,7 +23,7 @@ struct ProjectFolderScanResult {
 }
 
 enum ProjectFolderScanner {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ProjectFolderScanner")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ProjectFolderScanner")
 
     static func scan(
         rootURL: URL,

@@ -13,8 +13,6 @@ struct WelcomeActionsPanel: View {
     let onOpenProjectFolder: () -> Void
     let onImportConnectionsFile: () -> Void
 
-    private let updaterBridge = UpdaterBridge.shared
-
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
@@ -26,7 +24,7 @@ struct WelcomeActionsPanel: View {
                     .shadow(color: .black.opacity(0.18), radius: 8, x: 0, y: 4)
 
                 VStack(spacing: 6) {
-                    Text(verbatim: "TablePro")
+                    Text(verbatim: "SchemaStudio")
                         .font(.title2.weight(.semibold))
 
                     versionLine
@@ -74,20 +72,9 @@ struct WelcomeActionsPanel: View {
     }
 
     private var versionLine: some View {
-        HStack(spacing: 6) {
-            Text(String(format: String(localized: "Version %@"), Bundle.main.appVersion))
-                .foregroundStyle(.secondary)
-            Text(verbatim: "·")
-                .foregroundStyle(.tertiary)
-            Button {
-                updaterBridge.checkForUpdates()
-            } label: {
-                Text(String(localized: "Check for Updates..."))
-            }
-            .buttonStyle(.link)
-            .disabled(!updaterBridge.canCheckForUpdates)
-        }
-        .font(.callout)
+        Text(String(format: String(localized: "Version %@"), Bundle.main.appVersion))
+            .foregroundStyle(.secondary)
+            .font(.callout)
     }
 
     @ViewBuilder

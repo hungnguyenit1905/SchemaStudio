@@ -9,7 +9,7 @@ import AppKit
 import Foundation
 import os
 
-private let fkNavigationLogger = Logger(subsystem: "com.TablePro", category: "FKNavigation")
+private let fkNavigationLogger = Logger(subsystem: "com.SchemaStudio", category: "FKNavigation")
 
 extension MainContentCoordinator {
     // MARK: - Foreign Key Navigation

@@ -18,7 +18,7 @@ enum MCPPortAllocatorError: Error, LocalizedError {
 }
 
 enum MCPPortAllocator {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCPPortAllocator")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCPPortAllocator")
 
     static func findFreePort(in range: ClosedRange<UInt16>) throws -> UInt16 {
         for port in range where probe(port: port) {

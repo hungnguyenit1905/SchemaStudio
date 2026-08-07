@@ -71,7 +71,7 @@ public final class ConnectionManager: @unchecked Sendable {
     }
 
     private static func passwordKey(for connectionId: UUID) -> String {
-        "com.TablePro.password.\(connectionId.uuidString)"
+        "com.SchemaStudio.password.\(connectionId.uuidString)"
     }
 
     public func disconnect(_ connectionId: UUID) async {

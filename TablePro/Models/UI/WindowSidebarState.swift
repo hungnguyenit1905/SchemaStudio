@@ -46,7 +46,7 @@ internal final class WindowSidebarState {
     }
 
     private var storageKey: String? {
-        connectionId.map { "com.TablePro.sidebar.treeExpansion.\($0.uuidString)" }
+        connectionId.map { "com.SchemaStudio.sidebar.treeExpansion.\($0.uuidString)" }
     }
 
     private func loadExpansion() {

@@ -7,7 +7,7 @@ import Foundation
 import os
 import SwiftUI
 
-private let filterStateLog = Logger(subsystem: "com.TablePro", category: "FilterState")
+private let filterStateLog = Logger(subsystem: "com.SchemaStudio", category: "FilterState")
 
 @MainActor @Observable
 final class FilterCoordinator {

@@ -4,7 +4,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("TableScope")
@@ -42,7 +42,7 @@ struct TableScopeTests {
     func scopedKeysNamespaced() {
         let conn = UUID()
         let scope = TableScope(connectionId: conn, database: "db", schema: "public", table: "t")
-        #expect(PreferenceKeys.columnDisplayFormats(scope).name.hasPrefix("com.TablePro."))
-        #expect(PreferenceKeys.recentTables(connectionId: conn).name.hasPrefix("com.TablePro."))
+        #expect(PreferenceKeys.columnDisplayFormats(scope).name.hasPrefix("com.SchemaStudio."))
+        #expect(PreferenceKeys.recentTables(connectionId: conn).name.hasPrefix("com.SchemaStudio."))
     }
 }

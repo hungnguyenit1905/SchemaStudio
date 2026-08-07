@@ -8,7 +8,7 @@ import os
 import Security
 
 enum PluginCodeSignatureVerifier {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PluginCodeSignature")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PluginCodeSignature")
     private static let fallbackSigningTeamId = "D7HJ5TFYCU"
 
     static let resolvedSigningTeamId: String = {

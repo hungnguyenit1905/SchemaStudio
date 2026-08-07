@@ -11,7 +11,7 @@ import TableProPluginKit
 
 /// Provides cached database schema information for autocomplete
 actor SQLSchemaProvider {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SQLSchemaProvider")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SQLSchemaProvider")
     // MARK: - Properties
 
     private var tables: [TableInfo] = []

@@ -7,7 +7,7 @@ import Foundation
 import TableProImport
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Connection Export Data")
 @MainActor

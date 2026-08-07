@@ -3,7 +3,7 @@ title: Architecture
 description: How the app, plugin system, and core services fit together
 ---
 
-TablePro is built with:
+SchemaStudio is built with:
 
 - **SwiftUI** for the UI layer
 - **AppKit** for low-level macOS integration (windows, menus, native tabs)
@@ -52,7 +52,7 @@ actor SSHTunnelManager {
 | CodeEditSourceEditor | Vendored in `LocalPackages/` (with CodeEditTextView, CodeEditLanguages) | Tree-sitter code editor |
 | TableProCore | Local package in `Packages/` | Shared SwiftPM modules the macOS and iOS apps both use |
 | Sparkle | SPM, 2.9.0 | Auto-update with EdDSA signing |
-| OracleNIO | SPM, TablePro fork pinned by revision | Oracle wire protocol for OracleDriverPlugin |
+| OracleNIO | SPM, SchemaStudio fork pinned by revision | Oracle wire protocol for OracleDriverPlugin |
 | swift-certificates | SPM, 1.19.0 | Generates the MCP server's self-signed TLS certificate |
 | Yams | SPM, 5.4.0 | YAML parsing for project folder import |
 

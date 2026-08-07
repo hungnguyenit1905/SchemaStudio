@@ -3,7 +3,7 @@ title: URL Scheme
 description: Every tablepro:// deep link action with parameters and examples
 ---
 
-The `tablepro://` URL scheme drives the TablePro GUI from outside the app. Use it from the shell with `open`, from another app with `NSWorkspace.shared.open(url:)`, or from a Raycast extension with `open()` from `@raycast/api`.
+The `tablepro://` URL scheme drives the SchemaStudio GUI from outside the app. Use it from the shell with `open`, from another app with `NSWorkspace.shared.open(url:)`, or from a Raycast extension with `open()` from `@raycast/api`.
 
 The scheme covers two kinds of actions:
 
@@ -20,7 +20,7 @@ Connection paths use the connection's UUID, not its display name.
 tablepro://connect/9f1f0c3e-2e3d-4b14-9c3a-1d2f4ad1f6f1
 ```
 
-There is no UI action that copies a connect link. To find a connection's UUID, call the MCP [`list_connections`](/external-api/mcp-tools) tool or read the [`tablepro://connections`](/external-api/mcp-resources) resource; both return the UUID for each saved connection. The welcome screen's **Copy TablePro Link** context menu item copies a `tablepro://import?...` link for sharing the connection, not a `connect` link.
+There is no UI action that copies a connect link. To find a connection's UUID, call the MCP [`list_connections`](/external-api/mcp-tools) tool or read the [`tablepro://connections`](/external-api/mcp-resources) resource; both return the UUID for each saved connection. The welcome screen's **Copy SchemaStudio Link** context menu item copies a `tablepro://import?...` link for sharing the connection, not a `connect` link.
 
 <Warning>
 Pre-0.38 builds accepted `tablepro://connect/<name>/...` paths. Name-based paths were removed in 0.38.0. Bookmarks built against older versions must be regenerated with UUID-keyed paths.
@@ -34,7 +34,7 @@ tablepro://connect/<connection-uuid>
 
 Opens the saved connection. If the connection is already open in a window, that window comes to front. If the UUID does not match a saved connection, an error sheet appears.
 
-If the connection has a pre-connect script, TablePro shows the script text in a confirmation dialog before connecting. Cancelling the dialog cancels the whole deep link. This applies to every `connect/...` link: connection, table, and query.
+If the connection has a pre-connect script, SchemaStudio shows the script text in a confirmation dialog before connecting. Cancelling the dialog cancels the whole deep link. This applies to every `connect/...` link: connection, table, and query.
 
 ```bash
 open "tablepro://connect/9f1f0c3e-2e3d-4b14-9c3a-1d2f4ad1f6f1"
@@ -69,7 +69,7 @@ open "tablepro://connect/9f1f0c3e-2e3d-4b14-9c3a-1d2f4ad1f6f1/database/app/schem
 tablepro://connect/<connection-uuid>/query?sql=<percent-encoded-sql>
 ```
 
-Opens a query tab with the SQL pre-filled. TablePro always shows a confirmation dialog first, previewing the first 300 characters of the SQL. A tab that already holds exactly this SQL comes to front instead of a second tab opening. The query does not auto-execute; the user runs it from the editor. The SQL has a 51,200-character cap.
+Opens a query tab with the SQL pre-filled. SchemaStudio always shows a confirmation dialog first, previewing the first 300 characters of the SQL. A tab that already holds exactly this SQL comes to front instead of a second tab opening. The query does not auto-execute; the user runs it from the editor. The SQL has a 51,200-character cap.
 
 To run SQL from a script and read rows back, use the MCP [`execute_query`](/external-api/mcp-tools) tool instead. The URL scheme is for handing SQL into the GUI, not for headless execution.
 
@@ -87,7 +87,7 @@ open "tablepro://connect/9f1f0c3e-2e3d-4b14-9c3a-1d2f4ad1f6f1/query?sql=SELECT%2
 tablepro://integrations/pair?client=<name>&challenge=<base64url>&redirect=<url>&scopes=<scope>&connection-ids=<csv>
 ```
 
-Starts a pairing flow. TablePro presents an approval sheet, the user picks scopes and connections, and TablePro returns a one-time code via the `redirect` URL.
+Starts a pairing flow. SchemaStudio presents an approval sheet, the user picks scopes and connections, and SchemaStudio returns a one-time code via the `redirect` URL.
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
@@ -123,7 +123,7 @@ tablepro://integrations/start-mcp
 
 Starts the MCP server if it is not already running, then returns. Used by the bundled `tablepro-mcp` CLI to bootstrap on cold launch.
 
-The user does not need to enable MCP in Settings beforehand. The server binds to the configured port (default `23508`); if that port is taken, it falls back to a free port in the `51000-52000` range. Either way it writes a handshake file at `~/Library/Application Support/TablePro/mcp-handshake.json` with the actual port.
+The user does not need to enable MCP in Settings beforehand. The server binds to the configured port (default `23508`); if that port is taken, it falls back to a free port in the `51000-52000` range. Either way it writes a handshake file at `~/Library/Application Support/SchemaStudio/mcp-handshake.json` with the actual port.
 
 ```bash
 open "tablepro://integrations/start-mcp"
@@ -135,7 +135,7 @@ open "tablepro://integrations/start-mcp"
 tablepro://import?name=<n>&host=<h>&port=<p>&type=<t>&username=<u>&database=<db>
 ```
 
-Adds a saved connection from query parameters. TablePro shows a review sheet with the parsed details before saving anything; the name is editable, everything else is read-only. **Add Connection** saves it, or **Add as Copy** when a connection with the same name, host, and type already exists. Passwords are never accepted in the URL; the user adds one in the connection editor before connecting.
+Adds a saved connection from query parameters. SchemaStudio shows a review sheet with the parsed details before saving anything; the name is editable, everything else is read-only. **Add Connection** saves it, or **Add as Copy** when a connection with the same name, host, and type already exists. Passwords are never accepted in the URL; the user adds one in the connection editor before connecting.
 
 Required parameters: `name`, `host`, `type`.
 
@@ -198,6 +198,6 @@ Use the `af_` prefix to pass driver-specific fields. For example, `af_replicaSet
 
 ## Errors
 
-Malformed URLs are dropped without any UI: an invalid UUID, unknown path, missing required parameter, or over-limit SQL is logged to the system log (subsystem `com.TablePro`) and nothing opens. Check Console.app when a link does nothing.
+Malformed URLs are dropped without any UI: an invalid UUID, unknown path, missing required parameter, or over-limit SQL is logged to the system log (subsystem `com.SchemaStudio`) and nothing opens. Check Console.app when a link does nothing.
 
 Failures after parsing show an error sheet. Example: a valid UUID with no matching connection shows `No saved connection with ID "9F1F0C3E-2E3D-4B14-9C3A-1D2F4AD1F6F1".` under the title **Connection Failed**.

@@ -86,7 +86,7 @@ In the Favorites sidebar, click **+** and choose **Add Linked SQL Folder...** Pi
 
 Click a linked file to open it as a regular editor tab. `Cmd+S` writes back to disk in the file's original encoding. UTF-8, UTF-16, ISO Latin-1 and a few others are auto-detected on load and preserved on save.
 
-If the file was modified outside TablePro since you opened it, a yellow banner appears above the editor with a one-click **Reload from Disk**. If you save anyway, TablePro shows a side-by-side diff sheet with **Keep My Changes**, **Reload from Disk**, and **Cancel**.
+If the file was modified outside SchemaStudio since you opened it, a yellow banner appears above the editor with a one-click **Reload from Disk**. If you save anyway, SchemaStudio shows a side-by-side diff sheet with **Keep My Changes**, **Reload from Disk**, and **Cancel**.
 
 External edits propagate to the sidebar within about a second via FSEvents: new files appear, deleted files disappear, and `git pull` triggers the same refresh.
 
@@ -123,6 +123,6 @@ Press Delete on a linked file or right-click > **Move File to Trash**; the file 
 
 ## Storage
 
-Favorites live in a SQLite database (`sql_favorites.db`) in `~/Library/Application Support/TablePro/`. Search covers name, keyword, and query text.
+Favorites live in a SQLite database (`sql_favorites.db`) in `~/Library/Application Support/SchemaStudio/`. Search covers name, keyword, and query text.
 
-Linked folder paths live in UserDefaults under `com.TablePro.linkedSQLFolders`, and parsed metadata (name, keyword, mtime, size, encoding) is cached in `linked_sql_index.db` in the same directory so the sidebar renders without re-reading every file. File content always lives on disk. Linked folder paths are not part of iCloud Sync; each Mac links its own copy of a shared repo.
+Linked folder paths live in UserDefaults under `com.SchemaStudio.linkedSQLFolders`, and parsed metadata (name, keyword, mtime, size, encoding) is cached in `linked_sql_index.db` in the same directory so the sidebar renders without re-reading every file. File content always lives on disk. Linked folder paths are not part of iCloud Sync; each Mac links its own copy of a shared repo.

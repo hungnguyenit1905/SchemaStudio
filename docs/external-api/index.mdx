@@ -1,9 +1,9 @@
 ---
 title: External API
-description: URL scheme, MCP server, pairing flow, terminal, and iOS Shortcuts for driving TablePro from other apps
+description: URL scheme, MCP server, pairing flow, terminal, and iOS Shortcuts for driving SchemaStudio from other apps
 ---
 
-The TablePro External API is the public contract that lets other apps drive TablePro. Raycast, Cursor, Claude Desktop, shell scripts, and DDEV all use the same surface. This page is the entry point. Pick the subpage that matches what you want to do.
+The SchemaStudio External API is the public contract that lets other apps drive SchemaStudio. Raycast, Cursor, Claude Desktop, shell scripts, and DDEV all use the same surface. This page is the entry point. Pick the subpage that matches what you want to do.
 
 ## Layers
 
@@ -21,7 +21,7 @@ The URL scheme drives the GUI, MCP exchanges data, and pairing bootstraps trust.
   </Card>
 </CardGroup>
 
-Two more surfaces build on these. TablePro also opens plain database URLs (`mysql://...`) handed to it by macOS, which is how the [Terminal and DDEV](/external-api/terminal) integration works. On iPhone and iPad, TablePro exposes App Intents for [iOS Shortcuts](/external-api/ios-shortcuts).
+Two more surfaces build on these. SchemaStudio also opens plain database URLs (`mysql://...`) handed to it by macOS, which is how the [Terminal and DDEV](/external-api/terminal) integration works. On iPhone and iPad, SchemaStudio exposes App Intents for [iOS Shortcuts](/external-api/ios-shortcuts).
 
 ## When to use which
 
@@ -43,7 +43,7 @@ Every request is recorded in the activity log. Open **Settings > Integrations** 
 
 ## Quick start
 
-- Install the [Raycast extension](/external-api/raycast) and run `Pair with TablePro`.
+- Install the [Raycast extension](/external-api/raycast) and run `Pair with SchemaStudio`.
 - Or wire stdio MCP into your [MCP client](/external-api/mcp-clients) without an extension.
 - Or open a deep link from your shell:
 
@@ -53,7 +53,7 @@ open "tablepro://connect/9f1f0c3e-2e3d-4b14-9c3a-1d2f4ad1f6f1"
 
 ## Versioning
 
-The External API follows TablePro's semver. Paths and tools are additive within a major version. See [Versioning](/external-api/versioning) for the deprecation policy.
+The External API follows SchemaStudio's semver. Paths and tools are additive within a major version. See [Versioning](/external-api/versioning) for the deprecation policy.
 
 ## Subpages
 

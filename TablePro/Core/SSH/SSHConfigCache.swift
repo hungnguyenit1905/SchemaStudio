@@ -9,7 +9,7 @@ import os
 actor SSHConfigCache {
     static let shared = SSHConfigCache()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SSHConfigCache")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SSHConfigCache")
 
     private var cachedDocument: SSHConfigDocument?
     private var cachedMtimes: [String: Date] = [:]

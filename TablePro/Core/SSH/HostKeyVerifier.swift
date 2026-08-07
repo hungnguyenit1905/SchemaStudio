@@ -12,7 +12,7 @@ import os
 
 /// Handles host key verification with UI prompts
 internal enum HostKeyVerifier {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "HostKeyVerifier")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "HostKeyVerifier")
 
     /// Verify the host key, prompting the user if needed.
     /// - Parameters:

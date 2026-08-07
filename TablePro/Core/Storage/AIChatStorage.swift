@@ -12,7 +12,7 @@ import os
 actor AIChatStorage {
     static let shared = AIChatStorage()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "AIChatStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "AIChatStorage")
 
     private let directory: URL
 
@@ -41,7 +41,7 @@ actor AIChatStorage {
             appSupport = FileManager.default.temporaryDirectory
         }
         let dir = appSupport
-            .appendingPathComponent("TablePro", isDirectory: true)
+            .appendingPathComponent("SchemaStudio", isDirectory: true)
             .appendingPathComponent("ai_chats", isDirectory: true)
         directory = dir
 

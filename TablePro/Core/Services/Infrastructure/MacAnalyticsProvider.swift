@@ -11,14 +11,14 @@ import TableProAnalytics
 final class MacAnalyticsProvider: AnalyticsEnvironmentProvider {
     static let shared = MacAnalyticsProvider()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MacAnalyticsProvider")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MacAnalyticsProvider")
 
     private let defaults: UserDefaults
 
     enum Keys {
-        static let connectionAttemptedAt = "com.TablePro.analytics.connectionAttemptedAt"
-        static let connectionSucceededAt = "com.TablePro.analytics.connectionSucceededAt"
-        static let firstQueryExecutedAt = "com.TablePro.analytics.firstQueryExecutedAt"
+        static let connectionAttemptedAt = "com.SchemaStudio.analytics.connectionAttemptedAt"
+        static let connectionSucceededAt = "com.SchemaStudio.analytics.connectionSucceededAt"
+        static let firstQueryExecutedAt = "com.SchemaStudio.analytics.firstQueryExecutedAt"
     }
 
     init(defaults: UserDefaults = .standard) {

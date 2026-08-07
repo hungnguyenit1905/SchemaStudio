@@ -17,7 +17,7 @@ import TableProImport
 final class TeamLibrarySyncCoordinator {
     static let shared = TeamLibrarySyncCoordinator()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "TeamLibrarySyncCoordinator")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "TeamLibrarySyncCoordinator")
 
     private let apiClient: TeamLibraryAPIClient
     private let store: TeamLibraryStore

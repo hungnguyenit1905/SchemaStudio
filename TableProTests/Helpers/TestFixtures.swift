@@ -8,7 +8,7 @@
 import Foundation
 import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 enum TestFixtures {
     // MARK: - Database Types

@@ -1,4 +1,4 @@
-name: Build TablePro
+name: Build SchemaStudio
 
 on:
   workflow_dispatch:
@@ -10,8 +10,8 @@ on:
       - ".vscode/**"
 
 env:
-  XCODE_PROJECT: TablePro.xcodeproj
-  XCODE_SCHEME: TablePro
+  XCODE_PROJECT: SchemaStudio.xcodeproj
+  XCODE_SCHEME: SchemaStudio
   BUILD_CONFIGURATION: Release
 
 jobs:
@@ -113,7 +113,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
         run: |
-          xcrun notarytool store-credentials "TablePro" \
+          xcrun notarytool store-credentials "SchemaStudio" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
             --password "$NOTARY_PASSWORD"
@@ -144,8 +144,8 @@ jobs:
         with:
           name: artifacts-arm64
           path: |
-            build/Release/TablePro-*.dmg
-            build/Release/TablePro-*.zip
+            build/Release/SchemaStudio-*.dmg
+            build/Release/SchemaStudio-*.zip
 
   build-x86_64:
     name: Build x86_64
@@ -236,7 +236,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
         run: |
-          xcrun notarytool store-credentials "TablePro" \
+          xcrun notarytool store-credentials "SchemaStudio" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
             --password "$NOTARY_PASSWORD"
@@ -267,8 +267,8 @@ jobs:
         with:
           name: artifacts-x86_64
           path: |
-            build/Release/TablePro-*.dmg
-            build/Release/TablePro-*.zip
+            build/Release/SchemaStudio-*.dmg
+            build/Release/SchemaStudio-*.zip
 
   registry-readiness:
     name: Registry Readiness
@@ -339,12 +339,12 @@ jobs:
           # ZIP files need to be renamed
 
           # Rename ZIP files if they exist
-          if [ -f "artifacts/TablePro-arm64.zip" ]; then
-            mv artifacts/TablePro-arm64.zip "artifacts/TablePro-${VERSION}-arm64.zip"
+          if [ -f "artifacts/SchemaStudio-arm64.zip" ]; then
+            mv artifacts/SchemaStudio-arm64.zip "artifacts/SchemaStudio-${VERSION}-arm64.zip"
           fi
 
-          if [ -f "artifacts/TablePro-x86_64.zip" ]; then
-            mv artifacts/TablePro-x86_64.zip "artifacts/TablePro-${VERSION}-x86_64.zip"
+          if [ -f "artifacts/SchemaStudio-x86_64.zip" ]; then
+            mv artifacts/SchemaStudio-x86_64.zip "artifacts/SchemaStudio-${VERSION}-x86_64.zip"
           fi
 
           echo "✅ Artifacts organized successfully"

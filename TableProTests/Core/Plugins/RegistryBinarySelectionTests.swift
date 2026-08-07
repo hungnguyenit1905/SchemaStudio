@@ -5,7 +5,7 @@
 
 import Foundation
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("RegistryPlugin.resolvedBinary v2 selection")
 struct RegistryBinarySelectionTests {

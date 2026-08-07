@@ -15,7 +15,7 @@ public protocol MCPBridgeLogger: Sendable {
 public struct MCPOSBridgeLogger: MCPBridgeLogger {
     private let logger: Logger
 
-    public init(subsystem: String = "com.TablePro", category: String = "MCP.Bridge") {
+    public init(subsystem: String = "com.SchemaStudio", category: String = "MCP.Bridge") {
         logger = Logger(subsystem: subsystem, category: category)
     }
 

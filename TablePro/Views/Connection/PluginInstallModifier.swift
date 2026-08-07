@@ -7,7 +7,7 @@ import os
 import SwiftUI
 
 struct PluginInstallModifier: ViewModifier {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PluginInstallModifier")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PluginInstallModifier")
 
     @Binding var connection: DatabaseConnection?
     @State private var installFailed: String?
@@ -83,7 +83,7 @@ extension View {
 }
 
 struct PluginInstallTypeModifier: ViewModifier {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PluginInstallTypeModifier")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PluginInstallTypeModifier")
 
     @Binding var type: DatabaseType?
     @State private var installFailed: String?

@@ -4,7 +4,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("PluginBundleLoader.describeLoadFailure")
@@ -50,7 +50,7 @@ struct PluginBundleLoaderDescribeLoadFailureTests {
     @Test("link error points at app or plugin incompatibility")
     func linkError() {
         let reason = PluginBundleLoader.describeLoadFailure(makeError(NSExecutableLinkError))
-        #expect(reason.contains("TablePro"))
+        #expect(reason.contains("SchemaStudio"))
     }
 
     @Test("unknown code falls back to the OS-provided reason")

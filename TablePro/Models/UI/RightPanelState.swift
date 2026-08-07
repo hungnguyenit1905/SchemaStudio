@@ -48,7 +48,7 @@ import os
     }
 
     private static func activeTabKey(_ connectionId: UUID) -> String {
-        "com.TablePro.rightPanel.activeTab.\(connectionId.uuidString)"
+        "com.SchemaStudio.rightPanel.activeTab.\(connectionId.uuidString)"
     }
 
     /// Release all heavy data on disconnect so memory drops

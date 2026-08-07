@@ -25,7 +25,7 @@ final class JetBrainsCredentialStore {
         case cancelled
     }
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "JetBrainsCredentialStore")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "JetBrainsCredentialStore")
 
     /// ASCII bytes of "Proxy Config Sec", the hardcoded AES-128 key the IDE uses
     /// for the BUILT_IN encryption of the KDBX main key in `c.pwd`.

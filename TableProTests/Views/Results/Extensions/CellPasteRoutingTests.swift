@@ -11,7 +11,7 @@
 import AppKit
 import Foundation
 import SwiftUI
-@testable import TablePro
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
 

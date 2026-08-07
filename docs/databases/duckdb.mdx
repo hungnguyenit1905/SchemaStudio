@@ -3,7 +3,7 @@ title: DuckDB
 description: Open local DuckDB files or connect to a remote DuckDB server over Quack
 ---
 
-DuckDB is an embedded analytical database built for OLAP workloads. TablePro opens local DuckDB files and connects to remote DuckDB servers over the Quack protocol. The driver plugin bundles DuckDB 1.5.3 and is a downloadable plugin: TablePro prompts to install it when you pick DuckDB in the connection form.
+DuckDB is an embedded analytical database built for OLAP workloads. SchemaStudio opens local DuckDB files and connects to remote DuckDB servers over the Quack protocol. The driver plugin bundles DuckDB 1.5.3 and is a downloadable plugin: SchemaStudio prompts to install it when you pick DuckDB in the connection form.
 
 ## Connecting to a local DuckDB file
 
@@ -26,16 +26,16 @@ DuckDB is an embedded analytical database built for OLAP workloads. TablePro ope
 
 ## Connecting to a remote DuckDB server (Quack)
 
-Quack is DuckDB's client-server protocol. A DuckDB server exposes itself with `quack_serve`, and TablePro attaches to it as a remote database. Set **Connection Type** to **Remote (Quack, experimental)** and fill in:
+Quack is DuckDB's client-server protocol. A DuckDB server exposes itself with `quack_serve`, and SchemaStudio attaches to it as a remote database. Set **Connection Type** to **Remote (Quack, experimental)** and fill in:
 
 | Field | Value |
 |-------|-------|
 | **Host** | Server address (required) |
 | **Port** | `9494` by default |
 | **Token** | The token the server was started with |
-| **Database Alias** | Name TablePro attaches the remote under. Pre-filled with `remotedb` |
+| **Database Alias** | Name SchemaStudio attaches the remote under. Pre-filled with `remotedb` |
 
-Click **Save & Connect**. TablePro opens an in-memory DuckDB, registers the token as a secret, and attaches the remote server.
+Click **Save & Connect**. SchemaStudio opens an in-memory DuckDB, registers the token as a secret, and attaches the remote server.
 
 <Warning>
 Remote (Quack) is experimental and matches the Quack beta:
@@ -58,7 +58,7 @@ See [Connection URL Reference](/databases/connection-urls) for all parameters.
 
 ## Opening DuckDB files from Finder
 
-Double-click a `.duckdb` or `.ddb` file in Finder to open it directly in TablePro.
+Double-click a `.duckdb` or `.ddb` file in Finder to open it directly in SchemaStudio.
 
 ## Schemas
 
@@ -82,7 +82,7 @@ The iOS build statically links the `core_functions`, `json`, `parquet`, `icu`, `
 
 ## Troubleshooting
 
-**Connect fails on a local file**: DuckDB allows one writer per file. Quit anything else holding it, a `duckdb` CLI session, a Python process, or another TablePro window, then reconnect.
+**Connect fails on a local file**: DuckDB allows one writer per file. Quit anything else holding it, a `duckdb` CLI session, a Python process, or another SchemaStudio window, then reconnect.
 
 **Remote connection fails while attaching**: On macOS the `quack` extension downloads from the DuckDB extension registry the first time you connect. If that download is blocked, the attach step fails. Connect once from a network that can reach the registry.
 
@@ -94,4 +94,4 @@ The iOS build statically links the `core_functions`, `json`, `parquet`, `icu`, `
 
 - A local DuckDB file allows only one writer at a time.
 - Remote (Quack) mode cannot list tables in the sidebar. Reference them by name in SQL.
-- TablePro cannot switch databases on a DuckDB connection. Each connection targets one file or one attached remote.
+- SchemaStudio cannot switch databases on a DuckDB connection. Each connection targets one file or one attached remote.

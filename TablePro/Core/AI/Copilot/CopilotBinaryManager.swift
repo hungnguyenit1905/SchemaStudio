@@ -9,7 +9,7 @@ import Foundation
 import os
 
 actor CopilotBinaryManager {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CopilotBinary")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CopilotBinary")
     static let shared = CopilotBinaryManager()
 
     private let baseDirectory: URL
@@ -18,7 +18,7 @@ actor CopilotBinaryManager {
     private init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
-        baseDirectory = appSupport.appendingPathComponent("TablePro/copilot-language-server", isDirectory: true)
+        baseDirectory = appSupport.appendingPathComponent("SchemaStudio/copilot-language-server", isDirectory: true)
     }
 
     func ensureBinary() async throws -> String {

@@ -341,7 +341,7 @@ extension DatabaseManager {
     }
 
     func disconnectSession(_ sessionId: UUID) async {
-        let lifecycleLogger = Logger(subsystem: "com.TablePro", category: "NativeTabLifecycle")
+        let lifecycleLogger = Logger(subsystem: "com.SchemaStudio", category: "NativeTabLifecycle")
         guard let session = activeSessions[sessionId] else {
             lifecycleLogger.info(
                 "[close] disconnectSession: no session found connId=\(sessionId, privacy: .public)"

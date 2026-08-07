@@ -5,7 +5,7 @@
 
 import Foundation
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 import TableProSyncTransport
 
@@ -23,8 +23,8 @@ struct ConnectionStorageExternalAccessTests {
             at: fileURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
-        let defaultsName = "com.TablePro.tests.ConnectionStorage.ExternalAccess.\(unique)"
-        let syncName = "com.TablePro.tests.Sync.ExternalAccess.\(unique)"
+        let defaultsName = "com.SchemaStudio.tests.ConnectionStorage.ExternalAccess.\(unique)"
+        let syncName = "com.SchemaStudio.tests.Sync.ExternalAccess.\(unique)"
         guard let defaults = UserDefaults(suiteName: defaultsName),
               let syncDefaults = UserDefaults(suiteName: syncName) else {
             fatalError("UserDefaults suite creation failed in test setup")

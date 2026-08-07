@@ -6,7 +6,7 @@
 import AppKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("DataGridUpdateSnapshot reload gate")
 struct DataGridUpdateSnapshotTests {

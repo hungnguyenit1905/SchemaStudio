@@ -13,8 +13,8 @@ import OSLog
 
 @MainActor
 internal final class WindowLifecycleMonitor {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "WindowLifecycleMonitor")
-    private static let lifecycleLogger = Logger(subsystem: "com.TablePro", category: "NativeTabLifecycle")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "WindowLifecycleMonitor")
+    private static let lifecycleLogger = Logger(subsystem: "com.SchemaStudio", category: "NativeTabLifecycle")
     internal static let shared = WindowLifecycleMonitor()
 
     private struct Entry {

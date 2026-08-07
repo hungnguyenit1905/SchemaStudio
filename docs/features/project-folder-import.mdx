@@ -3,14 +3,14 @@ title: Open Project Folder
 description: Create a connection from the database settings already in your project's config files
 ---
 
-Point TablePro at a project folder and it reads the database settings the project already has, so you do not have to copy them out of a `.env` file by hand.
+Point SchemaStudio at a project folder and it reads the database settings the project already has, so you do not have to copy them out of a `.env` file by hand.
 
 ## Open a folder
 
 - **File > Open Project Folder...**
 - **Add from Existing > Open Project Folder...** on the welcome screen
 
-Pick the folder in the panel that appears. TablePro scans it and lists what it found.
+Pick the folder in the panel that appears. SchemaStudio scans it and lists what it found.
 
 ## Pick a connection
 
@@ -42,13 +42,13 @@ A connection starts at the **Alert** [Safe Mode](/features/safe-mode) level inst
 | `application.properties`, `application.yml` | `spring.datasource.url`, username, and password |
 | `appsettings.json` | The `ConnectionStrings` entries |
 
-Template files are skipped, so `.env.example`, `.env.sample`, `.env.template`, and `.env.dist` never appear. `.envrc` is a shell script, so TablePro never reads or runs it.
+Template files are skipped, so `.env.example`, `.env.sample`, `.env.template`, and `.env.dist` never appear. `.envrc` is a shell script, so SchemaStudio never reads or runs it.
 
 The scan does not follow symlinks, skips `node_modules`, `.git`, `vendor`, `dist`, `build` and similar directories, goes four levels deep, and ignores files over 1 MB. It reads only the folder you picked, with one exception: WordPress allows `wp-config.php` to sit one level above the site, so that single file is checked in the parent folder too. When it comes from there, the row shows the path as `../wp-config.php`.
 
 ## When a value cannot be read
 
-Some settings point somewhere else instead of holding a value, like `${{Postgres.DATABASE_URL}}` on Railway or a Rails credential lookup. TablePro leaves those out rather than guessing, so a row you expected may be missing. Fill those connections in by hand, or paste the URL with [Import from URL](/databases/connection-urls).
+Some settings point somewhere else instead of holding a value, like `${{Postgres.DATABASE_URL}}` on Railway or a Rails credential lookup. SchemaStudio leaves those out rather than guessing, so a row you expected may be missing. Fill those connections in by hand, or paste the URL with [Import from URL](/databases/connection-urls).
 
 ## Related
 

@@ -4,7 +4,7 @@ import os
 actor MCPSseWriter {
     static let keepAliveInterval: Duration = .seconds(30)
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.SseWriter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.SseWriter")
 
     private let context: HttpConnectionContext
     private var keepAliveTask: Task<Void, Never>?

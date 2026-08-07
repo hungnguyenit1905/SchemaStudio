@@ -6,7 +6,7 @@
 import Foundation
 import TableProImport
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("SequelAceImporter", .serialized)

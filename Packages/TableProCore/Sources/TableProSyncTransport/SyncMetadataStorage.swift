@@ -15,12 +15,12 @@ public struct Tombstone: Codable, Sendable {
 public final class SyncMetadataStorage: @unchecked Sendable {
     public static let shared = SyncMetadataStorage()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SyncMetadataStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SyncMetadataStorage")
 
     private let defaults: UserDefaults
     private let prefix: String
 
-    public init(userDefaults: UserDefaults = .standard, prefix: String = "com.TablePro.sync") {
+    public init(userDefaults: UserDefaults = .standard, prefix: String = "com.SchemaStudio.sync") {
         defaults = userDefaults
         self.prefix = prefix
     }

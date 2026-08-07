@@ -8,7 +8,7 @@ import os
 
 enum AIProvider {
     static let modelListTimeout: TimeInterval = 5.0
-    static let logger = Logger(subsystem: "com.TablePro", category: "AIProvider")
+    static let logger = Logger(subsystem: "com.SchemaStudio", category: "AIProvider")
 }
 
 enum AIProviderError: Error, LocalizedError {

@@ -74,7 +74,7 @@ internal extension MCPTokenStore {
 }
 
 public actor MCPBearerTokenAuthenticator: MCPAuthenticator {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.Auth")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.Auth")
 
     private let tokenStore: any MCPTokenStoreProtocol
     private let rateLimiter: MCPRateLimiter

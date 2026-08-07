@@ -3,16 +3,16 @@ title: Pairing
 description: One-click flow that issues a scoped MCP token to an extension through a PKCE-style code exchange
 ---
 
-Pairing is how an extension gets a TablePro token without the user copying one by hand. The extension opens a `tablepro://integrations/pair` deep link, the user approves scopes and connections in TablePro, and the extension exchanges a one-time code for the token over localhost HTTP.
+Pairing is how an extension gets a SchemaStudio token without the user copying one by hand. The extension opens a `tablepro://integrations/pair` deep link, the user approves scopes and connections in SchemaStudio, and the extension exchanges a one-time code for the token over localhost HTTP.
 
-The flow is PKCE-style: the extension generates a verifier, hashes it into a challenge, and TablePro releases the token only to the caller that presents the verifier. An app that intercepts the redirect cannot exchange the code.
+The flow is PKCE-style: the extension generates a verifier, hashes it into a challenge, and SchemaStudio releases the token only to the caller that presents the verifier. An app that intercepts the redirect cannot exchange the code.
 
 ## Sequence
 
 ```mermaid
 sequenceDiagram
     participant E as Extension
-    participant T as TablePro app
+    participant T as SchemaStudio app
     participant U as User
     participant M as MCP server (HTTP)
 
@@ -32,8 +32,8 @@ sequenceDiagram
 ```
 
 <Frame caption="The pairing approval sheet">
-  <img className="block dark:hidden" src="/images/mcp-pairing-approval-sheet.png" alt="TablePro sheet asking to approve a pairing request with scope, connection, and expiry pickers" />
-  <img className="hidden dark:block" src="/images/mcp-pairing-approval-sheet-dark.png" alt="TablePro sheet asking to approve a pairing request with scope, connection, and expiry pickers" />
+  <img className="block dark:hidden" src="/images/mcp-pairing-approval-sheet.png" alt="SchemaStudio sheet asking to approve a pairing request with scope, connection, and expiry pickers" />
+  <img className="hidden dark:block" src="/images/mcp-pairing-approval-sheet-dark.png" alt="SchemaStudio sheet asking to approve a pairing request with scope, connection, and expiry pickers" />
 </Frame>
 
 ## Extension steps
@@ -59,9 +59,9 @@ Open `tablepro://integrations/pair?client=...&challenge=...&redirect=...&scopes=
 
 ### 3. Receive the code and exchange it
 
-TablePro opens your `redirect` URL with a one-time code. For `raycast://` redirects the code arrives as `?context={"code":"<uuid>"}` (Raycast's launch-context convention); for any other scheme it is a flat `?code=<uuid>` query parameter. An `error` parameter instead of a code means the user denied the request; stop and show the description.
+SchemaStudio opens your `redirect` URL with a one-time code. For `raycast://` redirects the code arrives as `?context={"code":"<uuid>"}` (Raycast's launch-context convention); for any other scheme it is a flat `?code=<uuid>` query parameter. An `error` parameter instead of a code means the user denied the request; stop and show the description.
 
-Read the MCP port from `~/Library/Application Support/TablePro/mcp-handshake.json`, then:
+Read the MCP port from `~/Library/Application Support/SchemaStudio/mcp-handshake.json`, then:
 
 ```ts
 const port = await readHandshakePort();
@@ -79,11 +79,11 @@ The exchange endpoint requires no bearer auth. The single-use code plus the veri
 
 Store the token in the macOS Keychain. In Raycast, write it to a password preference, which is Keychain-backed. Do not keep it in `LocalStorage` or plain files.
 
-## What TablePro does on approval
+## What SchemaStudio does on approval
 
 The approval sheet shows the client name, a scope picker (starts at the requested scope; the user can pick any level), a connections multi-select (defaults to all unless `connection-ids` was provided), and an expiry picker (defaults to never). The query parameters are a request, not a grant.
 
-On approve, TablePro:
+On approve, SchemaStudio:
 
 1. Revokes any existing active token with the same client name. An extension that pairs again must replace its stored token; the old one stops working the moment the user approves.
 2. Mints the token and holds the plaintext in memory as a pending exchange keyed by a UUID code, valid for 5 minutes. Only the SHA-256 hash plus salt reaches `mcp-tokens.json`.
@@ -98,7 +98,7 @@ At most 50 exchange codes can be pending at once. Beyond that, new pair requests
 | Token is never in a URL | The token travels over localhost HTTP, not in a deep link. |
 | Redirect interception is harmless | The intercepted `code` cannot be exchanged without the verifier. |
 | Code is single-use | Successful exchange or 5-minute expiry deletes the pending exchange. |
-| Plaintext token is not persisted by TablePro | Only the SHA-256 hash plus salt is saved to `mcp-tokens.json`. |
+| Plaintext token is not persisted by SchemaStudio | Only the SHA-256 hash plus salt is saved to `mcp-tokens.json`. |
 | User sees and approves scopes | The sheet shows what was requested, what is granted, and which connections. |
 | User can revoke any time | **Settings > Integrations > Authentication > Revoke**. |
 
@@ -112,7 +112,7 @@ At most 50 exchange codes can be pending at once. Beyond that, new pair requests
 
 A failed exchange is recorded in the activity log under the `auth` category with outcome `denied`.
 
-If the user clicks **Deny**, TablePro opens the `redirect` URL with `error=denied` and `error_description=user_denied`, wrapped in the `context` JSON for `raycast://` redirects and appended as flat query parameters otherwise.
+If the user clicks **Deny**, SchemaStudio opens the `redirect` URL with `error=denied` and `error_description=user_denied`, wrapped in the `context` JSON for `raycast://` redirects and appended as flat query parameters otherwise.
 
 ## Implementing pairing in another extension
 

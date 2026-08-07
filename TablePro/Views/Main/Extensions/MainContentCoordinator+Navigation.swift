@@ -10,7 +10,7 @@ import Foundation
 import os
 import TableProPluginKit
 
-private let navigationLogger = Logger(subsystem: "com.TablePro", category: "MainContentCoordinator+Navigation")
+private let navigationLogger = Logger(subsystem: "com.SchemaStudio", category: "MainContentCoordinator+Navigation")
 
 extension MainContentCoordinator {
     // MARK: - Table Tab Opening
@@ -432,7 +432,7 @@ extension MainContentCoordinator {
             AlertHelper.showErrorSheet(
                 title: String(localized: "Schema Switching Not Supported"),
                 message: String(
-                    format: String(localized: "%@ does not support switching schemas in TablePro."),
+                    format: String(localized: "%@ does not support switching schemas in SchemaStudio."),
                     connection.type.rawValue
                 ),
                 window: contentWindow

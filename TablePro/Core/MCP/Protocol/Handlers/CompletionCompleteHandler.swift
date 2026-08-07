@@ -6,7 +6,7 @@ public struct CompletionCompleteHandler: MCPMethodHandler {
     public static let requiredScopes: Set<MCPScope> = []
     public static let allowedSessionStates: Set<MCPSessionAllowedState> = [.ready]
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.Completion")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.Completion")
 
     public init() {}
 

@@ -1,5 +1,5 @@
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 import TableProSyncTransport
 

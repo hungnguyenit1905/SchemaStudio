@@ -9,7 +9,7 @@ import os
 import CLibSSH2
 
 internal struct AgentAuthenticator: SSHAuthenticator {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "AgentAuthenticator")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "AgentAuthenticator")
 
     let socketPath: String?
 

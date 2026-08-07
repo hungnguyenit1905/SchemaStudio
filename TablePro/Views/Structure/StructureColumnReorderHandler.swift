@@ -12,7 +12,7 @@ import TableProPluginKit
 
 @MainActor
 enum StructureColumnReorderHandler {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "StructureColumnReorderHandler")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "StructureColumnReorderHandler")
 
     enum ReorderError: LocalizedError {
         case noDriver

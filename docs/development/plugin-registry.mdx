@@ -3,7 +3,7 @@ title: Plugin Registry
 description: Registry manifest format, binary selection, publishing, and PluginKit compatibility
 ---
 
-The plugin registry is a JSON manifest (`plugins.json`) hosted at [github.com/TableProApp/plugins](https://github.com/TableProApp/plugins). TablePro fetches it to populate **Settings > Plugins > Browse** and to auto-install a driver when a user selects a database type with no loaded plugin. This page covers the manifest and publishing pipeline; for install and update behavior in the app, see [Plugins & Themes](/features/plugins). To build a plugin, see [Plugin Development](/development/plugin-development).
+The plugin registry is a JSON manifest (`plugins.json`) hosted at [github.com/TableProApp/plugins](https://github.com/TableProApp/plugins). SchemaStudio fetches it to populate **Settings > Plugins > Browse** and to auto-install a driver when a user selects a database type with no loaded plugin. This page covers the manifest and publishing pipeline; for install and update behavior in the app, see [Plugins & Themes](/features/plugins). To build a plugin, see [Plugin Development](/development/plugin-development).
 
 ## Manifest Format
 
@@ -20,7 +20,7 @@ The current schema version is 2. The app rejects a manifest with a higher `schem
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `id` | string | Yes | Bundle identifier (e.g., `com.TablePro.OracleDriver`) |
+| `id` | string | Yes | Bundle identifier (e.g., `com.SchemaStudio.OracleDriver`) |
 | `name` | string | Yes | Display name |
 | `version` | string | Yes | Semantic version |
 | `summary` | string | Yes | One-line description |
@@ -29,7 +29,7 @@ The current schema version is 2. The app rejects a manifest with a higher `schem
 | `category` | string | Yes | `database-driver`, `export-format`, `import-format`, `theme`, `other` |
 | `databaseTypeIds` | [string] | No | `DatabaseType.pluginTypeId` values. Drives auto-install. |
 | `binaries` | [object] | Yes | Per-architecture binaries, see below |
-| `minAppVersion` | string | No | Minimum TablePro version |
+| `minAppVersion` | string | No | Minimum SchemaStudio version |
 | `iconName` | string | No | SF Symbol or bundled icon name |
 | `isVerified` | bool | No | Defaults to `false` |
 | `metadata` | object | No | Self-describing plugin metadata, see below |
@@ -57,12 +57,12 @@ Themes carry no native code, so they match on architecture only.
 
 ```json
 {
-  "id": "com.TablePro.OracleDriver",
+  "id": "com.SchemaStudio.OracleDriver",
   "name": "Oracle Driver",
   "version": "1.0.26",
   "summary": "Oracle Database 12c+ driver via OracleNIO",
-  "author": { "name": "TablePro", "url": "https://tablepro.app" },
-  "homepage": "https://docs.tablepro.app/databases/oracle",
+  "author": { "name": "SchemaStudio", "url": "https://github.com/hungnguyenit1905/SchemaStudio" },
+  "homepage": "https://github.com/hungnguyenit1905/SchemaStudio",
   "category": "database-driver",
   "databaseTypeIds": ["Oracle"],
   "binaries": [
@@ -167,7 +167,7 @@ Themes use the same manifest format with `category: "theme"`. Differences from d
 
 - Pure JSON data, no executable code, no code signing, no `.tableplugin` bundle
 - ZIP contains `.json` files (valid `ThemeDefinition`); theme packs with multiple themes are supported
-- Installed to `~/Library/Application Support/TablePro/Themes/Registry/`
+- Installed to `~/Library/Application Support/SchemaStudio/Themes/Registry/`
 - No `pluginKitVersion` needed; binaries match on architecture only, and the flat v1 fields still work
 
 ```json
@@ -175,7 +175,7 @@ Themes use the same manifest format with `category: "theme"`. Differences from d
   "id": "com.example.monokai-theme",
   "name": "Monokai Theme",
   "version": "1.0.0",
-  "summary": "Classic Monokai color scheme for TablePro",
+  "summary": "Classic Monokai color scheme for SchemaStudio",
   "author": { "name": "Theme Author" },
   "category": "theme",
   "downloadURL": "https://example.com/monokai-theme.zip",
@@ -189,9 +189,9 @@ Themes use the same manifest format with `category: "theme"`. Differences from d
 For enterprise or private registries:
 
 ```bash
-defaults write com.TablePro com.TablePro.customRegistryURL "https://your-registry.example.com/plugins.json"
+defaults write com.SchemaStudio com.SchemaStudio.customRegistryURL "https://your-registry.example.com/plugins.json"
 
-defaults delete com.TablePro com.TablePro.customRegistryURL
+defaults delete com.SchemaStudio com.SchemaStudio.customRegistryURL
 ```
 
 HTTP caching keys on the full URL, so changing the registry URL takes effect on the next fetch. These commands are also listed in [Settings](/customization/settings).

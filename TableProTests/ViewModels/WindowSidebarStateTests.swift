@@ -12,7 +12,7 @@
 import Foundation
 import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @MainActor
 struct WindowSidebarStateTests {
@@ -109,7 +109,7 @@ struct WindowSidebarStateTests {
         let legacy = """
             {"schemas":["public"],"databases":["shop"],"databaseSchemas":[{"database":"shop","schema":"public"}]}
             """
-        defaults.set(Data(legacy.utf8), forKey: "com.TablePro.sidebar.treeExpansion.\(connectionId.uuidString)")
+        defaults.set(Data(legacy.utf8), forKey: "com.SchemaStudio.sidebar.treeExpansion.\(connectionId.uuidString)")
 
         let restored = WindowSidebarState(connectionId: connectionId, defaults: defaults)
         #expect(restored.expandedTreeDatabases == ["shop"])

@@ -6,7 +6,7 @@
 import Foundation
 import os
 
-private let logger = Logger(subsystem: "com.TablePro", category: "GzipProcess")
+private let logger = Logger(subsystem: "com.SchemaStudio", category: "GzipProcess")
 
 enum GzipProcess {
     enum GzipError: LocalizedError {

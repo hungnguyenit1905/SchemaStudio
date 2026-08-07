@@ -30,7 +30,7 @@ private final class EditorWindow: NSWindow {
 
 @MainActor
 internal final class TabWindowController: NSWindowController, NSWindowDelegate {
-    private static let lifecycleLogger = Logger(subsystem: "com.TablePro", category: "NativeTabLifecycle")
+    private static let lifecycleLogger = Logger(subsystem: "com.SchemaStudio", category: "NativeTabLifecycle")
 
     internal static let frameAutosaveName: NSWindow.FrameAutosaveName = "MainEditorWindow"
 
@@ -194,7 +194,7 @@ internal final class TabWindowController: NSWindowController, NSWindowDelegate {
         let connection = coordinator.connection
         let selectedTab = coordinator.tabManager.selectedTab
         let tableName: String? = (selectedTab?.tabType == .table) ? selectedTab?.tableContext.tableName : nil
-        let activityType = tableName != nil ? "com.TablePro.viewTable" : "com.TablePro.viewConnection"
+        let activityType = tableName != nil ? "com.SchemaStudio.viewTable" : "com.SchemaStudio.viewConnection"
 
         if activity?.activityType != activityType {
             activity?.invalidate()

@@ -3,15 +3,15 @@ title: SQLite
 description: Open and query SQLite database files directly, no server needed
 ---
 
-SQLite is a file-based database engine. The whole database is one file on your Mac. The driver ships with TablePro, nothing to install.
+SQLite is a file-based database engine. The whole database is one file on your Mac. The driver ships with SchemaStudio, nothing to install.
 
 ## Quick Setup
 
 Click **Create Connection...**, select **SQLite**, pick the database file with **Browse...**, and click **Save & Connect**. No host, port, or credentials.
 
-Point the path at a file that does not exist and TablePro creates the database on connect.
+Point the path at a file that does not exist and SchemaStudio creates the database on connect.
 
-TablePro registers as a handler for `.db`, `.db3`, `.s3db`, `.sl3`, `.sqlite`, `.sqlite3`, and `.sqlitedb` files, so double-clicking one in Finder opens it directly.
+SchemaStudio registers as a handler for `.db`, `.db3`, `.s3db`, `.sl3`, `.sqlite`, `.sqlite3`, and `.sqlitedb` files, so double-clicking one in Finder opens it directly.
 
 <Frame caption="SQLite connection form">
   <img className="block dark:hidden" src="/images/sqlite-connection-form.png" alt="SQLite connection form with file path field" />
@@ -30,7 +30,7 @@ TablePro registers as a handler for `.db`, `.db3`, `.s3db`, `.sl3`, `.sqlite`, `
 | iOS Simulator | `~/Library/Developer/CoreSimulator/Devices/<device-id>/data/Containers/Data/Application/<app-id>/Documents/` |
 
 <Warning>
-The Safari, Photos, and Messages databases sit in folders macOS protects. Grant TablePro Full Disk Access in **System Settings > Privacy & Security > Full Disk Access**, then relaunch the app. Without it, opening those files fails with a permission error.
+The Safari, Photos, and Messages databases sit in folders macOS protects. Grant SchemaStudio Full Disk Access in **System Settings > Privacy & Security > Full Disk Access**, then relaunch the app. Without it, opening those files fails with a permission error.
 
 System databases may also be locked. Quit their parent app before opening.
 </Warning>
@@ -54,4 +54,4 @@ See [Connection URL Reference](/databases/connection-urls) for all parameters.
 
 **Locked database**: Close other apps using the file, or check for WAL files (`database.sqlite-wal`, `database.sqlite-shm`) left by a crashed process.
 
-**Can't open**: Verify the path exists and you have read permission on the file. For a protected folder such as `~/Library/Safari`, `~/Library/Messages`, or the Photos library, grant Full Disk Access and relaunch TablePro.
+**Can't open**: Verify the path exists and you have read permission on the file. For a protected folder such as `~/Library/Safari`, `~/Library/Messages`, or the Photos library, grant Full Disk Access and relaunch SchemaStudio.

@@ -9,9 +9,9 @@ import TableProSyncTransport
 
 final class SSHProfileStorage {
     static let shared = SSHProfileStorage()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SSHProfileStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SSHProfileStorage")
 
-    private let profilesKey = "com.TablePro.sshProfiles"
+    private let profilesKey = "com.SchemaStudio.sshProfiles"
     private let defaults = UserDefaults.standard
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
@@ -100,51 +100,51 @@ final class SSHProfileStorage {
     // MARK: - SSH Password Storage
 
     func saveSSHPassword(_ password: String, for profileId: UUID) {
-        let key = "com.TablePro.sshprofile.password.\(profileId.uuidString)"
+        let key = "com.SchemaStudio.sshprofile.password.\(profileId.uuidString)"
         keychain.writeString(password, forKey: key)
     }
 
     func loadSSHPassword(for profileId: UUID) -> String? {
-        let key = "com.TablePro.sshprofile.password.\(profileId.uuidString)"
+        let key = "com.SchemaStudio.sshprofile.password.\(profileId.uuidString)"
         return resolveString(label: "SSH profile password", profileId: profileId, forKey: key)
     }
 
     func deleteSSHPassword(for profileId: UUID) {
-        let key = "com.TablePro.sshprofile.password.\(profileId.uuidString)"
+        let key = "com.SchemaStudio.sshprofile.password.\(profileId.uuidString)"
         keychain.delete(forKey: key)
     }
 
     // MARK: - Key Passphrase Storage
 
     func saveKeyPassphrase(_ passphrase: String, for profileId: UUID) {
-        let key = "com.TablePro.sshprofile.keypassphrase.\(profileId.uuidString)"
+        let key = "com.SchemaStudio.sshprofile.keypassphrase.\(profileId.uuidString)"
         keychain.writeString(passphrase, forKey: key)
     }
 
     func loadKeyPassphrase(for profileId: UUID) -> String? {
-        let key = "com.TablePro.sshprofile.keypassphrase.\(profileId.uuidString)"
+        let key = "com.SchemaStudio.sshprofile.keypassphrase.\(profileId.uuidString)"
         return resolveString(label: "SSH profile key passphrase", profileId: profileId, forKey: key)
     }
 
     func deleteKeyPassphrase(for profileId: UUID) {
-        let key = "com.TablePro.sshprofile.keypassphrase.\(profileId.uuidString)"
+        let key = "com.SchemaStudio.sshprofile.keypassphrase.\(profileId.uuidString)"
         keychain.delete(forKey: key)
     }
 
     // MARK: - TOTP Secret Storage
 
     func saveTOTPSecret(_ secret: String, for profileId: UUID) {
-        let key = "com.TablePro.sshprofile.totpsecret.\(profileId.uuidString)"
+        let key = "com.SchemaStudio.sshprofile.totpsecret.\(profileId.uuidString)"
         keychain.writeString(secret, forKey: key)
     }
 
     func loadTOTPSecret(for profileId: UUID) -> String? {
-        let key = "com.TablePro.sshprofile.totpsecret.\(profileId.uuidString)"
+        let key = "com.SchemaStudio.sshprofile.totpsecret.\(profileId.uuidString)"
         return resolveString(label: "SSH profile TOTP secret", profileId: profileId, forKey: key)
     }
 
     func deleteTOTPSecret(for profileId: UUID) {
-        let key = "com.TablePro.sshprofile.totpsecret.\(profileId.uuidString)"
+        let key = "com.SchemaStudio.sshprofile.totpsecret.\(profileId.uuidString)"
         keychain.delete(forKey: key)
     }
 

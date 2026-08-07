@@ -13,7 +13,7 @@ set -euo pipefail
 PLUGIN_TARGET="${1:?Usage: $0 <PluginTarget> [arm64|x86_64|both] [version]}"
 ARCH="${2:-both}"
 PLUGIN_VERSION="${3:-${PLUGIN_VERSION:-}}"
-PROJECT="TablePro.xcodeproj"
+PROJECT="SchemaStudio.xcodeproj"
 CONFIG="Release"
 BUILD_DIR="build/Plugins"
 SIGN_IDENTITY="${SIGN_IDENTITY:-}"

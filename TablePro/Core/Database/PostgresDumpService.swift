@@ -88,7 +88,7 @@ protocol PostgresDumpRunner: AnyObject {
 @MainActor
 @Observable
 final class PostgresDumpService {
-    nonisolated private static let logger = Logger(subsystem: "com.TablePro", category: "PostgresDumpService")
+    nonisolated private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PostgresDumpService")
 
     let kind: PostgresDumpKind
     private(set) var state: PostgresDumpState = .idle

@@ -127,7 +127,7 @@ enum KeychainReadResult {
 typealias ForeignKeychainRead = (_ service: String, _ account: String) -> KeychainReadResult
 
 enum ForeignKeychainReader {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ForeignKeychainReader")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ForeignKeychainReader")
 
     static func readPassword(service: String, account: String) -> KeychainReadResult {
         let query: [String: Any] = [

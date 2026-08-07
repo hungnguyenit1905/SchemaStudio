@@ -9,7 +9,7 @@ import os
 import CLibSSH2
 
 internal struct NoneAuthenticator: SSHAuthenticator {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "NoneAuthenticator")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "NoneAuthenticator")
 
     func authenticate(session: OpaquePointer, username: String) throws {
         let authList = libssh2_userauth_list(session, username, UInt32(username.utf8.count))

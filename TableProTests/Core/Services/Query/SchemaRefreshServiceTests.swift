@@ -9,7 +9,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
 
@@ -20,6 +20,7 @@ private final class FakeScopedMetadataProvider: ScopedMetadataProviding {
     var errorToThrow: Error?
     var browseDatabase = "testdb"
     var browseSchema: String?
+    var browseScopeIsMissing = false
     private(set) var requestedScopes: [DatabaseScope] = []
     private(set) var requestedWorkloads: [MetadataConnectionPool.Workload] = []
 
@@ -42,7 +43,8 @@ private final class FakeScopedMetadataProvider: ScopedMetadataProviding {
     }
 
     func browseScope(for connectionId: UUID) -> DatabaseScope? {
-        DatabaseScope(connectionId: connectionId, database: browseDatabase, schema: browseSchema)
+        guard !browseScopeIsMissing else { return nil }
+        return DatabaseScope(connectionId: connectionId, database: browseDatabase, schema: browseSchema)
     }
 }
 
@@ -103,7 +105,7 @@ struct SchemaRefreshServiceTests {
     func refreshWithoutABrowseScopeFails() async {
         let driver = MockDatabaseDriver()
         let provider = FakeScopedMetadataProvider(driver: driver)
-        provider.browseDatabase = ""
+        provider.browseScopeIsMissing = true
         let schemaService = SchemaService()
         let service = makeService(schemaService: schemaService, provider: provider)
         let connection = TestFixtures.makeConnection()

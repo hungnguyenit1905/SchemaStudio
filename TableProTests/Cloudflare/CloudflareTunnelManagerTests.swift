@@ -7,7 +7,7 @@ import Darwin
 import Foundation
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 /// Fake cloudflared process. Depending on `behavior` it either opens a real
 /// loopback listener (so the manager's readiness probe succeeds), prints a

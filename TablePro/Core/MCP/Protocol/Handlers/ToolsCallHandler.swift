@@ -6,7 +6,7 @@ public struct ToolsCallHandler: MCPMethodHandler {
     public static let requiredScopes: Set<MCPScope> = [.toolsRead]
     public static let allowedSessionStates: Set<MCPSessionAllowedState> = [.ready]
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.Tools")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.Tools")
 
     private let services: MCPToolServices
 

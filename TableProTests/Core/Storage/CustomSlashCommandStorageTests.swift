@@ -5,14 +5,14 @@
 
 import Foundation
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("CustomSlashCommandStorage")
 @MainActor
 struct CustomSlashCommandStorageTests {
     private func makeStorage() -> CustomSlashCommandStorage {
-        let suiteName = "com.TablePro.tests.CustomSlashCommandStorage.\(UUID().uuidString)"
+        let suiteName = "com.SchemaStudio.tests.CustomSlashCommandStorage.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else {
             fatalError("UserDefaults suite creation failed")
         }

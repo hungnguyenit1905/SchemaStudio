@@ -43,13 +43,13 @@ internal protocol CommandLineToolInstalling {
 internal final class CommandLineToolInstaller: CommandLineToolInstalling {
     internal static let shared = CommandLineToolInstaller()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CommandLineToolInstaller")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CommandLineToolInstaller")
     private static let toolName = "tablepro"
-    private static let marker = "# TablePro command line tool"
+    private static let marker = "# SchemaStudio command line tool"
     private static let scriptContents = """
         #!/bin/sh
         \(marker)
-        exec open -b com.TablePro "$@"
+        exec open -b com.SchemaStudio "$@"
 
         """
 

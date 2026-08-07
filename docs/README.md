@@ -1,6 +1,6 @@
-# TablePro Documentation
+# SchemaStudio Documentation
 
-Source files for the [TablePro documentation site](https://docs.tablepro.app), powered by [Mintlify](https://mintlify.com).
+Source files for the [SchemaStudio documentation site](https://github.com/hungnguyenit1905/SchemaStudio), powered by [Mintlify](https://mintlify.com).
 
 ## Structure
 

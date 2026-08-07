@@ -3,7 +3,7 @@ title: Plugins & Themes
 description: Install database drivers, import and export formats, and themes from the plugin registry, and keep them updated.
 ---
 
-TablePro loads database drivers, import/export formats, and themes as `.tableplugin` bundles. Five driver plugins ship inside the app and cover 9 databases; 16 more download on demand from the plugin registry.
+SchemaStudio loads database drivers, import/export formats, and themes as `.tableplugin` bundles. Five driver plugins ship inside the app and cover 9 databases; 16 more download on demand from the plugin registry.
 
 ## Bundled plugins
 
@@ -45,7 +45,7 @@ These install from the registry when you need them:
 
 ## Installing plugins
 
-You usually don't install drivers by hand. The database type chooser marks registry drivers you don't have with a **Not Installed** badge; pick one anyway and TablePro downloads the plugin before connecting. No restart needed.
+You usually don't install drivers by hand. The database type chooser marks registry drivers you don't have with a **Not Installed** badge; pick one anyway and SchemaStudio downloads the plugin before connecting. No restart needed.
 
 To browse the full catalog, open **Settings > Plugins > Browse**. Search, filter by category (Database Drivers, Export Formats, Import Formats, Themes, Other), and click **Install**.
 
@@ -54,27 +54,27 @@ To browse the full catalog, open **Settings > Plugins > Browse**. Search, filter
   <img className="hidden dark:block" src="/images/settings-plugins-browse-dark.png" alt="Plugin registry browser in Settings" />
 </Frame>
 
-To install from a file, drag a `.tableplugin` or `.zip` onto **Settings > Plugins > Installed**, or click the **+** button there. User-installed plugins live in `~/Library/Application Support/TablePro/Plugins`.
+To install from a file, drag a `.tableplugin` or `.zip` onto **Settings > Plugins > Installed**, or click the **+** button there. User-installed plugins live in `~/Library/Application Support/SchemaStudio/Plugins`.
 
-Every plugin is verified before it loads: registry downloads must match the SHA-256 checksum in the registry manifest, and the bundle's code signature must match TablePro's signing team.
+Every plugin is verified before it loads: registry downloads must match the SHA-256 checksum in the registry manifest, and the bundle's code signature must match SchemaStudio's signing team.
 
 ## Updates
 
-TablePro compares installed plugin versions against the registry and shows a badge on the Plugins settings tab counting pending updates and plugins that failed to load. Select the plugin under **Installed** and click **Update**.
+SchemaStudio compares installed plugin versions against the registry and shows a badge on the Plugins settings tab counting pending updates and plugins that failed to load. Select the plugin under **Installed** and click **Update**.
 
 If a driver has open connections, the update is staged instead of applied. The staged version activates when the last connection using the driver closes, or click **Activate Now** after closing them. Quit before it activates and the update is offered again on next launch.
 
 ## After an app update
 
-An app update can raise the plugin interface version. Plugins built against the old version are rejected at load instead of crashing, and TablePro repairs them on its own: at launch it fetches the registry and reinstalls a compatible build of each outdated plugin, retrying after 30 seconds, then 5 and 10 minutes (up to five attempts), when the registry is unreachable or a download fails. It tries again when the network comes back, and connecting to a database whose plugin is outdated updates that plugin first.
+An app update can raise the plugin interface version. Plugins built against the old version are rejected at load instead of crashing, and SchemaStudio repairs them on its own: at launch it fetches the registry and reinstalls a compatible build of each outdated plugin, retrying after 30 seconds, then 5 and 10 minutes (up to five attempts), when the registry is unreachable or a download fails. It tries again when the network comes back, and connecting to a database whose plugin is outdated updates that plugin first.
 
 Until a plugin is repaired, it appears in a banner in **Settings > Plugins > Installed** with the reason and an action:
 
 | Action | Meaning |
 |--------|---------|
 | **Update Now** | A compatible build is in the registry. One click installs it. |
-| **Update TablePro** | The plugin requires a newer app version. |
-| No button | No compatible build is published yet. TablePro retries automatically. |
+| **Update SchemaStudio** | The plugin requires a newer app version. |
+| No button | No compatible build is published yet. SchemaStudio retries automatically. |
 | **Remove** | Deletes the rejected plugin from disk. |
 
 ## Managing plugins

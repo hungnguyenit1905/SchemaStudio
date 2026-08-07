@@ -3,7 +3,7 @@ title: MySQL
 description: Connect to MySQL 5.7 and later with the bundled MariaDB Connector/C driver
 ---
 
-TablePro connects to MySQL 5.7 and later through its bundled driver, built on MariaDB Connector/C. MySQL 8's `caching_sha2_password` auth works out of the box. MariaDB uses the same driver; MariaDB-specific notes are on [MariaDB](/databases/mariadb).
+SchemaStudio connects to MySQL 5.7 and later through its bundled driver, built on MariaDB Connector/C. MySQL 8's `caching_sha2_password` auth works out of the box. MariaDB uses the same driver; MariaDB-specific notes are on [MariaDB](/databases/mariadb).
 
 ## Quick Setup
 
@@ -46,11 +46,11 @@ Opening a URL connects directly. See [Connection URL Reference](/databases/conne
 
 ## AWS IAM Authentication
 
-RDS and Aurora connections can use your AWS identity instead of a static password: TablePro signs a fresh 15-minute token on every connect and reconnect. Setup and troubleshooting are on [AWS IAM Authentication](/databases/aws-iam).
+RDS and Aurora connections can use your AWS identity instead of a static password: SchemaStudio signs a fresh 15-minute token on every connect and reconnect. Setup and troubleshooting are on [AWS IAM Authentication](/databases/aws-iam).
 
 ## Google Cloud SQL
 
-Turn on **Cloud SQL Auth Proxy** in the connection form and enter the instance connection name; TablePro starts and stops the proxy for you. See [Cloud SQL Auth Proxy](/databases/cloud-sql-proxy).
+Turn on **Cloud SQL Auth Proxy** in the connection form and enter the instance connection name; SchemaStudio starts and stops the proxy for you. See [Cloud SQL Auth Proxy](/databases/cloud-sql-proxy).
 
 ## Users & Roles
 

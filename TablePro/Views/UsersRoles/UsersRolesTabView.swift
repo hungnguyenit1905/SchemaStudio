@@ -11,7 +11,7 @@ struct UsersRolesTabView: View {
     var body: some View {
         VStack(spacing: 0) {
             AutosavingSplitView(
-                autosaveName: "com.TablePro.usersRoles.mainSplit",
+                autosaveName: "com.SchemaStudio.usersRoles.mainSplit",
                 primaryMinimum: UsersRolesLayoutMetrics.principalListMinimumWidth,
                 primaryMaximum: UsersRolesLayoutMetrics.principalListMaximumWidth,
                 secondaryMinimum: UsersRolesLayoutMetrics.principalDetailMinimumWidth,

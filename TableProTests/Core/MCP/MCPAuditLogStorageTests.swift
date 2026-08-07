@@ -7,7 +7,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("MCP Audit Log Storage")
 struct MCPAuditLogStorageTests {

@@ -28,7 +28,7 @@ final class ChatGPTCodexCallbackServer: @unchecked Sendable {
         }
     }
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ChatGPTCodexCallbackServer")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ChatGPTCodexCallbackServer")
     private static let timeout: TimeInterval = 300
     private static let startTimeout: TimeInterval = 10
 

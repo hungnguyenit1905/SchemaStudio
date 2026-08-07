@@ -4,7 +4,7 @@
 //
 
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 import XCTest
 
 final class Base32Tests: XCTestCase {

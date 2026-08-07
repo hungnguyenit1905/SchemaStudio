@@ -5,7 +5,7 @@
 
 import XCTest
 
-@testable import TablePro
+@testable import SchemaStudio
 
 final class ResizableFieldMetricsTests: XCTestCase {
     private let range: ClosedRange<Double> = 80...600

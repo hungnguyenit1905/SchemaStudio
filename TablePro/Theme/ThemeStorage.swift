@@ -10,13 +10,13 @@ import Foundation
 import os
 
 internal struct ThemeStorage {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ThemeStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ThemeStorage")
 
     private static let userThemesDirectory: URL = {
         guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            return FileManager.default.temporaryDirectory.appendingPathComponent("TablePro/Themes", isDirectory: true)
+            return FileManager.default.temporaryDirectory.appendingPathComponent("SchemaStudio/Themes", isDirectory: true)
         }
-        return appSupport.appendingPathComponent("TablePro/Themes", isDirectory: true)
+        return appSupport.appendingPathComponent("SchemaStudio/Themes", isDirectory: true)
     }()
 
     private static let bundledThemesDirectory: URL? = {

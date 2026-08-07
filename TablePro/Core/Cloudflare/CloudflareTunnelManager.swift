@@ -11,7 +11,7 @@ import os
 
 actor CloudflareTunnelManager: TunnelManaging {
     static let shared = CloudflareTunnelManager()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CloudflareTunnelManager")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CloudflareTunnelManager")
 
     private static let readinessTimeout: TimeInterval = 30
     private static let readinessPollInterval: UInt64 = 250_000_000

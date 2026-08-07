@@ -28,7 +28,7 @@ enum SyncDecodeError: Error, LocalizedError {
 
 /// Pure-function mapper between local models and CKRecord
 struct SyncRecordMapper {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SyncRecordMapper")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SyncRecordMapper")
     private static let encoder = JSONEncoder()
     private static let decoder = JSONDecoder()
 

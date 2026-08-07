@@ -7,7 +7,7 @@
 
 import Foundation
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 // TODO: Convert to async tests — AIChatStorage is an actor, methods require await

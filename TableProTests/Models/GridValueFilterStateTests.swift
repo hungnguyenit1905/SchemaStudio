@@ -5,7 +5,7 @@
 
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("GridValueFilterState")
 struct GridValueFilterStateTests {

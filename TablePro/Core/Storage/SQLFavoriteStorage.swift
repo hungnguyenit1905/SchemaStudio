@@ -8,7 +8,7 @@ import os
 import SQLite3
 
 internal actor SQLFavoriteStorage {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SQLFavoriteStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SQLFavoriteStorage")
 
     private var db: OpaquePointer?
 
@@ -29,7 +29,7 @@ internal actor SQLFavoriteStorage {
         let appSupport = fileManager.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
         ).first ?? fileManager.temporaryDirectory
-        let dir = appSupport.appendingPathComponent("TablePro")
+        let dir = appSupport.appendingPathComponent("SchemaStudio")
         try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("sql_favorites.db")
     }

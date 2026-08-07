@@ -6,7 +6,7 @@
 import Foundation
 import Testing
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("executeUserQuery applies row cap and respects user SQL")
 struct ExecuteUserQueryTests {

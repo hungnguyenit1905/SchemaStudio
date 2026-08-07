@@ -18,7 +18,7 @@ final class StreamingQueryExportDataSource: PluginExportDataSource, @unchecked S
     private let driver: DatabaseDriver
     private let dbType: DatabaseType
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "StreamingQueryExport")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "StreamingQueryExport")
 
     init(query: String, driver: DatabaseDriver, databaseType: DatabaseType) {
         self.query = query

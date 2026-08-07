@@ -7,7 +7,7 @@ import AppKit
 import os
 import TableProPluginKit
 
-private let rowActionsLogger = Logger(subsystem: "com.TablePro", category: "DataGridView+RowActions")
+private let rowActionsLogger = Logger(subsystem: "com.SchemaStudio", category: "DataGridView+RowActions")
 
 // MARK: - Row Actions
 
@@ -275,7 +275,7 @@ extension TableViewCoordinator {
 
     // MARK: - Row Drag and Drop
 
-    private static let rowDragType = NSPasteboard.PasteboardType("com.TablePro.rowDrag")
+    private static let rowDragType = NSPasteboard.PasteboardType("com.SchemaStudio.rowDrag")
 
     func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> (any NSPasteboardWriting)? {
         guard delegate != nil else { return nil }

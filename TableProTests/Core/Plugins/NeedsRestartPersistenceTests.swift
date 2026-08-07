@@ -1,13 +1,13 @@
 import Foundation
 import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("PluginManager needsRestart State", .serialized)
 @MainActor
 struct NeedsRestartPersistenceTests {
     private let defaults = UserDefaults.standard
-    private let needsRestartKey = "com.TablePro.needsRestart"
+    private let needsRestartKey = "com.SchemaStudio.needsRestart"
 
     @Test("needsRestart defaults to false")
     func needsRestartDefaultsToFalse() {
@@ -29,6 +29,6 @@ struct NeedsRestartPersistenceTests {
 
     @Test("UserDefaults key for needsRestart uses expected value")
     func needsRestartKeyValue() {
-        #expect(needsRestartKey == "com.TablePro.needsRestart")
+        #expect(needsRestartKey == "com.SchemaStudio.needsRestart")
     }
 }

@@ -4,7 +4,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("CodableListPreferenceStore")
@@ -16,7 +16,7 @@ struct CodableListPreferenceStoreTests {
 
     private func makeStore() throws -> CodableListPreferenceStore<Item> {
         let defaults = try #require(UserDefaults(suiteName: "codablelist-\(UUID().uuidString)"))
-        return CodableListPreferenceStore(key: DefaultsKey<[Item]>("com.TablePro.test.items"), store: defaults)
+        return CodableListPreferenceStore(key: DefaultsKey<[Item]>("com.SchemaStudio.test.items"), store: defaults)
     }
 
     @Test("Loading an unset key returns an empty list")

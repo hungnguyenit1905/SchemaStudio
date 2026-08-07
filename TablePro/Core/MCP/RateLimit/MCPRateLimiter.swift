@@ -35,7 +35,7 @@ public enum MCPRateLimitVerdict: Sendable, Equatable {
 }
 
 public actor MCPRateLimiter {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.RateLimit")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.RateLimit")
 
     private struct Bucket {
         var failureTimestamps: [Date]

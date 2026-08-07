@@ -116,7 +116,7 @@ extension SSHTunnelError {
 /// Manages SSH tunnels for database connections using libssh2
 actor SSHTunnelManager: TunnelManaging {
     static let shared = SSHTunnelManager()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SSHTunnelManager")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SSHTunnelManager")
 
     private var tunnels: [UUID: LibSSH2Tunnel] = [:]
     private let portRangeStart = 60_000

@@ -43,7 +43,7 @@ final class DatabaseTreeMetadataService {
     @ObservationIgnored private let partitionsDedup = OnceTask<PartitionsKey, [TableInfo]>()
 
     @ObservationIgnored private static let logger = Logger(
-        subsystem: "com.TablePro", category: "SidebarTree"
+        subsystem: "com.SchemaStudio", category: "SidebarTree"
     )
 
     private init() {}

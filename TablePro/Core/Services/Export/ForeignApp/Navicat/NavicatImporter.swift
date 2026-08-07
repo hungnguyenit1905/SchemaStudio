@@ -10,7 +10,7 @@ import TableProPluginKit
 import UniformTypeIdentifiers
 
 struct NavicatImporter: ForeignAppImporter {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "NavicatImporter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "NavicatImporter")
 
     let id = "navicat"
     let displayName = "Navicat"

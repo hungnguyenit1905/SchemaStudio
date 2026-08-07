@@ -1,5 +1,5 @@
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @MainActor
@@ -93,7 +93,7 @@ struct ExternalConnectionTrustStoreTests {
             scopeName: ""
         )
         let poisoned = [TrustedExternalConnection(key: remote, trustedAt: Date())]
-        defaults.set(try JSONEncoder().encode(poisoned), forKey: "com.TablePro.externalConnectionTrust.entries")
+        defaults.set(try JSONEncoder().encode(poisoned), forKey: "com.SchemaStudio.externalConnectionTrust.entries")
 
         let store = ExternalConnectionTrustStore(defaults: defaults)
 

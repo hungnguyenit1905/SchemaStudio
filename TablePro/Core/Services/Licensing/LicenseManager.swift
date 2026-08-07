@@ -15,7 +15,7 @@ import os
 final class LicenseManager {
     static let shared = LicenseManager()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "LicenseManager")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LicenseManager")
 
     /// Current cached license (nil = unlicensed)
     private(set) var license: License?

@@ -7,7 +7,7 @@ import Foundation
 import TableProPluginKit
 import Security
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Keychain Access Control")
 struct KeychainAccessControlTests {

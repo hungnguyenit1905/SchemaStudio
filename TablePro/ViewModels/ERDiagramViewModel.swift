@@ -8,7 +8,7 @@ import TableProPluginKit
 @MainActor
 @Observable
 final class ERDiagramViewModel {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ERDiagram")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ERDiagram")
 
     // MARK: - Configuration
 

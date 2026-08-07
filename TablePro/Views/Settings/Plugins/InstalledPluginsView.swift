@@ -74,7 +74,7 @@ struct InstalledPluginsView: View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.triangle")
                 .foregroundStyle(.yellow)
-            Text("Restart TablePro to fully unload removed plugins.")
+            Text("Restart SchemaStudio to fully unload removed plugins.")
                 .font(.callout)
             Spacer()
             Button("Quit & Reopen") { relaunchApp() }
@@ -185,12 +185,10 @@ struct InstalledPluginsView: View {
             .controlSize(.small)
             .accessibilityLabel(String(format: String(localized: "Update %@"), plugin.name))
         case .requiresAppUpdate:
-            Button(String(localized: "Update TablePro")) {
-                UpdaterBridge.shared.checkForUpdates()
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .help(String(localized: "A newer TablePro is required to load this plugin."))
+            Text(String(localized: "Requires a newer app version"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .help(String(localized: "A newer SchemaStudio is required to load this plugin."))
         case .awaitingCompatibleBuild, .notInRegistry:
             EmptyView()
         }
@@ -229,7 +227,7 @@ struct InstalledPluginsView: View {
                 guard newApp != nil else {
                     errorAlertTitle = String(localized: "Relaunch Failed")
                     errorAlertMessage = error?.localizedDescription
-                        ?? String(localized: "Could not start a new TablePro instance. Quit and reopen manually.")
+                        ?? String(localized: "Could not start a new SchemaStudio instance. Quit and reopen manually.")
                     showErrorAlert = true
                     return
                 }
@@ -502,7 +500,7 @@ struct InstalledPluginsView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .help(String(localized: "Activate next time you launch TablePro"))
+                    .help(String(localized: "Activate next time you launch SchemaStudio"))
                 }
             case .completed:
                 Label(

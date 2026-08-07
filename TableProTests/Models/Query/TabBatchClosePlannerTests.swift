@@ -8,7 +8,7 @@
 import Foundation
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 private final class WindowToken {}
 

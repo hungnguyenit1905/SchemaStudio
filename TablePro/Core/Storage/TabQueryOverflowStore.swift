@@ -11,7 +11,7 @@ import Foundation
 import os
 
 internal enum TabQueryOverflowStore {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "TabDiskActor")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "TabDiskActor")
 
     static func directory(inside tabStateDirectory: URL) -> URL {
         tabStateDirectory.appendingPathComponent("Overflow", isDirectory: true)

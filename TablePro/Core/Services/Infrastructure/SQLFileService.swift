@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 
 /// Service for reading and writing SQL files.
 enum SQLFileService {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SQLFileService")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SQLFileService")
 
     static let supportedExtensions: Set<String> = ["sql", "psql", "pgsql"]
 

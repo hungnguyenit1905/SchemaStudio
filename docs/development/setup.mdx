@@ -1,6 +1,6 @@
 ---
 title: Development Setup
-description: Clone, configure signing, and build TablePro in Xcode
+description: Clone, configure signing, and build SchemaStudio in Xcode
 ---
 
 ## Prerequisites
@@ -25,7 +25,7 @@ Optional but recommended:
 <Steps>
   <Step title="Clone the repository">
     ```bash
-    git clone https://github.com/TableProApp/TablePro.git && cd TablePro
+    git clone https://github.com/TableProApp/SchemaStudio.git && cd SchemaStudio
     ```
   </Step>
 
@@ -57,17 +57,17 @@ Optional but recommended:
 
   <Step title="Open in Xcode">
     ```bash
-    open TablePro.xcodeproj
+    open SchemaStudio.xcodeproj
     ```
   </Step>
 
   <Step title="Configure signing">
-    1. Select the **TablePro** target
+    1. Select the **SchemaStudio** target
     2. Go to **Signing & Capabilities**, **Debug** sub-tab
     3. Change **Team** to your Apple Developer account (a free personal team works)
-    4. Change the **Bundle Identifier** from `com.TablePro` to something unique, for example `com.yourhandle.TablePro`
+    4. Change the **Bundle Identifier** from `com.SchemaStudio` to something unique, for example `com.yourhandle.SchemaStudio`
 
-    The Debug configuration signs with `TablePro.Debug.entitlements`, which drops
+    The Debug configuration signs with `SchemaStudio.Debug.entitlements`, which drops
     the iCloud capability, so a free personal team can sign it without a paid
     Apple Developer Program membership. If another target still shows a team
     error (a driver plugin or the MCP server), set its **Team** the same way.
@@ -76,22 +76,22 @@ Optional but recommended:
     Release signing. Hide them locally:
 
     ```bash
-    git update-index --skip-worktree TablePro.xcodeproj/project.pbxproj
+    git update-index --skip-worktree SchemaStudio.xcodeproj/project.pbxproj
     ```
   </Step>
 
   <Step title="Build and run">
-    Select the **TablePro** scheme, set destination to **My Mac**, press `Cmd+R`.
+    Select the **SchemaStudio** scheme, set destination to **My Mac**, press `Cmd+R`.
 
     Or from the command line:
 
     ```bash
-    xcodebuild -project TablePro.xcodeproj -scheme TablePro -configuration Debug build -skipPackagePluginValidation
+    xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio -configuration Debug build -skipPackagePluginValidation
     ```
 
     `Cmd+R` writes the app to DerivedData
-    (`~/Library/Developer/Xcode/DerivedData/TablePro-*/Build/Products/Debug`). The
-    `xcodebuild` command above writes to `build/Debug/TablePro.app` inside the repo instead.
+    (`~/Library/Developer/Xcode/DerivedData/SchemaStudio-*/Build/Products/Debug`). The
+    `xcodebuild` command above writes to `build/Debug/SchemaStudio.app` inside the repo instead.
   </Step>
 </Steps>
 
@@ -113,7 +113,7 @@ Writing a driver plugin? See [Plugin Development](/development/plugin-developmen
 ## Project Structure
 
 <Tree>
-  <Tree.Folder name="TablePro" defaultOpen>
+  <Tree.Folder name="SchemaStudio" defaultOpen>
     <Tree.Folder name="Core">
       <Tree.File name="Database/, Plugins/, Services/, Utilities/, SSH/, Autocomplete/" />
     </Tree.Folder>
@@ -156,7 +156,7 @@ Writing a driver plugin? See [Plugin Development](/development/plugin-developmen
 ## Running Tests
 
 ```bash
-xcodebuild -project TablePro.xcodeproj -scheme TablePro test -skipPackagePluginValidation
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio test -skipPackagePluginValidation
 ```
 
 Or in Xcode: `Cmd+U`. To run a single class or method, pass `-only-testing:TableProTests/TestClassName` or `-only-testing:TableProTests/TestClassName/testMethodName`.

@@ -3,7 +3,7 @@ title: etcd
 description: Connect to etcd v3 clusters with prefix-based key browsing and an etcdctl-style command editor
 ---
 
-TablePro connects to etcd v3 over the HTTP/JSON gRPC-gateway (it never speaks raw gRPC). On connect it probes the `/v3/`, `/v3beta/`, and `/v3alpha/` gateway prefixes in order, so etcd 3.2 through current releases work without configuration. Browse keys grouped by prefix, edit values in the grid, and run etcdctl-style commands in the editor.
+SchemaStudio connects to etcd v3 over the HTTP/JSON gRPC-gateway (it never speaks raw gRPC). On connect it probes the `/v3/`, `/v3beta/`, and `/v3alpha/` gateway prefixes in order, so etcd 3.2 through current releases work without configuration. Browse keys grouped by prefix, edit values in the grid, and run etcdctl-style commands in the editor.
 
 ## Quick Setup
 
@@ -19,7 +19,7 @@ etcd is a registry plugin. Picking it in the **Choose a Database** sheet prompts
 | **Port** | Client port, default `2379` |
 | **Username / Password** | Only if etcd authentication is enabled |
 
-With a username set, TablePro exchanges the credentials for a gateway token via the gateway's `auth/authenticate` endpoint and retries once with a fresh token when a request returns 401.
+With a username set, SchemaStudio exchanges the credentials for a gateway token via the gateway's `auth/authenticate` endpoint and retries once with a fresh token when a request returns 401.
 
 ### Advanced Fields
 
@@ -99,7 +99,7 @@ etcd connections support [SSH tunneling](/databases/ssh-tunneling) for reaching 
 
 **Connection refused**: Verify etcd is running and the client port (default 2379) is reachable.
 
-**No supported etcd API found**: TablePro requires the HTTP/JSON gateway, which etcd 3.x serves on the client port by default. Point the connection at the client port, not the peer port (2380).
+**No supported etcd API found**: SchemaStudio requires the HTTP/JSON gateway, which etcd 3.x serves on the client port by default. Point the connection at the client port, not the peer port (2380).
 
 **Authentication failed**: Check the username and password, and that the user has the required roles.
 

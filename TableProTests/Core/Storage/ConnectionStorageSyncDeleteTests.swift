@@ -8,7 +8,7 @@ import TableProPluginKit
 import Testing
 import TableProSyncTransport
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("ConnectionStorage sync delete ordering")
 @MainActor
@@ -26,8 +26,8 @@ struct ConnectionStorageSyncDeleteTests {
         storageDirectory = fileURL.deletingLastPathComponent()
         try? FileManager.default.createDirectory(at: storageDirectory, withIntermediateDirectories: true)
 
-        let defaults = UserDefaults(suiteName: "com.TablePro.tests.ConnectionStorage.\(unique)")!
-        let syncDefaults = UserDefaults(suiteName: "com.TablePro.tests.Sync.\(unique)")!
+        let defaults = UserDefaults(suiteName: "com.SchemaStudio.tests.ConnectionStorage.\(unique)")!
+        let syncDefaults = UserDefaults(suiteName: "com.SchemaStudio.tests.Sync.\(unique)")!
         metadata = SyncMetadataStorage(userDefaults: syncDefaults)
         storage = ConnectionStorage(
             fileURL: fileURL,

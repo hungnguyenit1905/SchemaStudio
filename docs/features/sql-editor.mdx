@@ -68,7 +68,7 @@ Match modes: contains, matches word, starts with, ends with, or regular expressi
 SELECT and WITH queries without their own `LIMIT` or `FETCH FIRST` run with the configured row cap:
 
 - The default cap is 10,000 rows. Pick 100 to 500,000 in **Settings > Data** (**Row cap**), or turn off **Truncate query results** to disable it.
-- Your query is sent exactly as you wrote it. TablePro never changes the SQL, it stops reading once it reaches the cap.
+- Your query is sent exactly as you wrote it. SchemaStudio never changes the SQL, it stops reading once it reaches the cap.
 - Your own `LIMIT`, `FETCH FIRST`, or `TOP` always wins: the query is not capped for that run.
 - `EXPLAIN`, `SHOW`, writes, and DDL are never limited.
 
@@ -131,9 +131,9 @@ Editor windows remember their size, position, and font zoom between launches. Se
 
 ## SQL Files
 
-TablePro opens `.sql`, `.psql`, and `.pgsql` files:
+SchemaStudio opens `.sql`, `.psql`, and `.pgsql` files:
 
-- Double-click in Finder (or **Open With > TablePro**)
+- Double-click in Finder (or **Open With > SchemaStudio**)
 - **File > Open File...** (`Cmd+O`)
 - Drag files onto the dock icon
 

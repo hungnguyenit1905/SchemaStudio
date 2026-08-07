@@ -5,7 +5,7 @@
 
 import Foundation
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("PluginManager reconciliation helpers", .serialized)
 @MainActor
@@ -220,12 +220,12 @@ struct PluginManagerReconciliationTests {
     func outdatedReconcileReasonReturnsReason() {
         let pm = PluginManager.shared
         let rejected = makeRejected(
-            reason: "A newer version of TablePro is required for this plugin.",
+            reason: "A newer version of SchemaStudio is required for this plugin.",
             providedDatabaseTypeIds: ["TestDriverType"]
         )
         pm.rejectedPlugins.append(rejected)
         defer { pm.removeFromRejected(url: rejected.url) }
-        #expect(pm.outdatedReconcileReason(forTypeId: "TestDriverType") == "A newer version of TablePro is required for this plugin.")
+        #expect(pm.outdatedReconcileReason(forTypeId: "TestDriverType") == "A newer version of SchemaStudio is required for this plugin.")
         #expect(pm.outdatedReconcileReason(forTypeId: "OtherDriverType") == nil)
     }
 
@@ -253,9 +253,25 @@ struct PluginManagerReconciliationTests {
     }
 
     @Test("forceRefresh manifest request bypasses the local cache and sends no If-None-Match")
-    func forceRefreshRequestBypassesCache() {
-        let request = RegistryClient.shared.makeManifestRequest(forceRefresh: true)
+    func forceRefreshRequestBypassesCache() throws {
+        let suiteName = "registry-force-refresh-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { UserDefaults.standard.removePersistentDomain(forName: suiteName) }
+        defaults.set("https://registry.invalid/plugins.json", forKey: RegistryClient.customRegistryURLKey)
+
+        let client = RegistryClient(userDefaults: defaults)
+        let request = try #require(client.makeManifestRequest(forceRefresh: true))
         #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
         #expect(request.value(forHTTPHeaderField: "If-None-Match") == nil)
+    }
+
+    @Test("no manifest request is built when no plugin registry is configured")
+    func noRequestWithoutRegistry() throws {
+        let suiteName = "registry-unconfigured-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { UserDefaults.standard.removePersistentDomain(forName: suiteName) }
+
+        let client = RegistryClient(userDefaults: defaults)
+        #expect(client.makeManifestRequest(forceRefresh: true) == nil)
     }
 }

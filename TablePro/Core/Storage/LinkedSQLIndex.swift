@@ -9,7 +9,7 @@ import SQLite3
 
 internal actor LinkedSQLIndex {
     static let shared = LinkedSQLIndex()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "LinkedSQLIndex")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LinkedSQLIndex")
 
     private var db: OpaquePointer?
     private let databaseURL: URL
@@ -29,7 +29,7 @@ internal actor LinkedSQLIndex {
         let appSupport = fileManager.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
         ).first ?? fileManager.temporaryDirectory
-        let dir = appSupport.appendingPathComponent("TablePro")
+        let dir = appSupport.appendingPathComponent("SchemaStudio")
         try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("linked_sql_index.db")
     }

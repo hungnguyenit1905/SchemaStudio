@@ -7,7 +7,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 private final class RefreshMockDriver: DatabaseDriver, @unchecked Sendable {
     let connection: DatabaseConnection

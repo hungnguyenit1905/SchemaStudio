@@ -7,7 +7,7 @@ import Foundation
 import os
 import TableProPluginKit
 
-private let paramLog = Logger(subsystem: "com.TablePro", category: "QueryParameters")
+private let paramLog = Logger(subsystem: "com.SchemaStudio", category: "QueryParameters")
 
 /// One statement of a multi-statement run, resolved before the transaction opens so the
 /// lease holds nothing but driver work.

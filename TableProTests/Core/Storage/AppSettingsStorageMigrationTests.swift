@@ -6,12 +6,12 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("AppSettingsStorage startup migration")
 struct AppSettingsStorageMigrationTests {
-    private let generalKey = "com.TablePro.settings.general"
+    private let generalKey = "com.SchemaStudio.settings.general"
 
     private func makeStorage() -> (storage: AppSettingsStorage, defaults: UserDefaults, suite: String) {
         let suite = "StartupMigrationTests-\(UUID().uuidString)"

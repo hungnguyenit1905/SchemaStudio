@@ -35,7 +35,7 @@ extension ConnectionHealthMonitor {
 /// `DatabaseDriver` (which is not `Sendable`). The caller provides `pingHandler`
 /// and `reconnectHandler` closures.
 actor ConnectionHealthMonitor {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ConnectionHealthMonitor")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ConnectionHealthMonitor")
 
     // MARK: - Configuration
 

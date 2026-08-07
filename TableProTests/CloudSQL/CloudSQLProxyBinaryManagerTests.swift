@@ -7,7 +7,7 @@ import CryptoKit
 import Foundation
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Cloud SQL Auth Proxy binary manager")
 struct CloudSQLProxyBinaryManagerTests {

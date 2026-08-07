@@ -25,7 +25,7 @@ struct KdbxEntry {
 /// own `com.intellij.credentialStore` implementation. Decryption is AES-KDF
 /// (iterated AES-256-ECB) plus AES-256-CBC, so CommonCrypto is sufficient.
 enum KdbxDatabase {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "KdbxDatabase")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "KdbxDatabase")
 
     private static let sig1: UInt32 = 0x9AA2_D903
     private static let sig2: UInt32 = 0xB54B_FB67

@@ -25,7 +25,7 @@ final class FakeSOCKS5Server: @unchecked Sendable {
         var sawAuthNegotiation = false
     }
 
-    private let queue = DispatchQueue(label: "com.TablePro.tests.FakeSOCKS5Server")
+    private let queue = DispatchQueue(label: "com.SchemaStudio.tests.FakeSOCKS5Server")
     private let behavior: Behavior
     private let requiredUsername: String?
     private let requiredPassword: String?

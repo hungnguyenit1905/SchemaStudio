@@ -8,7 +8,7 @@
 
 import XCTest
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 
 // swiftlint:disable file_length type_body_length
 

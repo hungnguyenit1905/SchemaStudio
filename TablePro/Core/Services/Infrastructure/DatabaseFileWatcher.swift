@@ -12,7 +12,7 @@ import os
 
 @MainActor
 final class DatabaseFileWatcher {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "DatabaseFileWatcher")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "DatabaseFileWatcher")
 
     private var activeSources: [UUID: DispatchSourceFileSystemObject] = [:]
     private var debounceTasks: [UUID: Task<Void, Never>] = [:]

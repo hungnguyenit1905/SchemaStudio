@@ -7,7 +7,7 @@ import TableProSyncTransport
 @Suite("Sync metadata storage")
 struct SyncMetadataStorageTests {
     private func makeStorage() -> SyncMetadataStorage {
-        let defaults = UserDefaults(suiteName: "com.TablePro.tests.\(UUID().uuidString)") ?? .standard
+        let defaults = UserDefaults(suiteName: "com.SchemaStudio.tests.\(UUID().uuidString)") ?? .standard
         return SyncMetadataStorage(userDefaults: defaults)
     }
 
@@ -61,11 +61,11 @@ struct SyncMetadataStorageTests {
 
     @Test("Pruning drops tombstones older than the cutoff and keeps newer ones")
     func pruningDropsOldTombstonesOnly() throws {
-        let defaults = UserDefaults(suiteName: "com.TablePro.tests.\(UUID().uuidString)") ?? .standard
+        let defaults = UserDefaults(suiteName: "com.SchemaStudio.tests.\(UUID().uuidString)") ?? .standard
         let old = Tombstone(id: "old", deletedAt: Date(timeIntervalSinceNow: -60 * 60 * 24 * 40))
         let fresh = Tombstone(id: "fresh", deletedAt: Date())
         let data = try JSONEncoder().encode([old, fresh])
-        defaults.set(data, forKey: "com.TablePro.sync.tombstones.\(SyncRecordType.connection.rawValue)")
+        defaults.set(data, forKey: "com.SchemaStudio.sync.tombstones.\(SyncRecordType.connection.rawValue)")
 
         let storage = SyncMetadataStorage(userDefaults: defaults)
         storage.pruneTombstones(olderThan: 30)
@@ -120,14 +120,14 @@ struct SyncMetadataStorageTests {
 
     @Test("Storage keys are the ones already on disk")
     func storageKeysAreStable() {
-        let defaults = UserDefaults(suiteName: "com.TablePro.tests.\(UUID().uuidString)") ?? .standard
+        let defaults = UserDefaults(suiteName: "com.SchemaStudio.tests.\(UUID().uuidString)") ?? .standard
         let storage = SyncMetadataStorage(userDefaults: defaults)
         storage.markDirty("a", type: .connection)
         storage.addTombstone("b", type: .connection)
         storage.lastAccountId = "account"
 
-        #expect(defaults.stringArray(forKey: "com.TablePro.sync.dirty.Connection") == ["a"])
-        #expect(defaults.data(forKey: "com.TablePro.sync.tombstones.Connection") != nil)
-        #expect(defaults.string(forKey: "com.TablePro.sync.lastAccountId") == "account")
+        #expect(defaults.stringArray(forKey: "com.SchemaStudio.sync.dirty.Connection") == ["a"])
+        #expect(defaults.data(forKey: "com.SchemaStudio.sync.tombstones.Connection") != nil)
+        #expect(defaults.string(forKey: "com.SchemaStudio.sync.lastAccountId") == "account")
     }
 }

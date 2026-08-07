@@ -1,19 +1,19 @@
 ---
 title: Oracle Database
-description: Connect to Oracle Database with TablePro
+description: Connect to Oracle Database with SchemaStudio
 ---
 
-TablePro supports Oracle Database 11.1 and later. It speaks the Oracle TNS wire protocol directly in Swift, so no Oracle Instant Client or other external library is required. This covers Oracle Database instances running on-premises, in Docker, or Oracle Cloud.
+SchemaStudio supports Oracle Database 11.1 and later. It speaks the Oracle TNS wire protocol directly in Swift, so no Oracle Instant Client or other external library is required. This covers Oracle Database instances running on-premises, in Docker, or Oracle Cloud.
 
 <Note>
 Oracle 10g and earlier are not supported: they use the older O3LOGON handshake that the pure-Swift driver does not implement.
 </Note>
 
-Servers behind a RAC SCAN listener, shared server, or a load balancer are supported: TablePro follows the listener's redirect to the instance that serves the session. Servers that require Native Network Encryption (`SQLNET.ENCRYPTION_SERVER` or `SQLNET.CRYPTO_CHECKSUM_SERVER` set to REQUIRED) are also supported: TablePro offers AES encryption with a SHA crypto-checksum to every server and the server turns it on when required, the same as SQL Developer and DBeaver. There is no option to configure.
+Servers behind a RAC SCAN listener, shared server, or a load balancer are supported: SchemaStudio follows the listener's redirect to the instance that serves the session. Servers that require Native Network Encryption (`SQLNET.ENCRYPTION_SERVER` or `SQLNET.CRYPTO_CHECKSUM_SERVER` set to REQUIRED) are also supported: SchemaStudio offers AES encryption with a SHA crypto-checksum to every server and the server turns it on when required, the same as SQL Developer and DBeaver. There is no option to configure.
 
 ## Install Plugin
 
-The Oracle driver is a downloadable plugin. When you select Oracle in the connection form, TablePro prompts you to install it. You can also install it manually:
+The Oracle driver is a downloadable plugin. When you select Oracle in the connection form, SchemaStudio prompts you to install it. You can also install it manually:
 
 1. Open **Settings > Plugins > Browse**
 2. Find **Oracle Driver** and click **Install**
@@ -76,7 +76,7 @@ OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY;
 
 ## Auth Compatibility
 
-TablePro authenticates via `OracleNIO`, a pure-Swift implementation of the Oracle TNS wire protocol (no Oracle Instant Client needed). Username and password are the only credentials it accepts; OS auth and Oracle wallets are not supported. Create a user with:
+SchemaStudio authenticates via `OracleNIO`, a pure-Swift implementation of the Oracle TNS wire protocol (no Oracle Instant Client needed). Username and password are the only credentials it accepts; OS auth and Oracle wallets are not supported. Create a user with:
 
 ```sql
 CREATE USER app_user IDENTIFIED BY "Password1!";

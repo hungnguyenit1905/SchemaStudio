@@ -10,7 +10,7 @@ import os
 
 @MainActor
 final class GhostTextRenderer {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "GhostTextRenderer")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "GhostTextRenderer")
 
     private weak var controller: TextViewController?
     private var ghostLayer: CATextLayer?

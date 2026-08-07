@@ -8,7 +8,7 @@ import SwiftUI
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @MainActor
 private final class RowEditingCopyClipboard: ClipboardProvider {

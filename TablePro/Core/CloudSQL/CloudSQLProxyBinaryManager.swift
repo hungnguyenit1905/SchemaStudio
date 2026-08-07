@@ -10,7 +10,7 @@ import os
 
 actor CloudSQLProxyBinaryManager {
     static let shared = CloudSQLProxyBinaryManager()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CloudSQLProxyBinary")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CloudSQLProxyBinary")
 
     static let pinnedVersion = "2.23.0"
 
@@ -32,7 +32,7 @@ actor CloudSQLProxyBinaryManager {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         self.baseDirectory = baseDirectory
-            ?? appSupport.appendingPathComponent("TablePro/cloud-sql-proxy", isDirectory: true)
+            ?? appSupport.appendingPathComponent("SchemaStudio/cloud-sql-proxy", isDirectory: true)
         self.expectedSHA256 = expectedSHA256
         self.fetch = fetch
     }

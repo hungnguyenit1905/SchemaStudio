@@ -1,6 +1,6 @@
 import CloudKit
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import TableProSyncTransport
 import Testing
 

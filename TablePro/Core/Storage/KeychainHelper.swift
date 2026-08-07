@@ -34,13 +34,13 @@ protocol KeychainStoring: Sendable {
 
 final class KeychainHelper: KeychainStoring {
     static let shared = KeychainHelper()
-    static let passwordSyncEnabledKey = "com.TablePro.keychainPasswordSyncEnabled"
+    static let passwordSyncEnabledKey = "com.SchemaStudio.keychainPasswordSyncEnabled"
 
-    private let service = "com.TablePro"
+    private let service = "com.SchemaStudio"
     private let accessGroup: String? = KeychainHelper.resolveAccessGroup()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "KeychainHelper")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "KeychainHelper")
 
-    private static let accessGroupSuffix = ".com.TablePro.shared"
+    private static let accessGroupSuffix = ".com.SchemaStudio.shared"
     private static let teamPrefixedGroupPattern = #"^[A-Z0-9]{10}\..+"#
 
     private static func resolveAccessGroup() -> String? {

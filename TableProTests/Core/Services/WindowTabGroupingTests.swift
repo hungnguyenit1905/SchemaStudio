@@ -15,7 +15,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("WindowTabGrouping")
 @MainActor
@@ -28,7 +28,7 @@ struct WindowTabGroupingTests {
     @Test("tabbingIdentifier produces a connection-specific identifier")
     func tabbingIdentifierUsesConnectionId() {
         let connectionId = UUID()
-        let expected = "com.TablePro.main.\(connectionId.uuidString)"
+        let expected = "com.SchemaStudio.main.\(connectionId.uuidString)"
 
         let result = WindowManager.tabbingIdentifier(for: connectionId)
 

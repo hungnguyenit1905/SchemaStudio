@@ -16,7 +16,7 @@ public struct MSSQLConnectionOptions: Sendable, Equatable {
 
     public static let defaultPort = 1433
     public static let defaultSchema = "dbo"
-    public static let defaultApplicationName = "TablePro"
+    public static let defaultApplicationName = "SchemaStudio"
     public static let defaultEncryptionFlag = "off"
     public static let defaultLoginTimeoutSeconds = 30
 

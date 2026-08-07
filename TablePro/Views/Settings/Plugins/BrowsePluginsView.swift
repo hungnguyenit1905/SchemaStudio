@@ -9,7 +9,6 @@ struct BrowsePluginsView: View {
     private let registryClient = RegistryClient.shared
     private let pluginManager = PluginManager.shared
     private let installTracker = PluginInstallTracker.shared
-    private let downloadCountService = DownloadCountService.shared
 
     @State private var searchText = ""
     @State private var selectedCategory: RegistryCategory?
@@ -27,7 +26,6 @@ struct BrowsePluginsView: View {
         mainContent
         .task {
             await registryClient.ensureManifest(.ifStale)
-            await downloadCountService.fetchCounts(for: registryClient.manifest)
         }
         .alert(errorTitle, isPresented: $showErrorAlert) {
             Button("OK") {}
@@ -136,7 +134,6 @@ struct BrowsePluginsView: View {
     private func refreshRegistry() {
         Task {
             await registryClient.ensureManifest(.mustBeCurrent)
-            await downloadCountService.fetchCounts(for: registryClient.manifest)
         }
     }
 
@@ -166,10 +163,6 @@ struct BrowsePluginsView: View {
                     Text("·")
                     Text(plugin.author.name)
                         .lineLimit(1)
-                    if let count = downloadCountService.downloadCount(for: plugin.id) {
-                        Text("·")
-                        Text("\(Image(systemName: "arrow.down.circle")) \(formattedCount(count))")
-                    }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -232,13 +225,6 @@ struct BrowsePluginsView: View {
         }
     }
 
-    private func formattedCount(_ count: Int) -> String {
-        if count >= 1_000 {
-            return String(format: "%.1fk", Double(count) / 1_000.0)
-        }
-        return "\(count)"
-    }
-
     // MARK: - Detail
 
     @ViewBuilder
@@ -249,7 +235,7 @@ struct BrowsePluginsView: View {
                 isInstalled: isPluginInstalled(selectedPlugin.id),
                 hasUpdate: hasUpdate(for: selectedPlugin),
                 installProgress: installTracker.state(for: selectedPlugin.id),
-                downloadCount: downloadCountService.downloadCount(for: selectedPlugin.id),
+                downloadCount: nil,
                 onInstall: { installPlugin(selectedPlugin) },
                 onUpdate: { updatePlugin(selectedPlugin) }
             )

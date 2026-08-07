@@ -4,7 +4,7 @@ set -euo pipefail
 # Refresh the checked-in snapshot of the Production CloudKit schema.
 #
 # CloudKit only creates record fields automatically in the Development
-# environment. TablePro pins both apps to Production, so a field added to a
+# environment. SchemaStudio pins both apps to Production, so a field added to a
 # record type in code never reaches the server on its own: saving a record
 # that carries an undeclared field makes CloudKit reject that record.
 #
@@ -20,7 +20,7 @@ set -euo pipefail
 #   scripts/export-cloudkit-schema.sh
 
 TEAM_ID="D7HJ5TFYCU"
-CONTAINER_ID="iCloud.com.TablePro"
+CONTAINER_ID="iCloud.com.SchemaStudio"
 ENVIRONMENT="production"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

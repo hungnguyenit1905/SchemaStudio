@@ -7,7 +7,7 @@ import Foundation
 import os
 
 final class AnthropicProvider: ChatTransport {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "AnthropicProvider")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "AnthropicProvider")
 
     private let endpoint: String
     private let apiKey: String

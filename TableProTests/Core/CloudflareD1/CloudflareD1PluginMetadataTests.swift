@@ -5,7 +5,7 @@
 
 import Foundation
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 import TableProPluginKit
 
 @Suite("Cloudflare D1 Plugin Metadata")

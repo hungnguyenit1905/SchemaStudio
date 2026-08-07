@@ -6,7 +6,7 @@
 //  menu item owns the shortcut per context.
 //
 
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("CommandFRouteTests")

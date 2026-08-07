@@ -13,7 +13,7 @@ import TableProSyncTransport
 /// Tracks dirty entities and deletions for sync
 final class SyncChangeTracker {
     static let shared = SyncChangeTracker()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SyncChangeTracker")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SyncChangeTracker")
 
     private let metadataStorage: SyncMetadataStorage
 

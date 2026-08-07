@@ -6,7 +6,7 @@ public struct PromptsListHandler: MCPMethodHandler {
     public static let requiredScopes: Set<MCPScope> = []
     public static let allowedSessionStates: Set<MCPSessionAllowedState> = [.ready]
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.Prompts")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.Prompts")
 
     public init() {}
 

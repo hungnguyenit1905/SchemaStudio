@@ -1,6 +1,6 @@
 import Foundation
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 actor FakeMCPTokenStore: MCPTokenStoreProtocol {

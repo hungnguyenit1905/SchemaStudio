@@ -15,7 +15,7 @@ import SwiftUI
 
 @MainActor
 internal final class MainSplitViewController: NSSplitViewController, InspectorVisibilityProxy {
-    private static let lifecycleLogger = Logger(subsystem: "com.TablePro", category: "NativeTabLifecycle")
+    private static let lifecycleLogger = Logger(subsystem: "com.SchemaStudio", category: "NativeTabLifecycle")
 
     // MARK: - Payload & Session
 
@@ -54,9 +54,9 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
 
     private var splitAutosaveName: NSSplitView.AutosaveName {
         if let connectionId = payload?.connectionId ?? currentSession?.connection.id {
-            return "com.TablePro.mainSplit.\(connectionId.uuidString)"
+            return "com.SchemaStudio.mainSplit.\(connectionId.uuidString)"
         }
-        return "com.TablePro.mainSplit"
+        return "com.SchemaStudio.mainSplit"
     }
 
     // MARK: - Toolbar

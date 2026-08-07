@@ -8,7 +8,7 @@
 
 import Foundation
 import SwiftUI
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @MainActor @Suite("CommandActions focus gate")

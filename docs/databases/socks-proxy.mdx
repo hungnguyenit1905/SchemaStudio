@@ -11,7 +11,7 @@ SOCKS Proxy routes your database connection through a SOCKS5 proxy server. Use i
 flowchart LR
     subgraph mac ["Your Mac"]
         Driver["Database driver<br>127.0.0.1:auto"]
-        Relay["TablePro relay"]
+        Relay["SchemaStudio relay"]
     end
 
     subgraph proxy ["SOCKS5 Proxy"]
@@ -25,9 +25,9 @@ flowchart LR
     Driver -->|"loopback"| Relay -->|"SOCKS5"| SOCKS -->|"TCP"| Database
 ```
 
-TablePro opens a loopback listener on a free port and relays every connection through the proxy to the database, then points the driver at the local port. Unlike Cloudflare Tunnel and Cloud SQL Auth Proxy, there is no external binary to install: TablePro's own networking stack (Network.framework) speaks SOCKS5 directly.
+SchemaStudio opens a loopback listener on a free port and relays every connection through the proxy to the database, then points the driver at the local port. Unlike Cloudflare Tunnel and Cloud SQL Auth Proxy, there is no external binary to install: SchemaStudio's own networking stack (Network.framework) speaks SOCKS5 directly.
 
-The database hostname is sent to the proxy and resolved there, not on your Mac. This is remote DNS (what a `socks5h://` URL selects in other clients), and TablePro always does it, so there is no separate `socks5` mode that resolves locally. Hostnames that only resolve inside the private network behind the proxy work, and no DNS query for the database host leaves your machine.
+The database hostname is sent to the proxy and resolved there, not on your Mac. This is remote DNS (what a `socks5h://` URL selects in other clients), and SchemaStudio always does it, so there is no separate `socks5` mode that resolves locally. Hostnames that only resolve inside the private network behind the proxy work, and no DNS query for the database host leaves your machine.
 
 ## Setting up
 
@@ -54,7 +54,7 @@ An SSH dynamic port forward is a SOCKS5 proxy. Run `ssh -D 1080 user@bastion` in
 
 ### Timed out connecting through the proxy
 
-TablePro waits 15 seconds for the path through the proxy to come up. A timeout means the proxy did not answer, the credentials were rejected, or the proxy could not reach the database. Check the proxy host and port, verify the username and password, and confirm the database host and port are reachable from the proxy's network.
+SchemaStudio waits 15 seconds for the path through the proxy to come up. A timeout means the proxy did not answer, the credentials were rejected, or the proxy could not reach the database. Check the proxy host and port, verify the username and password, and confirm the database host and port are reachable from the proxy's network.
 
 ### Local Network permission prompt
 

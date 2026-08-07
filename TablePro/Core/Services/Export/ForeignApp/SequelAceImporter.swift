@@ -8,7 +8,7 @@ import os
 import TableProImport
 
 struct SequelAceImporter: ForeignAppImporter {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SequelAceImporter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SequelAceImporter")
 
     let id = "sequelace"
     let displayName = "Sequel Ace"

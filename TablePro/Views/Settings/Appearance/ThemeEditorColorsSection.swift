@@ -29,7 +29,7 @@ struct HexColorPicker: View {
 // MARK: - ThemeEditorColorsSection
 
 internal struct ThemeEditorColorsSection: View {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ThemeEditorColorsSection")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ThemeEditorColorsSection")
     private var engine: ThemeEngine { ThemeEngine.shared }
     private var theme: ThemeDefinition { engine.activeTheme }
 

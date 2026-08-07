@@ -25,7 +25,7 @@ final class XAICallbackServer: @unchecked Sendable {
         }
     }
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "XAICallbackServer")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "XAICallbackServer")
     private static let timeout: TimeInterval = 300
     private static let startTimeout: TimeInterval = 10
 

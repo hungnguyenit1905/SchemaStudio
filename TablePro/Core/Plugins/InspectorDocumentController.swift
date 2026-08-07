@@ -9,7 +9,7 @@ import TableProPluginKit
 
 @MainActor
 final class InspectorDocumentController: NSDocumentController {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CSVInspector")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CSVInspector")
 
     override init() {
         super.init()

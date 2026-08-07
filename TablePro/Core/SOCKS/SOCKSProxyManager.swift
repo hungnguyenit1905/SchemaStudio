@@ -35,8 +35,8 @@ enum SOCKSProxyError: Error, LocalizedError, Equatable {
 
 actor SOCKSProxyManager: TunnelManaging {
     static let shared = SOCKSProxyManager()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SOCKSProxyManager")
-    private static let networkQueue = DispatchQueue(label: "com.TablePro.SOCKSProxyManager.network")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SOCKSProxyManager")
+    private static let networkQueue = DispatchQueue(label: "com.SchemaStudio.SOCKSProxyManager.network")
 
     private struct RelayPair {
         let inbound: NWConnection
@@ -255,7 +255,7 @@ actor SOCKSProxyManager: TunnelManaging {
         if !config.username.isEmpty, let password, !password.isEmpty {
             proxy.applyCredential(username: config.username, password: password)
         }
-        let context = NWParameters.PrivacyContext(description: "TablePro-SOCKS-\(connectionId.uuidString)")
+        let context = NWParameters.PrivacyContext(description: "SchemaStudio-SOCKS-\(connectionId.uuidString)")
         context.proxyConfigurations = [proxy]
         return context
     }

@@ -15,7 +15,7 @@ public final class TrinoStatementClient: @unchecked Sendable {
     private var _currentNextUri: String?
 
     private static let maxTransientRetries = 5
-    private static let logger = Logger(subsystem: "com.TablePro", category: "TrinoStatementClient")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "TrinoStatementClient")
 
     public init(transport: TrinoTransport, config: TrinoClientConfig, session: TrinoSessionState) {
         self.transport = transport

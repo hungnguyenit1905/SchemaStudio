@@ -7,7 +7,7 @@ import Foundation
 import os
 
 actor LSPClient {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "LSPClient")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LSPClient")
 
     private let transport: LSPTransport
 

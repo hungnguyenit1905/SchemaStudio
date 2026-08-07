@@ -22,7 +22,7 @@ internal struct ThemeDefinition: Codable, Identifiable, Equatable, Sendable {
         name: "Default Light",
         version: 1,
         appearance: .light,
-        author: "TablePro",
+        author: "SchemaStudio",
         editor: .defaultLight,
         dataGrid: .defaultLight,
         ui: .defaultLight,

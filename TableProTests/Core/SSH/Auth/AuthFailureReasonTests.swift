@@ -11,7 +11,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("SSHTunnelError.authenticationFailed reason")
 struct AuthFailureReasonTests {

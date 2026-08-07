@@ -36,7 +36,7 @@ final class SQLCompletionAdapter: CodeSuggestionDelegate {
     private var lastRefilterPrefix: String?
     private var lastRefilterItems: [SQLCompletionItem]?
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SQLCompletionAdapter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SQLCompletionAdapter")
 
     // MARK: - Initialization
 

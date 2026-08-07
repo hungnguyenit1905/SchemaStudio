@@ -3,7 +3,7 @@ title: PGlite
 description: Connect to a PGlite database over its socket server using the PostgreSQL wire protocol
 ---
 
-TablePro connects to [PGlite](https://pglite.dev), a build of PostgreSQL 17 compiled to WebAssembly. PGlite runs in-process in JavaScript, so it speaks the network wire protocol only through its socket server, `@electric-sql/pglite-socket`. Once that server is running, TablePro connects to it with the same libpq driver as [PostgreSQL](/databases/postgresql), and schema introspection, DDL, and EXPLAIN all behave like PostgreSQL.
+SchemaStudio connects to [PGlite](https://pglite.dev), a build of PostgreSQL 17 compiled to WebAssembly. PGlite runs in-process in JavaScript, so it speaks the network wire protocol only through its socket server, `@electric-sql/pglite-socket`. Once that server is running, SchemaStudio connects to it with the same libpq driver as [PostgreSQL](/databases/postgresql), and schema introspection, DDL, and EXPLAIN all behave like PostgreSQL.
 
 ## Start the Socket Server
 
@@ -17,7 +17,7 @@ npx @electric-sql/pglite-socket
 npx @electric-sql/pglite-socket --db=./my-pgdata
 ```
 
-Leave it running while you use the connection. TablePro opens a single connection to PGlite and serializes all of its own background work (schema browsing, autocomplete, row counts) over that one connection.
+Leave it running while you use the connection. SchemaStudio opens a single connection to PGlite and serializes all of its own background work (schema browsing, autocomplete, row counts) over that one connection.
 
 ## Connection Settings
 
@@ -48,12 +48,12 @@ See [Connection URL Reference](/databases/connection-urls) for all parameters.
 
 ## Limitations
 
-- **Single connection.** PGlite serves one connection at a time. TablePro is built for this and keeps to one connection, but other tools that open connections in parallel will fail against the same server. This also means PGlite cannot back a [cross-database tab](/databases/postgresql#cross-database-tabs) the way PostgreSQL, Redshift, and CockroachDB do: a PGlite tab bound to a database the connection is not on reports an error naming that database instead of running the query against the wrong one.
+- **Single connection.** PGlite serves one connection at a time. SchemaStudio is built for this and keeps to one connection, but other tools that open connections in parallel will fail against the same server. This also means PGlite cannot back a [cross-database tab](/databases/postgresql#cross-database-tabs) the way PostgreSQL, Redshift, and CockroachDB do: a PGlite tab bound to a database the connection is not on reports an error naming that database instead of running the query against the wrong one.
 - **No TLS.** The socket server rejects SSL, so SSL Mode is fixed to Disabled and the SSH, Cloudflare Tunnel, and SOCKS panes do not apply.
 - **Cancel does nothing.** PGlite has no backend process to signal, so cancelling a running query has no effect at the protocol level. Let long queries finish.
 
 ## Troubleshooting
 
-**Can't reach a PGlite socket server**: the server is not running or is on a different address. Start it with `npx @electric-sql/pglite-socket` and confirm the host and port match. TablePro needs loopback `127.0.0.1`, not `localhost`, which can resolve to IPv6 first.
+**Can't reach a PGlite socket server**: the server is not running or is on a different address. Start it with `npx @electric-sql/pglite-socket` and confirm the host and port match. SchemaStudio needs loopback `127.0.0.1`, not `localhost`, which can resolve to IPv6 first.
 
 **Too many connections**: something else is already connected to the socket server, which serves one client at a time. Close the other client and reconnect.

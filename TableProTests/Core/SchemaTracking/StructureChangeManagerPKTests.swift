@@ -9,7 +9,7 @@
 import Foundation
 import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Structure Change Manager Primary Key Detection")
 struct StructureChangeManagerPKTests {

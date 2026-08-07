@@ -55,12 +55,12 @@ private struct LossyTab: Decodable {
 internal actor TabDiskActor {
     internal static let shared = TabDiskActor()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "TabDiskActor")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "TabDiskActor")
 
     // MARK: - Legacy UserDefaults Keys (for migration)
 
-    private static let legacyTabStateKeyPrefix = "com.TablePro.tabs."
-    private static let migrationCompleteKey = "com.TablePro.tabStateMigrationComplete"
+    private static let legacyTabStateKeyPrefix = "com.SchemaStudio.tabs."
+    private static let migrationCompleteKey = "com.SchemaStudio.tabStateMigrationComplete"
 
     // MARK: - File Storage
 
@@ -148,7 +148,7 @@ internal actor TabDiskActor {
             for: .applicationSupportDirectory,
             in: .userDomainMask
         ).first ?? FileManager.default.temporaryDirectory
-        let baseDirectory = appSupport.appendingPathComponent("TablePro", isDirectory: true)
+        let baseDirectory = appSupport.appendingPathComponent("SchemaStudio", isDirectory: true)
         return baseDirectory.appendingPathComponent("TabState", isDirectory: true)
     }
 

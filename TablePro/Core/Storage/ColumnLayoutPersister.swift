@@ -15,10 +15,10 @@ final class FileColumnLayoutPersister: ColumnLayoutPersisting {
         return persister
     }()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ColumnLayoutPersister")
-    private static let legacyUserDefaultsPrefix = "com.TablePro.columns.layout."
-    private static let legacyVisibilityPrefix = "com.TablePro.columns.hiddenColumns."
-    private static let scopeMigrationKey = "com.TablePro.columnLayoutSchemaScopeMigrationComplete"
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ColumnLayoutPersister")
+    private static let legacyUserDefaultsPrefix = "com.SchemaStudio.columns.layout."
+    private static let legacyVisibilityPrefix = "com.SchemaStudio.columns.hiddenColumns."
+    private static let scopeMigrationKey = "com.SchemaStudio.columnLayoutSchemaScopeMigrationComplete"
 
     private struct PersistedColumnLayout: Codable {
         var columnWidths: [String: CGFloat]
@@ -219,7 +219,7 @@ final class FileColumnLayoutPersister: ColumnLayoutPersisting {
             in: .userDomainMask
         ).first ?? FileManager.default.temporaryDirectory
         return appSupport
-            .appendingPathComponent("TablePro", isDirectory: true)
+            .appendingPathComponent("SchemaStudio", isDirectory: true)
             .appendingPathComponent("ColumnLayout", isDirectory: true)
     }
 

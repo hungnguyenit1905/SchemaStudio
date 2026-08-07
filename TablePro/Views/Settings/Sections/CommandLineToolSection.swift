@@ -37,7 +37,7 @@ struct CommandLineToolSection: View {
 
             if let manualCommand {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("TablePro could not do this for you. Run this in Terminal instead:")
+                    Text("SchemaStudio could not do this for you. Run this in Terminal instead:")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 

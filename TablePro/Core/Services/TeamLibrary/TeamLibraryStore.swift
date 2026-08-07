@@ -12,7 +12,7 @@ import os
 actor TeamLibraryStore {
     static let shared = TeamLibraryStore()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "TeamLibraryStore")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "TeamLibraryStore")
 
     private let fileURL: URL
     private var cached: TeamLibraryPullResponse?
@@ -23,7 +23,7 @@ actor TeamLibraryStore {
         } else {
             let directory = FileManager.default
                 .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("TablePro", isDirectory: true)
+                .appendingPathComponent("SchemaStudio", isDirectory: true)
             try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             self.fileURL = directory.appendingPathComponent("team_library.json")
         }

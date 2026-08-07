@@ -5,11 +5,11 @@
 
 import Foundation
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("TransferDialogStorage")
 struct TransferDialogStorageTests {
-    private let suiteName = "com.TablePro.tests.exportDialog.\(UUID().uuidString)"
+    private let suiteName = "com.SchemaStudio.tests.exportDialog.\(UUID().uuidString)"
 
     private func makeDefaults() throws -> UserDefaults {
         try #require(UserDefaults(suiteName: suiteName))
@@ -72,7 +72,7 @@ struct TransferDialogStorageTests {
         let defaults = try makeDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
-        defaults.set("Shift-JIS", forKey: "com.TablePro.import.dialog.lastEncoding")
+        defaults.set("Shift-JIS", forKey: "com.SchemaStudio.import.dialog.lastEncoding")
         let storage = TransferDialogStorage(userDefaults: defaults)
 
         #expect(storage.loadLastImportEncoding() == .utf8)

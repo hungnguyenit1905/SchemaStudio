@@ -12,11 +12,11 @@ import UserNotifications
 final class PluginNotificationService {
     static let shared = PluginNotificationService()
 
-    static let identifierPrefix = "com.TablePro.plugin."
+    static let identifierPrefix = "com.SchemaStudio.plugin."
     static let openPluginSettingsActionId = "openPluginSettings"
-    private static let updateFailedCategoryId = "com.TablePro.pluginUpdateFailed"
+    private static let updateFailedCategoryId = "com.SchemaStudio.pluginUpdateFailed"
     private static let failedIdentifierPrefix = identifierPrefix + "failed."
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PluginNotifications")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PluginNotifications")
 
     private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
 

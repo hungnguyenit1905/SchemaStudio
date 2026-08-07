@@ -8,7 +8,7 @@ import os
 
 @MainActor
 final class AIChatInlineSource: InlineSuggestionSource {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "AIChatInlineSource")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "AIChatInlineSource")
 
     private weak var schemaProvider: SQLSchemaProvider?
     var connectionPolicy: AIConnectionPolicy?

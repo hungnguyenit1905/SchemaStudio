@@ -34,7 +34,7 @@ enum WelcomeActiveSheet: Identifiable {
 
 @MainActor @Observable
 final class WelcomeViewModel {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "WelcomeViewModel")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "WelcomeViewModel")
 
     @ObservationIgnored let services: AppServices
     private var storage: ConnectionStorage { services.connectionStorage }
@@ -80,16 +80,16 @@ final class WelcomeViewModel {
     var pendingImportResultCount: Int?
 
     var expandedGroupIds: Set<UUID> = {
-        let strings = UserDefaults.standard.stringArray(forKey: "com.TablePro.expandedGroupIds") ?? []
+        let strings = UserDefaults.standard.stringArray(forKey: "com.SchemaStudio.expandedGroupIds") ?? []
         if strings.isEmpty {
-            UserDefaults.standard.removeObject(forKey: "com.TablePro.collapsedGroupIds")
+            UserDefaults.standard.removeObject(forKey: "com.SchemaStudio.collapsedGroupIds")
         }
         return Set(strings.compactMap { UUID(uuidString: $0) })
     }() {
         didSet {
             UserDefaults.standard.set(
                 Array(expandedGroupIds.map(\.uuidString)),
-                forKey: "com.TablePro.expandedGroupIds"
+                forKey: "com.SchemaStudio.expandedGroupIds"
             )
         }
     }

@@ -25,11 +25,11 @@ internal struct PluginManifest {
         guard let id = bundle.bundleIdentifier else { return nil }
         let info = bundle.infoDictionary ?? [:]
         bundleId = id
-        providedDatabaseTypeIds = info["TableProProvidesDatabaseTypeIds"] as? [String] ?? []
-        providedExportFormatIds = info["TableProProvidesExportFormatIds"] as? [String] ?? []
-        providedImportFormatIds = info["TableProProvidesImportFormatIds"] as? [String] ?? []
-        providedInspectorIds = info["TableProProvidesInspectorIds"] as? [String] ?? []
-        providedInspectorFileExtensions = info["TableProInspectorFileExtensions"] as? [String] ?? []
-        providedInspectorUTIs = info["TableProInspectorUTIs"] as? [String] ?? []
+        providedDatabaseTypeIds = info["SchemaStudioProvidesDatabaseTypeIds"] as? [String] ?? []
+        providedExportFormatIds = info["SchemaStudioProvidesExportFormatIds"] as? [String] ?? []
+        providedImportFormatIds = info["SchemaStudioProvidesImportFormatIds"] as? [String] ?? []
+        providedInspectorIds = info["SchemaStudioProvidesInspectorIds"] as? [String] ?? []
+        providedInspectorFileExtensions = info["SchemaStudioInspectorFileExtensions"] as? [String] ?? []
+        providedInspectorUTIs = info["SchemaStudioInspectorUTIs"] as? [String] ?? []
     }
 }

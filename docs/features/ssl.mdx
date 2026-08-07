@@ -3,7 +3,7 @@ title: SSL/TLS
 description: Configure encrypted database connections, per-driver defaults, and certificate verification
 ---
 
-TablePro supports five SSL modes that map to each driver's native TLS capabilities. New connections start with the mode that matches the driver's documented default.
+SchemaStudio supports five SSL modes that map to each driver's native TLS capabilities. New connections start with the mode that matches the driver's documented default.
 
 ## Modes
 
@@ -83,12 +83,12 @@ The client key is password-protected. Enter the **Key Passphrase** in the SSL/TL
 
 ## Connection failures
 
-When a connection fails because of an SSL handshake problem, TablePro shows a structured message that names the cause and recommends a specific SSL Mode to switch to. The original driver error is shown below the suggestion.
+When a connection fails because of an SSL handshake problem, SchemaStudio shows a structured message that names the cause and recommends a specific SSL Mode to switch to. The original driver error is shown below the suggestion.
 
 For example, connecting to AWS RDS PostgreSQL with SSL Mode = Disabled produces:
 
 ```text
-The server requires an encrypted connection but TablePro is configured to connect in plain text.
+The server requires an encrypted connection but SchemaStudio is configured to connect in plain text.
 
 Open the connection editor, switch to the SSL tab, and set Mode to Required (or stricter).
 

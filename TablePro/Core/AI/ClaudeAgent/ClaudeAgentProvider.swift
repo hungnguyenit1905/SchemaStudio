@@ -7,7 +7,7 @@ import Foundation
 import os
 
 final class ClaudeAgentProvider: ChatTransport {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ClaudeAgentProvider")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ClaudeAgentProvider")
 
     private let model: String
     private let cli: ClaudeAgentCLI

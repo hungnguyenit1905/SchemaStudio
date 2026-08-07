@@ -3,7 +3,7 @@ title: Amazon DynamoDB
 description: Connect to Amazon DynamoDB with PartiQL queries, GSI/LSI browsing, and DynamoDB Local support
 ---
 
-TablePro connects to Amazon DynamoDB over the AWS HTTP API. Sign in with IAM credentials, an AWS profile, or SSO. Browse tables, run PartiQL queries, inspect GSI and LSI indexes, and edit items in the data grid.
+SchemaStudio connects to Amazon DynamoDB over the AWS HTTP API. Sign in with IAM credentials, an AWS profile, or SSO. Browse tables, run PartiQL queries, inspect GSI and LSI indexes, and edit items in the data grid.
 
 ## Quick Setup
 
@@ -43,7 +43,7 @@ Set **Auth Method** to Access Key + Secret Key, put any non-empty string in **Ac
 
 **Table Browsing**: The sidebar lists every table. Open one to see its data, its structure (attribute names and types), its indexes (primary key, GSI, LSI), and its DDL (key schema, billing mode, throughput, item count, and size).
 
-**Schemaless Discovery**: DynamoDB tables have no fixed schema, so TablePro reads the attribute names from the items it fetched and picks each column's type by majority vote. The Structure tab samples up to 100 items. Partition and sort keys come first, then the other attributes in alphabetical order.
+**Schemaless Discovery**: DynamoDB tables have no fixed schema, so SchemaStudio reads the attribute names from the items it fetched and picks each column's type by majority vote. The Structure tab samples up to 100 items. Partition and sort keys come first, then the other attributes in alphabetical order.
 
 **PartiQL Queries** ([reference](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ql-reference.html)):
 
@@ -71,7 +71,7 @@ Table names in PartiQL must be quoted with double quotes: `"TableName"`. String 
 
 **Data Types**: S (string), N (number), B (binary), BOOL, NULL, L (JSON array), M (JSON object), SS (string set), NS (number set), BS (binary set).
 
-**Data Editing**: Edit cells, insert rows, and delete rows. TablePro generates PartiQL: `INSERT INTO "Table" VALUE { ... }`, `UPDATE "Table" SET attr = 'val' WHERE pk = 'pkVal'`, and `DELETE FROM "Table" WHERE pk = 'pkVal'`. Key attributes cannot be changed, so delete the item and insert it again.
+**Data Editing**: Edit cells, insert rows, and delete rows. SchemaStudio generates PartiQL: `INSERT INTO "Table" VALUE { ... }`, `UPDATE "Table" SET attr = 'val' WHERE pk = 'pkVal'`, and `DELETE FROM "Table" WHERE pk = 'pkVal'`. Key attributes cannot be changed, so delete the item and insert it again.
 
 **Query Instead of Scan**: A filter that pins the partition key to a single value with `=` runs through the Query API instead of Scan. It returns faster and burns less read capacity.
 
@@ -124,7 +124,7 @@ For read-only access, remove the write actions (`PutItem`, `UpdateItem`, `Delete
 ## Limitations
 
 - Every request is an independent HTTPS call signed with SigV4. There are no persistent connections and no SSH tunneling.
-- Table structure is fixed when the table is created. TablePro cannot edit it.
+- Table structure is fixed when the table is created. SchemaStudio cannot edit it.
 - Item counts come from DynamoDB and refresh about every 6 hours, so they lag.
 - Pagination is cursor-based, so jumping to a far page re-scans from the start.
 - No transactions.

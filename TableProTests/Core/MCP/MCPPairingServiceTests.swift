@@ -3,7 +3,7 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("MCP Pairing Exchange Store")
 struct MCPPairingServiceTests {

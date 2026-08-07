@@ -7,7 +7,7 @@ import Foundation
 import os
 
 final class GeminiProvider: ChatTransport {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "GeminiProvider")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "GeminiProvider")
 
     private let endpoint: String
     private let apiKey: String

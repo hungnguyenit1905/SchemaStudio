@@ -9,7 +9,7 @@
 
 import Foundation
 import TableProPluginKit
-@testable import TablePro
+@testable import SchemaStudio
 
 final class FakeMSSQLPlugin: NSObject, TableProPlugin, DriverPlugin {
     static let pluginName = "Fake MSSQL Driver"

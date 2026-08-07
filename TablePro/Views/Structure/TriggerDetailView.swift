@@ -85,7 +85,7 @@ struct TriggerDetailView: View {
                 Divider()
             }
             AutosavingSplitView(
-                autosaveName: "com.TablePro.triggerSplit",
+                autosaveName: "com.SchemaStudio.triggerSplit",
                 isVertical: false,
                 primaryMinimum: 120,
                 secondaryMinimum: 180

@@ -302,6 +302,7 @@ enum LicenseError: LocalizedError {
     case networkError(Error)
     case serverError(Int, String)
     case decodingError(Error)
+    case serviceUnavailable
 
     var errorDescription: String? {
         switch self {
@@ -327,6 +328,8 @@ enum LicenseError: LocalizedError {
             return String(format: String(localized: "Server error (%d): %@"), code, message)
         case .decodingError(let error):
             return String(format: String(localized: "Failed to parse server response: %@"), error.localizedDescription)
+        case .serviceUnavailable:
+            return String(localized: "Licensing is not available in this build.")
         }
     }
 
@@ -354,6 +357,8 @@ enum LicenseError: LocalizedError {
             return String(localized: "This machine is not activated for this license.")
         case .decodingError:
             return String(localized: "Could not read the server response. Try again in a moment.")
+        case .serviceUnavailable:
+            return String(localized: "This build has no licensing service. Pro features are unavailable.")
         }
     }
 }

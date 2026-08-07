@@ -7,7 +7,7 @@
 //  word, which leaves a "works in Terminal, fails here" report with nothing to go on.
 //
 
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("SSHUnsupportedDirective")
@@ -28,7 +28,7 @@ struct SSHUnsupportedDirectiveTests {
         #expect(SSHUnsupportedDirective.changesRouting(key: "ProxyUseFdpass"))
     }
 
-    @Test("Directives TablePro honours are not reported")
+    @Test("Directives SchemaStudio honours are not reported")
     func supportedDirectivesAreNotReported() {
         #expect(!SSHUnsupportedDirective.changesRouting(key: "ProxyJump"))
         #expect(!SSHUnsupportedDirective.changesRouting(key: "HostName"))

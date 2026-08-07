@@ -1,4 +1,4 @@
-# Contributing to TablePro
+# Contributing to SchemaStudio
 
 ## Setup
 
@@ -7,7 +7,7 @@ Requirements: macOS 14.0+, Xcode 15+. Optional: SwiftLint, SwiftFormat, GitHub C
 Fork the repo on GitHub, then:
 
 ```bash
-git clone https://github.com/<your-fork>/TablePro.git && cd TablePro
+git clone https://github.com/<your-fork>/SchemaStudio.git && cd SchemaStudio
 scripts/download-libs.sh
 touch Secrets.xcconfig
 brew install swiftlint swiftformat
@@ -15,16 +15,16 @@ brew install swiftlint swiftformat
 
 ### Building with a personal Apple team
 
-To Debug-build under your own team, open `TablePro.xcodeproj`, select the `TablePro` target, then **Signing & Capabilities → Debug** sub-tab:
+To Debug-build under your own team, open `SchemaStudio.xcodeproj`, select the `SchemaStudio` target, then **Signing & Capabilities → Debug** sub-tab:
 
 1. **Team**: pick your personal team. If another target fails to sign later, repeat there.
-2. **Bundle Identifier**: change `com.TablePro` to something unique (e.g. `com.<yourhandle>.TablePro`).
-3. **Code Signing Entitlements** (Build Settings tab): switch Debug to `TablePro/TablePro.Debug.entitlements`. It ships in the repo and drops iCloud, which free teams don't support. Sync auto-disables at runtime.
+2. **Bundle Identifier**: change `com.SchemaStudio` to something unique (e.g. `com.<yourhandle>.SchemaStudio`).
+3. **Code Signing Entitlements** (Build Settings tab): switch Debug to `TablePro/SchemaStudio.Debug.entitlements`. It ships in the repo and drops iCloud, which free teams don't support. Sync auto-disables at runtime.
 
 Don't commit the resulting `pbxproj` changes. They break official Release signing. Skip them locally:
 
 ```bash
-git update-index --skip-worktree TablePro.xcodeproj/project.pbxproj
+git update-index --skip-worktree SchemaStudio.xcodeproj/project.pbxproj
 ```
 
 To verify: save a connection password, relaunch, reopen. The password should still be there.
@@ -32,13 +32,13 @@ To verify: save a connection password, relaunch, reopen. The password should sti
 Build:
 
 ```bash
-xcodebuild -project TablePro.xcodeproj -scheme TablePro -configuration Debug build -skipPackagePluginValidation
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio -configuration Debug build -skipPackagePluginValidation
 ```
 
 Tests:
 
 ```bash
-xcodebuild -project TablePro.xcodeproj -scheme TablePro test -skipPackagePluginValidation
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio test -skipPackagePluginValidation
 ```
 
 ## Code Style
@@ -103,14 +103,14 @@ scripts/               Build and release scripts
 
 Drivers are `.tableplugin` bundles loaded at runtime. Create a new bundle under `Plugins/`, implement `DriverPlugin` + `PluginDatabaseDriver` from `TableProPluginKit`, and add the target to the Xcode project.
 
-Full guide: [docs/development/plugin-registry](https://docs.tablepro.app/development/plugin-registry)
+Full guide: [docs/development/plugin-registry](https://github.com/hungnguyenit1905/SchemaStudio)
 
 ## Reporting Bugs
 
 Open a [GitHub issue](https://github.com/TableProApp/TablePro/issues) with:
 
 - macOS version
-- TablePro version
+- SchemaStudio version
 - Reproduction steps
 - Database type and version (for database-specific bugs)
 

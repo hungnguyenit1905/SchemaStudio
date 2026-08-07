@@ -1,5 +1,5 @@
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @MainActor
@@ -44,7 +44,7 @@ struct CommandLineToolInstallerTests {
         #expect(installer.status == .notInstalled)
     }
 
-    @Test("Install writes an executable shim that opens TablePro by bundle id")
+    @Test("Install writes an executable shim that opens SchemaStudio by bundle id")
     func installWritesExecutableShim() throws {
         let directory = try makeDirectory()
         let installer = CommandLineToolInstaller(directory: directory)
@@ -53,7 +53,7 @@ struct CommandLineToolInstallerTests {
 
         #expect(installer.status == .installed)
         let contents = try String(contentsOfFile: installer.toolPath, encoding: .utf8)
-        #expect(contents.contains("exec open -b com.TablePro"))
+        #expect(contents.contains("exec open -b com.SchemaStudio"))
 
         let attributes = try FileManager.default.attributesOfItem(atPath: installer.toolPath)
         let permissions = try #require(attributes[.posixPermissions] as? NSNumber)
@@ -150,7 +150,7 @@ struct CommandLineToolInstallerTests {
         #expect(installer.status == .installed)
         let contents = try String(contentsOfFile: installer.toolPath, encoding: .utf8)
         #expect(contents.hasPrefix("#!/bin/sh\n"))
-        #expect(contents.contains("exec open -b com.TablePro \"$@\""))
+        #expect(contents.contains("exec open -b com.SchemaStudio \"$@\""))
 
         try shell.run(installer.uninstallCommand)
         #expect(installer.status == .notInstalled)
@@ -183,7 +183,7 @@ struct CommandLineToolInstallerTests {
         let installer = CommandLineToolInstaller(directory: try makeDirectory())
 
         #expect(installer.manualInstallCommand.hasPrefix("sudo sh -c "))
-        #expect(installer.manualInstallCommand.contains("open -b com.TablePro"))
+        #expect(installer.manualInstallCommand.contains("open -b com.SchemaStudio"))
         #expect(installer.manualUninstallCommand.hasPrefix("sudo sh -c "))
         #expect(installer.manualUninstallCommand.contains(installer.toolPath))
     }

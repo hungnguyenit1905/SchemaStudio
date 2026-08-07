@@ -103,7 +103,7 @@ struct SyncRecordCacheTests {
     private let zoneID = CKRecordZone.ID(zoneName: "TestZone", ownerName: CKCurrentUserDefaultName)
 
     private func makeCache() throws -> SyncRecordCache {
-        let defaults = try #require(UserDefaults(suiteName: "com.TablePro.tests.\(UUID().uuidString)"))
+        let defaults = try #require(UserDefaults(suiteName: "com.SchemaStudio.tests.\(UUID().uuidString)"))
         return SyncRecordCache(defaults: defaults, storageKey: "recordCache")
     }
 

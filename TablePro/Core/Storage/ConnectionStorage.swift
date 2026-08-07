@@ -14,10 +14,10 @@ import TableProSyncTransport
 @MainActor
 final class ConnectionStorage {
     static let shared = ConnectionStorage()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ConnectionStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ConnectionStorage")
 
-    private let connectionsKey = "com.TablePro.connections"
-    private let migratedToFileKey = "com.TablePro.connectionsMigratedToFile"
+    private let connectionsKey = "com.SchemaStudio.connections"
+    private let migratedToFileKey = "com.SchemaStudio.connectionsMigratedToFile"
     private let defaults: UserDefaults
     private let syncTracker: SyncChangeTracker
     private let appSettingsProvider: () -> AppSettingsStorage
@@ -52,7 +52,7 @@ final class ConnectionStorage {
             for: .applicationSupportDirectory,
             in: .userDomainMask
         ).first ?? FileManager.default.temporaryDirectory
-        let dir = appSupport.appendingPathComponent("TablePro", isDirectory: true)
+        let dir = appSupport.appendingPathComponent("SchemaStudio", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("connections.json")
     }
@@ -404,85 +404,85 @@ final class ConnectionStorage {
     // MARK: - Keychain (Password Storage)
 
     func savePassword(_ password: String, for connectionId: UUID) {
-        let key = "com.TablePro.password.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.password.\(connectionId.uuidString)"
         keychain.writeString(password, forKey: key)
     }
 
     func loadPassword(for connectionId: UUID) -> String? {
-        let key = "com.TablePro.password.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.password.\(connectionId.uuidString)"
         return resolveString(.init(label: "Database password", connectionId: connectionId), forKey: key)
     }
 
     func deletePassword(for connectionId: UUID) {
-        let key = "com.TablePro.password.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.password.\(connectionId.uuidString)"
         keychain.delete(forKey: key)
     }
 
     // MARK: - SSH Password Storage
 
     func saveSSHPassword(_ password: String, for connectionId: UUID) {
-        let key = "com.TablePro.sshpassword.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.sshpassword.\(connectionId.uuidString)"
         keychain.writeString(password, forKey: key)
     }
 
     func loadSSHPassword(for connectionId: UUID) -> String? {
-        let key = "com.TablePro.sshpassword.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.sshpassword.\(connectionId.uuidString)"
         return resolveString(.init(label: "SSH password", connectionId: connectionId), forKey: key)
     }
 
     func deleteSSHPassword(for connectionId: UUID) {
-        let key = "com.TablePro.sshpassword.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.sshpassword.\(connectionId.uuidString)"
         keychain.delete(forKey: key)
     }
 
     // MARK: - Key Passphrase Storage
 
     func saveKeyPassphrase(_ passphrase: String, for connectionId: UUID) {
-        let key = "com.TablePro.keypassphrase.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.keypassphrase.\(connectionId.uuidString)"
         keychain.writeString(passphrase, forKey: key)
     }
 
     func loadKeyPassphrase(for connectionId: UUID) -> String? {
-        let key = "com.TablePro.keypassphrase.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.keypassphrase.\(connectionId.uuidString)"
         return resolveString(.init(label: "Key passphrase", connectionId: connectionId), forKey: key)
     }
 
     func deleteKeyPassphrase(for connectionId: UUID) {
-        let key = "com.TablePro.keypassphrase.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.keypassphrase.\(connectionId.uuidString)"
         keychain.delete(forKey: key)
     }
 
     // MARK: - SSL Client Key Passphrase Storage
 
     func saveSSLClientKeyPassphrase(_ passphrase: String, for connectionId: UUID) {
-        let key = "com.TablePro.sslkeypassphrase.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.sslkeypassphrase.\(connectionId.uuidString)"
         keychain.writeString(passphrase, forKey: key)
     }
 
     func loadSSLClientKeyPassphrase(for connectionId: UUID) -> String? {
-        let key = "com.TablePro.sslkeypassphrase.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.sslkeypassphrase.\(connectionId.uuidString)"
         return resolveString(.init(label: "SSL client key passphrase", connectionId: connectionId), forKey: key)
     }
 
     func deleteSSLClientKeyPassphrase(for connectionId: UUID) {
-        let key = "com.TablePro.sslkeypassphrase.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.sslkeypassphrase.\(connectionId.uuidString)"
         keychain.delete(forKey: key)
     }
 
     // MARK: - Plugin Secure Field Storage
 
     func savePluginSecureField(_ value: String, fieldId: String, for connectionId: UUID) {
-        let key = "com.TablePro.plugin.\(fieldId).\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.plugin.\(fieldId).\(connectionId.uuidString)"
         keychain.writeString(value, forKey: key)
     }
 
     func loadPluginSecureField(fieldId: String, for connectionId: UUID) -> String? {
-        let key = "com.TablePro.plugin.\(fieldId).\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.plugin.\(fieldId).\(connectionId.uuidString)"
         return resolveString(.init(label: "Plugin field \(fieldId)", connectionId: connectionId), forKey: key)
     }
 
     func deletePluginSecureField(fieldId: String, for connectionId: UUID) {
-        let key = "com.TablePro.plugin.\(fieldId).\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.plugin.\(fieldId).\(connectionId.uuidString)"
         keychain.delete(forKey: key)
     }
 
@@ -495,83 +495,83 @@ final class ConnectionStorage {
     // MARK: - TOTP Secret Storage
 
     func saveTOTPSecret(_ secret: String, for connectionId: UUID) {
-        let key = "com.TablePro.totpsecret.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.totpsecret.\(connectionId.uuidString)"
         keychain.writeString(secret, forKey: key)
     }
 
     func loadTOTPSecret(for connectionId: UUID) -> String? {
-        let key = "com.TablePro.totpsecret.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.totpsecret.\(connectionId.uuidString)"
         return resolveString(.init(label: "TOTP secret", connectionId: connectionId), forKey: key)
     }
 
     func deleteTOTPSecret(for connectionId: UUID) {
-        let key = "com.TablePro.totpsecret.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.totpsecret.\(connectionId.uuidString)"
         keychain.delete(forKey: key)
     }
 
     // MARK: - Cloudflare Service Token Storage
 
     func saveCloudflareTokenId(_ tokenId: String, for connectionId: UUID) {
-        let key = "com.TablePro.cloudflaretokenid.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.cloudflaretokenid.\(connectionId.uuidString)"
         keychain.writeString(tokenId, forKey: key)
     }
 
     func loadCloudflareTokenId(for connectionId: UUID) -> String? {
-        let key = "com.TablePro.cloudflaretokenid.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.cloudflaretokenid.\(connectionId.uuidString)"
         return resolveString(.init(label: "Cloudflare token ID", connectionId: connectionId), forKey: key)
     }
 
     func deleteCloudflareTokenId(for connectionId: UUID) {
-        let key = "com.TablePro.cloudflaretokenid.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.cloudflaretokenid.\(connectionId.uuidString)"
         keychain.delete(forKey: key)
     }
 
     func saveCloudflareTokenSecret(_ tokenSecret: String, for connectionId: UUID) {
-        let key = "com.TablePro.cloudflaretokensecret.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.cloudflaretokensecret.\(connectionId.uuidString)"
         keychain.writeString(tokenSecret, forKey: key)
     }
 
     func loadCloudflareTokenSecret(for connectionId: UUID) -> String? {
-        let key = "com.TablePro.cloudflaretokensecret.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.cloudflaretokensecret.\(connectionId.uuidString)"
         return resolveString(.init(label: "Cloudflare token secret", connectionId: connectionId), forKey: key)
     }
 
     func deleteCloudflareTokenSecret(for connectionId: UUID) {
-        let key = "com.TablePro.cloudflaretokensecret.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.cloudflaretokensecret.\(connectionId.uuidString)"
         keychain.delete(forKey: key)
     }
 
     // MARK: - Cloud SQL Auth Proxy Credential Storage
 
     func saveCloudSQLProxyServiceAccountKey(_ key: String, for connectionId: UUID) {
-        let storageKey = "com.TablePro.cloudsqlproxyserviceaccountkey.\(connectionId.uuidString)"
+        let storageKey = "com.SchemaStudio.cloudsqlproxyserviceaccountkey.\(connectionId.uuidString)"
         keychain.writeString(key, forKey: storageKey)
     }
 
     func loadCloudSQLProxyServiceAccountKey(for connectionId: UUID) -> String? {
-        let storageKey = "com.TablePro.cloudsqlproxyserviceaccountkey.\(connectionId.uuidString)"
+        let storageKey = "com.SchemaStudio.cloudsqlproxyserviceaccountkey.\(connectionId.uuidString)"
         return resolveString(.init(label: "Cloud SQL service account key", connectionId: connectionId), forKey: storageKey)
     }
 
     func deleteCloudSQLProxyServiceAccountKey(for connectionId: UUID) {
-        let storageKey = "com.TablePro.cloudsqlproxyserviceaccountkey.\(connectionId.uuidString)"
+        let storageKey = "com.SchemaStudio.cloudsqlproxyserviceaccountkey.\(connectionId.uuidString)"
         keychain.delete(forKey: storageKey)
     }
 
     // MARK: - SOCKS Proxy Password Storage
 
     func saveSOCKSProxyPassword(_ password: String, for connectionId: UUID) {
-        let key = "com.TablePro.socksproxypassword.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.socksproxypassword.\(connectionId.uuidString)"
         keychain.writeString(password, forKey: key)
     }
 
     func loadSOCKSProxyPassword(for connectionId: UUID) -> String? {
-        let key = "com.TablePro.socksproxypassword.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.socksproxypassword.\(connectionId.uuidString)"
         return resolveString(.init(label: "SOCKS proxy password", connectionId: connectionId), forKey: key)
     }
 
     func deleteSOCKSProxyPassword(for connectionId: UUID) {
-        let key = "com.TablePro.socksproxypassword.\(connectionId.uuidString)"
+        let key = "com.SchemaStudio.socksproxypassword.\(connectionId.uuidString)"
         keychain.delete(forKey: key)
     }
 
@@ -594,7 +594,7 @@ final class ConnectionStorage {
     }
 
     func migratePluginSecureFieldsIfNeeded() {
-        let migrationKey = "com.TablePro.pluginSecureFieldsMigrated"
+        let migrationKey = "com.SchemaStudio.pluginSecureFieldsMigrated"
         guard !defaults.bool(forKey: migrationKey) else { return }
         defer { defaults.set(true, forKey: migrationKey) }
 

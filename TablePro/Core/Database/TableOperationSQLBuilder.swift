@@ -8,7 +8,7 @@ import os
 
 @MainActor
 struct TableOperationSQLBuilder {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "TableOperationSQLBuilder")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "TableOperationSQLBuilder")
 
     let connectionId: UUID
     let databaseType: DatabaseType

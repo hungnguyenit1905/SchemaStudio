@@ -3,7 +3,7 @@ title: CockroachDB
 description: Connect to CockroachDB clusters over the PostgreSQL wire protocol, including CockroachDB Cloud with cluster routing
 ---
 
-TablePro connects to CockroachDB, a distributed SQL database that is wire-compatible with PostgreSQL, using the same libpq driver as [PostgreSQL](/databases/postgresql). Schema introspection reads `information_schema` and `pg_catalog`, and table and view DDL come from CockroachDB's native `SHOW CREATE`. The PostgreSQL page applies unless noted here.
+SchemaStudio connects to CockroachDB, a distributed SQL database that is wire-compatible with PostgreSQL, using the same libpq driver as [PostgreSQL](/databases/postgresql). Schema introspection reads `information_schema` and `pg_catalog`, and table and view DDL come from CockroachDB's native `SHOW CREATE`. The PostgreSQL page applies unless noted here.
 
 ## Connection Settings
 
@@ -42,13 +42,13 @@ cockroachdb://user:password@host:26257/defaultdb
 
 **DDL**: table and view definitions come from `SHOW CREATE`. Indexes come from `SHOW INDEXES`. Foreign keys are read from `information_schema`.
 
-**EXPLAIN**: `EXPLAIN` and `EXPLAIN ANALYZE` render as a visual plan tree. CockroachDB returns text plans, not JSON, and TablePro parses them into the tree. See [EXPLAIN Visualization](/features/explain-visualization).
+**EXPLAIN**: `EXPLAIN` and `EXPLAIN ANALYZE` render as a visual plan tree. CockroachDB returns text plans, not JSON, and SchemaStudio parses them into the tree. See [EXPLAIN Visualization](/features/explain-visualization).
 
 **Import & Export**: export to CSV, JSON, SQL, or XLSX. Import from CSV, JSON, or SQL. See [Import & Export](/features/import-export).
 
 ## Limitations
 
-- TablePro disables all structure editing for CockroachDB: no add, modify, or drop column, no index changes, no primary key changes from the structure tab. Run schema changes as SQL in the editor.
+- SchemaStudio disables all structure editing for CockroachDB: no add, modify, or drop column, no index changes, no primary key changes from the structure tab. Run schema changes as SQL in the editor.
 - No `pg_dump` / `pg_restore`. The **Backup Dump** and **Restore Dump** menu items are not available. Use CockroachDB's `BACKUP` and `RESTORE` SQL statements instead.
 - No Maintenance menu. CockroachDB garbage-collects automatically, so it offers no `VACUUM` to run.
 - Foreign key checks are not deferrable.

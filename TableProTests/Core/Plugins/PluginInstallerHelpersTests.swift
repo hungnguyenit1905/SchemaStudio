@@ -6,7 +6,7 @@
 import Darwin
 import Foundation
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("PluginInstaller helpers", .serialized)
 struct PluginInstallerHelpersTests {
@@ -135,7 +135,7 @@ struct PluginInstallerHelpersTests {
 
     @Test("stagingRoot is a sibling of userPluginsDir for same-volume atomic replace")
     func stagingRootIsSiblingOfUserPluginsDir() {
-        let userPluginsDir = URL(fileURLWithPath: "/Users/test/Library/Application Support/TablePro/Plugins")
+        let userPluginsDir = URL(fileURLWithPath: "/Users/test/Library/Application Support/SchemaStudio/Plugins")
         let stagingRoot = PluginInstaller.stagingRoot(for: userPluginsDir)
         #expect(stagingRoot.deletingLastPathComponent() == userPluginsDir.deletingLastPathComponent())
         #expect(stagingRoot.lastPathComponent == "PluginStaging")

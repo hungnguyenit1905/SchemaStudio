@@ -1,15 +1,15 @@
 ---
 title: MCP Server
-description: Built-in Model Context Protocol server that lets AI clients query your databases through TablePro
+description: Built-in Model Context Protocol server that lets AI clients query your databases through SchemaStudio
 ---
 
-TablePro includes a built-in [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server. AI clients like Claude Desktop, Claude Code, Cursor, and Zed connect to it and query your databases through TablePro's saved connections, without ever seeing your passwords.
+SchemaStudio includes a built-in [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server. AI clients like Claude Desktop, Claude Code, Cursor, and Zed connect to it and query your databases through SchemaStudio's saved connections, without ever seeing your passwords.
 
 This page covers the **Settings > Integrations** pane. Protocol details, the tool catalog, and token scopes live in the [External API](/external-api/index) section.
 
 <Frame caption="MCP server settings">
-  <img className="block dark:hidden" src="/images/mcp-settings.png" alt="TablePro MCP settings" />
-  <img className="hidden dark:block" src="/images/mcp-settings-dark.png" alt="TablePro MCP settings" />
+  <img className="block dark:hidden" src="/images/mcp-settings.png" alt="SchemaStudio MCP settings" />
+  <img className="hidden dark:block" src="/images/mcp-settings-dark.png" alt="SchemaStudio MCP settings" />
 </Frame>
 
 ## Enabling the server
@@ -18,7 +18,7 @@ Open **Settings > Integrations** and turn on **Enable MCP Server**. A status row
 
 You can also skip the toggle: the server lazy-starts on demand. The bundled `tablepro-mcp` stdio bridge fires `tablepro://integrations/start-mcp` on cold start, and pairing an extension starts the server too.
 
-The server binds the configured port (default **23508**). Starts triggered on demand fall back to a free port in the 51000-52000 range if that port is taken. Starting from Settings does not fall back; a taken port shows a port-in-use error in the status row. The actual port is written to `~/Library/Application Support/TablePro/mcp-handshake.json`, which the stdio bridge reads, so client configs never hardcode a port.
+The server binds the configured port (default **23508**). Starts triggered on demand fall back to a free port in the 51000-52000 range if that port is taken. Starting from Settings does not fall back; a taken port shows a port-in-use error in the status row. The actual port is written to `~/Library/Application Support/SchemaStudio/mcp-handshake.json`, which the stdio bridge reads, so client configs never hardcode a port.
 
 ## Server configuration
 
@@ -32,7 +32,7 @@ The server binds the configured port (default **23508**). Starts triggered on de
 
 ## Connecting a client
 
-Click **Connect a Client…** in **Settings > Integrations**. The sheet has a **Client** picker with four choices: **Claude Code**, **Claude Desktop**, **Cursor**, and **Zed**. Each shows numbered steps and a copyable config snippet or command that points at the bundled stdio bridge. You paste it into the client's own config; TablePro does not write to other apps' files.
+Click **Connect a Client…** in **Settings > Integrations**. The sheet has a **Client** picker with four choices: **Claude Code**, **Claude Desktop**, **Cursor**, and **Zed**. Each shows numbered steps and a copyable config snippet or command that points at the bundled stdio bridge. You paste it into the client's own config; SchemaStudio does not write to other apps' files.
 
 For VS Code, Cline, Continue, Windsurf, Goose, the HTTP transport, and troubleshooting, see [MCP Clients](/external-api/mcp-clients).
 
@@ -61,7 +61,7 @@ Remote access exposes the server to your network. Leave it off unless you connec
 
 ## Security model
 
-- Clients query through TablePro's saved connections; passwords never leave the Keychain and are not readable over MCP.
+- Clients query through SchemaStudio's saved connections; passwords never leave the Keychain and are not readable over MCP.
 - AI access policies are set per connection in each connection's settings, including blocking a connection from external access entirely.
 - Bearer tokens carry scopes and per-connection allowlists; see [Tokens](/external-api/tokens) for what tokens can and cannot do.
 - The reachable surface is the [tool catalog](/external-api/mcp-tools) and [resources](/external-api/mcp-resources), nothing else.

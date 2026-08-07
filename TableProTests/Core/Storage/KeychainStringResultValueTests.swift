@@ -5,12 +5,12 @@
 
 import Foundation
 import os
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("KeychainStringResult.value")
 struct KeychainStringResultValueTests {
-    private let logger = Logger(subsystem: "com.TablePro.tests", category: "keychain")
+    private let logger = Logger(subsystem: "com.SchemaStudio.tests", category: "keychain")
 
     @Test("Found returns the value")
     func foundReturnsValue() {

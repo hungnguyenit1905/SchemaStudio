@@ -10,7 +10,7 @@ import SwiftUI
 import TableProPluginKit
 
 struct ClickHousePartsView: View {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ClickHousePartsView")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ClickHousePartsView")
 
     let tableName: String
     let connectionId: UUID

@@ -5,11 +5,11 @@
 
 require 'xcodeproj'
 
-project_path = File.join(__dir__, '..', 'TablePro.xcodeproj')
+project_path = File.join(__dir__, '..', 'SchemaStudio.xcodeproj')
 proj = Xcodeproj::Project.open(project_path)
 
-app_target = proj.targets.find { |t| t.name == 'TablePro' }
-abort 'TablePro target not found' unless app_target
+app_target = proj.targets.find { |t| t.name == 'SchemaStudio' }
+abort 'SchemaStudio target not found' unless app_target
 
 # ============================================================
 # 1. Add header search path for CRedis

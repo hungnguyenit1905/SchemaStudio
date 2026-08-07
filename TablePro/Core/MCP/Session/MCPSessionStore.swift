@@ -7,7 +7,7 @@ public enum MCPSessionStoreError: Error, Sendable, Equatable {
 }
 
 public actor MCPSessionStore {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.Session")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.Session")
 
     private let policy: MCPSessionPolicy
     private let clock: any MCPClock

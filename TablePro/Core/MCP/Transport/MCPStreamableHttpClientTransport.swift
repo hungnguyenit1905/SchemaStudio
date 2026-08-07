@@ -39,7 +39,7 @@ public actor MCPStreamableHttpClientTransport: MCPMessageTransport {
     private static let recoveryKey = "upstream"
     private static let sessionTerminationTimeout: TimeInterval = 2
     private static let unavailableMessage =
-        "TablePro's MCP server is not reachable. Make sure TablePro is running and the MCP server is enabled in Settings > Integrations."
+        "SchemaStudio's MCP server is not reachable. Make sure SchemaStudio is running and the MCP server is enabled in Settings > Integrations."
 
     private let configuration: MCPStreamableHttpClientConfiguration
     private let credentialsProvider: any MCPUpstreamCredentialsProviding
@@ -604,7 +604,7 @@ public actor MCPStreamableHttpClientTransport: MCPMessageTransport {
             }
         }
 
-        let challenge = headerValue(headers, name: "WWW-Authenticate") ?? "Bearer realm=\"TablePro\""
+        let challenge = headerValue(headers, name: "WWW-Authenticate") ?? "Bearer realm=\"SchemaStudio\""
         let protocolError = Self.protocolError(forStatus: status, body: body, challenge: challenge)
         let response = protocolError.toJsonRpcErrorResponse(id: requestId)
         continuation.yield(.errorResponse(response))

@@ -4,8 +4,9 @@
 //
 
 import Foundation
+import TableProPluginKit
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("Column Type SQL Quoting")
 struct ColumnTypeSQLQuotingTests {

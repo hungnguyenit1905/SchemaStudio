@@ -214,7 +214,7 @@ struct SSHProfileEditorView: View {
                     Text("60s").tag(60)
                 }
             } else {
-                Text(String(localized: "If the SSH server asks for a verification code, TablePro prompts you for it when you connect."))
+                Text(String(localized: "If the SSH server asks for a verification code, SchemaStudio prompts you for it when you connect."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

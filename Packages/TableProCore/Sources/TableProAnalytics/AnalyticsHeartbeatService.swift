@@ -13,12 +13,11 @@ import os
 /// encoding, HMAC-SHA256 signing, HTTP transport, heartbeat scheduling, and cooldown persistence.
 @MainActor
 public final class AnalyticsHeartbeatService {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "AnalyticsHeartbeat")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "AnalyticsHeartbeat")
 
     private let provider: AnalyticsEnvironmentProvider
 
-    // swiftlint:disable:next force_unwrapping
-    private let analyticsUrl: URL
+    private let analyticsUrl: URL?
 
     private let heartbeatInterval: TimeInterval
     private let initialDelay: TimeInterval
@@ -27,7 +26,7 @@ public final class AnalyticsHeartbeatService {
     /// Prevents duplicate sends on iOS when the app cycles between foreground/background.
     private let cooldownInterval: TimeInterval
 
-    private static let lastHeartbeatKey = "com.TablePro.analytics.lastHeartbeatDate"
+    private static let lastHeartbeatKey = "com.SchemaStudio.analytics.lastHeartbeatDate"
 
     private let session: URLSession = {
         let config = URLSessionConfiguration.default
@@ -46,7 +45,7 @@ public final class AnalyticsHeartbeatService {
 
     public init(
         provider: AnalyticsEnvironmentProvider,
-        analyticsUrl: URL = URL(string: "https://api.tablepro.app/v1/analytics")!, // swiftlint:disable:this force_unwrapping
+        analyticsUrl: URL? = nil,
         heartbeatInterval: TimeInterval = 24 * 60 * 60,
         initialDelay: TimeInterval = 10,
         cooldownInterval: TimeInterval = 20 * 60 * 60
@@ -84,6 +83,11 @@ public final class AnalyticsHeartbeatService {
 
         guard isCooldownElapsed() else {
             Self.logger.trace("Analytics cooldown not elapsed, skipping heartbeat")
+            return
+        }
+
+        guard let analyticsUrl else {
+            Self.logger.trace("No analytics endpoint configured, skipping heartbeat")
             return
         }
 

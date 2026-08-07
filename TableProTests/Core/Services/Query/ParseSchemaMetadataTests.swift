@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import TablePro
+@testable import SchemaStudio
 
 @Suite("QueryExecutor.parseSchemaMetadata - column comments")
 @MainActor

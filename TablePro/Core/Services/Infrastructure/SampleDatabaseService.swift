@@ -34,7 +34,7 @@ internal final class SampleDatabaseService {
         connectionInspector: DatabaseManagerSampleConnectionInspector()
     )
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SampleDatabaseService")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SampleDatabaseService")
 
     private let bundledFileResolver: () -> URL?
     private let fileManager: FileManager
@@ -141,7 +141,7 @@ internal final class SampleDatabaseService {
             appSupport = fileManager.temporaryDirectory
         }
         return appSupport
-            .appendingPathComponent("TablePro", isDirectory: true)
+            .appendingPathComponent("SchemaStudio", isDirectory: true)
             .appendingPathComponent("Samples", isDirectory: true)
     }
 }

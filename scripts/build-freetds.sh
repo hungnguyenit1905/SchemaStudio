@@ -149,7 +149,7 @@ lipo -create \
     "$LIBS_DIR/libsybdb_macos-x86_64.a" \
     -output "$LIBS_DIR/libsybdb_macos_universal.a"
 
-# The flat committed archives the macOS plugin links directly (TablePro.xcodeproj force_loads
+# The flat committed archives the macOS plugin links directly (SchemaStudio.xcodeproj force_loads
 # Libs/libsybdb.a). The universal slice is kept until the xcframework is assembled, then cleaned up.
 # Publish with scripts/publish-libs.sh libsybdb_arm64.a libsybdb_x86_64.a libsybdb_universal.a libsybdb.a
 echo "==> Writing committed macOS archives (libsybdb.a, libsybdb_arm64.a, libsybdb_x86_64.a, libsybdb_universal.a)..."

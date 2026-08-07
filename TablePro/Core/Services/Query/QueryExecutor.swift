@@ -2,7 +2,7 @@ import Foundation
 import os
 import TableProPluginKit
 
-private let queryExecutorLog = Logger(subsystem: "com.TablePro", category: "QueryExecutor")
+private let queryExecutorLog = Logger(subsystem: "com.SchemaStudio", category: "QueryExecutor")
 
 struct QueryFetchResult {
     let columns: [String]

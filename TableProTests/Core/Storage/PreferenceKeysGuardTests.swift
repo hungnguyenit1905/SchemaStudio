@@ -4,7 +4,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("Preference key registry & guard")
@@ -14,21 +14,21 @@ struct PreferenceKeysGuardTests {
         let names = PreferenceKeys.registeredKeyNames
         #expect(Set(names).count == names.count)
         for name in names {
-            #expect(name.hasPrefix("com.TablePro."), "Key '\(name)' is outside the com.TablePro namespace")
+            #expect(name.hasPrefix("com.SchemaStudio."), "Key '\(name)' is outside the com.SchemaStudio namespace")
         }
     }
 
     @Test("No off-namespace forKey: literals outside the frozen baseline")
     func noNewRawForKeyLiterals() throws {
         let offenders = try Self.scan(pattern: #"forKey:\s*"([^"\\]+)""#)
-            .filter { !$0.hasPrefix("com.TablePro") && Self.grandfatheredForKey[$0] == nil }
+            .filter { !$0.hasPrefix("com.SchemaStudio") && Self.grandfatheredForKey[$0] == nil }
         #expect(offenders.isEmpty, "Route new UserDefaults keys through PreferenceKeys: \(offenders.sorted())")
     }
 
     @Test("No off-namespace @AppStorage literals outside the frozen baseline")
     func noNewRawAppStorageLiterals() throws {
         let offenders = try Self.scan(pattern: #"@AppStorage\(\s*"([^"\\]+)""#)
-            .filter { !$0.hasPrefix("com.TablePro") && Self.grandfatheredAppStorage[$0] == nil }
+            .filter { !$0.hasPrefix("com.SchemaStudio") && Self.grandfatheredAppStorage[$0] == nil }
         #expect(offenders.isEmpty, "Route new @AppStorage keys through the preferences layer: \(offenders.sorted())")
     }
 
@@ -68,7 +68,7 @@ struct PreferenceKeysGuardTests {
     private static func repoRoot() throws -> URL {
         var directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         for _ in 0 ..< 12 {
-            if FileManager.default.fileExists(atPath: directory.appendingPathComponent("TablePro.xcodeproj").path) {
+            if FileManager.default.fileExists(atPath: directory.appendingPathComponent("SchemaStudio.xcodeproj").path) {
                 return directory
             }
             directory = directory.deletingLastPathComponent()

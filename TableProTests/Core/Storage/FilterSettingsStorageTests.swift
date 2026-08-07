@@ -4,7 +4,7 @@
 //
 
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("FilterSettingsStorage")
@@ -225,7 +225,7 @@ struct FilterSettingsStorageTests {
         defer { try? FileManager.default.removeItem(at: directory) }
 
         let stored = FilterSettings(panelState: .alwaysHide)
-        defaults.set(try JSONEncoder().encode(stored), forKey: "com.TablePro.filter.settings")
+        defaults.set(try JSONEncoder().encode(stored), forKey: "com.SchemaStudio.filter.settings")
 
         let storage = FilterSettingsStorage(filterStateDirectory: directory, defaults: defaults)
 
@@ -373,8 +373,8 @@ struct FilterSettingsStorageTests {
     @Test("A legacy bare-array filter file loads with the default AND logic mode")
     func legacyArrayFileLoadsWithAndMode() throws {
         let defaults = try #require(UserDefaults(suiteName: "FilterSettingsStorageTests-\(UUID().uuidString)"))
-        defaults.set(true, forKey: "com.TablePro.filterStateMigrationComplete")
-        defaults.set(true, forKey: "com.TablePro.filterStateCompositeKeyMigrationComplete")
+        defaults.set(true, forKey: "com.SchemaStudio.filterStateMigrationComplete")
+        defaults.set(true, forKey: "com.SchemaStudio.filterStateCompositeKeyMigrationComplete")
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("FilterSettingsStorageTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

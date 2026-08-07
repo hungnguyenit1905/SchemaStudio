@@ -12,7 +12,7 @@ import os
 final class InlineSuggestionManager {
     // MARK: - Properties
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "InlineSuggestion")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "InlineSuggestion")
 
     private weak var controller: TextViewController?
     private let renderer = GhostTextRenderer()

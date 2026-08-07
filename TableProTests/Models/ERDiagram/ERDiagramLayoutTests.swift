@@ -7,7 +7,7 @@
 
 import CoreGraphics
 import Foundation
-@testable import TablePro
+@testable import SchemaStudio
 import Testing
 
 @Suite("ER diagram layout")

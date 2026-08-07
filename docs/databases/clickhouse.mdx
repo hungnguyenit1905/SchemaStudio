@@ -1,9 +1,9 @@
 ---
 title: ClickHouse
-description: Connect to ClickHouse over its HTTP interface with TablePro
+description: Connect to ClickHouse over its HTTP interface with SchemaStudio
 ---
 
-TablePro connects to ClickHouse over its HTTP interface (port 8123 by default), not the native TCP protocol. The driver ships inside the app; there is nothing to install.
+SchemaStudio connects to ClickHouse over its HTTP interface (port 8123 by default), not the native TCP protocol. The driver ships inside the app; there is nothing to install.
 
 ## Quick Setup
 
@@ -15,7 +15,7 @@ Click **New Connection**, select **ClickHouse**, enter host, port, credentials, 
 |-------|---------|-------|
 | **Host** | `localhost` | |
 | **Port** | `8123` | HTTP port (not 9000 native TCP) |
-| **Username** | `default` | Leave empty and TablePro sends `default`. Set a password in production |
+| **Username** | `default` | Leave empty and SchemaStudio sends `default`. Set a password in production |
 | **Database** | `default` | Leave empty and the server uses `default`. Switch with Cmd+K |
 
 **SSL/TLS**: Setting any non-Disabled SSL Mode switches the URL scheme to `https`. **Preferred** and **Required** skip certificate verification, **Verify CA** validates against the supplied CA file, **Verify Identity** uses system default HTTPS trust (certificate chain plus hostname). Use **Verify Identity** for ClickHouse Cloud (port 8443); its certificates chain to a public CA. Use **Required** only for a self-signed certificate you have no CA file for. See [SSL/TLS](/features/ssl).
@@ -36,7 +36,7 @@ See [Connection URL Reference](/databases/connection-urls) for all parameters.
 
 The sidebar lists the current database's tables, views, and materialized views. Press Cmd+K or click the database name in the toolbar to switch databases. Choose **View > Sidebar as Tree** to list every database and expand them in place.
 
-For each table, TablePro shows:
+For each table, SchemaStudio shows:
 
 - **Structure**: Columns with ClickHouse data types, default expressions, and comments
 - **Indexes**: The sorting key, listed as `PRIMARY (sorting key)`, plus data-skipping indices (minmax, set, bloom_filter, and others)
@@ -82,7 +82,7 @@ Export query results or table data to CSV, JSON, SQL, and XLSX. Import SQL, JSON
 
 ## Troubleshooting
 
-**Connection refused**: Check ClickHouse is listening on the HTTP port: `curl http://localhost:8123/ping` should return `Ok.`. Common port mix-up: 8123 is HTTP, 8443 is HTTPS, 9000 is native TCP (not used by TablePro). If the HTTP interface is disabled, check `<http_port>` in `/etc/clickhouse-server/config.xml`.
+**Connection refused**: Check ClickHouse is listening on the HTTP port: `curl http://localhost:8123/ping` should return `Ok.`. Common port mix-up: 8123 is HTTP, 8443 is HTTPS, 9000 is native TCP (not used by SchemaStudio). If the HTTP interface is disabled, check `<http_port>` in `/etc/clickhouse-server/config.xml`.
 
 **Authentication failed (HTTP 403)**: Verify the username and password, that the user exists (`SELECT name, auth_type FROM system.users`), and that it has access to the target database (`SHOW GRANTS FOR app_user`).
 

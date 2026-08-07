@@ -12,7 +12,7 @@ import TableProPluginKit
 // MARK: - Startup Commands
 
 extension DatabaseManager {
-    nonisolated private static let startupLogger = Logger(subsystem: "com.TablePro", category: "DatabaseManager")
+    nonisolated private static let startupLogger = Logger(subsystem: "com.SchemaStudio", category: "DatabaseManager")
 
     @discardableResult
     nonisolated internal func executeStartupCommands(

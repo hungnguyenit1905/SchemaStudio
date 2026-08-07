@@ -16,7 +16,7 @@ import TableProSyncTransport
 @MainActor @Observable
 final class SyncCoordinator {
     static let shared = SyncCoordinator()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SyncCoordinator")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SyncCoordinator")
 
     private(set) var syncStatus: SyncStatus = .disabled(.userDisabled)
     private(set) var lastSyncDate: Date?
