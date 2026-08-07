@@ -39,7 +39,6 @@ enum SettingsPane: String {
 
 struct SettingsView: View {
     @Bindable private var settingsManager = AppSettingsManager.shared
-    @Environment(UpdaterBridge.self) var updaterBridge
     @AppStorage(PreferenceKeys.selectedSettingsPane.name) private var selectedTab = SettingsPane.general.rawValue
     private let pluginManager = PluginManager.shared
 
@@ -59,7 +58,6 @@ struct SettingsView: View {
             GeneralSettingsView(
                 settings: $settingsManager.general,
                 tabSettings: $settingsManager.tabs,
-                updaterBridge: updaterBridge,
                 onResetAll: { settingsManager.resetToDefaults() }
             )
             .tabItem { Label(SettingsPane.general.title, systemImage: SettingsPane.general.symbol) }
@@ -108,5 +106,4 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
-        .environment(UpdaterBridge.shared)
 }

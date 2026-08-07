@@ -32,9 +32,6 @@ struct AccountSettingsView: View {
                 Text(String(localized: "Sync paused — Pro license expired"))
                     .font(.callout)
                 Spacer()
-                Link(String(localized: "Renew License..."), destination: LicenseConstants.pricingURL)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
             }
             .padding(12)
             .themeMaterial(.banner, .ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))

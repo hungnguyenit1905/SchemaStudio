@@ -110,7 +110,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !Self.isUITesting else { return }
 
         ConnectionStorage.shared.migratePluginSecureFieldsIfNeeded()
-        AnalyticsService.shared.startPeriodicHeartbeat()
         SyncCoordinator.shared.start()
         LinkedFolderWatcher.shared.start()
         TeamLibrarySyncCoordinator.shared.start()
@@ -163,7 +162,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func showHelp(_ sender: Any?) {
-        if let url = URL(string: "https://docs.tablepro.app") {
+        if let url = URL(string: "https://github.com/TableProApp/TablePro") {
             NSWorkspace.shared.open(url)
         }
     }

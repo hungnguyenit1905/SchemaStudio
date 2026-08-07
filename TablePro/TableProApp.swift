@@ -9,7 +9,6 @@ import CodeEditTextView
 import Combine
 import Observation
 import os
-import Sparkle
 import SwiftUI
 import TableProPluginKit
 
@@ -129,7 +128,6 @@ enum CommandFRoute {
 /// changes only re-evaluate the menu items — NOT the Scene body / WindowGroups.
 struct AppMenuCommands: Commands {
     var settingsManager: AppSettingsManager
-    var updaterBridge: UpdaterBridge
     @FocusedValue(\.commandActions) var focusedActions: MainContentCommandActions?
     /// @Observable singleton — passed in from TableProApp via @Bindable so
     /// SwiftUI re-evaluates the menu when the current key window's actions
@@ -201,7 +199,7 @@ struct AppMenuCommands: Commands {
     }
 
     var body: some Commands {
-        // Custom About window + Check for Updates + MCP status
+        // Custom About window + MCP status
         CommandGroup(replacing: .appInfo) {
             Button(String(localized: "About TablePro")) {
                 let linkStyle: [NSAttributedString.Key: Any] = [
@@ -210,9 +208,7 @@ struct AppMenuCommands: Commands {
                 ]
                 let credits = NSMutableAttributedString()
                 let links: [(String, String)] = [
-                    ("Website", "https://tablepro.app"),
-                    ("GitHub", "https://github.com/TableProApp/TablePro"),
-                    (String(localized: "Documentation"), "https://docs.tablepro.app"),
+                    (String(localized: "Forked from TablePro"), "https://github.com/TableProApp/TablePro"),
                     (String(localized: "Sponsor"), "https://github.com/sponsors/datlechin")
                 ]
                 for (index, link) in links.enumerated() {
@@ -232,7 +228,6 @@ struct AppMenuCommands: Commands {
                     .credits: credits
                 ])
             }
-            CheckForUpdatesView(updaterBridge: updaterBridge)
             Divider()
             MCPServerMenuItem()
         }
@@ -858,16 +853,6 @@ struct AppMenuCommands: Commands {
         // showHelp: and fails with "Help isn't available" when no Help Book
         // is registered). The search field is preserved automatically.
         CommandGroup(replacing: .help) {
-            Button(String(localized: "TablePro Website")) {
-                if let url = URL(string: "https://tablepro.app") { NSWorkspace.shared.open(url) }
-            }
-
-            Button(String(localized: "Documentation")) {
-                if let url = URL(string: "https://docs.tablepro.app") { NSWorkspace.shared.open(url) }
-            }
-
-            Divider()
-
             Button("GitHub Repository") {
                 if let url = URL(string: "https://github.com/TableProApp/TablePro") { NSWorkspace.shared.open(url) }
             }
@@ -891,7 +876,6 @@ struct TableProApp: App {
     var appDelegate
 
     @State private var settingsManager = AppSettingsManager.shared
-    @State private var updaterBridge = UpdaterBridge.shared
     @State private var commandRegistry = CommandActionsRegistry.shared
 
     init() {
@@ -948,7 +932,6 @@ struct TableProApp: App {
         .commands {
             AppMenuCommands(
                 settingsManager: AppSettingsManager.shared,
-                updaterBridge: updaterBridge,
                 commandRegistry: commandRegistry,
                 recentlyClosedStore: RecentlyClosedTabStore.shared
             )
@@ -957,23 +940,8 @@ struct TableProApp: App {
         Settings {
             SettingsView()
                 .background(WindowOpenerBridge())
-                .environment(updaterBridge)
                 .environment(\.appServices, .live)
         }
-    }
-}
-
-// MARK: - Check for Updates
-
-/// Menu bar button that triggers Sparkle update check
-struct CheckForUpdatesView: View {
-    var updaterBridge: UpdaterBridge
-
-    var body: some View {
-        Button("Check for Updates...") {
-            updaterBridge.checkForUpdates()
-        }
-        .disabled(!updaterBridge.canCheckForUpdates)
     }
 }
 

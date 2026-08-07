@@ -185,12 +185,10 @@ struct InstalledPluginsView: View {
             .controlSize(.small)
             .accessibilityLabel(String(format: String(localized: "Update %@"), plugin.name))
         case .requiresAppUpdate:
-            Button(String(localized: "Update TablePro")) {
-                UpdaterBridge.shared.checkForUpdates()
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .help(String(localized: "A newer TablePro is required to load this plugin."))
+            Text(String(localized: "Requires a newer app version"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .help(String(localized: "A newer TablePro is required to load this plugin."))
         case .awaitingCompatibleBuild, .notInRegistry:
             EmptyView()
         }
