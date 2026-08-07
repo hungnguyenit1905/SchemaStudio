@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "5A1091C62EF17EDC0055EA7C"
-               BuildableName = "TablePro.app"
-               BlueprintName = "TablePro"
-               ReferencedContainer = "container:TablePro.xcodeproj">
+               BuildableName = "SchemaStudio.app"
+               BlueprintName = "SchemaStudio"
+               ReferencedContainer = "container:SchemaStudio.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -38,7 +38,7 @@
                BlueprintIdentifier = "5ABCC5A62F43856700EAF3FC"
                BuildableName = "TableProTests.xctest"
                BlueprintName = "TableProTests"
-               ReferencedContainer = "container:TablePro.xcodeproj">
+               ReferencedContainer = "container:SchemaStudio.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -49,7 +49,7 @@
                BlueprintIdentifier = "5AF00A142FB9000000000001"
                BuildableName = "TableProUITests.xctest"
                BlueprintName = "TableProUITests"
-               ReferencedContainer = "container:TablePro.xcodeproj">
+               ReferencedContainer = "container:SchemaStudio.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -70,9 +70,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "5A1091C62EF17EDC0055EA7C"
-            BuildableName = "TablePro.app"
-            BlueprintName = "TablePro"
-            ReferencedContainer = "container:TablePro.xcodeproj">
+            BuildableName = "SchemaStudio.app"
+            BlueprintName = "SchemaStudio"
+            ReferencedContainer = "container:SchemaStudio.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -87,9 +87,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "5A1091C62EF17EDC0055EA7C"
-            BuildableName = "TablePro.app"
-            BlueprintName = "TablePro"
-            ReferencedContainer = "container:TablePro.xcodeproj">
+            BuildableName = "SchemaStudio.app"
+            BlueprintName = "SchemaStudio"
+            ReferencedContainer = "container:SchemaStudio.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
