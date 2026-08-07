@@ -11,38 +11,75 @@ extension DatabaseTreeOutlineCoordinator {
     // MARK: - Expansion
 
     func applyDesiredExpansion() {
-        guard let outlineView else { return }
+        guard outlineView != nil else { return }
         isApplyingExpansion = true
         defer { isApplyingExpansion = false }
+        applyExpansion(to: resolvedChildren(of: nil))
+    }
+
+    /// Restores shape only. Expanding a connection here must never start a
+    /// connect: launch replays saved expansion, and connecting from that replay
+    /// would fire one connect and one password sheet per remembered connection.
+    /// Only `outlineViewItemWillExpand` outside this pass connects.
+    private func applyExpansion(to nodes: [DatabaseTreeNode]) {
+        guard let outlineView else { return }
         let searching = !searchText.isEmpty
-        let recentId = DatabaseTreeNode.recentSectionId(connectionId: connectionId)
-        for rootNode in resolvedChildren(of: nil) where rootNode.id == recentId {
-            setExpanded(rootNode, searching || (viewModel?.isRecentsExpanded ?? true))
-        }
-        for databaseNode in resolvedChildren(of: nil) {
-            guard case .database(let connectionId, let metadata) = databaseNode.kind else { continue }
-            let databaseKey = ConnectionDatabaseKey(connectionId: connectionId, database: metadata.name)
-            let want = searching
-                ? databaseMatchesSearch(metadata)
-                : windowState?.expandedTreeDatabases.contains(databaseKey) ?? false
-            setExpanded(databaseNode, want)
-            guard outlineView.isItemExpanded(databaseNode) else { continue }
-            triggerLoad(for: databaseNode)
-            guard supportsSchemaLevel else {
-                restorePartitionExpansion(under: databaseNode)
+        for node in nodes {
+            switch node.kind {
+            case .folder(let group):
+                setExpanded(node, searching || ConnectionTreeState.shared.expandedFolderIds.contains(group.id))
+                if outlineView.isItemExpanded(node) {
+                    applyExpansion(to: resolvedChildren(of: node))
+                }
+            case .connection(let connection):
+                setExpanded(node, ConnectionTreeState.shared.expandedConnectionIds.contains(connection.id))
+                if outlineView.isItemExpanded(node) {
+                    applyExpansionUnderConnection(node)
+                }
+            default:
                 continue
             }
-            for schemaNode in resolvedChildren(of: databaseNode) {
-                guard case .schema(let connectionId, let database, let schema) = schemaNode.kind else { continue }
-                let schemaKey = ConnectionSchemaKey(connectionId: connectionId, database: database, schema: schema)
-                let wantSchema = searching
-                    ? DatabaseTreeFilter.matches(searchText, schema) || schemaContentMatchesSearch(database: database, schema: schema)
-                    : windowState?.expandedTreeDatabaseSchemas.contains(schemaKey) ?? false
-                setExpanded(schemaNode, wantSchema)
-                if outlineView.isItemExpanded(schemaNode) {
-                    triggerLoad(for: schemaNode)
-                    restorePartitionExpansion(under: schemaNode)
-                }
+        }
+    }
+
+    private func applyExpansionUnderConnection(_ connectionNode: DatabaseTreeNode) {
+        guard let outlineView else { return }
+        let searching = !searchText.isEmpty
+        for child in resolvedChildren(of: connectionNode) {
+            if case .recentSection(let connectionId) = child.kind {
+                setExpanded(child, searching || (viewModel(for: connectionId)?.isRecentsExpanded ?? true))
+                continue
+            }
+            guard case .database(let connectionId, let metadata) = child.kind,
+                  let context = context(for: connectionId) else { continue }
+            let databaseKey = ConnectionDatabaseKey(connectionId: connectionId, database: metadata.name)
+            let want = searching
+                ? databaseMatchesSearch(context: context, metadata)
+                : windowState?.expandedTreeDatabases.contains(databaseKey) ?? false
+            setExpanded(child, want)
+            guard outlineView.isItemExpanded(child) else { continue }
+            triggerLoad(for: child)
+            guard context.supportsSchemaLevel else {
+                restorePartitionExpansion(under: child)
+                continue
+            }
+            applyExpansion(toSchemasOf: child, searching: searching)
+        }
+    }
+
+    private func applyExpansion(toSchemasOf databaseNode: DatabaseTreeNode, searching: Bool) {
+        guard let outlineView else { return }
+        for schemaNode in resolvedChildren(of: databaseNode) {
+            guard case .schema(let connectionId, let database, let schema) = schemaNode.kind else { continue }
+            let schemaKey = ConnectionSchemaKey(connectionId: connectionId, database: database, schema: schema)
+            let wantSchema = searching
+                ? DatabaseTreeFilter.matches(searchText, schema)
+                    || schemaContentMatchesSearch(connectionId: connectionId, database: database, schema: schema)
+                : windowState?.expandedTreeDatabaseSchemas.contains(schemaKey) ?? false
+            setExpanded(schemaNode, wantSchema)
+            if outlineView.isItemExpanded(schemaNode) {
+                triggerLoad(for: schemaNode)
+                restorePartitionExpansion(under: schemaNode)
             }
         }
     }
@@ -73,8 +110,8 @@ extension DatabaseTreeOutlineCoordinator {
 
     func recordExpansion(_ node: DatabaseTreeNode, expanded: Bool) {
         switch node.kind {
-        case .recentSection:
-            viewModel?.isRecentsExpanded = expanded
+        case .recentSection(let connectionId):
+            viewModel(for: connectionId)?.isRecentsExpanded = expanded
         case .folder(let group):
             if expanded {
                 ConnectionTreeState.shared.expandedFolderIds.insert(group.id)
@@ -117,30 +154,40 @@ extension DatabaseTreeOutlineCoordinator {
 
     func triggerLoad(for node: DatabaseTreeNode) {
         switch node.kind {
-        case .database(_, let metadata):
-            if supportsSchemaLevel {
+        case .connection(let connection):
+            loadDatabases(connectionId: connection.id)
+        case .database(let connectionId, let metadata):
+            guard let context = context(for: connectionId) else { return }
+            if context.supportsSchemaLevel {
                 if isIdle(service.schemaListState(connectionId: connectionId, database: metadata.name)) {
                     Task { await service.loadSchemas(connectionId: connectionId, database: metadata.name) }
                 }
-                loadExternalSchemaNames(database: metadata.name)
+                loadExternalSchemaNames(connectionId: connectionId, database: metadata.name)
             } else {
-                loadObjects(database: metadata.name, schema: nil)
+                loadObjects(connectionId: connectionId, database: metadata.name, schema: nil)
             }
-        case .schema(_, let database, let schema):
-            loadObjects(database: database, schema: schema)
+        case .schema(let connectionId, let database, let schema):
+            loadObjects(connectionId: connectionId, database: database, schema: schema)
         case .table(let ref):
             loadPartitions(ref)
-        case .connectionRoot, .folder, .connection, .recentSection, .recentTable, .routine, .status:
+        case .connectionRoot, .folder, .recentSection, .recentTable, .routine, .status:
             break
         }
     }
 
-    private func loadExternalSchemaNames(database: String) {
+    private func loadDatabases(connectionId: UUID) {
+        guard let context = context(for: connectionId), context.isConnected else { return }
+        guard isIdle(service.databaseListState(for: connectionId)) else { return }
+        Task {
+            await service.loadDatabases(connectionId: connectionId, databaseType: context.databaseType)
+        }
+    }
+
+    private func loadExternalSchemaNames(connectionId: UUID, database: String) {
         guard let session = DatabaseManager.shared.session(for: connectionId),
               DatabaseManager.shared.browseDatabaseName(for: session.connection) == database,
               let driver = DatabaseManager.shared.driver(for: connectionId)
         else { return }
-        let connectionId = connectionId
         Task {
             await ExternalSchemaTracker.shared.load(
                 connectionId: connectionId,
@@ -163,7 +210,7 @@ extension DatabaseTreeOutlineCoordinator {
         }
     }
 
-    private func loadObjects(database: String, schema: String?) {
+    private func loadObjects(connectionId: UUID, database: String, schema: String?) {
         if isIdle(service.tablesLoadState(connectionId: connectionId, database: database, schema: schema)) {
             Task { await service.loadTables(connectionId: connectionId, database: database, schema: schema) }
         }
@@ -243,15 +290,15 @@ extension DatabaseTreeOutlineCoordinator {
         }
     }
 
-    func refreshDatabase(_ database: String) {
-        if supportsSchemaLevel {
+    func refreshDatabase(_ database: String, connectionId: UUID) {
+        if context(for: connectionId)?.supportsSchemaLevel == true {
             Task { await service.refreshSchemas(connectionId: connectionId, database: database) }
         } else {
             Task { await service.refreshObjects(connectionId: connectionId, database: database, schema: nil) }
         }
     }
 
-    func refreshObjects(database: String, schema: String?) {
+    func refreshObjects(database: String, schema: String?, connectionId: UUID) {
         Task { await service.refreshObjects(connectionId: connectionId, database: database, schema: schema) }
     }
 
@@ -287,7 +334,7 @@ extension DatabaseTreeOutlineCoordinator: NSOutlineViewDelegate {
         guard let node = item as? DatabaseTreeNode else { return nil }
         let cell = outlineView.makeView(withIdentifier: Self.cellIdentifier, owner: self) as? DatabaseTreeCellView
             ?? makeCell()
-        cell.configure(node: node, context: rowContext(), actions: rowActions())
+        cell.configure(node: node, context: rowContext(for: node), actions: rowActions(for: node))
         return cell
     }
 
@@ -298,7 +345,22 @@ extension DatabaseTreeOutlineCoordinator: NSOutlineViewDelegate {
     func outlineViewItemWillExpand(_ notification: Notification) {
         guard let node = notification.userInfo?["NSObject"] as? DatabaseTreeNode else { return }
         triggerLoad(for: node)
-        if !isApplyingExpansion { recordExpansion(node, expanded: true) }
+        guard !isApplyingExpansion else { return }
+        recordExpansion(node, expanded: true)
+        if case .connection(let connection) = node.kind {
+            connectIfNeeded(connection)
+        }
+    }
+
+    /// Reached only from a user-driven expand, never from restoring saved
+    /// expansion. Connecting goes through `DatabaseManager.connectToSession`
+    /// so the attempt registry decides which attempt owns the session; the tree
+    /// keeps no loading flag of its own and reads status back from the session.
+    private func connectIfNeeded(_ connection: DatabaseConnection) {
+        guard DatabaseManager.shared.activeSessions[connection.id]?.driver == nil else { return }
+        Task { @MainActor in
+            try? await DatabaseManager.shared.connectToSession(connection)
+        }
     }
 
     func outlineViewItemWillCollapse(_ notification: Notification) {

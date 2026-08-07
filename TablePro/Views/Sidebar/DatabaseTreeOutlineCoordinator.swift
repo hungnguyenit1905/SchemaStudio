@@ -26,6 +26,9 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     var pendingTruncates: [UUID: Set<String>] = [:]
     var pendingDeletes: [UUID: Set<String>] = [:]
 
+    var contextResolver = SidebarNodeContextResolver.live
+    var contextCache: [UUID: SidebarNodeContext] = [:]
+
     var nodeCache: [String: DatabaseTreeNode] = [:]
     var childrenCache: [String: [DatabaseTreeNode]] = [:]
     var lastSelection: Set<DatabaseTreeTableRef> = []
@@ -36,14 +39,6 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     private var hasRenderedOnce = false
     private var reconcileScheduled = false
     private var observationGeneration = 0
-
-    var supportsSchemaLevel: Bool {
-        PluginManager.shared.databaseGroupingStrategy(for: databaseType) == .bySchema
-    }
-
-    var systemSchemas: Set<String> {
-        Set(PluginManager.shared.systemSchemaNames(for: databaseType))
-    }
 
     // MARK: - Attach / input
 
@@ -123,7 +118,15 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         }
     }
 
+    /// The tree spans every saved connection, so observation has to follow all
+    /// of them: `activeSessions` drives the status dot and the connect-to-expand
+    /// transition, and each expanded connection contributes its own metadata.
     private func snapshotDependencies() {
+        _ = DatabaseManager.shared.activeSessions
+        for expandedId in ConnectionTreeState.shared.expandedConnectionIds {
+            _ = service.databaseListState(for: expandedId)
+            _ = SharedSidebarState.forConnection(expandedId).recentTables
+        }
         _ = service.databaseListState(for: connectionId)
         _ = sidebarState?.recentTables
         for node in nodeCache.values {
@@ -148,6 +151,7 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     func refresh() {
         guard let outlineView else { return }
         isReloading = true
+        contextCache.removeAll()
         childrenCache.removeAll()
         outlineView.reloadData()
         applyDesiredExpansion()

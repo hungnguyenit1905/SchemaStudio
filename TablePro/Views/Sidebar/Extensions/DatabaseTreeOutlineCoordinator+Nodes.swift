@@ -19,22 +19,116 @@ extension DatabaseTreeOutlineCoordinator {
     func buildChildren(of node: DatabaseTreeNode?) -> [DatabaseTreeNode] {
         guard let node else { return rootNodes() }
         switch node.kind {
-        case .recentSection:
-            return recentTableRefs().map {
+        case .connectionRoot:
+            return folderChildren(of: nil)
+        case .folder(let group):
+            return folderChildren(of: group.id)
+        case .connection(let connection):
+            return connectionChildren(connection)
+        case .recentSection(let connectionId):
+            return recentTableRefs(connectionId: connectionId).map {
                 self.node(id: DatabaseTreeNode.recentTableId($0), kind: .recentTable($0))
             }
-        case .database(_, let metadata):
-            return supportsSchemaLevel
-                ? schemaNodes(database: metadata.name)
-                : objectNodes(database: metadata.name, schema: nil)
-        case .schema(_, let database, let schema):
-            return objectNodes(database: database, schema: schema)
+        case .database(let connectionId, let metadata):
+            guard let context = context(for: connectionId) else { return [] }
+            return context.supportsSchemaLevel
+                ? schemaNodes(context: context, database: metadata.name)
+                : objectNodes(context: context, database: metadata.name, schema: nil)
+        case .schema(let connectionId, let database, let schema):
+            guard let context = context(for: connectionId) else { return [] }
+            return objectNodes(context: context, database: database, schema: schema)
         case .table(let ref):
             return ref.table.type == .partitionedTable ? partitionNodes(of: ref) : []
-        case .connectionRoot, .folder, .connection, .recentTable, .routine, .status:
+        case .recentTable, .routine, .status:
             return []
         }
     }
+
+    // MARK: - Connection level
+
+    func context(for connectionId: UUID) -> SidebarNodeContext? {
+        if let cached = contextCache[connectionId] { return cached }
+        guard let resolved = contextResolver.context(for: connectionId) else { return nil }
+        contextCache[connectionId] = resolved
+        return resolved
+    }
+
+    private func rootNodes() -> [DatabaseTreeNode] {
+        folderChildren(of: nil)
+    }
+
+    private func folderChildren(of folderId: UUID?) -> [DatabaseTreeNode] {
+        ConnectionTreeBuilder.children(
+            ofFolder: folderId,
+            groups: GroupStorage.shared.loadGroups(),
+            connections: ConnectionStorage.shared.loadConnections(),
+            searchText: searchText,
+            makeNode: { [weak self] id, kind in
+                self?.node(id: id, kind: kind) ?? DatabaseTreeNode(id: id, kind: kind)
+            }
+        )
+    }
+
+    /// A connection that has no session yet renders a single status row. The
+    /// connect itself is driven from the expansion handler, never from here:
+    /// building children must stay free of side effects so a reload cannot
+    /// trigger a second connect attempt.
+    private func connectionChildren(_ connection: DatabaseConnection) -> [DatabaseTreeNode] {
+        let connectionId = connection.id
+        let parentId = DatabaseTreeNode.connectionNodeId(connectionId)
+        guard let context = context(for: connectionId) else {
+            return [statusNode(parentId: parentId, status: .empty)]
+        }
+
+        switch context.status {
+        case .disconnected:
+            return [statusNode(parentId: parentId, status: .loading)]
+        case .connecting:
+            return [statusNode(parentId: parentId, status: .loading)]
+        case .error(let message):
+            return [statusNode(parentId: parentId, status: .error(message))]
+        case .connected:
+            break
+        }
+
+        var nodes: [DatabaseTreeNode] = []
+        if !recentTableRefs(connectionId: connectionId).isEmpty {
+            nodes.append(node(
+                id: DatabaseTreeNode.recentSectionId(connectionId: connectionId),
+                kind: .recentSection(connectionId: connectionId)
+            ))
+        }
+        nodes += databaseNodes(context: context)
+        if nodes.isEmpty {
+            switch service.databaseListState(for: connectionId) {
+            case .idle, .loading: return [statusNode(parentId: parentId, status: .loading)]
+            case .failed(let message): return [statusNode(parentId: parentId, status: .error(message))]
+            case .loaded: return [statusNode(parentId: parentId, status: .empty)]
+            }
+        }
+        return nodes
+    }
+
+    private func databaseNodes(context: SidebarNodeContext) -> [DatabaseTreeNode] {
+        let connectionId = context.connectionId
+        let visible = DatabaseTreeVisibility.visible(
+            databases: service.databases(for: connectionId),
+            selected: sidebarState(for: connectionId)?.databaseFilterSelected ?? [],
+            activeDatabase: activeDatabase(for: connectionId)
+        )
+        let matched = searchText.isEmpty ? visible : visible.filter { databaseMatchesSearch(context: context, $0) }
+        var seen = Set<String>()
+        return matched
+            .filter { seen.insert($0.id).inserted }
+            .map {
+                node(
+                    id: DatabaseTreeNode.databaseId(connectionId: connectionId, database: $0.name),
+                    kind: .database(connectionId: connectionId, metadata: $0)
+                )
+            }
+    }
+
+    // MARK: - Object level
 
     private func partitionNodes(of ref: DatabaseTreeTableRef) -> [DatabaseTreeNode] {
         let parentId = DatabaseTreeNode.tableId(ref)
@@ -57,35 +151,10 @@ extension DatabaseTreeOutlineCoordinator {
         }
     }
 
-    private func rootNodes() -> [DatabaseTreeNode] {
-        var nodes: [DatabaseTreeNode] = []
-        if !recentTableRefs().isEmpty {
-            nodes.append(node(
-                id: DatabaseTreeNode.recentSectionId(connectionId: connectionId),
-                kind: .recentSection(connectionId: connectionId)
-            ))
-        }
-        let visible = DatabaseTreeVisibility.visible(
-            databases: service.databases(for: connectionId),
-            selected: sidebarState?.databaseFilterSelected ?? [],
-            activeDatabase: mainCoordinator?.browseDatabaseName ?? activeDatabase
-        )
-        let matched = searchText.isEmpty ? visible : visible.filter { databaseMatchesSearch($0) }
-        var seen = Set<String>()
-        nodes += matched
-            .filter { seen.insert($0.id).inserted }
-            .map {
-                node(
-                    id: DatabaseTreeNode.databaseId(connectionId: connectionId, database: $0.name),
-                    kind: .database(connectionId: connectionId, metadata: $0)
-                )
-            }
-        return nodes
-    }
-
-    private func recentTableRefs() -> [DatabaseTreeTableRef] {
-        guard let sidebarState, AppSettingsManager.shared.general.showRecentTables else { return [] }
-        let database = mainCoordinator?.browseDatabaseName ?? activeDatabase ?? ""
+    private func recentTableRefs(connectionId: UUID) -> [DatabaseTreeTableRef] {
+        guard let sidebarState = sidebarState(for: connectionId),
+              AppSettingsManager.shared.general.showRecentTables else { return [] }
+        let database = activeDatabase(for: connectionId) ?? ""
         return sidebarState.recentEntries(inDatabase: database).compactMap { entry -> DatabaseTreeTableRef? in
             if !searchText.isEmpty, !DatabaseTreeFilter.matches(searchText, entry.name) { return nil }
             return DatabaseTreeTableRef(
@@ -94,7 +163,8 @@ extension DatabaseTreeOutlineCoordinator {
         }
     }
 
-    private func schemaNodes(database: String) -> [DatabaseTreeNode] {
+    private func schemaNodes(context: SidebarNodeContext, database: String) -> [DatabaseTreeNode] {
+        let connectionId = context.connectionId
         let parentId = DatabaseTreeNode.databaseId(connectionId: connectionId, database: database)
         switch service.schemaListState(connectionId: connectionId, database: database) {
         case .idle, .loading:
@@ -104,9 +174,9 @@ extension DatabaseTreeOutlineCoordinator {
         case .loaded(let schemas):
             let visible = DatabaseTreeFilter.visibleSchemas(
                 schemas,
-                systemSchemas: systemSchemas,
+                systemSchemas: context.systemSchemas,
                 searchText: searchText,
-                contentMatches: { schemaContentMatchesSearch(database: database, schema: $0) }
+                contentMatches: { schemaContentMatchesSearch(connectionId: connectionId, database: database, schema: $0) }
             )
             if visible.isEmpty { return [statusNode(parentId: parentId, status: .empty)] }
             return visible.map {
@@ -118,7 +188,12 @@ extension DatabaseTreeOutlineCoordinator {
         }
     }
 
-    private func objectNodes(database: String, schema: String?) -> [DatabaseTreeNode] {
+    private func objectNodes(
+        context: SidebarNodeContext,
+        database: String,
+        schema: String?
+    ) -> [DatabaseTreeNode] {
+        let connectionId = context.connectionId
         let parentId = schema
             .map { DatabaseTreeNode.schemaId(connectionId: connectionId, database: database, schema: $0) }
             ?? DatabaseTreeNode.databaseId(connectionId: connectionId, database: database)
@@ -128,11 +203,18 @@ extension DatabaseTreeOutlineCoordinator {
         case .failed(let message):
             return [statusNode(parentId: parentId, status: .error(message))]
         case .loaded:
-            return loadedObjectNodes(database: database, schema: schema, parentId: parentId)
+            return loadedObjectNodes(
+                connectionId: connectionId, database: database, schema: schema, parentId: parentId
+            )
         }
     }
 
-    private func loadedObjectNodes(database: String, schema: String?, parentId: String) -> [DatabaseTreeNode] {
+    private func loadedObjectNodes(
+        connectionId: UUID,
+        database: String,
+        schema: String?,
+        parentId: String
+    ) -> [DatabaseTreeNode] {
         let tables = DatabaseTreeFilter.filteredTables(
             service.tables(connectionId: connectionId, database: database, schema: schema), searchText: searchText
         )
@@ -171,20 +253,40 @@ extension DatabaseTreeOutlineCoordinator {
         node(id: DatabaseTreeNode.statusId(parentId: parentId, status: status), kind: .status(status))
     }
 
+    // MARK: - Per-connection lookups
+
+    func sidebarState(for connectionId: UUID) -> SharedSidebarState? {
+        SharedSidebarState.forConnection(connectionId)
+    }
+
+    /// The browse database of the connection itself, not of the window hosting
+    /// the tree. Only the window's own connection may fall back to the toolbar.
+    func activeDatabase(for connectionId: UUID) -> String? {
+        if let session = DatabaseManager.shared.activeSessions[connectionId] {
+            let name = DatabaseManager.shared.browseDatabaseName(for: session.connection)
+            if !name.isEmpty { return name }
+        }
+        guard connectionId == self.connectionId else { return nil }
+        return mainCoordinator?.browseDatabaseName ?? activeDatabase
+    }
+
     // MARK: - Search
 
-    func databaseMatchesSearch(_ metadata: DatabaseMetadata) -> Bool {
+    func databaseMatchesSearch(context: SidebarNodeContext, _ metadata: DatabaseMetadata) -> Bool {
+        let connectionId = context.connectionId
         if DatabaseTreeFilter.matches(searchText, metadata.name) { return true }
         if case .loaded(let schemas) = service.schemaListState(connectionId: connectionId, database: metadata.name) {
             if schemas.contains(where: { DatabaseTreeFilter.matches(searchText, $0) }) { return true }
-            for schema in schemas where schemaContentMatchesSearch(database: metadata.name, schema: schema) {
+            for schema in schemas where schemaContentMatchesSearch(
+                connectionId: connectionId, database: metadata.name, schema: schema
+            ) {
                 return true
             }
         }
-        return schemaContentMatchesSearch(database: metadata.name, schema: nil)
+        return schemaContentMatchesSearch(connectionId: connectionId, database: metadata.name, schema: nil)
     }
 
-    func schemaContentMatchesSearch(database: String, schema: String?) -> Bool {
+    func schemaContentMatchesSearch(connectionId: UUID, database: String, schema: String?) -> Bool {
         if let schema, DatabaseTreeFilter.matches(searchText, schema) { return true }
         let tables = service.tables(connectionId: connectionId, database: database, schema: schema)
         if tables.contains(where: { DatabaseTreeFilter.matches(searchText, $0.name) }) { return true }

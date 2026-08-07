@@ -18,6 +18,9 @@ struct DatabaseTreeRowActions {
     let showRoutineDDL: (RoutineInfo) -> Void
     let batchToggleTruncate: (_ connectionId: UUID, _ tableNames: [String]) -> Void
     let batchToggleDelete: (_ connectionId: UUID, _ tableNames: [String]) -> Void
+    var connect: (DatabaseConnection) -> Void = { _ in }
+    var disconnect: (DatabaseConnection) -> Void = { _ in }
+    var refreshConnection: (DatabaseConnection) -> Void = { _ in }
     let removeRecent: (DatabaseTreeTableRef) -> Void
     let clearRecents: () -> Void
 }
@@ -29,6 +32,7 @@ struct DatabaseTreeRowContext {
     let systemSchemas: Set<String>
     let pendingTruncates: [UUID: Set<String>]
     let pendingDeletes: [UUID: Set<String>]
+    var connectionStatus: ConnectionStatus = .disconnected
     var isExternalSchema: @MainActor (String, String) -> Bool = { _, _ in false }
 
     func isPendingTruncate(_ ref: DatabaseTreeTableRef) -> Bool {
@@ -85,8 +89,21 @@ struct DatabaseTreeRowView: View {
                 isPendingDelete: context.isPendingDelete(ref)
             )
             .foregroundStyle(isEmphasized ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
-        case .connectionRoot, .folder, .connection:
-            EmptyView()
+        case .connectionRoot:
+            header(
+                text: String(localized: "My Connections"),
+                systemImage: "rectangle.stack",
+                isActive: false,
+                isSystem: false
+            )
+        case .folder(let group):
+            ConnectionFolderRowView(group: group, isEmphasized: isEmphasized)
+        case .connection(let connection):
+            ConnectionRowView(
+                connection: connection,
+                status: context.connectionStatus,
+                isEmphasized: isEmphasized
+            )
         case .database(_, let metadata):
             header(
                 text: metadata.name,
@@ -165,7 +182,7 @@ struct DatabaseTreeRowView: View {
 
     private var hasContextMenu: Bool {
         switch node.kind {
-        case .status, .recentSection: return false
+        case .status, .recentSection, .connectionRoot, .folder: return false
         default: return true
         }
     }
@@ -173,8 +190,17 @@ struct DatabaseTreeRowView: View {
     @ViewBuilder
     private var menuItems: some View {
         switch node.kind {
-        case .connectionRoot, .folder, .connection, .recentSection:
+        case .connectionRoot, .folder, .recentSection:
             EmptyView()
+        case .connection(let connection):
+            ConnectionNodeContextMenu(
+                connection: connection,
+                status: context.connectionStatus,
+                isReadOnly: actions.isReadOnly,
+                onConnect: { actions.connect(connection) },
+                onDisconnect: { actions.disconnect(connection) },
+                onRefresh: { actions.refreshConnection(connection) }
+            )
         case .recentTable(let ref):
             SidebarContextMenu(
                 clickedTable: ref.table,
