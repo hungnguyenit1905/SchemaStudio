@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Tree model và app-level state"
-status: pending
+status: done
 priority: P1
 effort: "1.5-2d"
 dependencies: []
@@ -118,14 +118,14 @@ connectionId (xem bên dưới).
 
 ## Success Criteria
 
-- [ ] `ConnectionTreeBuilder` dựng đúng cây folder/connection, khớp thứ tự với Welcome
-- [ ] Hai connection có database trùng tên không đụng id node
-- [ ] `ConnectionTreeState` persist và restore đúng qua UserDefaults
-- [ ] Selection và pending truncate/delete mang connectionId; hai connection có `public.users`
+- [x] `ConnectionTreeBuilder` dựng đúng cây folder/connection, khớp thứ tự với Welcome
+- [x] Hai connection có database trùng tên không đụng id node
+- [x] `ConnectionTreeState` persist và restore đúng qua UserDefaults
+- [x] Selection và pending truncate/delete mang connectionId; hai connection có `public.users`
       không lẫn selection và không thể truncate nhầm nhau
-- [ ] Unit test phủ 7 trường hợp ở bước 8, tất cả xanh
-- [ ] File mới/xoá đã vào pbxproj; clone mới build được
-- [ ] Không file nào vượt ngưỡng SwiftLint; build sạch
+- [x] Unit test phủ 7 trường hợp ở bước 8, tất cả xanh
+- [x] ~~File mới/xoá đã vào pbxproj~~ Không cần: pbxproj dùng synchronized root group (xem invariant 7)
+- [x] Không file nào vượt ngưỡng SwiftLint; build sạch
 
 ## Risk Assessment
 

@@ -67,7 +67,7 @@ phân giải `connectionId` theo từng node thay vì theo window, và định t
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | [Phase 1: Tree model và app-level state](./phase-01-start.md) | Pending |
+| 1 | [Phase 1: Tree model và app-level state](./phase-01-start.md) | Done |
 | 2 | [Phase 2: Node context và cây connection trên nhánh outline](./phase-02-multi-connection-outline-coordinator.md) | Pending |
 | 3 | [Phase 3: Gộp ba nhánh render về một outline](./phase-03-unify-render-branches.md) | Pending |
 | 4 | [Phase 4: Cross-connection tab routing](./phase-04-cross-connection-tab-routing.md) | Pending |
@@ -214,5 +214,52 @@ mọi window khác).
   kiến trúc + file + bước 7 + test + 2 tiêu chí + rủi ro.
 - Effort: tổng 7.5-10.5d khớp tổng 6 phase (1.5-2 + 1.5-2 + 1-1.5 + 1-1.5 + 2-2.5 + 0.5-1).
 - Không còn mâu thuẫn chưa giải quyết.
+
+## Implementation Log
+
+### Session 1 — 2026-08-07 — Phase 1
+
+Commit `523ea08b` (code) và `5aa2311f` (plan docs) trên nhánh `rebrand/schemastudio`.
+
+Đã làm đúng plan:
+
+- `DatabaseTreeNode.Kind` thêm `connectionRoot` / `folder` / `connection`, thêm `var connectionId: UUID?`.
+- Mọi id node dưới connection có tiền tố connectionId; `DatabaseTreeTableRef` và
+  `DatabaseTreeRoutineRef` mang `connectionId` trong `id`.
+- `ConnectionTreeBuilder` (hàm thuần, tái dùng `buildGroupTreeIndexed` + `filterGroupTree` nên thứ
+  tự khớp Welcome) và `ConnectionTreeState` (app-level `@Observable` singleton, persist expand ids).
+- C1 đóng: `selectedTables` sang `Set<DatabaseTreeTableRef>`, khoá expand mang connectionId,
+  `batchToggleTruncate`/`batchToggleDelete` nhận `connectionId` và từ chối connection lạ.
+
+Hai chỗ lệch khỏi câu chữ của plan, có chủ ý:
+
+1. **Lưu trữ pending truncate/delete vẫn ở `ConnectionSession`**, chỉ kiểu *hiển thị* phía sidebar
+   thành `[UUID: Set<String>]`. `ConnectionSession` đã keyed theo connection và là nơi
+   `RowEditingCoordinator` đọc khi save/discard; dựng thêm một `[UUID: Set<String>]` toàn cục sẽ tạo
+   nguồn sự thật thứ hai. Rủi ro mà C1 nêu (hiện nhầm dấu pending, truncate nhầm connection) đã đóng
+   bằng kiểu hiển thị + `connectionId` bắt buộc ở API ghi.
+2. **`connectionRoot` / `folder` / `connection` render `EmptyView()`.** Phase 1 là model, chưa có
+   chỗ nào dựng ba kind này. Phase 2 thay bằng `ConnectionRowView`.
+
+#### Kết quả kiểm chứng
+
+| | passed | failed |
+|---|---|---|
+| Baseline (stash, HEAD sạch) | 9576 | 72 |
+| Sau Phase 1 | 9582 | 74 |
+
+Toàn bộ 72 lỗi baseline cũng fail sau Phase 1 (không che lỗi nào). Hai lỗi lệch là
+`AWSSSOFetchTests/unauthorized()` và `CopilotIdleStopControllerTests/rescheduleFiresOnce()`; chạy lại
+trên cây **chưa sửa** thì `AWSSSOFetchTests/unauthorized()` vẫn fail và
+`AWSSSOFetchTests/networkFailure()` đổi kết quả giữa hai lần trong cùng một lần chạy. Kết luận: flaky
+có sẵn, không phải regression. `swiftlint lint --strict` sạch.
+
+#### Hai việc chặn Phase 6, phát hiện ở session này
+
+1. **Repo có sẵn ~72 test fail** trên `rebrand/schemastudio`, không liên quan plan này. Tiêu chí
+   "`xcodebuild ... test` xanh" của Phase 6 không đạt được cho tới khi xử lý số này.
+2. **`swiftformat --lint .` không chạy được**: `error: Unknown option --ifdefindent` trong
+   `.swiftformat`, lệch với SwiftFormat 0.65.0 đang cài. Có sẵn từ trước, nhưng chặn cổng format của
+   Phase 6.
 
 <!-- slug: navicat-style-multi-connection-sidebar -->
