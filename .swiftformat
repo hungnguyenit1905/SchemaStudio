@@ -5,7 +5,9 @@
 --swiftversion 5.9
 
 # File options
---exclude DerivedData,.build,Packages,Pods,Carthage,vendor
+# LocalPackages holds vendored CodeEdit sources; reformatting them would
+# conflict with every upstream update.
+--exclude DerivedData,.build,Packages,LocalPackages,Pods,Carthage,vendor
 
 # Format options
 --indent 4
@@ -16,7 +18,8 @@
 --wrapparameters before-first
 --wrapcollections before-first
 --wrapconditions after-first
---wrapreturntype if-multiline
+# The codebase writes `) -> Bool {`; if-multiline breaks it onto its own line.
+--wrapreturntype preserve
 --wrapeffects if-multiline
 --closingparen balanced
 --funcattributes prev-line
@@ -35,36 +38,51 @@
 --ranges spaced
 --typedelimiter space-after
 --guardelse same-line
+# The codebase writes `case .foo(let bar)`, not `case let .foo(bar)`.
+--patternlet inline
+# The codebase writes 1_000 and 250_000_000; the default threshold would strip
+# the separators from anything under six digits.
+--decimalgrouping 3,4
 
 # Braces
 --allman false
 --elseposition same-line
---ifdefindent no-indent
+--ifdef no-indent
 
 # Misc
 --self remove
 --selfrequired
 --importgrouping alpha
---header strip
+# Never "strip": every file in this repo carries a header comment.
+--header ignore
 --stripunusedargs closure-only
 --modifierorder
 --emptybraces no-space
 
 # Enabled rules (comment out to disable)
 --enable blankLineAfterImports
---enable blankLinesBetweenImports
 --enable blockComments
 --enable docComments
 --enable isEmpty
---enable markTypes
---enable organizeDeclarations
---enable sortDeclarations
---enable wrapConditionalBodies
 --enable wrapEnumCases
---enable wrapMultilineStatementBraces
---enable wrapSwitchCases
 
 # Disabled rules
 --disable acronyms
 --disable redundantSelf
 --disable trailingCommas
+# CLAUDE.md requires access control to be explicit, including `internal`.
+--disable redundantInternal
+# CLAUDE.md prescribes early returns, and the codebase writes them on one line
+# (`guard x else { return }`). These rules split every one of them.
+--disable wrapGuardStatementBodies
+--disable wrapIfStatementBodies
+--disable wrapPropertyBodies
+--disable wrapFunctionBodies
+# Puts a lone `{` on its own line after a multiline signature; nothing here does that.
+--disable wrapMultilineStatementBraces
+# Switch cases here read `case .a: return x`, not the Swift 5.9 implicit-return form.
+--disable redundantReturn
+# `case .a, .b:` stays on one line throughout the codebase.
+--disable wrapSwitchCases
+# Keeps the blank line test files put before `@testable import`.
+--disable blankLinesBetweenImports
