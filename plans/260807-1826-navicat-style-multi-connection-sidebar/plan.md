@@ -68,7 +68,7 @@ phân giải `connectionId` theo từng node thay vì theo window, và định t
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | [Phase 1: Tree model và app-level state](./phase-01-start.md) | Done |
-| 2 | [Phase 2: Node context và cây connection trên nhánh outline](./phase-02-multi-connection-outline-coordinator.md) | Pending |
+| 2 | [Phase 2: Node context và cây connection trên nhánh outline](./phase-02-multi-connection-outline-coordinator.md) | Done |
 | 3 | [Phase 3: Gộp ba nhánh render về một outline](./phase-03-unify-render-branches.md) | Pending |
 | 4 | [Phase 4: Cross-connection tab routing](./phase-04-cross-connection-tab-routing.md) | Pending |
 | 5 | [Phase 5: Connect lifecycle and connection sync](./phase-05-connect-lifecycle-and-connection-sync.md) | Pending |
@@ -261,5 +261,48 @@ có sẵn, không phải regression. `swiftlint lint --strict` sạch.
 2. **`swiftformat --lint .` không chạy được**: `error: Unknown option --ifdefindent` trong
    `.swiftformat`, lệch với SwiftFormat 0.65.0 đang cài. Có sẵn từ trước, nhưng chặn cổng format của
    Phase 6.
+
+### Session 2 — 2026-08-07 — Phase 2
+
+Commit `e3aefe74` (tách file) và `731cf0d7` (hành vi).
+
+Tách trước, thêm code sau, đúng thứ tự plan yêu cầu. `DatabaseTreeOutlineCoordinator` 752 dòng →
+core 174 + `+Nodes` 310 + `+Selection` 404 + `+ContextMenu` 128. Commit tách là thuần cơ học, 92 test
+sidebar xanh trước khi thêm bất kỳ hành vi nào.
+
+- `SidebarNodeContext` + `SidebarNodeContextResolver`: mọi phụ thuộc tiêm vào được, nên luật phân
+  giải test được mà không cần session hay plugin registry thật.
+- Root cây giờ là folder + connection từ storage; `.database`/`.schema` phân giải context theo
+  `node.connectionId`.
+- M6 đóng: `rowContext(for:)` và `rowActions(for:)` nhận node, `isReadOnly` đọc safe mode của
+  connection thuộc node (session trước, rồi `connection.safeModeLevel`).
+- `SidebarViewModel.forConnection` dựng view model cho connection bất kỳ với binding trỏ thẳng vào
+  session của chính nó, nên batch op không thể rơi sang session khác.
+- `DatabaseTreeView` bỏ cổng `databaseListState` bọc ngoài; loading/empty/error thành status row dưới
+  đúng connection của nó.
+
+#### Lệch khỏi plan, có chủ ý
+
+Plan (Phase 2 bước 3) nói expand connection chưa kết nối thì "tạm thời gọi thẳng
+`connectToSession`". Làm đúng câu chữ sẽ tái tạo chính C2: `applyDesiredExpansion` chạy lúc khởi
+động sẽ bắn một connect cho mỗi connection từng expand. Nên connect chỉ nối vào
+`outlineViewItemWillExpand` khi `!isApplyingExpansion` — tức chỉ thao tác người dùng. Quy tắc C2 của
+Phase 5 vì thế đã đúng từ Phase 2 thay vì đi qua một trạng thái sai.
+
+`.connectionRoot` có render nhưng chưa có đường nào sinh ra nó: top level là folder + connection,
+giống Welcome. Giữ case lại vì plan yêu cầu; nếu Phase 3-4 không dùng thì nên xoá.
+
+#### Kết quả kiểm chứng
+
+| | passed | failed |
+|---|---|---|
+| Baseline HEAD sạch | 9576 | 72 |
+| Sau Phase 2 | 9596 | 72 |
+
+Cùng 72 lỗi, vẫn là bộ flaky có sẵn (`AWSSSOFetchTests` đổi kết quả giữa các lần chạy,
+`CopilotIdleStopControllerTests/rescheduleFiresOnce` timing). `StreamsServerNotifications()` chỉ là
+dòng log bị cắt của `MCPHttpServerTransportTests/getMcpStreamsServerNotifications()` do ghi đồng
+thời, không phải lỗi mới. `swiftlint lint --strict` sạch. 24 test mới trong
+`MultiConnectionTreeTests` xanh.
 
 <!-- slug: navicat-style-multi-connection-sidebar -->

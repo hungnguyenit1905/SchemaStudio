@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Node context và cây connection trên nhánh outline"
-status: pending
+status: done
 priority: P1
 effort: "1.5-2d"
 dependencies: [1]
@@ -124,14 +124,14 @@ Mọi hành động ghi hiển thị cho connection X (context menu ở phase n�
 
 ## Success Criteria
 
-- [ ] Sidebar hiện folder + connection kể cả khi chưa kết nối
-- [ ] Expand hai connection cùng lúc, cả hai nạp database độc lập, không nhiễu id
-- [ ] Hành động ghi đọc safe mode của đúng connection thuộc node
-- [ ] Search khớp tên connection và tên folder khi chưa expand connection nào
-- [ ] File mới đã vào pbxproj; clone mới build được
-- [ ] Dấu pending truncate/delete không rò sang connection khác có bảng trùng tên
-- [ ] Không file nào vượt cảnh báo 1200 dòng của SwiftLint
-- [ ] App build và chạy được với ba nhánh render còn nguyên (trạng thái trung gian hợp lệ)
+- [x] Sidebar hiện folder + connection kể cả khi chưa kết nối
+- [x] Expand hai connection cùng lúc, cả hai nạp database độc lập, không nhiễu id
+- [x] Hành động ghi đọc safe mode của đúng connection thuộc node
+- [x] Search khớp tên connection và tên folder khi chưa expand connection nào
+- [x] ~~File mới đã vào pbxproj~~ Không cần: synchronized root group (xem invariant 7)
+- [x] Dấu pending truncate/delete không rò sang connection khác có bảng trùng tên
+- [x] Không file nào vượt cảnh báo 1200 dòng của SwiftLint
+- [x] App build và chạy được với ba nhánh render còn nguyên (trạng thái trung gian hợp lệ)
 
 ## Risk Assessment
 
