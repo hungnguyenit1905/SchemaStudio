@@ -12,7 +12,7 @@ run_quiet() {
     rm -f "$logfile"
 }
 
-# Build static libmongoc + libbson for TablePro
+# Build static libmongoc + libbson for SchemaStudio
 #
 # Produces architecture-specific and universal static libraries in Libs/:
 #   libbson_arm64.a, libbson_x86_64.a, libbson_universal.a
@@ -20,7 +20,7 @@ run_quiet() {
 #
 # TLS backend: OpenSSL (ENABLE_SSL=OPENSSL). The previous Secure Transport
 # build broke TLS handshakes against MongoDB Atlas on macOS 26 with
-# errSSLPeerInternalError (-9838). OpenSSL handshakes succeed and TablePro
+# errSSLPeerInternalError (-9838). OpenSSL handshakes succeed and SchemaStudio
 # already bundles OpenSSL 3 dylibs for Redis/MSSQL/MySQL.
 #
 # OpenSSL is rebuilt from source for each arch with the correct deployment

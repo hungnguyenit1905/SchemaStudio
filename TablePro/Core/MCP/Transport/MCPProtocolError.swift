@@ -76,7 +76,7 @@ public extension MCPProtocolError {
         )
     }
 
-    static func unauthenticated(challenge: String = "Bearer realm=\"TablePro\"") -> Self {
+    static func unauthenticated(challenge: String = "Bearer realm=\"SchemaStudio\"") -> Self {
         Self(
             code: JsonRpcErrorCode.unauthenticated,
             message: "Unauthenticated",

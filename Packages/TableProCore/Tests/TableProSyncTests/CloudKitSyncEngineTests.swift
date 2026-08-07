@@ -71,6 +71,6 @@ struct CloudKitSyncEngineTests {
         let engine = CloudKitSyncEngine()
         let zoneID = await engine.currentZoneID
         #expect(zoneID.zoneName == CloudKitSyncEngine.zoneName)
-        #expect(CloudKitSyncEngine.zoneName == "TableProSync")
+        #expect(CloudKitSyncEngine.zoneName == "SchemaStudioSync")
     }
 }

@@ -180,7 +180,7 @@ extension WelcomeWindowView {
                     ClipboardService.shared.writeText(link)
                 }
             } label: {
-                Label(String(localized: "Copy TablePro Link"), systemImage: "link.badge.plus")
+                Label(String(localized: "Copy SchemaStudio Link"), systemImage: "link.badge.plus")
             }
 
             Button {

@@ -13,7 +13,7 @@ run_quiet() {
     rm -f "$logfile"
 }
 
-# Build static hiredis (with SSL support) for TablePro
+# Build static hiredis (with SSL support) for SchemaStudio
 #
 # Produces architecture-specific and universal static libraries in Libs/:
 #   libhiredis_arm64.a, libhiredis_x86_64.a, libhiredis_universal.a

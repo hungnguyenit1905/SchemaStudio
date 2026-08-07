@@ -1,11 +1,22 @@
 # Changelog
 
-All notable changes to TablePro will be documented in this file.
+All notable changes to SchemaStudio will be documented in this file.
 
 The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Changed
+
+- The app is now SchemaStudio, a fork of TablePro. Stored settings, connections, and window state start fresh because the app now uses its own storage location and no data is migrated from TablePro.
+
+### Removed
+
+- Automatic updates. The app no longer checks for or installs updates, and the "Check for Updates" command is gone.
+- Anonymous usage reporting, along with the "Share anonymous usage data" setting. The app sends no telemetry.
+- License activation and Team Library sync. Both required a service this fork does not run, so Pro features report as unavailable.
+- Plugin download counts, and the built-in plugin registry now needs a registry URL to be configured before it will fetch anything.
 
 ### Added
 

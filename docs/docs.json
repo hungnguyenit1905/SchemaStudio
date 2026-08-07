@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "aspen",
-  "name": "TablePro",
+  "name": "SchemaStudio",
   "colors": {
     "primary": "#FFAA46",
     "light": "#FFAA46",
@@ -12,10 +12,10 @@
   },
   "favicon": "/favicon.png",
   "metadata": {
-    "og:image": "https://tablepro.app/og.png",
-    "og:site_name": "TablePro",
+    "og:image": "https://github.com/hungnguyenit1905/SchemaStudio",
+    "og:site_name": "SchemaStudio",
     "twitter:card": "summary_large_image",
-    "twitter:image": "https://tablepro.app/og.png"
+    "twitter:image": "https://github.com/hungnguyenit1905/SchemaStudio"
   },
   "redirects": [
     {
@@ -221,12 +221,12 @@
       "anchors": [
         {
           "anchor": "GitHub",
-          "href": "https://github.com/TableProApp/TablePro",
+          "href": "https://github.com/TableProApp/SchemaStudio",
           "icon": "github"
         },
         {
           "anchor": "Download",
-          "href": "https://tablepro.app/download",
+          "href": "https://github.com/hungnguyenit1905/SchemaStudio/releases",
           "icon": "download"
         },
         {
@@ -245,13 +245,13 @@
   "logo": {
     "light": "/logo/logo.png",
     "dark": "/logo/logo.png",
-    "href": "https://tablepro.app"
+    "href": "https://github.com/hungnguyenit1905/SchemaStudio"
   },
   "navbar": {
     "links": [
       {
         "label": "Website",
-        "href": "https://tablepro.app"
+        "href": "https://github.com/hungnguyenit1905/SchemaStudio"
       },
       {
         "label": "Support",
@@ -261,7 +261,7 @@
     "primary": {
       "type": "button",
       "label": "Download",
-      "href": "https://tablepro.app/download"
+      "href": "https://github.com/hungnguyenit1905/SchemaStudio/releases"
     }
   },
   "contextual": {
@@ -277,8 +277,8 @@
   },
   "footer": {
     "socials": {
-      "website": "https://tablepro.app",
-      "github": "https://github.com/TableProApp/TablePro",
+      "website": "https://github.com/hungnguyenit1905/SchemaStudio",
+      "github": "https://github.com/TableProApp/SchemaStudio",
       "discord": "https://discord.gg/hCNmUUbnD4",
       "telegram": "https://t.me/tablepro_app"
     }

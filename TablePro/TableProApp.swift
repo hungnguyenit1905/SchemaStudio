@@ -201,7 +201,7 @@ struct AppMenuCommands: Commands {
     var body: some Commands {
         // Custom About window + MCP status
         CommandGroup(replacing: .appInfo) {
-            Button(String(localized: "About TablePro")) {
+            Button(String(localized: "About SchemaStudio")) {
                 let linkStyle: [NSAttributedString.Key: Any] = [
                     .font: NSFont.systemFont(ofSize: 11),
                     .foregroundColor: NSColor.secondaryLabelColor
@@ -895,7 +895,7 @@ struct TableProApp: App {
     }
 
     var body: some Scene {
-        Window("Welcome to TablePro", id: SceneId.welcome) {
+        Window("Welcome to SchemaStudio", id: SceneId.welcome) {
             WelcomeWindowView()
                 .frame(width: 800, height: 480)
                 .background(WindowOpenerBridge())

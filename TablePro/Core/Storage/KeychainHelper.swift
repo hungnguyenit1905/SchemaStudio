@@ -40,7 +40,7 @@ final class KeychainHelper: KeychainStoring {
     private let accessGroup: String? = KeychainHelper.resolveAccessGroup()
     private static let logger = Logger(subsystem: "com.SchemaStudio", category: "KeychainHelper")
 
-    private static let accessGroupSuffix = ".com.TablePro.shared"
+    private static let accessGroupSuffix = ".com.SchemaStudio.shared"
     private static let teamPrefixedGroupPattern = #"^[A-Z0-9]{10}\..+"#
 
     private static func resolveAccessGroup() -> String? {

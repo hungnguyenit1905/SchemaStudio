@@ -45,7 +45,7 @@ internal final class CommandLineToolInstaller: CommandLineToolInstalling {
 
     private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CommandLineToolInstaller")
     private static let toolName = "tablepro"
-    private static let marker = "# TablePro command line tool"
+    private static let marker = "# SchemaStudio command line tool"
     private static let scriptContents = """
         #!/bin/sh
         \(marker)

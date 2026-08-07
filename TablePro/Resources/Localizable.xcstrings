@@ -1534,30 +1534,30 @@
         }
       }
     },
-    "%@ does not support switching schemas in TablePro." : {
+    "%@ does not support switching schemas in SchemaStudio." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ TablePro'da şema değiştirmeyi desteklemiyor."
+            "value" : "%@ SchemaStudio'da şema değiştirmeyi desteklemiyor."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ không hỗ trợ chuyển schema trong TablePro."
+            "value" : "%@ không hỗ trợ chuyển schema trong SchemaStudio."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@在TablePro中不支持切换Schema。"
+            "value" : "%@在SchemaStudio中不支持切换Schema。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ 在 TablePro 中不支援切換綱要。"
+            "value" : "%@ 在 SchemaStudio 中不支援切換綱要。"
           }
         }
       }
@@ -6135,58 +6135,58 @@
         }
       }
     },
-    "A newer TablePro is required to load this plugin." : {
+    "A newer SchemaStudio is required to load this plugin." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu eklentiyi yüklemek için daha yeni bir TablePro gerekiyor."
+            "value" : "Bu eklentiyi yüklemek için daha yeni bir SchemaStudio gerekiyor."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cần phiên bản TablePro mới hơn để tải plugin này."
+            "value" : "Cần phiên bản SchemaStudio mới hơn để tải plugin này."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "需要更新版本的TablePro才能加载此插件。"
+            "value" : "需要更新版本的SchemaStudio才能加载此插件。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "需要更新版本的 TablePro 才能載入這個外掛。"
+            "value" : "需要更新版本的 SchemaStudio 才能載入這個外掛。"
           }
         }
       }
     },
-    "A newer version of TablePro is required for this plugin. Update TablePro to keep using it." : {
+    "A newer version of SchemaStudio is required for this plugin. Update SchemaStudio to keep using it." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu eklenti için TablePro'nun daha yeni bir sürümü gerekiyor. Kullanmaya devam etmek için TablePro'yu güncelleyin."
+            "value" : "Bu eklenti için SchemaStudio'nun daha yeni bir sürümü gerekiyor. Kullanmaya devam etmek için SchemaStudio'yu güncelleyin."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plugin này cần phiên bản TablePro mới hơn. Cập nhật TablePro để tiếp tục sử dụng."
+            "value" : "Plugin này cần phiên bản SchemaStudio mới hơn. Cập nhật SchemaStudio để tiếp tục sử dụng."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此插件需要更新版本的TablePro。请更新TablePro以继续使用。"
+            "value" : "此插件需要更新版本的SchemaStudio。请更新SchemaStudio以继续使用。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "這個外掛需要更新版本的 TablePro。請更新 TablePro 以繼續使用。"
+            "value" : "這個外掛需要更新版本的 SchemaStudio。請更新 SchemaStudio 以繼續使用。"
           }
         }
       }
@@ -6304,30 +6304,30 @@
         }
       }
     },
-    "About TablePro" : {
+    "About SchemaStudio" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro Hakkında"
+            "value" : "SchemaStudio Hakkında"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Giới thiệu TablePro"
+            "value" : "Giới thiệu SchemaStudio"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "关于 TablePro"
+            "value" : "关于 SchemaStudio"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "關於 TablePro"
+            "value" : "關於 SchemaStudio"
           }
         }
       }
@@ -6849,30 +6849,30 @@
         }
       }
     },
-    "Activate next time you launch TablePro" : {
+    "Activate next time you launch SchemaStudio" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro'yu bir sonraki başlatışınızda etkinleştir"
+            "value" : "SchemaStudio'yu bir sonraki başlatışınızda etkinleştir"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kích hoạt lần khởi chạy TablePro tiếp theo"
+            "value" : "Kích hoạt lần khởi chạy SchemaStudio tiếp theo"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "下次启动TablePro时激活"
+            "value" : "下次启动SchemaStudio时激活"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "下次啟動 TablePro 時啟用"
+            "value" : "下次啟動 SchemaStudio 時啟用"
           }
         }
       }
@@ -9640,30 +9640,30 @@
         }
       }
     },
-    "Allow %@ to access TablePro?" : {
+    "Allow %@ to access SchemaStudio?" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ uygulamasının TablePro'ya erişmesine izin verilsin mi?"
+            "value" : "%@ uygulamasının SchemaStudio'ya erişmesine izin verilsin mi?"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cho phép %@ truy cập TablePro?"
+            "value" : "Cho phép %@ truy cập SchemaStudio?"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允许 %@ 访问 TablePro？"
+            "value" : "允许 %@ 访问 SchemaStudio？"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允許 %@ 存取 TablePro？"
+            "value" : "允許 %@ 存取 SchemaStudio？"
           }
         }
       }
@@ -14861,30 +14861,30 @@
         }
       }
     },
-    "Cannot execute write queries: TablePro's Safe Mode is set to read-only for this connection" : {
+    "Cannot execute write queries: SchemaStudio's Safe Mode is set to read-only for this connection" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yazma sorguları çalıştırılamıyor: Bu bağlantı için TablePro'nun Safe Mode ayarı salt okunur"
+            "value" : "Yazma sorguları çalıştırılamıyor: Bu bağlantı için SchemaStudio'nun Safe Mode ayarı salt okunur"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Không thể chạy truy vấn ghi: Chế độ an toàn của TablePro đang đặt kết nối này ở chế độ chỉ đọc"
+            "value" : "Không thể chạy truy vấn ghi: Chế độ an toàn của SchemaStudio đang đặt kết nối này ở chế độ chỉ đọc"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法执行写入查询：TablePro 的安全模式已将此连接设为只读"
+            "value" : "无法执行写入查询：SchemaStudio 的安全模式已将此连接设为只读"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法執行寫入查詢：TablePro 的安全模式已將此連線設為唯讀"
+            "value" : "無法執行寫入查詢：SchemaStudio 的安全模式已將此連線設為唯讀"
           }
         }
       }
@@ -15032,30 +15032,30 @@
         }
       }
     },
-    "Cannot save schema changes: TablePro's Safe Mode is set to read-only for this connection." : {
+    "Cannot save schema changes: SchemaStudio's Safe Mode is set to read-only for this connection." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Şema değişiklikleri kaydedilemiyor: Bu bağlantı için TablePro'nun Safe Mode ayarı salt okunur."
+            "value" : "Şema değişiklikleri kaydedilemiyor: Bu bağlantı için SchemaStudio'nun Safe Mode ayarı salt okunur."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Không thể lưu thay đổi schema: Chế độ an toàn của TablePro đang đặt kết nối này ở chế độ chỉ đọc."
+            "value" : "Không thể lưu thay đổi schema: Chế độ an toàn của SchemaStudio đang đặt kết nối này ở chế độ chỉ đọc."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法保存 Schema 更改：TablePro 的安全模式已将此连接设为只读。"
+            "value" : "无法保存 Schema 更改：SchemaStudio 的安全模式已将此连接设为只读。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法儲存綱要變更：TablePro 的安全模式已將此連線設為唯讀。"
+            "value" : "無法儲存綱要變更：SchemaStudio 的安全模式已將此連線設為唯讀。"
           }
         }
       }
@@ -16879,30 +16879,30 @@
         }
       }
     },
-    "Choose your client and follow the steps to connect it to TablePro." : {
+    "Choose your client and follow the steps to connect it to SchemaStudio." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İstemcinizi seçin ve TablePro'ya bağlamak için adımları izleyin."
+            "value" : "İstemcinizi seçin ve SchemaStudio'ya bağlamak için adımları izleyin."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chọn client của bạn và làm theo các bước để kết nối với TablePro."
+            "value" : "Chọn client của bạn và làm theo các bước để kết nối với SchemaStudio."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择您的客户端并按步骤将其连接到TablePro。"
+            "value" : "选择您的客户端并按步骤将其连接到SchemaStudio。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇你的用戶端，並依照步驟將它連線到 TablePro。"
+            "value" : "選擇你的用戶端，並依照步驟將它連線到 SchemaStudio。"
           }
         }
       }
@@ -23583,30 +23583,30 @@
         }
       }
     },
-    "Copy TablePro Link" : {
+    "Copy SchemaStudio Link" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro Bağlantısını Kopyala"
+            "value" : "SchemaStudio Bağlantısını Kopyala"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sao chép liên kết TablePro"
+            "value" : "Sao chép liên kết SchemaStudio"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复制 TablePro 链接"
+            "value" : "复制 SchemaStudio 链接"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "複製 TablePro 連結"
+            "value" : "複製 SchemaStudio 連結"
           }
         }
       }
@@ -24432,30 +24432,30 @@
         }
       }
     },
-    "Could not start a new TablePro instance. Quit and reopen manually." : {
+    "Could not start a new SchemaStudio instance. Quit and reopen manually." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yeni bir TablePro örneği başlatılamadı. Uygulamadan çıkıp elle yeniden açın."
+            "value" : "Yeni bir SchemaStudio örneği başlatılamadı. Uygulamadan çıkıp elle yeniden açın."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Không thể khởi chạy phiên TablePro mới. Hãy thoát và mở lại thủ công."
+            "value" : "Không thể khởi chạy phiên SchemaStudio mới. Hãy thoát và mở lại thủ công."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "无法启动新的TablePro实例。请手动退出并重新打开。"
+            "value" : "无法启动新的SchemaStudio实例。请手动退出并重新打开。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "無法啟動新的 TablePro 實例。請手動結束並重新開啟。"
+            "value" : "無法啟動新的 SchemaStudio 實例。請手動結束並重新開啟。"
           }
         }
       }
@@ -34555,30 +34555,30 @@
         }
       }
     },
-    "Environment variable %@ is not set in TablePro's environment. Apps launched from the Dock do not inherit shell exports. Launch TablePro from a terminal, or set the variable with launchctl setenv." : {
+    "Environment variable %@ is not set in SchemaStudio's environment. Apps launched from the Dock do not inherit shell exports. Launch SchemaStudio from a terminal, or set the variable with launchctl setenv." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ ortam değişkeni TablePro'nun ortamında ayarlı değil. Dock'tan başlatılan uygulamalar kabuk dışa aktarmalarını devralmaz. TablePro'yu bir terminalden başlatın veya değişkeni launchctl setenv ile ayarlayın."
+            "value" : "%@ ortam değişkeni SchemaStudio'nun ortamında ayarlı değil. Dock'tan başlatılan uygulamalar kabuk dışa aktarmalarını devralmaz. SchemaStudio'yu bir terminalden başlatın veya değişkeni launchctl setenv ile ayarlayın."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Biến môi trường %@ chưa được đặt trong môi trường của TablePro. Ứng dụng khởi chạy từ Dock không kế thừa các export của shell. Hãy khởi chạy TablePro từ terminal, hoặc đặt biến bằng launchctl setenv."
+            "value" : "Biến môi trường %@ chưa được đặt trong môi trường của SchemaStudio. Ứng dụng khởi chạy từ Dock không kế thừa các export của shell. Hãy khởi chạy SchemaStudio từ terminal, hoặc đặt biến bằng launchctl setenv."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "环境变量 %@ 未在 TablePro 的环境中设置。从 Dock 启动的应用不会继承 shell 导出的变量。请从终端启动 TablePro，或使用 launchctl setenv 设置该变量。"
+            "value" : "环境变量 %@ 未在 SchemaStudio 的环境中设置。从 Dock 启动的应用不会继承 shell 导出的变量。请从终端启动 SchemaStudio，或使用 launchctl setenv 设置该变量。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "環境變數 %@ 未在 TablePro 的環境中設定。從 Dock 啟動的應用程式不會繼承 shell 匯出的變數。請從終端機啟動 TablePro，或使用 launchctl setenv 設定該變數。"
+            "value" : "環境變數 %@ 未在 SchemaStudio 的環境中設定。從 Dock 啟動的應用程式不會繼承 shell 匯出的變數。請從終端機啟動 SchemaStudio，或使用 launchctl setenv 設定該變數。"
           }
         }
       }
@@ -42895,30 +42895,30 @@
         }
       }
     },
-    "Help improve TablePro by sharing anonymous usage statistics (no personal data or queries)." : {
+    "Help improve SchemaStudio by sharing anonymous usage statistics (no personal data or queries)." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anonim kullanım istatistiklerini paylaşarak TablePro'nun gelişmesine yardımcı olun (kişisel veri veya sorgu yok)."
+            "value" : "Anonim kullanım istatistiklerini paylaşarak SchemaStudio'nun gelişmesine yardımcı olun (kişisel veri veya sorgu yok)."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Giúp cải thiện TablePro bằng cách chia sẻ thống kê sử dụng ẩn danh (không có dữ liệu cá nhân hay truy vấn nào)."
+            "value" : "Giúp cải thiện SchemaStudio bằng cách chia sẻ thống kê sử dụng ẩn danh (không có dữ liệu cá nhân hay truy vấn nào)."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "通过分享匿名使用统计数据帮助改进 TablePro（不包含个人数据或查询内容）。"
+            "value" : "通过分享匿名使用统计数据帮助改进 SchemaStudio（不包含个人数据或查询内容）。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "分享匿名使用統計協助改善 TablePro(不含個人資料或查詢內容)。"
+            "value" : "分享匿名使用統計協助改善 SchemaStudio(不含個人資料或查詢內容)。"
           }
         }
       }
@@ -43827,30 +43827,30 @@
         }
       }
     },
-    "If the SSH server asks for a verification code, TablePro prompts you for it when you connect." : {
+    "If the SSH server asks for a verification code, SchemaStudio prompts you for it when you connect." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SSH sunucusu bir doğrulama kodu isterse, TablePro bağlanırken bunu size sorar."
+            "value" : "SSH sunucusu bir doğrulama kodu isterse, SchemaStudio bağlanırken bunu size sorar."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nếu máy chủ SSH yêu cầu mã xác minh, TablePro sẽ hỏi bạn khi kết nối."
+            "value" : "Nếu máy chủ SSH yêu cầu mã xác minh, SchemaStudio sẽ hỏi bạn khi kết nối."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "如果 SSH 服务器要求验证码，TablePro 会在连接时提示你输入。"
+            "value" : "如果 SSH 服务器要求验证码，SchemaStudio 会在连接时提示你输入。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "如果 SSH 伺服器要求驗證碼，TablePro 會在連線時提示你輸入。"
+            "value" : "如果 SSH 伺服器要求驗證碼，SchemaStudio 會在連線時提示你輸入。"
           }
         }
       }
@@ -44792,30 +44792,30 @@
         }
       }
     },
-    "Importing passwords from %1$@ reads up to %2$d keychain items. macOS prompts for your login password once per item because each is owned by %1$@. Click Always Allow on each prompt to grant TablePro permanent access. Cancel any prompt to skip the rest." : {
+    "Importing passwords from %1$@ reads up to %2$d keychain items. macOS prompts for your login password once per item because each is owned by %1$@. Click Always Allow on each prompt to grant SchemaStudio permanent access. Cancel any prompt to skip the rest." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ uygulamasından parola içe aktarma en fazla %2$d anahtar zinciri öğesi okur. Her öğe %1$@ uygulamasına ait olduğu için macOS her öğe için bir kez oturum açma parolanızı sorar. TablePro'ya kalıcı erişim vermek için her istemde Her Zaman İzin Ver'e tıklayın. Kalanları atlamak için herhangi bir istemi iptal edin."
+            "value" : "%1$@ uygulamasından parola içe aktarma en fazla %2$d anahtar zinciri öğesi okur. Her öğe %1$@ uygulamasına ait olduğu için macOS her öğe için bir kez oturum açma parolanızı sorar. SchemaStudio'ya kalıcı erişim vermek için her istemde Her Zaman İzin Ver'e tıklayın. Kalanları atlamak için herhangi bir istemi iptal edin."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nhập mật khẩu từ %1$@ sẽ đọc tối đa %2$d mục trong keychain. macOS hỏi mật khẩu đăng nhập của bạn một lần cho mỗi mục vì mỗi mục thuộc sở hữu của %1$@. Bấm Luôn cho phép ở mỗi lời nhắc để cấp cho TablePro quyền truy cập vĩnh viễn. Hủy bất kỳ lời nhắc nào để bỏ qua phần còn lại."
+            "value" : "Nhập mật khẩu từ %1$@ sẽ đọc tối đa %2$d mục trong keychain. macOS hỏi mật khẩu đăng nhập của bạn một lần cho mỗi mục vì mỗi mục thuộc sở hữu của %1$@. Bấm Luôn cho phép ở mỗi lời nhắc để cấp cho SchemaStudio quyền truy cập vĩnh viễn. Hủy bất kỳ lời nhắc nào để bỏ qua phần còn lại."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "从 %1$@ 导入密码最多会读取 %2$d 个钥匙串项。由于每一项都归 %1$@ 所有，macOS 会针对每一项要求输入一次登录密码。请在每个提示中点按“始终允许”以授予 TablePro 永久访问权限。取消任一提示将跳过其余项。"
+            "value" : "从 %1$@ 导入密码最多会读取 %2$d 个钥匙串项。由于每一项都归 %1$@ 所有，macOS 会针对每一项要求输入一次登录密码。请在每个提示中点按“始终允许”以授予 SchemaStudio 永久访问权限。取消任一提示将跳过其余项。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "從 %1$@ 匯入密碼最多會讀取 %2$d 個鑰匙圈項目。由於每一項都歸 %1$@ 所有，macOS 會針對每一項要求輸入一次登入密碼。請在每個提示中點按「總是允許」以授予 TablePro 永久存取權限。取消任一提示將略過其餘項目。"
+            "value" : "從 %1$@ 匯入密碼最多會讀取 %2$d 個鑰匙圈項目。由於每一項都歸 %1$@ 所有，macOS 會針對每一項要求輸入一次登入密碼。請在每個提示中點按「總是允許」以授予 SchemaStudio 永久存取權限。取消任一提示將略過其餘項目。"
           }
         }
       }
@@ -49976,30 +49976,30 @@
         }
       }
     },
-    "Links you chose to always allow. TablePro connects without asking. Only connections on this machine can be trusted." : {
+    "Links you chose to always allow. SchemaStudio connects without asking. Only connections on this machine can be trusted." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Her zaman izin vermeyi seçtiğiniz bağlantılar. TablePro sormadan bağlanır. Yalnızca bu makinedeki bağlantılara güvenilebilir."
+            "value" : "Her zaman izin vermeyi seçtiğiniz bağlantılar. SchemaStudio sormadan bağlanır. Yalnızca bu makinedeki bağlantılara güvenilebilir."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Các liên kết bạn đã chọn luôn cho phép. TablePro kết nối mà không hỏi lại. Chỉ các kết nối trên máy này mới có thể được tin cậy."
+            "value" : "Các liên kết bạn đã chọn luôn cho phép. SchemaStudio kết nối mà không hỏi lại. Chỉ các kết nối trên máy này mới có thể được tin cậy."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你选择始终允许的链接。TablePro 会直接连接，不再询问。只有本机上的连接才能被信任。"
+            "value" : "你选择始终允许的链接。SchemaStudio 会直接连接，不再询问。只有本机上的连接才能被信任。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你選擇一律允許的連結。TablePro 會直接連線，不再詢問。只有本機上的連線才能被信任。"
+            "value" : "你選擇一律允許的連結。SchemaStudio 會直接連線，不再詢問。只有本機上的連線才能被信任。"
           }
         }
       }
@@ -50172,30 +50172,30 @@
         }
       }
     },
-    "List currently open tabs across all TablePro windows. Returns connection, tab type, table name, and titles for each tab." : {
+    "List currently open tabs across all SchemaStudio windows. Returns connection, tab type, table name, and titles for each tab." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tüm TablePro pencerelerinde şu anda açık olan sekmeleri listeler. Her sekme için bağlantı, sekme türü, tablo adı ve başlıkları döndürür."
+            "value" : "Tüm SchemaStudio pencerelerinde şu anda açık olan sekmeleri listeler. Her sekme için bağlantı, sekme türü, tablo adı ve başlıkları döndürür."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Liệt kê các tab đang mở trên tất cả cửa sổ TablePro. Trả về kết nối, loại tab, tên bảng và tiêu đề của mỗi tab."
+            "value" : "Liệt kê các tab đang mở trên tất cả cửa sổ SchemaStudio. Trả về kết nối, loại tab, tên bảng và tiêu đề của mỗi tab."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "列出所有 TablePro 窗口中当前打开的标签页。返回每个标签页的连接、标签页类型、表名和标题。"
+            "value" : "列出所有 SchemaStudio 窗口中当前打开的标签页。返回每个标签页的连接、标签页类型、表名和标题。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "列出所有 TablePro 視窗中目前開啟的分頁。會回傳每個分頁的連線、分頁類型、資料表名稱與標題。"
+            "value" : "列出所有 SchemaStudio 視窗中目前開啟的分頁。會回傳每個分頁的連線、分頁類型、資料表名稱與標題。"
           }
         }
       }
@@ -60781,58 +60781,58 @@
         }
       }
     },
-    "Open a table tab in TablePro for the given connection." : {
+    "Open a table tab in SchemaStudio for the given connection." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verilen bağlantı için TablePro'da bir tablo sekmesi açar."
+            "value" : "Verilen bağlantı için SchemaStudio'da bir tablo sekmesi açar."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mở một tab bảng trong TablePro cho kết nối đã cho."
+            "value" : "Mở một tab bảng trong SchemaStudio cho kết nối đã cho."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在 TablePro 中为指定连接打开一个表标签页。"
+            "value" : "在 SchemaStudio 中为指定连接打开一个表标签页。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在 TablePro 中為指定的連線開啟資料表分頁。"
+            "value" : "在 SchemaStudio 中為指定的連線開啟資料表分頁。"
           }
         }
       }
     },
-    "Open a TablePro window for a saved connection (focuses if already open)." : {
+    "Open a SchemaStudio window for a saved connection (focuses if already open)." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kayıtlı bir bağlantı için TablePro penceresi açar (zaten açıksa öne getirir)."
+            "value" : "Kayıtlı bir bağlantı için SchemaStudio penceresi açar (zaten açıksa öne getirir)."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mở cửa sổ TablePro cho một kết nối đã lưu (chuyển tiêu điểm nếu đã mở)."
+            "value" : "Mở cửa sổ SchemaStudio cho một kết nối đã lưu (chuyển tiêu điểm nếu đã mở)."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "为已保存的连接打开 TablePro 窗口（如已打开则切换到该窗口）。"
+            "value" : "为已保存的连接打开 SchemaStudio 窗口（如已打开则切换到该窗口）。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "為已儲存的連線開啟 TablePro 視窗（如已開啟則切換到該視窗）。"
+            "value" : "為已儲存的連線開啟 SchemaStudio 視窗（如已開啟則切換到該視窗）。"
           }
         }
       }
@@ -62676,30 +62676,30 @@
         }
       }
     },
-    "Over an SSH tunnel, TablePro connects directly to the first host. Replica set failover is not available." : {
+    "Over an SSH tunnel, SchemaStudio connects directly to the first host. Replica set failover is not available." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SSH tüneli üzerinden TablePro doğrudan ilk sunucuya bağlanır. Replica set yük devretme kullanılamaz."
+            "value" : "SSH tüneli üzerinden SchemaStudio doğrudan ilk sunucuya bağlanır. Replica set yük devretme kullanılamaz."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Qua đường hầm SSH, TablePro kết nối trực tiếp tới máy chủ đầu tiên. Không hỗ trợ chuyển đổi dự phòng replica set."
+            "value" : "Qua đường hầm SSH, SchemaStudio kết nối trực tiếp tới máy chủ đầu tiên. Không hỗ trợ chuyển đổi dự phòng replica set."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "通过 SSH 隧道时，TablePro 直接连接到第一个主机。无法使用副本集故障转移。"
+            "value" : "通过 SSH 隧道时，SchemaStudio 直接连接到第一个主机。无法使用副本集故障转移。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "透過 SSH 通道時，TablePro 會直接連線到第一個主機。無法使用複本集容錯移轉。"
+            "value" : "透過 SSH 通道時，SchemaStudio 會直接連線到第一個主機。無法使用複本集容錯移轉。"
           }
         }
       }
@@ -65062,36 +65062,36 @@
         }
       }
     },
-    "Plugin was built for PluginKit version %d; this release of TablePro needs version %d." : {
+    "Plugin was built for PluginKit version %d; this release of SchemaStudio needs version %d." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Plugin was built for PluginKit version %1$d; this release of TablePro needs version %2$d."
+            "value" : "Plugin was built for PluginKit version %1$d; this release of SchemaStudio needs version %2$d."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eklenti, PluginKit %1$d sürümü için derlenmiş; TablePro'nun bu sürümü %2$d sürümünü gerektiriyor."
+            "value" : "Eklenti, PluginKit %1$d sürümü için derlenmiş; SchemaStudio'nun bu sürümü %2$d sürümünü gerektiriyor."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plugin được xây dựng cho PluginKit phiên bản %1$d; bản phát hành TablePro này cần phiên bản %2$d."
+            "value" : "Plugin được xây dựng cho PluginKit phiên bản %1$d; bản phát hành SchemaStudio này cần phiên bản %2$d."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "插件是为 PluginKit 版本 %1$d 构建的；此版本的 TablePro 需要版本 %2$d。"
+            "value" : "插件是为 PluginKit 版本 %1$d 构建的；此版本的 SchemaStudio 需要版本 %2$d。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "外掛是為 PluginKit 版本 %1$d 建置的；此版本的 TablePro 需要版本 %2$d。"
+            "value" : "外掛是為 PluginKit 版本 %1$d 建置的；此版本的 SchemaStudio 需要版本 %2$d。"
           }
         }
       }
@@ -73019,58 +73019,58 @@
         }
       }
     },
-    "Restart TablePro for the language change to take full effect." : {
+    "Restart SchemaStudio for the language change to take full effect." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dil değişikliğinin tam olarak uygulanması için TablePro'yu yeniden başlatın."
+            "value" : "Dil değişikliğinin tam olarak uygulanması için SchemaStudio'yu yeniden başlatın."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Khởi động lại TablePro để thay đổi ngôn ngữ có hiệu lực hoàn toàn."
+            "value" : "Khởi động lại SchemaStudio để thay đổi ngôn ngữ có hiệu lực hoàn toàn."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重启 TablePro 以使语言更改完全生效。"
+            "value" : "重启 SchemaStudio 以使语言更改完全生效。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新啟動 TablePro 以讓語言變更完全生效。"
+            "value" : "重新啟動 SchemaStudio 以讓語言變更完全生效。"
           }
         }
       }
     },
-    "Restart TablePro to fully unload removed plugins." : {
+    "Restart SchemaStudio to fully unload removed plugins." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Restart TablePro to fully unload removed plugins."
+            "value" : "Restart SchemaStudio to fully unload removed plugins."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Khởi động lại TablePro để gỡ hoàn toàn các plugin đã xoá."
+            "value" : "Khởi động lại SchemaStudio để gỡ hoàn toàn các plugin đã xoá."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重启 TablePro 以完全卸载已移除的插件。"
+            "value" : "重启 SchemaStudio 以完全卸载已移除的插件。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重新啟動 TablePro 以完全解除載入已移除的外掛。"
+            "value" : "重新啟動 SchemaStudio 以完全解除載入已移除的外掛。"
           }
         }
       }
@@ -82569,31 +82569,31 @@
         }
       }
     },
-    "Sponsor TablePro" : {
+    "Sponsor SchemaStudio" : {
       "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sponsor TablePro"
+            "value" : "Sponsor SchemaStudio"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tài trợ TablePro"
+            "value" : "Tài trợ SchemaStudio"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "赞助 TablePro"
+            "value" : "赞助 SchemaStudio"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "贊助 TablePro"
+            "value" : "贊助 SchemaStudio"
           }
         }
       }
@@ -87185,31 +87185,31 @@
         }
       }
     },
-    "TablePro" : {
+    "SchemaStudio" : {
       "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro"
+            "value" : "SchemaStudio"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro"
+            "value" : "SchemaStudio"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro"
+            "value" : "SchemaStudio"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro"
+            "value" : "SchemaStudio"
           }
         }
       }
@@ -87242,170 +87242,170 @@
         }
       }
     },
-    "TablePro could not do this for you. Run this in Terminal instead:" : {
+    "SchemaStudio could not do this for you. Run this in Terminal instead:" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro bunu sizin için yapamadı. Bunun yerine Terminal'de şunu çalıştırın:"
+            "value" : "SchemaStudio bunu sizin için yapamadı. Bunun yerine Terminal'de şunu çalıştırın:"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro không thể làm việc này giúp bạn. Hãy chạy lệnh sau trong Terminal:"
+            "value" : "SchemaStudio không thể làm việc này giúp bạn. Hãy chạy lệnh sau trong Terminal:"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 无法替你完成此操作。请在终端中运行："
+            "value" : "SchemaStudio 无法替你完成此操作。请在终端中运行："
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 無法替你完成此操作。請改在終端機執行："
+            "value" : "SchemaStudio 無法替你完成此操作。請改在終端機執行："
           }
         }
       }
     },
-    "TablePro couldn't reach the plugin registry to update this plugin. Check your connection and reopen TablePro." : {
+    "SchemaStudio couldn't reach the plugin registry to update this plugin. Check your connection and reopen SchemaStudio." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro bu eklentiyi güncellemek için eklenti deposuna ulaşamadı. Bağlantınızı denetleyip TablePro'yu yeniden açın."
+            "value" : "SchemaStudio bu eklentiyi güncellemek için eklenti deposuna ulaşamadı. Bağlantınızı denetleyip SchemaStudio'yu yeniden açın."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro không thể truy cập registry plugin để cập nhật plugin này. Kiểm tra kết nối mạng và mở lại TablePro."
+            "value" : "SchemaStudio không thể truy cập registry plugin để cập nhật plugin này. Kiểm tra kết nối mạng và mở lại SchemaStudio."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 无法访问插件注册表来更新此插件。请检查网络连接并重新打开 TablePro。"
+            "value" : "SchemaStudio 无法访问插件注册表来更新此插件。请检查网络连接并重新打开 SchemaStudio。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 無法連上外掛註冊來更新此外掛。請檢查你的網路連線並重新開啟 TablePro。"
+            "value" : "SchemaStudio 無法連上外掛註冊來更新此外掛。請檢查你的網路連線並重新開啟 SchemaStudio。"
           }
         }
       }
     },
-    "TablePro runs Anthropic's claude tool in headless mode. Claude Code is built for you to use directly, not as a backend for other apps, so this path can break with any Claude Code release." : {
+    "SchemaStudio runs Anthropic's claude tool in headless mode. Claude Code is built for you to use directly, not as a backend for other apps, so this path can break with any Claude Code release." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro, Anthropic'in claude aracını başsız modda çalıştırır. Claude Code doğrudan sizin kullanmanız için yapıldı, başka uygulamalara arka uç olsun diye değil; bu yüzden bu yol herhangi bir Claude Code sürümüyle bozulabilir."
+            "value" : "SchemaStudio, Anthropic'in claude aracını başsız modda çalıştırır. Claude Code doğrudan sizin kullanmanız için yapıldı, başka uygulamalara arka uç olsun diye değil; bu yüzden bu yol herhangi bir Claude Code sürümüyle bozulabilir."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro chạy công cụ claude của Anthropic ở chế độ headless. Claude Code được tạo ra để bạn dùng trực tiếp, không phải làm backend cho ứng dụng khác, nên cách này có thể hỏng sau bất kỳ bản phát hành Claude Code nào."
+            "value" : "SchemaStudio chạy công cụ claude của Anthropic ở chế độ headless. Claude Code được tạo ra để bạn dùng trực tiếp, không phải làm backend cho ứng dụng khác, nên cách này có thể hỏng sau bất kỳ bản phát hành Claude Code nào."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 以无界面模式运行 Anthropic 的 claude 工具。Claude Code 是给你直接使用的，不是给其他应用当后端，因此这条路径可能在任何一次 Claude Code 更新后失效。"
+            "value" : "SchemaStudio 以无界面模式运行 Anthropic 的 claude 工具。Claude Code 是给你直接使用的，不是给其他应用当后端，因此这条路径可能在任何一次 Claude Code 更新后失效。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 以無介面模式執行 Anthropic 的 claude 工具。Claude Code 是給你直接使用的，不是給其他應用程式當後端，因此這條路徑可能在任何一次 Claude Code 更新後失效。"
+            "value" : "SchemaStudio 以無介面模式執行 Anthropic 的 claude 工具。Claude Code 是給你直接使用的，不是給其他應用程式當後端，因此這條路徑可能在任何一次 Claude Code 更新後失效。"
           }
         }
       }
     },
-    "TablePro Website" : {
+    "SchemaStudio Website" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro Website"
+            "value" : "SchemaStudio Website"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trang web TablePro"
+            "value" : "Trang web SchemaStudio"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 网站"
+            "value" : "SchemaStudio 网站"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 網站"
+            "value" : "SchemaStudio 網站"
           }
         }
       }
     },
-    "TablePro's Safe Mode is set to read-only for this connection. Destructive operations are not permitted." : {
+    "SchemaStudio's Safe Mode is set to read-only for this connection. Destructive operations are not permitted." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu bağlantı için TablePro'nun Safe Mode ayarı salt okunur. Yıkıcı işlemlere izin verilmez."
+            "value" : "Bu bağlantı için SchemaStudio'nun Safe Mode ayarı salt okunur. Yıkıcı işlemlere izin verilmez."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chế độ an toàn của TablePro đang đặt kết nối này ở chế độ chỉ đọc. Không cho phép các thao tác phá hủy dữ liệu."
+            "value" : "Chế độ an toàn của SchemaStudio đang đặt kết nối này ở chế độ chỉ đọc. Không cho phép các thao tác phá hủy dữ liệu."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 的安全模式已将此连接设为只读。不允许执行破坏性操作。"
+            "value" : "SchemaStudio 的安全模式已将此连接设为只读。不允许执行破坏性操作。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 的安全模式已將此連線設為唯讀。不允許執行破壞性操作。"
+            "value" : "SchemaStudio 的安全模式已將此連線設為唯讀。不允許執行破壞性操作。"
           }
         }
       }
     },
-    "TablePro's Safe Mode is set to read-only for this connection. Set it to Confirm Writes or higher to allow this tool." : {
+    "SchemaStudio's Safe Mode is set to read-only for this connection. Set it to Confirm Writes or higher to allow this tool." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu bağlantı için TablePro'nun Safe Mode ayarı salt okunur. Bu araca izin vermek için Confirm Writes veya daha üstünü seçin."
+            "value" : "Bu bağlantı için SchemaStudio'nun Safe Mode ayarı salt okunur. Bu araca izin vermek için Confirm Writes veya daha üstünü seçin."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chế độ an toàn của TablePro đang đặt kết nối này ở chế độ chỉ đọc. Đặt thành Confirm Writes hoặc cao hơn để cho phép công cụ này."
+            "value" : "Chế độ an toàn của SchemaStudio đang đặt kết nối này ở chế độ chỉ đọc. Đặt thành Confirm Writes hoặc cao hơn để cho phép công cụ này."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 的安全模式已将此连接设为只读。请设为 Confirm Writes 或更高级别以允许此工具。"
+            "value" : "SchemaStudio 的安全模式已将此连接设为只读。请设为 Confirm Writes 或更高级别以允许此工具。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 的安全模式已將此連線設為唯讀。請設為 Confirm Writes 或更高層級以允許此工具。"
+            "value" : "SchemaStudio 的安全模式已將此連線設為唯讀。請設為 Confirm Writes 或更高層級以允許此工具。"
           }
         }
       }
@@ -89021,30 +89021,30 @@
         }
       }
     },
-    "The database server enforced this, not TablePro's Safe Mode. You are most likely connected to a read replica, or the server sets new transactions to read-only. Connect to the primary server to write.\n\nServer response: %@" : {
+    "The database server enforced this, not SchemaStudio's Safe Mode. You are most likely connected to a read replica, or the server sets new transactions to read-only. Connect to the primary server to write.\n\nServer response: %@" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bunu TablePro'nun Safe Mode ayarı değil, veritabanı sunucusu uyguladı. Büyük olasılıkla bir okuma kopyasına bağlısınız veya sunucu yeni işlemleri salt okunur yapıyor. Yazmak için birincil sunucuya bağlanın.\n\nSunucu yanıtı: %@"
+            "value" : "Bunu SchemaStudio'nun Safe Mode ayarı değil, veritabanı sunucusu uyguladı. Büyük olasılıkla bir okuma kopyasına bağlısınız veya sunucu yeni işlemleri salt okunur yapıyor. Yazmak için birincil sunucuya bağlanın.\n\nSunucu yanıtı: %@"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Đây là do máy chủ cơ sở dữ liệu áp đặt, không phải Chế độ an toàn của TablePro. Nhiều khả năng bạn đang kết nối tới bản sao chỉ đọc, hoặc máy chủ đặt các giao dịch mới ở chế độ chỉ đọc. Hãy kết nối tới máy chủ chính để ghi.\n\nPhản hồi của máy chủ: %@"
+            "value" : "Đây là do máy chủ cơ sở dữ liệu áp đặt, không phải Chế độ an toàn của SchemaStudio. Nhiều khả năng bạn đang kết nối tới bản sao chỉ đọc, hoặc máy chủ đặt các giao dịch mới ở chế độ chỉ đọc. Hãy kết nối tới máy chủ chính để ghi.\n\nPhản hồi của máy chủ: %@"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这是数据库服务器的限制，不是 TablePro 的安全模式。你很可能连接到了只读副本，或者服务器将新事务设为只读。请连接主服务器以写入。\n\n服务器响应：%@"
+            "value" : "这是数据库服务器的限制，不是 SchemaStudio 的安全模式。你很可能连接到了只读副本，或者服务器将新事务设为只读。请连接主服务器以写入。\n\n服务器响应：%@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "這是資料庫伺服器的限制，不是 TablePro 的安全模式。你很可能連線到唯讀副本，或伺服器將新交易設為唯讀。請連線到主要伺服器以寫入。\n\n伺服器回應：%@"
+            "value" : "這是資料庫伺服器的限制，不是 SchemaStudio 的安全模式。你很可能連線到唯讀副本，或伺服器將新交易設為唯讀。請連線到主要伺服器以寫入。\n\n伺服器回應：%@"
           }
         }
       }
@@ -89600,30 +89600,30 @@
         }
       }
     },
-    "The plugin isn't compatible with this version of TablePro. Update the app or reinstall the plugin." : {
+    "The plugin isn't compatible with this version of SchemaStudio. Update the app or reinstall the plugin." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eklenti bu TablePro sürümüyle uyumlu değil. Uygulamayı güncelleyin veya eklentiyi yeniden yükleyin."
+            "value" : "Eklenti bu SchemaStudio sürümüyle uyumlu değil. Uygulamayı güncelleyin veya eklentiyi yeniden yükleyin."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plugin không tương thích với phiên bản TablePro này. Hãy cập nhật ứng dụng hoặc cài lại plugin."
+            "value" : "Plugin không tương thích với phiên bản SchemaStudio này. Hãy cập nhật ứng dụng hoặc cài lại plugin."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "该插件与此版本的 TablePro 不兼容。请更新应用或重新安装插件。"
+            "value" : "该插件与此版本的 SchemaStudio 不兼容。请更新应用或重新安装插件。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "該外掛與此版本的 TablePro 不相容。請更新應用程式或重新安裝外掛。"
+            "value" : "該外掛與此版本的 SchemaStudio 不相容。請更新應用程式或重新安裝外掛。"
           }
         }
       }
@@ -89909,30 +89909,30 @@
         }
       }
     },
-    "The SSH server connects to this socket instead of Host and Port. A database on a socket cannot negotiate TLS, so TablePro turns it off; the SSH tunnel still encrypts the whole path." : {
+    "The SSH server connects to this socket instead of Host and Port. A database on a socket cannot negotiate TLS, so SchemaStudio turns it off; the SSH tunnel still encrypts the whole path." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SSH sunucusu, Sunucu ve Port yerine bu sokete bağlanır. Soket üzerindeki bir veritabanı TLS anlaşması yapamaz, bu yüzden TablePro TLS'i kapatır; SSH tüneli yine de tüm yolu şifreler."
+            "value" : "SSH sunucusu, Sunucu ve Port yerine bu sokete bağlanır. Soket üzerindeki bir veritabanı TLS anlaşması yapamaz, bu yüzden SchemaStudio TLS'i kapatır; SSH tüneli yine de tüm yolu şifreler."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Máy chủ SSH kết nối tới socket này thay vì Máy chủ và Cổng. Cơ sở dữ liệu trên socket không thể thương lượng TLS, nên TablePro tắt TLS; đường hầm SSH vẫn mã hóa toàn bộ đường truyền."
+            "value" : "Máy chủ SSH kết nối tới socket này thay vì Máy chủ và Cổng. Cơ sở dữ liệu trên socket không thể thương lượng TLS, nên SchemaStudio tắt TLS; đường hầm SSH vẫn mã hóa toàn bộ đường truyền."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SSH 服务器会连接到此 socket，而不是主机和端口。socket 上的数据库无法协商 TLS，因此 TablePro 会关闭 TLS；SSH 隧道仍然加密整条链路。"
+            "value" : "SSH 服务器会连接到此 socket，而不是主机和端口。socket 上的数据库无法协商 TLS，因此 SchemaStudio 会关闭 TLS；SSH 隧道仍然加密整条链路。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SSH 伺服器會連線到此 socket，而不是主機與連接埠。socket 上的資料庫無法協商 TLS，因此 TablePro 會關閉 TLS；SSH 通道仍會加密整條路徑。"
+            "value" : "SSH 伺服器會連線到此 socket，而不是主機與連接埠。socket 上的資料庫無法協商 TLS，因此 SchemaStudio 會關閉 TLS；SSH 通道仍會加密整條路徑。"
           }
         }
       }
@@ -91030,89 +91030,89 @@
         }
       }
     },
-    "This file is not a valid TablePro export" : {
+    "This file is not a valid SchemaStudio export" : {
       "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu dosya geçerli bir TablePro dışa aktarma dosyası değil"
+            "value" : "Bu dosya geçerli bir SchemaStudio dışa aktarma dosyası değil"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tệp này không phải là tệp xuất TablePro hợp lệ"
+            "value" : "Tệp này không phải là tệp xuất SchemaStudio hợp lệ"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此文件不是有效的 TablePro 导出文件"
+            "value" : "此文件不是有效的 SchemaStudio 导出文件"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此檔案不是有效的 TablePro 匯出檔"
+            "value" : "此檔案不是有效的 SchemaStudio 匯出檔"
           }
         }
       }
     },
-    "This file requires a newer version of TablePro (format version %d)" : {
+    "This file requires a newer version of SchemaStudio (format version %d)" : {
       "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu dosya daha yeni bir TablePro sürümü gerektiriyor (format sürümü %d)"
+            "value" : "Bu dosya daha yeni bir SchemaStudio sürümü gerektiriyor (format sürümü %d)"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tệp này yêu cầu phiên bản TablePro mới hơn (phiên bản định dạng %d)"
+            "value" : "Tệp này yêu cầu phiên bản SchemaStudio mới hơn (phiên bản định dạng %d)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此文件需要更新版本的TablePro（格式版本%d）"
+            "value" : "此文件需要更新版本的SchemaStudio（格式版本%d）"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此檔案需要較新版本的 TablePro（格式版本 %d）"
+            "value" : "此檔案需要較新版本的 SchemaStudio（格式版本 %d）"
           }
         }
       }
     },
-    "This file requires a newer version of TablePro (format version %lld)" : {
+    "This file requires a newer version of SchemaStudio (format version %lld)" : {
       "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu dosya daha yeni bir TablePro sürümü gerektiriyor (format sürümü %lld)"
+            "value" : "Bu dosya daha yeni bir SchemaStudio sürümü gerektiriyor (format sürümü %lld)"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tệp này yêu cầu phiên bản TablePro mới hơn (phiên bản định dạng %lld)"
+            "value" : "Tệp này yêu cầu phiên bản SchemaStudio mới hơn (phiên bản định dạng %lld)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此文件需要更新版本的 TablePro（格式版本 %lld）"
+            "value" : "此文件需要更新版本的 SchemaStudio（格式版本 %lld）"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此檔案需要較新版本的 TablePro（格式版本 %lld）"
+            "value" : "此檔案需要較新版本的 SchemaStudio（格式版本 %lld）"
           }
         }
       }
@@ -91510,30 +91510,30 @@
         }
       }
     },
-    "This plugin requires TablePro %@ or later" : {
+    "This plugin requires SchemaStudio %@ or later" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This plugin requires TablePro %@ or later"
+            "value" : "This plugin requires SchemaStudio %@ or later"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plugin này yêu cầu TablePro %@ trở lên"
+            "value" : "Plugin này yêu cầu SchemaStudio %@ trở lên"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此插件需要 TablePro %@ 或更高版本"
+            "value" : "此插件需要 SchemaStudio %@ 或更高版本"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此外掛需要 TablePro %@ 或更新版本"
+            "value" : "此外掛需要 SchemaStudio %@ 或更新版本"
           }
         }
       }
@@ -96060,30 +96060,30 @@
         }
       }
     },
-    "Update TablePro" : {
+    "Update SchemaStudio" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro'yu Güncelle"
+            "value" : "SchemaStudio'yu Güncelle"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cập nhật TablePro"
+            "value" : "Cập nhật SchemaStudio"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "更新 TablePro"
+            "value" : "更新 SchemaStudio"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "更新 TablePro"
+            "value" : "更新 SchemaStudio"
           }
         }
       }
@@ -96172,30 +96172,30 @@
         }
       }
     },
-    "Updating this plugin didn't finish. TablePro will try again the next time it launches." : {
+    "Updating this plugin didn't finish. SchemaStudio will try again the next time it launches." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu eklentinin güncellenmesi tamamlanmadı. TablePro bir sonraki açılışta yeniden deneyecek."
+            "value" : "Bu eklentinin güncellenmesi tamamlanmadı. SchemaStudio bir sonraki açılışta yeniden deneyecek."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cập nhật plugin này chưa hoàn tất. TablePro sẽ thử lại lần khởi động tiếp theo."
+            "value" : "Cập nhật plugin này chưa hoàn tất. SchemaStudio sẽ thử lại lần khởi động tiếp theo."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此插件更新未完成。TablePro 将在下次启动时重试。"
+            "value" : "此插件更新未完成。SchemaStudio 将在下次启动时重试。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此外掛的更新尚未完成。TablePro 會在下次啟動時重試。"
+            "value" : "此外掛的更新尚未完成。SchemaStudio 會在下次啟動時重試。"
           }
         }
       }
@@ -97978,31 +97978,31 @@
         }
       }
     },
-    "Verified by TablePro" : {
+    "Verified by SchemaStudio" : {
       "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verified by TablePro"
+            "value" : "Verified by SchemaStudio"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Đã xác minh bởi TablePro"
+            "value" : "Đã xác minh bởi SchemaStudio"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已通过 TablePro 验证"
+            "value" : "已通过 SchemaStudio 验证"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已通過 TablePro 驗證"
+            "value" : "已通過 SchemaStudio 驗證"
           }
         }
       }
@@ -98754,30 +98754,30 @@
         }
       }
     },
-    "Welcome to TablePro" : {
+    "Welcome to SchemaStudio" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welcome to TablePro"
+            "value" : "Welcome to SchemaStudio"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chào mừng đến với TablePro"
+            "value" : "Chào mừng đến với SchemaStudio"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "欢迎使用 TablePro"
+            "value" : "欢迎使用 SchemaStudio"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "歡迎使用 TablePro"
+            "value" : "歡迎使用 SchemaStudio"
           }
         }
       }
@@ -98925,30 +98925,30 @@
         }
       }
     },
-    "When TablePro starts:" : {
+    "When SchemaStudio starts:" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro başlarken:"
+            "value" : "SchemaStudio başlarken:"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Khi TablePro khởi động:"
+            "value" : "Khi SchemaStudio khởi động:"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 启动时："
+            "value" : "SchemaStudio 启动时："
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TablePro 啟動時："
+            "value" : "SchemaStudio 啟動時："
           }
         }
       }
@@ -99770,30 +99770,30 @@
         }
       }
     },
-    "Your subscription is governed by Anthropic's Consumer Terms and Usage Policy. Read them and decide whether this use fits. TablePro cannot grant rights under them." : {
+    "Your subscription is governed by Anthropic's Consumer Terms and Usage Policy. Read them and decide whether this use fits. SchemaStudio cannot grant rights under them." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aboneliğiniz Anthropic'in Tüketici Koşulları ve Kullanım Politikası'na tabidir. Bunları okuyun ve bu kullanımın uygun olup olmadığına karar verin. TablePro bu koşullar kapsamında size hak veremez."
+            "value" : "Aboneliğiniz Anthropic'in Tüketici Koşulları ve Kullanım Politikası'na tabidir. Bunları okuyun ve bu kullanımın uygun olup olmadığına karar verin. SchemaStudio bu koşullar kapsamında size hak veremez."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gói đăng ký của bạn chịu sự điều chỉnh của Điều khoản Người dùng và Chính sách Sử dụng của Anthropic. Hãy đọc và tự quyết định cách dùng này có phù hợp không. TablePro không thể cấp quyền theo các điều khoản đó."
+            "value" : "Gói đăng ký của bạn chịu sự điều chỉnh của Điều khoản Người dùng và Chính sách Sử dụng của Anthropic. Hãy đọc và tự quyết định cách dùng này có phù hợp không. SchemaStudio không thể cấp quyền theo các điều khoản đó."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的订阅受 Anthropic 的消费者条款和使用政策约束。请阅读这些条款，自行判断这种用法是否合适。TablePro 无法据此授予你任何权利。"
+            "value" : "你的订阅受 Anthropic 的消费者条款和使用政策约束。请阅读这些条款，自行判断这种用法是否合适。SchemaStudio 无法据此授予你任何权利。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "你的訂閱受 Anthropic 的消費者條款與使用政策約束。請閱讀這些條款，自行判斷這種用法是否合適。TablePro 無法據此授予你任何權利。"
+            "value" : "你的訂閱受 Anthropic 的消費者條款與使用政策約束。請閱讀這些條款，自行判斷這種用法是否合適。SchemaStudio 無法據此授予你任何權利。"
           }
         }
       }

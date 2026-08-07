@@ -26,7 +26,7 @@ public struct MCPAuthDenialReason: Sendable, Equatable {
     public static func unauthenticated(reason: String) -> Self {
         Self(
             httpStatus: 401,
-            challenge: "Bearer realm=\"TablePro MCP\"",
+            challenge: "Bearer realm=\"SchemaStudio MCP\"",
             logMessage: reason
         )
     }
@@ -34,7 +34,7 @@ public struct MCPAuthDenialReason: Sendable, Equatable {
     public static func tokenExpired() -> Self {
         Self(
             httpStatus: 401,
-            challenge: "Bearer realm=\"TablePro MCP\", error=\"invalid_token\", error_description=\"token_expired\"",
+            challenge: "Bearer realm=\"SchemaStudio MCP\", error=\"invalid_token\", error_description=\"token_expired\"",
             logMessage: "token_expired"
         )
     }
@@ -42,7 +42,7 @@ public struct MCPAuthDenialReason: Sendable, Equatable {
     public static func tokenInvalid(reason: String) -> Self {
         Self(
             httpStatus: 401,
-            challenge: "Bearer realm=\"TablePro MCP\", error=\"invalid_token\"",
+            challenge: "Bearer realm=\"SchemaStudio MCP\", error=\"invalid_token\"",
             logMessage: reason
         )
     }

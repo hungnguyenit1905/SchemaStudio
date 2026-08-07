@@ -16,7 +16,7 @@ fi
 
 echo "Verifying build output..."
 
-BINARY_PATH="build/Release/TablePro-${ARCH}.app/Contents/MacOS/TablePro"
+BINARY_PATH="build/Release/SchemaStudio-${ARCH}.app/Contents/MacOS/SchemaStudio"
 
 # Check binary exists
 if [ ! -f "$BINARY_PATH" ]; then
@@ -54,7 +54,7 @@ if [ ! -x "$BINARY_PATH" ]; then
 fi
 
 # Verify bundled dylibs
-FRAMEWORKS_DIR="build/Release/TablePro-${ARCH}.app/Contents/Frameworks"
+FRAMEWORKS_DIR="build/Release/SchemaStudio-${ARCH}.app/Contents/Frameworks"
 if [ -d "$FRAMEWORKS_DIR" ]; then
   echo "Bundled dynamic libraries:"
   ls -lh "$FRAMEWORKS_DIR"/*.dylib 2>/dev/null || echo "  (none)"
@@ -71,7 +71,7 @@ else
 fi
 
 # Verify plugins
-APP_BUNDLE="build/Release/TablePro-${ARCH}.app"
+APP_BUNDLE="build/Release/SchemaStudio-${ARCH}.app"
 PLUGINS_DIR="$APP_BUNDLE/Contents/PlugIns"
 
 echo "Verifying plugins..."

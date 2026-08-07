@@ -28,7 +28,7 @@ struct SSHUnsupportedDirectiveTests {
         #expect(SSHUnsupportedDirective.changesRouting(key: "ProxyUseFdpass"))
     }
 
-    @Test("Directives TablePro honours are not reported")
+    @Test("Directives SchemaStudio honours are not reported")
     func supportedDirectivesAreNotReported() {
         #expect(!SSHUnsupportedDirective.changesRouting(key: "ProxyJump"))
         #expect(!SSHUnsupportedDirective.changesRouting(key: "HostName"))

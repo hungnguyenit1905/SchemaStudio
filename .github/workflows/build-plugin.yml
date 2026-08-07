@@ -17,7 +17,7 @@ permissions:
   contents: write
 
 env:
-  XCODE_PROJECT: TablePro.xcodeproj
+  XCODE_PROJECT: SchemaStudio.xcodeproj
 
 jobs:
   resolve-tags:
@@ -257,7 +257,7 @@ jobs:
           # test, and framework target is pinned to MARKETING_VERSION = 1.0,
           # and target order in the pbxproj is not stable.
           MIN_APP_VERSION=$(grep -E 'MARKETING_VERSION\s*=\s*[0-9]' \
-            TablePro.xcodeproj/project.pbxproj \
+            SchemaStudio.xcodeproj/project.pbxproj \
             | sed 's/.*MARKETING_VERSION = \(.*\);/\1/' | tr -d ' ' \
             | grep -v '^1\.0$' | sort -u | head -1)
           if [ -z "$MIN_APP_VERSION" ] || [ "$MIN_APP_VERSION" = "1.0" ]; then
@@ -265,7 +265,7 @@ jobs:
             exit 1
           fi
           DISTINCT_COUNT=$(grep -E 'MARKETING_VERSION\s*=\s*[0-9]' \
-            TablePro.xcodeproj/project.pbxproj \
+            SchemaStudio.xcodeproj/project.pbxproj \
             | sed 's/.*MARKETING_VERSION = \(.*\);/\1/' | tr -d ' ' \
             | grep -v '^1\.0$' | sort -u | wc -l | tr -d ' ')
           if [ "$DISTINCT_COUNT" != "1" ]; then

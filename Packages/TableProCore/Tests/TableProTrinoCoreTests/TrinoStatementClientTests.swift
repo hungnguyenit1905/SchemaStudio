@@ -38,7 +38,7 @@ final class TrinoStatementClientTests: XCTestCase {
         XCTAssertEqual(post.headers["X-Trino-User"], "u")
         XCTAssertEqual(post.headers["X-Trino-Catalog"], "c")
         XCTAssertEqual(post.headers["X-Trino-Schema"], "s")
-        XCTAssertEqual(post.headers["X-Trino-Source"], "TablePro")
+        XCTAssertEqual(post.headers["X-Trino-Source"], "SchemaStudio")
         XCTAssertEqual(post.headers["Content-Type"], "text/plain; charset=utf-8")
         XCTAssertEqual(post.body, Data("SELECT 1".utf8))
     }

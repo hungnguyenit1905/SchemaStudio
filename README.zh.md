@@ -1,8 +1,8 @@
 <p align="center">
-  <img src=".github/assets/logo.png" width="128" height="128" alt="TablePro">
+  <img src=".github/assets/logo.png" width="128" height="128" alt="SchemaStudio">
 </p>
 
-<h1 align="center">TablePro</h1>
+<h1 align="center">SchemaStudio</h1>
 
 <p align="center">
   面向开发者的快速、原生数据库客户端。<br>
@@ -10,14 +10,14 @@
 </p>
 
 <p align="center">
-  <a href="https://tablepro.app">官网</a> ·
-  <a href="https://docs.tablepro.app">文档</a> ·
+  <a href="https://github.com/hungnguyenit1905/SchemaStudio">官网</a> ·
+  <a href="https://github.com/hungnguyenit1905/SchemaStudio">文档</a> ·
   <a href="https://github.com/TableProApp/TablePro/releases">下载</a> ·
   <a href="https://discord.gg/hCNmUUbnD4">Discord</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/TableProApp/TablePro/releases/latest"><img src="https://img.shields.io/github/v/release/TableProApp/TablePro" alt="Release"></a>
+  <a href="https://github.com/TableProApp/TablePro/releases/latest"><img src="https://img.shields.io/github/v/release/TableProApp/SchemaStudio" alt="Release"></a>
   <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="License: AGPL v3"></a>
 </p>
 
@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/24114" target="_blank"><img src="https://trendshift.io/api/badge/repositories/24114" alt="TableProApp%2FTablePro | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+  <a href="https://trendshift.io/repositories/24114" target="_blank"><img src="https://trendshift.io/api/badge/repositories/24114" alt="TableProApp%2FSchemaStudio | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </p>
 
 ---
@@ -36,19 +36,19 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset=".github/assets/app-dark.png">
     <source media="(prefers-color-scheme: light)" srcset=".github/assets/app-light.png">
-    <img alt="TablePro 原生数据库客户端,带 SQL 编辑器和数据网格" src=".github/assets/app-light.png" width="800">
+    <img alt="SchemaStudio 原生数据库客户端,带 SQL 编辑器和数据网格" src=".github/assets/app-light.png" width="800">
   </picture>
 </p>
 
 ## 关于
 
-TablePro 是我心目中的 TablePlus:原生、快速、开源。
+SchemaStudio 是我心目中的 TablePlus:原生、快速、开源。
 
 每个平台都用原生框架构建。没有 Electron,没有 JDBC,没有 JavaScript 运行时。冷启动不到 1 秒,空闲约 80 MB 内存。通过原生驱动连接所有主流 SQL 和 NoSQL 数据库。
 
 AI 内置:聊天、行内建议,以及 MCP 服务器,让 Cursor、Raycast 或 Claude Desktop 直接和你的数据库对话。使用你自己的 API key,选你喜欢的服务商,或本地跑 Ollama。
 
-## 为什么选 TablePro
+## 为什么选 SchemaStudio
 
 目前 macOS 原生数据库客户端可分三类:
 
@@ -56,7 +56,7 @@ AI 内置:聊天、行内建议,以及 MCP 服务器,让 Cursor、Raycast 或 Cl
 - **多数据库,闭源**:TablePlus。流畅且原生,但是专有软件。
 - **多数据库,非原生**:DBeaver(JVM)、Beekeeper Studio 和 DBGate(Electron)。跨平台,但启动慢且占内存。
 
-TablePro 补上缺失的第四类:原生、多数据库、开源。
+SchemaStudio 补上缺失的第四类:原生、多数据库、开源。
 
 ## 平台支持
 
@@ -113,25 +113,25 @@ brew install --cask tablepro
 
 ## 文档
 
-完整文档请见 [docs.tablepro.app](https://docs.tablepro.app)。
+完整文档请见 [docs.tablepro.app](https://github.com/hungnguyenit1905/SchemaStudio)。
 
 ## 支持开发
 
-应用在 AGPLv3 下免费。如果你在工作中使用 TablePro,请购买[许可证](https://tablepro.app)。每一份购买都资助下一个版本。如果买不起,就用免费版吧。这就是它免费的原因。
+应用在 AGPLv3 下免费。如果你在工作中使用 SchemaStudio,请购买[许可证](https://github.com/hungnguyenit1905/SchemaStudio)。每一份购买都资助下一个版本。如果买不起,就用免费版吧。这就是它免费的原因。
 
 ## 赞助者
 
-感谢这些为 TablePro 提供支持的朋友们:
+感谢这些为 SchemaStudio 提供支持的朋友们:
 
 **[SimpleLocalize](https://simplelocalize.io?ref=tablepro)** · **[CodeRabbit](https://coderabbit.ai?ref=tablepro)** · **[Nimbus](https://getnimbus.io?ref=tablepro)** · **[Visnalize](https://visnalize.com?ref=tablepro)** · **[Dwarves Foundation](https://dwarves.foundation/?ref=tablepro)** · **[Huy TQ](https://github.com/imhuytq)** · **[Xermius](https://xermius.com?ref=tablepro)** · **[Unikorn](https://unikorn.vn?ref=tablepro)**
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=TableProApp%2FTablePro&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=TableProApp%2FSchemaStudio&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=TableProApp/TablePro&type=date&theme=dark&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=TableProApp/TablePro&type=date&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=TableProApp/TablePro&type=date&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=TableProApp/SchemaStudio&type=date&theme=dark&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=TableProApp/SchemaStudio&type=date&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=TableProApp/SchemaStudio&type=date&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
  </picture>
 </a>
 

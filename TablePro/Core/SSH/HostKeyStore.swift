@@ -30,7 +30,7 @@ internal final class HostKeyStore: @unchecked Sendable {
         guard let appSupport = FileManager.default.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
         ).first else {
-            self.filePath = NSTemporaryDirectory() + "TablePro_known_hosts"
+            self.filePath = NSTemporaryDirectory() + "SchemaStudio_known_hosts"
             return
         }
         let schemaStudioDir = appSupport.appendingPathComponent("SchemaStudio")

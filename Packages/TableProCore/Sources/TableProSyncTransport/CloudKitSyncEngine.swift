@@ -22,8 +22,8 @@ public actor CloudKitSyncEngine {
     private let database: CKDatabase?
     private let zoneID: CKRecordZone.ID
 
-    public static let zoneName = "TableProSync"
-    public static let defaultContainerID = "iCloud.com.TablePro"
+    public static let zoneName = "SchemaStudioSync"
+    public static let defaultContainerID = "iCloud.com.SchemaStudio"
 
     private static let maxBatchSize = 400
     private static let maxRetries = 3

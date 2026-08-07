@@ -143,7 +143,7 @@ final class PluginManager {
 
     nonisolated static func defaultUserPluginsDir() -> URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("TablePro/Plugins", isDirectory: true)
+            .appendingPathComponent("SchemaStudio/Plugins", isDirectory: true)
     }
 
     // MARK: - Registry Metadata
@@ -218,7 +218,7 @@ final class PluginManager {
             } else {
                 eagerPending.append(entry)
                 if entry.source == .userInstalled, let bundleId = Bundle(url: entry.url)?.bundleIdentifier {
-                    Self.logger.warning("Plugin '\(bundleId)' declared no TableProProvides* capability keys in Info.plist; eager loading will block startup. Add TableProProvidesDatabaseTypeIds / ExportFormatIds / ImportFormatIds for lazy load.")
+                    Self.logger.warning("Plugin '\(bundleId)' declared no SchemaStudioProvides* capability keys in Info.plist; eager loading will block startup. Add SchemaStudioProvidesDatabaseTypeIds / ExportFormatIds / ImportFormatIds for lazy load.")
                 }
             }
         }
@@ -446,7 +446,7 @@ final class PluginManager {
         }
 
         guard let principalClass = bundle.principalClass as? any TableProPlugin.Type else {
-            Self.logger.error("Lazy plugin '\(bundleId)' has no TableProPlugin principal class")
+            Self.logger.error("Lazy plugin '\(bundleId)' has no SchemaStudioPlugin principal class")
             return
         }
 
@@ -531,7 +531,7 @@ final class PluginManager {
             }
         }
 
-        if let minAppVersion = infoPlist["TableProMinAppVersion"] as? String {
+        if let minAppVersion = infoPlist["SchemaStudioMinAppVersion"] as? String {
             let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
             if appVersion.compare(minAppVersion, options: .numeric) == .orderedAscending {
                 throw PluginError.appVersionTooOld(minimumRequired: minAppVersion, currentApp: appVersion)
@@ -581,7 +581,7 @@ final class PluginManager {
 
     private func registerBundle(_ bundle: Bundle, url: URL, source: PluginSource) -> PluginEntry? {
         guard let principalClass = bundle.principalClass as? any TableProPlugin.Type else {
-            Self.logger.error("Principal class does not conform to TableProPlugin: \(url.lastPathComponent)")
+            Self.logger.error("Principal class does not conform to SchemaStudioPlugin: \(url.lastPathComponent)")
             return nil
         }
 
@@ -806,7 +806,7 @@ final class PluginManager {
         }
 
         guard let entry = registerBundle(loaded, url: url, source: source) else {
-            throw PluginError.invalidBundle("Principal class does not conform to TableProPlugin")
+            throw PluginError.invalidBundle("Principal class does not conform to SchemaStudioPlugin")
         }
 
         return entry

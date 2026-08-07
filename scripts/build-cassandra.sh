@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Build DataStax C/C++ driver (cassandra-cpp-driver) static library for TablePro
+# Build DataStax C/C++ driver (cassandra-cpp-driver) static library for SchemaStudio
 # Usage: ./scripts/build-cassandra.sh [arm64|x86_64|both]
 #
 # Dependencies: cmake, libuv (built automatically), OpenSSL (from Libs/)

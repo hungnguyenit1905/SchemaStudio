@@ -28,9 +28,9 @@ public enum ConnectionExportError: LocalizedError {
         case .fileReadFailed(let path):
             return String(format: String(localized: "Failed to read file: %@"), path)
         case .invalidFormat:
-            return String(localized: "This file is not a valid TablePro export")
+            return String(localized: "This file is not a valid SchemaStudio export")
         case .unsupportedVersion(let version):
-            return String(format: String(localized: "This file requires a newer version of TablePro (format version %d)"), version)
+            return String(format: String(localized: "This file requires a newer version of SchemaStudio (format version %d)"), version)
         case .decodingFailed(let detail):
             return String(format: String(localized: "Failed to parse connection file: %@"), detail)
         case .requiresPassphrase:

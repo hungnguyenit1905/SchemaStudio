@@ -29,7 +29,7 @@ build_interface() {
     local dir="$1" out="$2" sym interface
     sym="$(mktemp -d)"
     [ -f "$dir/Secrets.xcconfig" ] || touch "$dir/Secrets.xcconfig"
-    if ! xcodebuild -project "$dir/TablePro.xcodeproj" -target TableProPluginKit -configuration Debug \
+    if ! xcodebuild -project "$dir/SchemaStudio.xcodeproj" -target TableProPluginKit -configuration Debug \
             -skipPackagePluginValidation build SYMROOT="$sym" >"$sym/build.log" 2>&1; then
         RESULT="failed"
         tail -20 "$sym/build.log"

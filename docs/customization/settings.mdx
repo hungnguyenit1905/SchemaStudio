@@ -26,7 +26,7 @@ Open with `Cmd+,`. Settings are grouped into nine tabs.
 
 ### Language
 
-System (default), English, Tiếng Việt, 简体中文, 繁體中文, Türkçe. Changing the language requires restarting TablePro.
+System (default), English, Tiếng Việt, 简体中文, 繁體中文, Türkçe. Changing the language requires restarting SchemaStudio.
 
 ### Startup Behavior
 
@@ -72,7 +72,7 @@ Enforcement happens at the database level where supported:
 
 ### Command Line
 
-**Install** writes a `tablepro` command to `/usr/local/bin` that opens database URLs in TablePro. If TablePro cannot write there, it shows a command for you to run in Terminal. See [Terminal and DDEV](/external-api/terminal).
+**Install** writes a `tablepro` command to `/usr/local/bin` that opens database URLs in SchemaStudio. If SchemaStudio cannot write there, it shows a command for you to run in Terminal. See [Terminal and DDEV](/external-api/terminal).
 
 ### Trusted Links
 
@@ -85,7 +85,7 @@ Lists external links you chose to always allow, with **Forget** per entry and **
 | **Automatically check for updates** | On | Periodic background check |
 | **Check for Updates...** | - | Check now |
 
-Powered by [Sparkle](https://sparkle-project.org/). Also available from the **TablePro** menu.
+Powered by [Sparkle](https://sparkle-project.org/). Also available from the **SchemaStudio** menu.
 
 ### Privacy
 
@@ -157,7 +157,7 @@ The **Integrations** tab runs the MCP server. **Enable MCP Server** (default off
 
 ### Authentication
 
-**Require authentication** defaults to on. If you switch it on with no tokens saved, TablePro generates a full-access token named "Default token" and shows it once. Copy it before closing the sheet. Generate, revoke, and delete tokens in the list below the toggle. See [Tokens](/external-api/tokens).
+**Require authentication** defaults to on. If you switch it on with no tokens saved, SchemaStudio generates a full-access token named "Default token" and shows it once. Copy it before closing the sheet. Generate, revoke, and delete tokens in the list below the toggle. See [Tokens](/external-api/tokens).
 
 ### Network
 
@@ -171,7 +171,7 @@ The **Integrations** tab runs the MCP server. **Enable MCP Server** (default off
 
 Two sub-tabs, each a split view with the plugin list on the left and details on the right.
 
-- **Installed**: bundled plugins (MySQL, PostgreSQL, SQLite, ClickHouse, and Redis drivers; CSV, JSON, SQL, XLSX, and MQL exporters; SQL, JSON, and CSV importers; CSV Inspector) plus anything you installed. Toggle a plugin on or off in the detail pane. Bundled plugins can be disabled but not uninstalled. To install from a file, click **+** below the list or drag a `.tableplugin` or `.zip` onto it. TablePro verifies the code signature before loading.
+- **Installed**: bundled plugins (MySQL, PostgreSQL, SQLite, ClickHouse, and Redis drivers; CSV, JSON, SQL, XLSX, and MQL exporters; SQL, JSON, and CSV importers; CSV Inspector) plus anything you installed. Toggle a plugin on or off in the detail pane. Bundled plugins can be disabled but not uninstalled. To install from a file, click **+** below the list or drag a `.tableplugin` or `.zip` onto it. SchemaStudio verifies the code signature before loading.
 - **Browse**: install from the registry, with search and a category filter (Database Drivers, Export Formats, Import Formats, Themes, Other). Registry drivers: MongoDB, Oracle, DuckDB, SQL Server, Cassandra, Etcd, Cloudflare D1, DynamoDB, BigQuery, Snowflake, Elasticsearch, LibSQL, SurrealDB, Beancount, Teradata, and Trino.
 
 See [Plugins & Themes](/features/plugins) for installing, updating, and managing plugins.
@@ -182,17 +182,17 @@ Only install plugins from sources you trust. Code-signature checks do not guaran
 
 ## Account
 
-Activate, deactivate, or view your license here. TablePro checks the license signature locally, re-validates with the server every 7 days, and allows 30 days offline before validation fails. On a Team plan, paste an invite code in the activation field to join a team instead of entering a key. See [Team plan](/features/team) and [Licensing](/features/licensing).
+Activate, deactivate, or view your license here. SchemaStudio checks the license signature locally, re-validates with the server every 7 days, and allows 30 days offline before validation fails. On a Team plan, paste an invite code in the activation field to join a team instead of entering a key. See [Team plan](/features/team) and [Licensing](/features/licensing).
 
 iCloud sync and linked folders live on the same tab. See [iCloud Sync](/features/icloud-sync).
 
 ## Settings Storage
 
-Settings live in `~/Library/Preferences/com.TablePro.plist`. Use **Reset All Settings to Defaults** on the General tab to reset them.
+Settings live in `~/Library/Preferences/com.SchemaStudio.plist`. Use **Reset All Settings to Defaults** on the General tab to reset them.
 
 Advanced flags not exposed in the UI:
 
 | Setting | Command |
 |---------|---------|
-| Custom plugin registry | `defaults write com.TablePro com.TablePro.customRegistryURL <url>` |
-| Clear custom registry | `defaults delete com.TablePro com.TablePro.customRegistryURL` |
+| Custom plugin registry | `defaults write com.SchemaStudio com.SchemaStudio.customRegistryURL <url>` |
+| Clear custom registry | `defaults delete com.SchemaStudio com.SchemaStudio.customRegistryURL` |

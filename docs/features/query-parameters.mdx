@@ -3,7 +3,7 @@ title: Query Parameters
 description: Use :name placeholders in SQL queries, fill values in a panel, execute with prepared statements
 ---
 
-Instead of editing your SQL every time you want to test a different value, use `:name` placeholders. TablePro detects them, shows a panel for entering values, and executes using prepared statements.
+Instead of editing your SQL every time you want to test a different value, use `:name` placeholders. SchemaStudio detects them, shows a panel for entering values, and executes using prepared statements.
 
 <Frame caption="Query parameter panel">
   <img
@@ -68,17 +68,17 @@ If the same name appears twice (`:id = :id`), both get the same value.
 
 ## How Binding Works
 
-TablePro converts your `:name` placeholders to the database's native format before executing:
+SchemaStudio converts your `:name` placeholders to the database's native format before executing:
 
 - MySQL, SQLite: `?` placeholders via `mysql_stmt_bind_param` / `sqlite3_bind_text`
 - PostgreSQL: `$1`, `$2` via `PQexecParams`
 - DuckDB: `$1`, `$2` via prepared statements
 - ClickHouse: `{p1:String}` server-side query parameters
 - SQL Server: `sp_executesql` with declared parameters
-- Drivers with no parameter API: TablePro substitutes the values with escaping
+- Drivers with no parameter API: SchemaStudio substitutes the values with escaping
 
 <Tip>
-Where the driver has a parameter API, values are bound, not pasted into your SQL. Everywhere else TablePro escapes them. Either way, you never quote a value yourself.
+Where the driver has a parameter API, values are bound, not pasted into your SQL. Everywhere else SchemaStudio escapes them. Either way, you never quote a value yourself.
 </Tip>
 
 ## Values Stick Around

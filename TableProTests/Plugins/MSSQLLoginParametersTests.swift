@@ -12,7 +12,7 @@ struct MSSQLLoginParametersTests {
         MSSQLLoginParameters.build(
             user: "carrier",
             password: "secret",
-            applicationName: "TablePro",
+            applicationName: "SchemaStudio",
             encryptionFlag: "require",
             database: database
         )
@@ -49,7 +49,7 @@ struct MSSQLLoginParametersTests {
         let parameters = MSSQLLoginParameters.build(
             user: "",
             password: "",
-            applicationName: "TablePro",
+            applicationName: "SchemaStudio",
             encryptionFlag: "require",
             database: "app"
         )

@@ -3,7 +3,7 @@ title: CSV Inspector
 description: Open, view, and edit CSV and TSV files without importing them into a database.
 ---
 
-TablePro opens `.csv` and `.tsv` files directly as documents. No scratch database, no import step. The file is the source of truth; Save writes back to it.
+SchemaStudio opens `.csv` and `.tsv` files directly as documents. No scratch database, no import step. The file is the source of truth; Save writes back to it.
 
 <Frame caption="CSV inspector window with toolbar, header row, and paginated data">
   <img className="block dark:hidden" src="/images/csv-inspector.png" alt="CSV Inspector" />
@@ -12,19 +12,19 @@ TablePro opens `.csv` and `.tsv` files directly as documents. No scratch databas
 
 ## Opening a file
 
-- Double-click a `.csv` or `.tsv` in Finder, or right-click and choose Open With > TablePro.
-- Drag a file onto the TablePro Dock icon.
+- Double-click a `.csv` or `.tsv` in Finder, or right-click and choose Open With > SchemaStudio.
+- Drag a file onto the SchemaStudio Dock icon.
 
 File > Open File... opens SQL files only, so it is not a path into the inspector.
 
 ## Auto-detection
 
-When a file opens, TablePro detects:
+When a file opens, SchemaStudio detects:
 
 - **Delimiter**: comma, tab, semicolon, or pipe, whichever appears most often outside quoted regions in the first 64 KB. `.tsv` files always use tab.
-- **Encoding**: a BOM selects UTF-8, UTF-16 BE, or UTF-16 LE. Without a BOM, TablePro probes up to the first 256 KB: valid UTF-8 reads as UTF-8, anything else reads the whole file as Windows-1252.
+- **Encoding**: a BOM selects UTF-8, UTF-16 BE, or UTF-16 LE. Without a BOM, SchemaStudio probes up to the first 256 KB: valid UTF-8 reads as UTF-8, anything else reads the whole file as Windows-1252.
 - **Line ending**: CRLF, LF, or CR, whichever appears first in the first 64 KB.
-- **Header row**: row one is treated as headers when at least half of its cells are non-empty and not numbers. Otherwise TablePro generates `Column 1`, `Column 2`, ... and treats every row as data.
+- **Header row**: row one is treated as headers when at least half of its cells are non-empty and not numbers. Otherwise SchemaStudio generates `Column 1`, `Column 2`, ... and treats every row as data.
 
 When a guess is wrong, choose **Edit > Set CSV Properties…** to pick the delimiter, quote character, escape character, encoding, and line ending by hand, then **Reload** to re-read the file with those settings. The escape character is either a doubled quote (the RFC 4180 default) or a backslash. Reload discards unsaved edits and asks first if you have any.
 
@@ -63,7 +63,7 @@ In the toolbar `Columns` menu, **Add Column…** at the top appends a new column
 
 ## Header row
 
-TablePro guesses whether the first row is a header when it opens the file. When it guesses wrong, choose **Edit > Switch First Row Between Header/Data** (`Cmd+Shift+H`) to flip it. Turning the header off moves the first row down into the data and names the columns `Column 1`, `Column 2`, and so on. Turning it back on promotes the first data row to the header. The change is undoable, and Save writes the file with or without a header row to match.
+SchemaStudio guesses whether the first row is a header when it opens the file. When it guesses wrong, choose **Edit > Switch First Row Between Header/Data** (`Cmd+Shift+H`) to flip it. Turning the header off moves the first row down into the data and names the columns `Column 1`, `Column 2`, and so on. Turning it back on promotes the first data row to the header. The change is undoable, and Save writes the file with or without a header row to match.
 
 ## Filter and sort
 
@@ -86,7 +86,7 @@ TablePro guesses whether the first row is a header when it opens the file. When 
 
 ## Type inference
 
-TablePro samples the first 200 rows of the file and infers `Integer`, `Real`, `Boolean`, `Date`, or `Text` per column, skipping empty values. The inferred type controls numeric sorting. Inferred types do not modify the stored data: every cell is still a string on disk. Override per-column from the `Columns` menu.
+SchemaStudio samples the first 200 rows of the file and infers `Integer`, `Real`, `Boolean`, `Date`, or `Text` per column, skipping empty values. The inferred type controls numeric sorting. Inferred types do not modify the stored data: every cell is still a string on disk. Override per-column from the `Columns` menu.
 
 ## Saving
 
@@ -96,10 +96,10 @@ TablePro samples the first 200 rows of the file and infers `Integer`, `Real`, `B
 
 ## External changes
 
-If another application writes the file while you have it open in TablePro:
+If another application writes the file while you have it open in SchemaStudio:
 
-- If you have no unsaved edits, TablePro reloads the file.
-- If you have unsaved edits, TablePro asks whether to reload or keep your changes.
+- If you have no unsaved edits, SchemaStudio reloads the file.
+- If you have unsaved edits, SchemaStudio asks whether to reload or keep your changes.
 
 ## Window tabbing
 

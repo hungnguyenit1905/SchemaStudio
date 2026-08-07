@@ -1,16 +1,16 @@
 ---
 title: Cloudflare Tunnel
-description: Reach a database behind Cloudflare Access by letting TablePro manage the cloudflared process
+description: Reach a database behind Cloudflare Access by letting SchemaStudio manage the cloudflared process
 ---
 
-Cloudflare Tunnel routes your database connection through `cloudflared access tcp` so you can reach a database published behind [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/). Instead of running cloudflared by hand in a terminal before every session, TablePro starts it when you connect and stops it when you disconnect, the same way it manages [SSH tunnels](/databases/ssh-tunneling).
+Cloudflare Tunnel routes your database connection through `cloudflared access tcp` so you can reach a database published behind [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/). Instead of running cloudflared by hand in a terminal before every session, SchemaStudio starts it when you connect and stops it when you disconnect, the same way it manages [SSH tunnels](/databases/ssh-tunneling).
 
 ## How it works
 
 ```mermaid
 flowchart LR
     subgraph mac ["Your Mac"]
-        TablePro["TablePro<br>127.0.0.1:auto"]
+        SchemaStudio["SchemaStudio<br>127.0.0.1:auto"]
         CFD["cloudflared"]
     end
 
@@ -22,10 +22,10 @@ flowchart LR
         Database["PostgreSQL<br>MySQL<br>db:5432"]
     end
 
-    TablePro -->|"loopback"| CFD -->|"Access tunnel"| Access -->|"origin"| Database
+    SchemaStudio -->|"loopback"| CFD -->|"Access tunnel"| Access -->|"origin"| Database
 ```
 
-TablePro picks a free loopback port, runs `cloudflared access tcp --hostname <your-host> --url 127.0.0.1:<port>`, waits until the local port accepts connections, then points the database driver at it. When you disconnect, quit the app, or the process exits, the tunnel is torn down.
+SchemaStudio picks a free loopback port, runs `cloudflared access tcp --hostname <your-host> --url 127.0.0.1:<port>`, waits until the local port accepts connections, then points the database driver at it. When you disconnect, quit the app, or the process exits, the tunnel is torn down.
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ Install cloudflared:
 brew install cloudflared
 ```
 
-TablePro looks for cloudflared on your `PATH` and in the common Homebrew locations (`/opt/homebrew/bin`, `/usr/local/bin`). If it lives somewhere else, set the path in the pane.
+SchemaStudio looks for cloudflared on your `PATH` and in the common Homebrew locations (`/opt/homebrew/bin`, `/usr/local/bin`). If it lives somewhere else, set the path in the pane.
 
 ## Setting up
 
@@ -59,13 +59,13 @@ A connection uses one connection method at a time. If an SSH tunnel, Cloud SQL A
   <Tab title="Browser Sign-In">
     cloudflared signs in through your browser and caches a token under `~/.cloudflared`. Click **Sign In with Browser...** once so the login happens up front; after that, connecting uses the cached token without opening a browser.
 
-    If you connect without a cached token, TablePro detects the sign-in prompt and asks you to sign in, rather than appearing to hang.
+    If you connect without a cached token, SchemaStudio detects the sign-in prompt and asks you to sign in, rather than appearing to hang.
   </Tab>
   <Tab title="Service Token">
-    For unattended connections, enter a Cloudflare Access service token (**Client ID** and **Client Secret**). TablePro stores them in the macOS Keychain and passes them to cloudflared as environment variables, never on the command line.
+    For unattended connections, enter a Cloudflare Access service token (**Client ID** and **Client Secret**). SchemaStudio stores them in the macOS Keychain and passes them to cloudflared as environment variables, never on the command line.
 
     <Warning>
-    The Access application policy must use a **Service Auth** rule. If the policy only allows an identity provider, Cloudflare still prompts for a browser sign-in even when a service token is set. This is configured in your Cloudflare Zero Trust dashboard, not in TablePro.
+    The Access application policy must use a **Service Auth** rule. If the policy only allows an identity provider, Cloudflare still prompts for a browser sign-in even when a service token is set. This is configured in your Cloudflare Zero Trust dashboard, not in SchemaStudio.
     </Warning>
   </Tab>
 </Tabs>
@@ -74,7 +74,7 @@ A connection uses one connection method at a time. If an SSH tunnel, Cloud SQL A
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| **Choose port automatically** | TablePro picks a free loopback port. Avoids collisions between connections. | On |
+| **Choose port automatically** | SchemaStudio picks a free loopback port. Avoids collisions between connections. | On |
 | **Local port** | Set a fixed port instead. | - |
 | **Expose to local network** | Bind `0.0.0.0` instead of `127.0.0.1`, so other machines on your network can reach the listener. Leave off unless you need it. | Off |
 
@@ -94,4 +94,4 @@ The cached Access token expired (Access sessions are time-limited), or you're us
 
 ### Tunnel didn't become ready
 
-TablePro waits up to 30 seconds for the local port to accept connections. If it times out, the last lines of cloudflared's output are shown. Check the hostname and that the Access application is reachable.
+SchemaStudio waits up to 30 seconds for the local port to accept connections. If it times out, the last lines of cloudflared's output are shown. Check the hostname and that the Access application is reachable.

@@ -67,7 +67,7 @@ struct PairingApprovalSheet: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(String(format: String(localized: "Allow %@ to access TablePro?"), request.clientName))
+            Text(String(format: String(localized: "Allow %@ to access SchemaStudio?"), request.clientName))
                 .font(.headline)
             Text(String(localized: "An external app is asking for an API token. Review the permissions before approving."))
                 .font(.callout)

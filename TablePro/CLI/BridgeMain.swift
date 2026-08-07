@@ -14,7 +14,7 @@ struct TableProMcpBridge {
             handshake = try await acquirer.acquire()
         } catch {
             logger.log(.error, "Handshake failed: \(error.localizedDescription)")
-            emitFatalJsonRpcError(message: "TablePro is not running. Launch the app and enable the MCP server.")
+            emitFatalJsonRpcError(message: "SchemaStudio is not running. Launch the app and enable the MCP server.")
             exit(1)
         }
 

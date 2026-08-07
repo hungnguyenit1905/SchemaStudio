@@ -19,9 +19,9 @@ enum MCPHandshakeError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .launchFailed(let status):
-            return "Failed to launch TablePro (open exit \(status))"
+            return "Failed to launch SchemaStudio (open exit \(status))"
         case .timeout:
-            return "Timed out waiting for TablePro MCP server to start"
+            return "Timed out waiting for SchemaStudio MCP server to start"
         case .fileNotFound:
             return "Handshake file not found"
         }
@@ -38,7 +38,7 @@ struct MCPHandshakeAcquirer: Sendable {
 
     init(logger: any MCPBridgeLogger) {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        self.handshakePath = "\(home)/Library/Application Support/TablePro/mcp-handshake.json"
+        self.handshakePath = "\(home)/Library/Application Support/SchemaStudio/mcp-handshake.json"
         self.logger = logger
     }
 
@@ -48,7 +48,7 @@ struct MCPHandshakeAcquirer: Sendable {
         }
 
         if (try? load()) != nil {
-            logger.log(.warning, "Stale handshake detected; relaunching TablePro")
+            logger.log(.warning, "Stale handshake detected; relaunching SchemaStudio")
             removeHandshake()
         }
 
@@ -74,7 +74,7 @@ struct MCPHandshakeAcquirer: Sendable {
     }
 
     private func launchHostApp() throws {
-        logger.log(.info, "TablePro not running; launching via \(Self.launchUrl)")
+        logger.log(.info, "SchemaStudio not running; launching via \(Self.launchUrl)")
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
         process.arguments = ["-g", Self.launchUrl]

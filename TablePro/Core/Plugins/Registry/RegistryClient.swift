@@ -19,9 +19,6 @@ final class RegistryClient {
     private static let logger = Logger(subsystem: "com.SchemaStudio", category: "RegistryClient")
     private static let manifestFreshnessWindow: TimeInterval = 300
 
-    private static let defaultRegistryURL = URL(string:
-        "https://raw.githubusercontent.com/TableProApp/plugins/main/plugins.json")!
-
     static let customRegistryURLKey = "com.SchemaStudio.customRegistryURL"
     private static let lastFetchKey = "com.SchemaStudio.registryLastFetch"
     private static let legacyManifestCacheKey = "registryManifestCache"
@@ -36,15 +33,12 @@ final class RegistryClient {
     @ObservationIgnored private var lastFetchedURL: URL?
 
     var isUsingCustomRegistry: Bool {
-        registryURL != Self.defaultRegistryURL
+        registryURL != nil
     }
 
-    private var registryURL: URL {
-        if let raw = defaults.string(forKey: Self.customRegistryURLKey),
-           let custom = URL(string: raw) {
-            return custom
-        }
-        return Self.defaultRegistryURL
+    private var registryURL: URL? {
+        guard let raw = defaults.string(forKey: Self.customRegistryURLKey) else { return nil }
+        return URL(string: raw)
     }
 
     private static let manifestCacheFileName = "registry-manifest.json"
@@ -71,14 +65,14 @@ final class RegistryClient {
             memoryCapacity: 1_000_000,
             diskCapacity: 5_000_000,
             directory: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("TablePro/Registry/URLCache", isDirectory: true)
+                .appendingPathComponent("SchemaStudio/Registry/URLCache", isDirectory: true)
         )
         return URLSession(configuration: config)
     }
 
     nonisolated static func defaultManifestCacheURL() -> URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("TablePro/Registry", isDirectory: true)
+            .appendingPathComponent("SchemaStudio/Registry", isDirectory: true)
             .appendingPathComponent(manifestCacheFileName)
     }
 
@@ -152,10 +146,11 @@ final class RegistryClient {
     func fetchManifest(forceRefresh: Bool = false) async {
         fetchState = .loading
 
-        let request = makeManifestRequest(forceRefresh: forceRefresh)
-        if isUsingCustomRegistry {
-            Self.logger.warning("Using custom plugin registry URL: \(self.registryURL.absoluteString)")
+        guard let request = makeManifestRequest(forceRefresh: forceRefresh) else {
+            fetchState = .failed(String(localized: "No plugin registry is configured."))
+            return
         }
+        Self.logger.warning("Using plugin registry URL: \(request.url?.absoluteString ?? "")")
 
         do {
             let (data, response) = try await session.data(for: request)
@@ -202,7 +197,8 @@ final class RegistryClient {
         }
     }
 
-    func makeManifestRequest(forceRefresh: Bool) -> URLRequest {
+    func makeManifestRequest(forceRefresh: Bool) -> URLRequest? {
+        guard let registryURL else { return nil }
         var request = URLRequest(url: registryURL)
         request.cachePolicy = forceRefresh ? .reloadIgnoringLocalCacheData : .reloadRevalidatingCacheData
         return request

@@ -102,7 +102,7 @@ final class MCPStreamableHttpClientTransportTests: XCTestCase {
                 status: 401,
                 headers: [
                     ("Content-Type", "text/plain"),
-                    ("WWW-Authenticate", "Bearer realm=\"TablePro\"")
+                    ("WWW-Authenticate", "Bearer realm=\"SchemaStudio\"")
                 ],
                 body: Data("Unauthenticated".utf8)
             )
@@ -336,7 +336,7 @@ final class MCPStreamableHttpClientTransportTests: XCTestCase {
         }
         XCTAssertEqual(response.id, .number(13))
         XCTAssertTrue(
-            response.error.message.contains("TablePro"),
+            response.error.message.contains("SchemaStudio"),
             "Expected an actionable message, got \(response.error.message)"
         )
         XCTAssertFalse(response.error.message.contains("Session not found"))
@@ -664,7 +664,7 @@ private final class FakeMcpServer: @unchecked Sendable {
                 status: 401,
                 headers: [
                     ("Content-Type", "text/plain"),
-                    ("WWW-Authenticate", "Bearer realm=\"TablePro\"")
+                    ("WWW-Authenticate", "Bearer realm=\"SchemaStudio\"")
                 ],
                 body: Data("Unauthenticated".utf8)
             )

@@ -5,7 +5,7 @@ import os
 public struct OpenConnectionWindowTool: MCPToolImplementation {
     public static let name = "open_connection_window"
     public static let description = String(
-        localized: "Open a TablePro window for a saved connection (focuses if already open)."
+        localized: "Open a SchemaStudio window for a saved connection (focuses if already open)."
     )
     public static let inputSchema: JsonValue = .object([
         "type": .string("object"),

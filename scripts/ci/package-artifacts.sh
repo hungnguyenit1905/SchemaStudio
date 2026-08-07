@@ -23,10 +23,10 @@ fi
 chmod +x scripts/create-dmg.sh
 
 echo "📌 Using version: $VERSION"
-NOTARIZE="${NOTARIZE:-false}" scripts/create-dmg.sh "$VERSION" "$ARCH" "build/Release/TablePro-${ARCH}.app"
+NOTARIZE="${NOTARIZE:-false}" scripts/create-dmg.sh "$VERSION" "$ARCH" "build/Release/SchemaStudio-${ARCH}.app"
 
 # Verify DMG was created
-DMG_FILE="build/Release/TablePro-${VERSION}-${ARCH}.dmg"
+DMG_FILE="build/Release/SchemaStudio-${VERSION}-${ARCH}.dmg"
 if [ -f "$DMG_FILE" ]; then
   echo "✅ DMG installer created successfully: $DMG_FILE"
 else
@@ -52,13 +52,13 @@ cd build/Release
 
 # Use ditto to preserve framework symlinks (zip -r resolves them,
 # which breaks code signature validation and Sparkle updates)
-if ! ditto -c -k --sequesterRsrc --keepParent "TablePro-${ARCH}.app" "TablePro-${ARCH}.zip"; then
+if ! ditto -c -k --sequesterRsrc --keepParent "SchemaStudio-${ARCH}.app" "SchemaStudio-${ARCH}.zip"; then
   echo "❌ ERROR: Failed to create ZIP archive"
   exit 1
 fi
 
 echo "✅ ZIP archive created"
-ls -lh "TablePro-${ARCH}.zip"
+ls -lh "SchemaStudio-${ARCH}.zip"
 
 cd - > /dev/null
 
@@ -66,7 +66,7 @@ cd - > /dev/null
 if [ -n "$STAGING" ]; then
   mkdir -p "$STAGING"
   cp build/Release/*.dmg "$STAGING/" 2>/dev/null || true
-  cp "build/Release/TablePro-${ARCH}.zip" "$STAGING/" 2>/dev/null || true
+  cp "build/Release/SchemaStudio-${ARCH}.zip" "$STAGING/" 2>/dev/null || true
   echo "Artifacts staged to $STAGING"
   ls -lh "$STAGING"
 fi

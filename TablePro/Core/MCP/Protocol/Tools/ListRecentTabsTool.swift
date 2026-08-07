@@ -3,7 +3,7 @@ import Foundation
 public struct ListRecentTabsTool: MCPToolImplementation {
     public static let name = "list_recent_tabs"
     public static let description = String(
-        localized: "List currently open tabs across all TablePro windows. Returns connection, tab type, table name, and titles for each tab."
+        localized: "List currently open tabs across all SchemaStudio windows. Returns connection, tab type, table name, and titles for each tab."
     )
     public static let requiredScopes: Set<MCPScope> = [.toolsRead]
     public static let annotations = MCPToolAnnotations(

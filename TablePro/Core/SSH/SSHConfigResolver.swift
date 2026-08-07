@@ -207,7 +207,7 @@ enum SSHConfigResolver {
               SSHUnsupportedDirective.changesRouting(key: key) else { return }
 
         logger.warning(
-            "Ignoring \(key) from ssh_config: TablePro connects to the host directly, so this connection may not reach the same server ssh would"
+            "Ignoring \(key) from ssh_config: SchemaStudio connects to the host directly, so this connection may not reach the same server ssh would"
         )
     }
 

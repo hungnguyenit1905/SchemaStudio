@@ -255,7 +255,7 @@ actor SOCKSProxyManager: TunnelManaging {
         if !config.username.isEmpty, let password, !password.isEmpty {
             proxy.applyCredential(username: config.username, password: password)
         }
-        let context = NWParameters.PrivacyContext(description: "TablePro-SOCKS-\(connectionId.uuidString)")
+        let context = NWParameters.PrivacyContext(description: "SchemaStudio-SOCKS-\(connectionId.uuidString)")
         context.proxyConfigurations = [proxy]
         return context
     }

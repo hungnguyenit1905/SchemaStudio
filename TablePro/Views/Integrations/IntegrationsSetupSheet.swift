@@ -50,7 +50,7 @@ struct IntegrationsSetupSheet: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(String(localized: "Connect a Client"))
                 .font(.title2.weight(.semibold))
-            Text(String(localized: "Choose your client and follow the steps to connect it to TablePro."))
+            Text(String(localized: "Choose your client and follow the steps to connect it to SchemaStudio."))
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }

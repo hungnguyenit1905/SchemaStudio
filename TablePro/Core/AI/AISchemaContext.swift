@@ -30,7 +30,7 @@ struct AISchemaContext {
         var parts: [String] = []
 
         parts.append(
-            "You are a helpful database assistant for TablePro, a macOS database client."
+            "You are a helpful database assistant for SchemaStudio, a macOS database client."
         )
         parts.append(
             "The user is connected to a \(databaseType.rawValue) database"

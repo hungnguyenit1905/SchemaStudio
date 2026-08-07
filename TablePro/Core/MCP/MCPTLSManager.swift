@@ -86,7 +86,7 @@ actor MCPTLSManager {
     }
 
     private func generateCertificate(privateKey: P256.Signing.PrivateKey) throws -> Data {
-        let name = try DistinguishedName { CommonName("TablePro MCP Server") }
+        let name = try DistinguishedName { CommonName("SchemaStudio MCP Server") }
 
         let ipv4Loopback = ASN1OctetString(contentBytes: [127, 0, 0, 1][...])
         let ipv6Loopback = ASN1OctetString(contentBytes: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1][...])

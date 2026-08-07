@@ -35,7 +35,7 @@ enum PluginError: LocalizedError {
         case .incompatibleVersion(let required, let current):
             return String(format: String(localized: "Plugin requires PluginKit version %d, but app provides version %d"), required, current)
         case .pluginOutdated(let pluginVersion, let requiredVersion):
-            let format = String(localized: "Plugin was built for PluginKit version %d; this release of TablePro needs version %d.")
+            let format = String(localized: "Plugin was built for PluginKit version %d; this release of SchemaStudio needs version %d.")
             return String(format: format, pluginVersion, requiredVersion)
         case .cannotUninstallBuiltIn:
             return String(localized: "Built-in plugins cannot be uninstalled")
@@ -58,7 +58,7 @@ enum PluginError: LocalizedError {
         case .pluginUpdateUnavailable(let reason):
             return reason
         case .incompatibleWithCurrentApp(let minimumRequired):
-            return String(format: String(localized: "This plugin requires TablePro %@ or later"), minimumRequired)
+            return String(format: String(localized: "This plugin requires SchemaStudio %@ or later"), minimumRequired)
         case .invalidDescriptor(let pluginId, let reason):
             return String(format: String(localized: "Plugin '%@' has an invalid descriptor: %@"), pluginId, reason)
         }

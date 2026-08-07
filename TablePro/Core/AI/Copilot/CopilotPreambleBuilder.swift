@@ -14,7 +14,7 @@ final class CopilotPreambleBuilder {
     static let contextDirectory: URL = {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
-        return appSupport.appendingPathComponent("TablePro/copilot-context", isDirectory: true)
+        return appSupport.appendingPathComponent("SchemaStudio/copilot-context", isDirectory: true)
     }()
 
     private(set) var preamble: String = ""

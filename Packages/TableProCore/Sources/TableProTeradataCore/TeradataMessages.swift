@@ -82,7 +82,7 @@ enum TeradataMessages {
         stringAttribute(7, "127.0.0.1")
         stringAttribute(8, "1")
         stringAttribute(9, username)
-        stringAttribute(10, "TablePro")
+        stringAttribute(10, "SchemaStudio")
         stringAttribute(11, "macOS")
         stringAttribute(22, "Swift macOS")
         stringAttribute(16, "macOS CryptoKit")

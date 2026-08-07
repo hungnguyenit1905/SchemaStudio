@@ -3,7 +3,7 @@ title: Plugin Development
 description: Write a database driver plugin, implement the PluginKit protocols, and package it as a .tableplugin bundle
 ---
 
-A TablePro database driver is a `.tableplugin` bundle built against **TableProPluginKit** (`Plugins/TableProPluginKit/`). You implement two protocols: `DriverPlugin` describes the database (name, port, capabilities, SQL dialect) and creates driver instances; `PluginDatabaseDriver` is the connection itself (connect, query, fetch schema). The app bridges your driver to its internal `DatabaseDriver` protocol through `PluginDriverAdapter` and resolves it by database type ID, so a working plugin gets the full UI: connection form, sidebar, data grid, editor, import and export.
+A SchemaStudio database driver is a `.tableplugin` bundle built against **TableProPluginKit** (`Plugins/TableProPluginKit/`). You implement two protocols: `DriverPlugin` describes the database (name, port, capabilities, SQL dialect) and creates driver instances; `PluginDatabaseDriver` is the connection itself (connect, query, fetch schema). The app bridges your driver to its internal `DatabaseDriver` protocol through `PluginDriverAdapter` and resolves it by database type ID, so a working plugin gets the full UI: connection form, sidebar, data grid, editor, import and export.
 
 The best starting point is an existing plugin. `Plugins/SurrealDBDriverPlugin/` is a compact reference with no C bridge: it talks HTTP, implements the schema-aware query-building hooks, and ships a custom editor language.
 
@@ -66,7 +66,7 @@ Notable defaults you may want to override:
 
 ## How loading works
 
-`PluginManager` loads plugins from two places: the app's `PlugIns/` directory (built-in, no signature check) and `~/Library/Application Support/TablePro/Plugins` (user-installed, must be signed by TablePro's signing team).
+`PluginManager` loads plugins from two places: the app's `PlugIns/` directory (built-in, no signature check) and `~/Library/Application Support/SchemaStudio/Plugins` (user-installed, must be signed by SchemaStudio's signing team).
 
 Before loading any bundle, `validateBundleVersions` checks `TableProPluginKitVersion` against the app's compatible range, `[minimumCompatiblePluginKitVersion, currentPluginKitVersion]` in `PluginManager.swift`. A missing key, a version above the range, or a version below it all reject the plugin with a clear error instead of a crash. `TableProMinAppVersion` is checked next, then the bundle's principal class must conform to `TableProPlugin`.
 
@@ -85,7 +85,7 @@ Run `scripts/check-pluginkit-abi.sh` before merging any change under `Plugins/Ta
 
 ## Test locally
 
-The app derives the required signing team from its own signature, so a plugin built by the same Xcode as your debug app passes verification. Build the plugin target in Xcode, then install it into the user plugins directory and relaunch TablePro:
+The app derives the required signing team from its own signature, so a plugin built by the same Xcode as your debug app passes verification. Build the plugin target in Xcode, then install it into the user plugins directory and relaunch SchemaStudio:
 
 ```bash
 scripts/install-plugin-dev.sh MyDriverPlugin
@@ -95,9 +95,9 @@ The script copies the bundle from DerivedData, so build from Xcode, not from a C
 
 ## Distribute
 
-Publishing to TablePro's registry takes two steps in this repo:
+Publishing to SchemaStudio's registry takes two steps in this repo:
 
 1. Add a case for your plugin to `resolve_plugin_info()` in `.github/workflows/build-plugin.yml`: target name, bundle ID, display name, summary, database type IDs, icon, category, homepage. Without it the workflow exits with `Unknown plugin name`.
 2. Push the tag `plugin-<name>-v<version>`. CI builds both architectures, signs, notarizes, and updates `plugins.json`.
 
-CI signs with TablePro's own certificate, so a third-party plugin ships through a pull request, not a tag of your own. See [Plugin Registry](/development/plugin-registry) for the manifest format, the self-describing `metadata` block, and the publishing flow.
+CI signs with SchemaStudio's own certificate, so a third-party plugin ships through a pull request, not a tag of your own. See [Plugin Registry](/development/plugin-registry) for the manifest format, the self-describing `metadata` block, and the publishing flow.

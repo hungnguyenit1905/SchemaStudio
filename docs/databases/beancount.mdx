@@ -1,11 +1,11 @@
 ---
 title: Beancount
-description: Open Beancount ledgers with TablePro
+description: Open Beancount ledgers with SchemaStudio
 ---
 
-TablePro opens `.beancount` ledgers as read-only, file-based connections. If the Beancount plugin is not installed yet, TablePro prompts you to download it before opening the ledger. The driver projects transactions, postings, accounts, prices, computed balances, balance assertions, and source files into SQL tables for browsing and exports.
+SchemaStudio opens `.beancount` ledgers as read-only, file-based connections. If the Beancount plugin is not installed yet, SchemaStudio prompts you to download it before opening the ledger. The driver projects transactions, postings, accounts, prices, computed balances, balance assertions, and source files into SQL tables for browsing and exports.
 
-The plugin uses either `rledger` (the rustledger project) or Python Beancount to parse ledgers. TablePro does not bundle either one, so install one yourself before opening a ledger. When both are available, TablePro uses `rledger`; Python Beancount is the fallback for browsing projected SQL tables.
+The plugin uses either `rledger` (the rustledger project) or Python Beancount to parse ledgers. SchemaStudio does not bundle either one, so install one yourself before opening a ledger. When both are available, SchemaStudio uses `rledger`; Python Beancount is the fallback for browsing projected SQL tables.
 
 The plugin also supports BQL queries through `rledger`. BQL requires the `rledger` executable even when the ledger was opened through Python Beancount.
 
@@ -19,7 +19,7 @@ pip3 install beancount
 
 For `rledger`, build or download the rustledger project and put the executable on `PATH`, in `/opt/homebrew/bin`, or in `/usr/local/bin`.
 
-TablePro then discovers backends in this order:
+SchemaStudio then discovers backends in this order:
 
 1. `rledger` from `TABLEPRO_RUSTLEDGER_BINARY`, then `PATH`, then `/opt/homebrew/bin` and `/usr/local/bin`.
 2. A `python3` that can `import beancount`, from `TABLEPRO_BEANCOUNT_PYTHON`, then `PATH`, then `/opt/homebrew/bin/python3`, `/usr/local/bin/python3`, and `/usr/bin/python3`.
@@ -38,7 +38,7 @@ To verify Python Beancount:
 python3 -c "import beancount"
 ```
 
-If TablePro cannot find a supported backend, set the executable path before launching the app:
+If SchemaStudio cannot find a supported backend, set the executable path before launching the app:
 
 ```bash
 launchctl setenv TABLEPRO_RUSTLEDGER_BINARY /opt/homebrew/bin/rledger
@@ -55,7 +55,7 @@ launchctl setenv TABLEPRO_BEANCOUNT_BACKEND python
 
 <Steps>
   <Step title="Create a new connection">
-    Open TablePro and click **Create Connection...** or press **Cmd+N**.
+    Open SchemaStudio and click **Create Connection...** or press **Cmd+N**.
   </Step>
   <Step title="Select Beancount">
     Choose **Beancount** from the database type list.
@@ -69,8 +69,8 @@ launchctl setenv TABLEPRO_BEANCOUNT_BACKEND python
 </Steps>
 
 <Frame caption="A Beancount ledger projected into SQL tables">
-  <img className="block dark:hidden" src="/images/beancount-ledger-tables.png" alt="Beancount ledger open in TablePro with projected tables in the sidebar" />
-  <img className="hidden dark:block" src="/images/beancount-ledger-tables-dark.png" alt="Beancount ledger open in TablePro with projected tables in the sidebar" />
+  <img className="block dark:hidden" src="/images/beancount-ledger-tables.png" alt="Beancount ledger open in SchemaStudio with projected tables in the sidebar" />
+  <img className="hidden dark:block" src="/images/beancount-ledger-tables-dark.png" alt="Beancount ledger open in SchemaStudio with projected tables in the sidebar" />
 </Frame>
 
 ## Connection URL
@@ -111,7 +111,7 @@ Table browsing, row counts, and pagination work for BQL results. BQL queries do 
 
 ## Troubleshooting
 
-**Beancount needs rledger or Python Beancount**: No backend was found. An app launched from Finder does not inherit your shell's `PATH`, so `rledger --version` working in Terminal is not enough. Set `TABLEPRO_RUSTLEDGER_BINARY` or `TABLEPRO_BEANCOUNT_PYTHON` with `launchctl setenv`, then relaunch TablePro.
+**Beancount needs rledger or Python Beancount**: No backend was found. An app launched from Finder does not inherit your shell's `PATH`, so `rledger --version` working in Terminal is not enough. Set `TABLEPRO_RUSTLEDGER_BINARY` or `TABLEPRO_BEANCOUNT_PYTHON` with `launchctl setenv`, then relaunch SchemaStudio.
 
 **TABLEPRO_BEANCOUNT_PYTHON points to a Python executable that cannot import beancount**: Run `pip3 install beancount` with that exact interpreter, or point the variable at one that already has the package.
 

@@ -27,7 +27,7 @@ MongoDB is a registry plugin. Picking it in the **Choose a Database** sheet prom
 | **Password** | - | |
 | **Auth Mechanism** | Default | SCRAM-SHA-1, SCRAM-SHA-256, X.509, or AWS IAM. In the Authentication section |
 
-The form has no Database field. On connect TablePro opens the first non-system database it finds, and **Cmd+K** switches to another. A database in a connection URL path (`mongodb://host:27017/mydb`) is used instead.
+The form has no Database field. On connect SchemaStudio opens the first non-system database it finds, and **Cmd+K** switches to another. A database in a connection URL path (`mongodb://host:27017/mydb`) is used instead.
 
 **Advanced**: **Auth Database** (usually `admin`), **Read Preference**, **Write Concern**, **Use SRV Record**, and **Replica Set** name.
 
@@ -40,11 +40,11 @@ Leaving **Auth Database** empty authenticates against the database in the connec
 
 ## MongoDB Atlas (SRV)
 
-The **Use SRV Record** toggle in Advanced connects with the `mongodb+srv://` scheme. For hosts ending in `.mongodb.net`, TablePro enables SRV automatically and turns TLS on if the SSL mode is Disabled, since Atlas requires both. An Atlas connection needs only the cluster hostname, username, and password.
+The **Use SRV Record** toggle in Advanced connects with the `mongodb+srv://` scheme. For hosts ending in `.mongodb.net`, SchemaStudio enables SRV automatically and turns TLS on if the SSL mode is Disabled, since Atlas requires both. An Atlas connection needs only the cluster hostname, username, and password.
 
 ## Replica Sets
 
-The **Hosts** field accepts multiple `host:port` pairs separated by commas (for example `host1:27017,host2:27017,host3:27017`). TablePro discovers the primary automatically and routes writes there. Set the replica set name in **Advanced**.
+The **Hosts** field accepts multiple `host:port` pairs separated by commas (for example `host1:27017,host2:27017,host3:27017`). SchemaStudio discovers the primary automatically and routes writes there. Set the replica set name in **Advanced**.
 
 You can also paste a multi-host URI directly:
 
@@ -53,7 +53,7 @@ mongodb://user:pass@host1:27017,host2:27017,host3:27017/db?replicaSet=rs0
 ```
 
 <Note>
-Over an SSH tunnel TablePro connects to the first host only and drops the rest of the list. Replica set discovery and failover are off for that session.
+Over an SSH tunnel SchemaStudio connects to the first host only and drops the rest of the list. Replica set discovery and failover are off for that session.
 </Note>
 
 ## SSL/TLS
@@ -67,7 +67,7 @@ mongodb://user:password@host:27017/database?authSource=admin
 mongodb+srv://user:password@cluster.mongodb.net/database
 ```
 
-The `mongodb+srv://` scheme resolves hosts through DNS SRV records and does not allow a port. If you paste an SRV URL that includes one (for example `cluster.mongodb.net:27017`), TablePro strips it before connecting. The plain `mongodb://` scheme keeps any port you provide.
+The `mongodb+srv://` scheme resolves hosts through DNS SRV records and does not allow a port. If you paste an SRV URL that includes one (for example `cluster.mongodb.net:27017`), SchemaStudio strips it before connecting. The plain `mongodb://` scheme keeps any port you provide.
 
 See [Connection URL Reference](/databases/connection-urls) for all parameters.
 
@@ -79,7 +79,7 @@ See [Connection URL Reference](/databases/connection-urls) for all parameters.
 
 **Views**: **New View** in the sidebar opens a query tab with a `db.createView("view_name", "source_collection", [pipeline])` template. Editing a view definition pre-fills a `db.runCommand({"collMod": ...})` command.
 
-**Explain**: Press `Cmd+Option+E` on an MQL statement. TablePro converts `find`, `aggregate`, `countDocuments`, update, delete, and `findOneAnd*` calls into `db.runCommand({"explain": ..., "verbosity": "executionStats"})`.
+**Explain**: Press `Cmd+Option+E` on an MQL statement. SchemaStudio converts `find`, `aggregate`, `countDocuments`, update, delete, and `findOneAnd*` calls into `db.runCommand({"explain": ..., "verbosity": "executionStats"})`.
 
 **MQL Shell Queries**: Filters and pipelines are parsed as JSON and Extended JSON, not JavaScript. Quote every key, operators included: `{age: {$gte: 18}}` fails with a parse error. mongosh helpers like `ISODate("2025-01-01")` fail too; write `{"$date": "2025-01-01T00:00:00Z"}`. The editor has no comment syntax, so a `//` line becomes part of the statement.
 
@@ -123,13 +123,13 @@ db.users.countDocuments({"role": "admin"})
 
 **Connection refused**: Check MongoDB is running (`brew services start mongodb-community`), verify host/port in `mongod.conf`, check `bindIp` setting.
 
-**Auth failed**: The error names the database TablePro authenticated against. If that is not where your user lives, set **Auth Database** in the Advanced section. Otherwise verify username, password, and auth mechanism. The MQL editor does not parse `db.getUsers()` or `db.createUser()`; inspect users with `db.runCommand({"usersInfo": 1})` or manage them in mongosh.
+**Auth failed**: The error names the database SchemaStudio authenticated against. If that is not where your user lives, set **Auth Database** in the Advanced section. Otherwise verify username, password, and auth mechanism. The MQL editor does not parse `db.getUsers()` or `db.createUser()`; inspect users with `db.runCommand({"usersInfo": 1})` or manage them in mongosh.
 
 **Timeout**: Verify host/port, check network and firewall, whitelist your IP in MongoDB Atlas.
 
 **A collection is slow to open**: A sort or a filter on a field with no index makes MongoDB read every document, even when you only ask for 20 rows, because it has to look at all of them to find which 20 come first. Check the Structure tab for an index on the field you sorted or filtered by, and add one if it is missing. `Cmd+.` stops the query on the server.
 
-**The row total shows `~`**: That is an estimate read from collection metadata, which is instant. TablePro caps the automatic count at 5 seconds and keeps the estimate if the server takes longer, so browsing is never held up by counting. **Count exactly** runs a real count with your configured query timeout. Views and time-series collections have no metadata count, so their estimate can be missing.
+**The row total shows `~`**: That is an estimate read from collection metadata, which is instant. SchemaStudio caps the automatic count at 5 seconds and keeps the estimate if the server takes longer, so browsing is never held up by counting. **Count exactly** runs a real count with your configured query timeout. Views and time-series collections have no metadata count, so their estimate can be missing.
 
 ## Limitations
 

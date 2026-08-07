@@ -432,7 +432,7 @@ extension MainContentCoordinator {
             AlertHelper.showErrorSheet(
                 title: String(localized: "Schema Switching Not Supported"),
                 message: String(
-                    format: String(localized: "%@ does not support switching schemas in TablePro."),
+                    format: String(localized: "%@ does not support switching schemas in SchemaStudio."),
                     connection.type.rawValue
                 ),
                 window: contentWindow

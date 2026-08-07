@@ -105,7 +105,7 @@ struct GeneralPaneView: View {
                 if hostsValue.contains(",") {
                     Section {
                         Label(
-                            String(localized: "Over an SSH tunnel, TablePro connects directly to the first host. Replica set failover is not available."),
+                            String(localized: "Over an SSH tunnel, SchemaStudio connects directly to the first host. Replica set failover is not available."),
                             systemImage: "exclamationmark.triangle"
                         )
                         .font(.caption)

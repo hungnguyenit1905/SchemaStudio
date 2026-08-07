@@ -54,7 +54,7 @@ public struct InitializeHandler: MCPMethodHandler {
             ]),
             "serverInfo": .object([
                 "name": .string("tablepro"),
-                "title": .string("TablePro"),
+                "title": .string("SchemaStudio"),
                 "version": .string(Self.serverVersion)
             ])
         ])

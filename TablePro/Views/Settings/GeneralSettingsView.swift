@@ -33,12 +33,12 @@ struct GeneralSettingsView: View {
             }
 
             if let initial = initialLanguage, settings.language != initial {
-                Text("Restart TablePro for the language change to take full effect.")
+                Text("Restart SchemaStudio for the language change to take full effect.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Picker("When TablePro starts:", selection: $settings.startupBehavior) {
+            Picker("When SchemaStudio starts:", selection: $settings.startupBehavior) {
                 ForEach(StartupBehavior.allCases) { behavior in
                     Text(behavior.displayName).tag(behavior)
                 }

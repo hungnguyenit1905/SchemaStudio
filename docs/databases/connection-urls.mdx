@@ -3,7 +3,7 @@ title: Connection URL Reference
 description: Every supported database URL scheme, format, and query parameter for imports and direct connections
 ---
 
-TablePro parses standard database connection URLs for importing connections, opening them directly from a browser or terminal, and configuring SSH tunnels.
+SchemaStudio parses standard database connection URLs for importing connections, opening them directly from a browser or terminal, and configuring SSH tunnels.
 
 ## URL Schemes
 
@@ -280,15 +280,15 @@ Uses a saved connection if it matches, otherwise creates a temporary session. To
   <img className="hidden dark:block" src="/images/import-from-url-dark.png" alt="Import from URL sheet with a pasted connection URL" />
 </Frame>
 
-`+ssh` schemes are not registered with macOS, so `open` and browser links cannot route them to TablePro. Use the **Import from URL...** sheet for SSH tunnel URLs.
+`+ssh` schemes are not registered with macOS, so `open` and browser links cannot route them to SchemaStudio. Use the **Import from URL...** sheet for SSH tunnel URLs.
 
 <Tip>
-To force TablePro when another client also handles the scheme, use `open -b com.TablePro "mysql://..."`. See [Terminal and DDEV](/external-api/terminal) for the `tablepro` command and a `ddev tablepro` host command.
+To force SchemaStudio when another client also handles the scheme, use `open -b com.SchemaStudio "mysql://..."`. See [Terminal and DDEV](/external-api/terminal) for the `tablepro` command and a `ddev tablepro` host command.
 </Tip>
 
 ## Confirmation and Trusted Links
 
-Every URL opened from outside the app shows a confirmation alert with the database type, host, user, and database before TablePro connects. Connect only if you trust the source of the link.
+Every URL opened from outside the app shows a confirmation alert with the database type, host, user, and database before SchemaStudio connects. Connect only if you trust the source of the link.
 
 For connections to this machine (`localhost`, `127.x.x.x`, `::1`) the alert also offers **Always Allow**. A trusted link is matched by database type, host, database, username, and the URL's `name` parameter, never the port. Only loopback hosts can be trusted; remote hosts always prompt.
 

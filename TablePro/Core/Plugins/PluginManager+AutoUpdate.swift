@@ -177,7 +177,7 @@ extension PluginManager {
             .filter { $0.architecture == .current }
             .compactMap(\.pluginKitVersion)
         if availableKits.contains(where: { $0 > Self.currentPluginKitVersion }) {
-            return String(localized: "A newer version of TablePro is required for this plugin. Update TablePro to keep using it.")
+            return String(localized: "A newer version of SchemaStudio is required for this plugin. Update SchemaStudio to keep using it.")
         }
         return String(localized: "No compatible build is available yet. This plugin will update automatically once one is published.")
     }
@@ -187,11 +187,11 @@ extension PluginManager {
     }
 
     private func registryUnreachableReason() -> String {
-        String(localized: "TablePro couldn't reach the plugin registry to update this plugin. Check your connection and reopen TablePro.")
+        String(localized: "SchemaStudio couldn't reach the plugin registry to update this plugin. Check your connection and reopen SchemaStudio.")
     }
 
     private func temporaryFailureReason() -> String {
-        String(localized: "Updating this plugin didn't finish. TablePro will try again the next time it launches.")
+        String(localized: "Updating this plugin didn't finish. SchemaStudio will try again the next time it launches.")
     }
 
     private func applyReason(_ reason: String, to plugins: [RejectedPlugin]) {

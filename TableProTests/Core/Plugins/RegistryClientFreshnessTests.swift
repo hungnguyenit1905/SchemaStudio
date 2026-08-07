@@ -96,6 +96,8 @@ struct RegistryClientFreshnessTests {
         config.protocolClasses = [MockRegistryProtocol.self]
         let session = URLSession(configuration: config)
 
+        defaults.set("https://registry.invalid/plugins.json", forKey: RegistryClient.customRegistryURLKey)
+
         let client = RegistryClient(
             userDefaults: defaults,
             session: session,
@@ -107,7 +109,7 @@ struct RegistryClientFreshnessTests {
     @Test("non-forced manifest request revalidates with the origin instead of trusting the local cache")
     func nonForcedRequestRevalidates() throws {
         let (client, _, _) = try makeEnvironment()
-        let request = client.makeManifestRequest(forceRefresh: false)
+        let request = try #require(client.makeManifestRequest(forceRefresh: false))
         #expect(request.cachePolicy == .reloadRevalidatingCacheData)
         #expect(request.value(forHTTPHeaderField: "If-None-Match") == nil)
     }
@@ -115,7 +117,7 @@ struct RegistryClientFreshnessTests {
     @Test("forced manifest request bypasses the local cache entirely")
     func forcedRequestIgnoresCache() throws {
         let (client, _, _) = try makeEnvironment()
-        let request = client.makeManifestRequest(forceRefresh: true)
+        let request = try #require(client.makeManifestRequest(forceRefresh: true))
         #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
     }
 

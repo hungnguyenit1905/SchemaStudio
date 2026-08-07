@@ -1,6 +1,6 @@
 ---
 title: "Changelog"
-description: "Product updates and announcements for TablePro"
+description: "Product updates and announcements for SchemaStudio"
 rss: true
 ---
 
@@ -22,7 +22,7 @@ rss: true
   - Saving on a server that starts sessions read-only no longer fails on MySQL, MariaDB, PostgreSQL, CockroachDB, and Redshift
   - Changing Safe Mode applies to an open connection instead of waiting for a reconnect, and a read-only error says whether the server or Safe Mode refused the write
   - The MCP `export_data` tool honours the configured row limits and query timeout, works on SQL Server, Oracle, and Teradata, and shows up in query history
-  - Setting the MCP row limits or query timeout to zero no longer crashes the app, and AI chat no longer crashes on a limit larger than TablePro can count to
+  - Setting the MCP row limits or query timeout to zero no longer crashes the app, and AI chat no longer crashes on a limit larger than SchemaStudio can count to
 </Update>
 
 <Update label="August 2, 2026" description="v0.62.0">
@@ -58,7 +58,7 @@ rss: true
 <Update label="July 30, 2026" description="v0.61.0">
   ### New Features
 
-  - **Connect from a project folder**: Pick a folder from the welcome screen or File > Open Project Folder, and TablePro reads the database settings it finds in `.env`, `wp-config.php`, `prisma/schema.prisma`, `config/database.yml`, `docker-compose.yml`, `application.properties`, `application.yml`, or `appsettings.json`. Review what it found and the connection form opens filled in (#1959)
+  - **Connect from a project folder**: Pick a folder from the welcome screen or File > Open Project Folder, and SchemaStudio reads the database settings it finds in `.env`, `wp-config.php`, `prisma/schema.prisma`, `config/database.yml`, `docker-compose.yml`, `application.properties`, `application.yml`, or `appsettings.json`. Review what it found and the connection form opens filled in (#1959)
   - **AI walkthroughs**: Explain, Optimize, and Fix Error now answer with numbered steps and a before/after SQL diff you can apply to the editor (#1945)
   - **Close tabs in groups**: Close All Tabs, Close Other Tabs, and Close Tabs for Other Databases in the File menu. None has a shortcut out of the box; bind them in Settings > Keyboard (#1972)
   - **Structure editing in the inspector**: Select a column, index, or foreign key in the Structure tab and edit it in the inspector, with the same type list and YES/NO menus the grid offers
@@ -70,7 +70,7 @@ rss: true
   - The welcome screen groups Import from Other App, Open Project Folder, Import Connections, and Import from URL into one Add from Existing menu
   - A failed iCloud sync on iPhone and iPad names the cause: out of storage, no network, or a rejected change (#1990)
   - An SSH tunnel that cannot reach the database reports whether the connection was refused or timed out, instead of leaving the driver to report a handshake timeout. The usual cause is Host holding the server's public address when the database only listens on `127.0.0.1` (#1981)
-  - The macOS local network prompt now says why TablePro needs access, so it is no longer a generic prompt that is easy to deny
+  - The macOS local network prompt now says why SchemaStudio needs access, so it is no longer a generic prompt that is easy to deny
 
   ### Bug Fixes
 
@@ -94,7 +94,7 @@ rss: true
 <Update label="July 25, 2026" description="v0.60.1">
   ### New Features
 
-  - **RDS Endpoint**: AWS IAM connections have an RDS Endpoint field, for when the connection points at a port forward you run yourself and TablePro cannot tell which database is behind it (#1432)
+  - **RDS Endpoint**: AWS IAM connections have an RDS Endpoint field, for when the connection points at a port forward you run yourself and SchemaStudio cannot tell which database is behind it (#1432)
 
   ### Improvements
 
@@ -132,7 +132,7 @@ rss: true
 
   - **Trino**: Trino as a downloadable native Swift driver. Connect with a username and password or a JWT token, optionally over TLS with a custom CA or client certificate, browse catalogs, schemas, tables, and columns, run SQL, edit rows, and create or alter tables (#1906)
   - **SSH auth: None**: SSH tunnels support None as an auth method, for hosts that handle SSH auth themselves like Tailscale SSH (#1907)
-  - **SSH keyboard-interactive 2FA**: SSH tunnels support keyboard-interactive verification, so a server that needs a private key plus a one-time code now connects. TablePro shows the prompt and you type the code (#1920)
+  - **SSH keyboard-interactive 2FA**: SSH tunnels support keyboard-interactive verification, so a server that needs a private key plus a one-time code now connects. SchemaStudio shows the prompt and you type the code (#1920)
 
   ### Improvements
 
@@ -160,7 +160,7 @@ rss: true
   ### Improvements
 
   - The sidebar database tree remembers which databases and schemas you expanded, per connection, so reopening a window keeps them open
-  - The query result row cap no longer adds a LIMIT to your SQL. The query runs as written and TablePro stops reading at the cap, so a query with ORDER BY no longer returns different rows than you typed (#1884)
+  - The query result row cap no longer adds a LIMIT to your SQL. The query runs as written and SchemaStudio stops reading at the cap, so a query with ORDER BY no longer returns different rows than you typed (#1884)
   - Settings groups the data grid, pagination, result formatting, JSON viewer, query history, and saved customizations under a new Data tab
 
   ### Bug Fixes
@@ -191,7 +191,7 @@ rss: true
 <Update label="July 15, 2026" description="v0.57.1">
   ### New Features
 
-  - **SSH to a Unix socket**: SSH tunnels can forward to a Unix socket on the remote server, for databases that only listen on a socket. Set the socket path on the General pane and TablePro forwards to it through your jump hosts (#1871)
+  - **SSH to a Unix socket**: SSH tunnels can forward to a Unix socket on the remote server, for databases that only listen on a socket. Set the socket path on the General pane and SchemaStudio forwards to it through your jump hosts (#1871)
 
   ### Bug Fixes
 
@@ -212,7 +212,7 @@ rss: true
   - **SurrealDB**: SurrealDB 2.x and 3.x as a downloadable driver. Browse namespaces and databases, run SurrealQL, and edit records in the grid (#1862)
   - **Beancount**: Beancount ledgers as a downloadable, read-only driver. Transactions, postings, accounts, prices, and balances read as SQL tables, and BQL runs with a `BQL:` prefix (#1474)
   - **Users & Roles**: Manage database users, roles, and privileges on MySQL and PostgreSQL from View > Users & Roles. Pick any object from the server down to a single column, see where each privilege comes from, and grant or revoke it. Changes are staged, undoable, and shown as SQL before they run (#1413)
-  - **Cloud SQL Auth Proxy**: Connect to Google Cloud SQL without starting the proxy yourself. Turn it on for a MySQL, PostgreSQL, or SQL Server connection, set the instance connection name, and TablePro starts and stops the proxy for you (#1728)
+  - **Cloud SQL Auth Proxy**: Connect to Google Cloud SQL without starting the proxy yourself. Turn it on for a MySQL, PostgreSQL, or SQL Server connection, set the instance connection name, and SchemaStudio starts and stops the proxy for you (#1728)
   - **xAI (Grok)**: Grok as an AI provider. Paste a key from the xAI Console, or sign in with a SuperGrok or X Premium+ subscription and use no key at all
   - **Reopen Closed Tab**: `Cmd+Shift+T` brings back the tab you just closed, and File > Recently Closed lists the last 20, kept for 30 days (#1854)
   - **Open from the terminal**: Install the `tablepro` command from Settings > General, then run `ddev tablepro` in a DDEV project. Links to a database on your own Mac can be trusted with Always Allow and reviewed in Settings > General (#1486)
@@ -263,10 +263,10 @@ rss: true
 <Update label="July 9, 2026" description="v0.56.0">
   ### New Features
 
-  - **Secret manager passwords**: A connection can pull its password from 1Password, HashiCorp Vault, or AWS Secrets Manager at connect time, so the secret is never stored in TablePro.
+  - **Secret manager passwords**: A connection can pull its password from 1Password, HashiCorp Vault, or AWS Secrets Manager at connect time, so the secret is never stored in SchemaStudio.
   - **Team Library**: Share connections and saved queries with your team through your account. Right-click a connection or use the Favorites sidebar to Publish to Team Library, and teammates see them in their own list and sidebar. Passwords are never included.
   - **Team Catalog**: On the Team plan, publish connections to a shared folder your team reads from, without passwords. Teammates add the folder under Settings > Linked Folders.
-  - **Join a team with an invite code**: Paste your invite code where a license key goes, in Settings > Account. Owners manage members and seats on tablepro.app.
+  - **Join a team with an invite code**: Paste your invite code where a license key goes, in Settings > Account. Owners manage members and seats in the upstream project.
   - **Saved queries and slash commands sync**: Saved SQL queries and their folders, and custom AI slash commands, now sync across your Macs with iCloud Sync.
   - **Recent tables**: A Recent section at the top of the sidebar lists the last 10 tables you opened per connection and database, and remembers them between launches. Off by default; turn it on in Settings > General > Sidebar (#1352)
   - **Delete confirmation**: Saving now asks you to confirm before it permanently deletes rows (#1823)
@@ -360,7 +360,7 @@ rss: true
   - Opening a new query tab now puts keyboard focus in the SQL editor instead of the sidebar filter, so you can type right away (#1765)
   - Raw filters in the data grid now work on document and key-value databases; the typed text was dropped before reaching the driver (#1529)
   - Connecting to Oracle no longer crashes on certain server values during the handshake; a bad packet now fails the connection with an error (#1746)
-  - Connecting to Oracle no longer hangs when the server permits but does not require native network encryption; TablePro connects in clear text by default, like Oracle's own clients (#1746)
+  - Connecting to Oracle no longer hangs when the server permits but does not require native network encryption; SchemaStudio connects in clear text by default, like Oracle's own clients (#1746)
   - Following a foreign key into another schema now opens the correct table on SQL Server and Oracle, instead of the default schema (#1754)
   - Browsing or editing a SQL Server or Oracle table outside the default schema no longer fails with "Invalid object name" or writes to the wrong table (#1754)
 </Update>
@@ -445,7 +445,7 @@ rss: true
 
   - **BigQuery datasets**: Switch, create, and drop datasets from the toolbar, Cmd+K switcher, and File menu (#509)
   - **Quick Switcher upgrades**: Search saved queries, scope results with Cmd+1 to Cmd+4 and a recent-items view, open a table in a new tab with Option+Return, and right-click a result to open its structure or copy the name or query
-  - **Session restore on launch**: TablePro reopens your last session by default, bringing back each tab's sort, page, cursor position, and column widths plus the active database and schema. Tabs autosave every 30 seconds and recover after a crash (#1673)
+  - **Session restore on launch**: SchemaStudio reopens your last session by default, bringing back each tab's sort, page, cursor position, and column widths plus the active database and schema. Tabs autosave every 30 seconds and recover after a crash (#1673)
   - **`.psql` and `.pgsql` files**: Open in the SQL editor like `.sql` (#1641)
 
   ### Improvements
@@ -545,7 +545,7 @@ rss: true
   - JSON import: failed imports restore deleted rows, skip-and-continue no longer duplicates rows, and "Stop and Commit" keeps rows inserted before the error
   - JSON file import works again; it failed to load in 0.48.0
   - The connection and database switcher focuses its search field even while a filter input is being edited (#1575)
-  - TablePro no longer shows its icon for .sql, .sqlite, and .duckdb files when it is not their default app (#1594)
+  - SchemaStudio no longer shows its icon for .sql, .sqlite, and .duckdb files when it is not their default app (#1594)
   - The JSON results view shows row data right away and follows the row selection (#1576)
   - Query result columns follow the SELECT order (#1565)
   - SQL Server: logins restricted to one database, such as Azure SQL contained users, now connect
@@ -558,7 +558,7 @@ rss: true
 <Update label="June 2, 2026" description="v0.48.0">
   ### New Features
 
-  - **JSON Import**: Import a JSON file into a table. Pick SQL or JSON from the Import menu; the JSON flow accepts an array of objects, newline-delimited JSON, or TablePro's own JSON export, and maps each field to a new or existing table (#1536)
+  - **JSON Import**: Import a JSON file into a table. Pick SQL or JSON from the Import menu; the JSON flow accepts an array of objects, newline-delimited JSON, or SchemaStudio's own JSON export, and maps each field to a new or existing table (#1536)
   - **Table Name in the Title Bar**: The window title bar shows the open table's name, with its database and schema below (#1475)
   - **iOS DuckDB**: Open DuckDB database files and in-memory DuckDB databases on iOS, matching the Mac app (#1526)
   - **Save Query as Favorite**: Save the current query as a favorite from a star button in the SQL editor toolbar
@@ -635,7 +635,7 @@ rss: true
   - **Paste Rows with Commas and NULL**: Pasting rows with commas in a cell keeps each value in its own column and preserves NULL vs the literal text "NULL"
   - **BigQuery Table Switch**: Switching to another table in BigQuery loads its data immediately instead of leaving the grid empty
   - **Custom AI Base URL ending /v1**: Custom and OpenAI-compatible AI providers work when the base URL ends in `/v1` (#1400)
-  - **Plugin Update Wait**: Connecting after an app update waits for in-progress plugin updates; when no compatible plugin build exists yet, the message asks you to update TablePro (#1380)
+  - **Plugin Update Wait**: Connecting after an app update waits for in-progress plugin updates; when no compatible plugin build exists yet, the message asks you to update SchemaStudio (#1380)
   - **Detailed Saved Connection Errors**: Failed saved connections show the Test Connection troubleshooting dialog instead of a generic alert (#1425, #483)
   - **Plain-Language Oracle Errors**: Oracle connection errors explain the cause in plain language instead of the driver's raw message (#483)
   - **AWS IAM Profile Sources**: AWS IAM authentication with a named profile reads `~/.aws/config` and supports `credential_process`, so SSO, IAM Identity Center, and assume-role profiles work (#1291)
@@ -645,7 +645,7 @@ rss: true
   - **iOS Confirm Writes Prompt**: Safe Mode "Confirm Writes" prompts before grid edits and inserts on iOS, matching the query editor
   - **Redshift Schema and Filters**: Schema switching, table search, and contains/starts with/ends with filters now work on Redshift (#1439)
   - **MCP Require Auth**: Turning on Require Authentication no longer hangs the first request, generates a default token if needed, and shows it once. The Generate Token sheet focuses the Token Name field on first open (#1093)
-  - **Direct CSV and TSV Open**: Double-clicking a CSV or TSV file when TablePro is closed opens the file directly (#1443)
+  - **Direct CSV and TSV Open**: Double-clicking a CSV or TSV file when SchemaStudio is closed opens the file directly (#1443)
   - **Tab Named After SQL File**: Opening a `.sql` file names the tab after the file instead of "SQL Query" (#1220)
   - **Server Dashboard Slow Queries**: Server Dashboard shows the Slow Queries panel, with a draggable vertical split and remembered divider positions (#1464)
 </Update>
@@ -653,8 +653,8 @@ rss: true
 <Update label="May 26, 2026" description="v0.45.0">
   ### New Features
 
-  - **Cloudflare Tunnel**: Connect to a database behind Cloudflare Access. TablePro starts and stops `cloudflared access tcp` per connection, the same way it manages SSH tunnels, with browser sign-in or a service token. Needs cloudflared (`brew install cloudflared`) (#1285)
-  - **AWS IAM Authentication**: Authenticate PostgreSQL and MySQL connections to RDS and Aurora with AWS IAM, using an access key, named profile, or SSO. TablePro generates a fresh token on every connect and requires SSL (#1291)
+  - **Cloudflare Tunnel**: Connect to a database behind Cloudflare Access. SchemaStudio starts and stops `cloudflared access tcp` per connection, the same way it manages SSH tunnels, with browser sign-in or a service token. Needs cloudflared (`brew install cloudflared`) (#1285)
+  - **AWS IAM Authentication**: Authenticate PostgreSQL and MySQL connections to RDS and Aurora with AWS IAM, using an access key, named profile, or SSO. SchemaStudio generates a fresh token on every connect and requires SSL (#1291)
   - **Fill Column**: Right-click a column header to set one value across all loaded rows. The fill is staged like a normal edit, and one undo reverts it. Not available on primary key columns (#1304)
   - **Date Picker**: Date, datetime, timestamp, and time cells show a date picker from the chevron button. Double-clicking still edits the cell as text, and the picker keeps the value's format, fractional seconds, and timezone offset (#1405)
   - **Pagination Bar**: Table tabs gain a pagination bar with a rows-per-page menu (5, 10, 20, 100, 500, 1,000, All rows, or custom) and First, Previous, Next, and Last buttons. Click the page indicator to jump to a page, and page through filtered tables even when the total row count is unknown. First Page and Last Page are assignable keyboard actions in Settings > Keyboard (#1364)
@@ -663,7 +663,7 @@ rss: true
   ### Bug Fixes
 
   - **Font Size Persists**: Changing the editor or data grid font size in Appearance settings now applies immediately and persists across relaunch, with no orphan custom themes left behind (#1381)
-  - **Plugin Install After Update**: Installing or updating a plugin right after updating TablePro now refetches the plugin list first, so it no longer fails against a stale cached list (#1380)
+  - **Plugin Install After Update**: Installing or updating a plugin right after updating SchemaStudio now refetches the plugin list first, so it no longer fails against a stale cached list (#1380)
   - **Esc Keeps Fullscreen**: Pressing Esc to close the raw SQL filter suggestions, or to clear a search field, no longer also exits fullscreen (#1403)
   - **Clear MCP OAuth Error**: Connecting an OAuth-capable MCP client like Claude Code with an invalid or expired token now shows a clear error instead of "Invalid OAuth error response" (#1409)
 </Update>
@@ -677,7 +677,7 @@ rss: true
 
   - **Active Connections Popover**: Active Connections is now a searchable toolbar popover instead of a modal dialog (#1350)
   - **Filter Suggestions Everywhere**: The raw SQL filter suggests columns and keywords at every position, including after AND and OR, instead of only the first (#1346)
-  - **Quieter Plugin Updates**: Plugins left incompatible after a TablePro update now update in the background instead of showing a premature "could not be loaded" alert. You are notified only when no compatible version exists yet (#1322)
+  - **Quieter Plugin Updates**: Plugins left incompatible after a SchemaStudio update now update in the background instead of showing a premature "could not be loaded" alert. You are notified only when no compatible version exists yet (#1322)
 
   ### Bug Fixes
 
@@ -738,7 +738,7 @@ rss: true
 
   - **PluginKit Version Errors**: Fixes the recurring "Plugin was built with PluginKit version N, but version M is required" error after app updates. Rejected plugins now recover without manual steps (#1322)
   - **DuckDB Types and Schemas**: Spatial `GEOMETRY` renders as WKT, `HUGEINT` and `UHUGEINT` keep full precision and handle negatives, streaming results respect the row cap and render `TIMESTAMPTZ`/`TIMETZ`/`GEOMETRY`, ENUMs resolve in non-`main` schemas, BC years show a leading minus, and schema reads handle apostrophes and concurrent switches (#1324)
-  - **Open SQLite from Finder**: `.db`, `.db3`, `.s3db`, `.sl3`, and `.sqlitedb` files open in TablePro from Finder (#1327)
+  - **Open SQLite from Finder**: `.db`, `.db3`, `.s3db`, `.sl3`, and `.sqlitedb` files open in SchemaStudio from Finder (#1327)
   - **DynamoDB SSO**: Connections work with `sso-session` profiles right after `aws sso login`, with no extra AWS CLI command (#1333)
 </Update>
 
@@ -912,7 +912,7 @@ rss: true
   - **AI Chat Refinements**: Inline-suggestion debounce configurable (default 500 ms); 30-second SSE keep-alive on MCP HTTP; Anthropic model list through Claude 4.7; per-tool access modes; native button styles and accessibility labels
   - **Translucent Surfaces**: Welcome sidebar, settings banners, ER diagram toolbar, JSON editor, and Pro scrim swap to solid surfaces when Reduce Transparency or Increase Contrast is on
   - **Typed Binary Cells**: Engines that expose binary types (PostgreSQL BYTEA, Oracle RAW/LONG_RAW/BLOB, MySQL BLOB, SQLite BLOB, MSSQL VARBINARY/IMAGE, DuckDB BLOB, Cassandra blob, MongoDB BSON, DynamoDB B, BigQuery BYTES) route through a typed pipeline; hex editor saves bind raw bytes through the driver's binary parameter format (#1188)
-  - **Plugin Restart UX**: "Restart TablePro" banner gains a Quit & Reopen button with an alert on relaunch failure; install badges auto-clear after 3 seconds; the restart-needed flag no longer persists across launches
+  - **Plugin Restart UX**: "Restart SchemaStudio" banner gains a Quit & Reopen button with an alert on relaunch failure; install badges auto-clear after 3 seconds; the restart-needed flag no longer persists across launches
 
   ### Bug Fixes
 
@@ -952,7 +952,7 @@ rss: true
   - **AI Chat Slash Commands**: Built-in `/explain`, `/optimize`, `/fix`, `/help`, plus user-defined commands in Settings -> AI -> Custom Slash Commands with `{{query}}`, `{{schema}}`, `{{database}}`, `{{body}}` placeholders
   - **AI Chat Per-Connection Rules**: Add custom guidance about table conventions, PII columns, and naming in the connection's AI Rules tab; the assistant sees it on every chat turn
   - **AI Chat Panel Redesign**: Composer-focused chat tab with inline model picker and per-turn model attribution
-  - **Linked SQL Folders**: Point TablePro at a folder of `.sql` files for two-way sync with Favorites. Edit in TablePro or your editor; changes flow both ways. Frontmatter sets `@name`, `@keyword`, and `@description`; save-time conflicts show a side-by-side diff. Free
+  - **Linked SQL Folders**: Point SchemaStudio at a folder of `.sql` files for two-way sync with Favorites. Edit in SchemaStudio or your editor; changes flow both ways. Frontmatter sets `@name`, `@keyword`, and `@description`; save-time conflicts show a side-by-side diff. Free
   - **Database Type Chooser**: New Connection opens a categorised, searchable sheet listing every supported driver (Relational, Document, Key-Value, Analytical, Wide-Column, Cloud Native, Coordination & Config)
   - **Free XLSX Export**: Excel export no longer requires Pro
   - **Free Safe Mode**: Touch ID, Full, and Read Only Safe Mode levels no longer require Pro
@@ -1084,7 +1084,7 @@ rss: true
   ### Breaking Changes
 
   - Old name-based deep links (`tablepro://connect/{name}/...`) removed. Use UUID-keyed paths from "Copy Connection Deep Link"
-  - MCP server data directory moved to `~/Library/Application Support/TablePro/`. Re-pair external clients after upgrading
+  - MCP server data directory moved to `~/Library/Application Support/SchemaStudio/`. Re-pair external clients after upgrading
   - Separately distributed plugins (Oracle, DuckDB, MSSQL, MongoDB, BigQuery, LibSQL, Cassandra, Etcd, Cloudflare D1, DynamoDB) require update. PluginKit ABI bumped to 9
   - Settings renamed: `enforceQueryResultLimit` to `truncateQueryResults`, `queryResultLimit` to `queryResultRowCap`. Custom values revert to default on first launch
 </Update>
@@ -1095,7 +1095,7 @@ rss: true
   - **GitHub Copilot**: Inline code suggestions, chat, OAuth sign-in, and schema-aware context
   - **Query Parameters**: Use `:name` placeholders in SQL, fill values in an inline panel, execute with native prepared statements
   - **Plugin Auto-Update**: Outdated plugins update silently at launch; one-click update in Settings
-  - **Connection Sharing**: Copy Connection String, Copy TablePro Link, and Copy as JSON via Share menu
+  - **Connection Sharing**: Copy Connection String, Copy SchemaStudio Link, and Copy as JSON via Share menu
   - **MCP Server Security**: Token auth with three permission tiers, TLS, remote access, rate limiting, and one-click setup for Claude Code, Desktop, and Cursor
 
   ### Improvements
@@ -1627,7 +1627,7 @@ rss: true
 <Update label="March 19, 2026" description="v0.21.0">
   ### New Features
 
-  - **Cloudflare D1 Support**: Connect to Cloudflare D1 databases directly from TablePro
+  - **Cloudflare D1 Support**: Connect to Cloudflare D1 databases directly from SchemaStudio
   - **Autocomplete Match Highlighting**: Matched characters in autocomplete suggestions are now shown in bold
   - **Autocomplete Loading Indicator**: Loading spinner while fetching column metadata
 
@@ -1826,7 +1826,7 @@ rss: true
   ### New Features
 
   - **Oracle Database Support**: Connect to Oracle databases via OCI (Oracle Call Interface)
-  - **Database URL Scheme**: Open connections directly from terminal with `open "mysql://user@host/db" -a TablePro`. Supports MySQL, PostgreSQL, SQLite, MongoDB, Redis, MSSQL, and Oracle
+  - **Database URL Scheme**: Open connections directly from terminal with `open "mysql://user@host/db" -a SchemaStudio`. Supports MySQL, PostgreSQL, SQLite, MongoDB, Redis, MSSQL, and Oracle
   - **SSH Agent Authentication**: Use SSH Agent for tunnel authentication, compatible with 1Password SSH Agent, Secretive, and ssh-agent
   - **Multi-Jump SSH**: Chain multiple SSH hops (ProxyJump) to reach databases through bastion hosts. Configure jump hosts in the connection form or import from `~/.ssh/config`
 
@@ -1880,7 +1880,7 @@ rss: true
   ### New Features
 
   - **Redis Support**: Connect to Redis databases with key-value browsing, database-level sidebar (db0-db15), TTL management, and interactive CLI
-  - **TablePlus-compatible URLs**: Open databases via command line with `open -a TablePro "postgresql://user@host/db"`, supporting schema switching, table opening, filters, color, and environment tags
+  - **TablePlus-compatible URLs**: Open databases via command line with `open -a SchemaStudio "postgresql://user@host/db"`, supporting schema switching, table opening, filters, color, and environment tags
 
   ### Bug Fixes
 
@@ -2266,7 +2266,7 @@ rss: true
   - **Improved Filter Panel**: Redesigned filter UI for a better experience
   - **SwiftUI Tab Bar**: New pure SwiftUI editor tab bar replacing the AppKit implementation
   - **GPL v3 License**: Project is now licensed under the GNU General Public License v3
-  - **Auto-Update**: In-app updates via Sparkle 2 with EdDSA signing. Check for updates from the TablePro menu or Settings > General
+  - **Auto-Update**: In-app updates via Sparkle 2 with EdDSA signing. Check for updates from the SchemaStudio menu or Settings > General
 
   ### Bug Fixes
 
@@ -2283,7 +2283,7 @@ rss: true
 </Update>
 
 <Update label="February 8, 2026" description="v0.1.0">
-  The first public release of TablePro: a native macOS database client built with SwiftUI and AppKit.
+  The first public release of SchemaStudio: a native macOS database client built with SwiftUI and AppKit.
 
   ### New Features
 

@@ -36,7 +36,7 @@ enum PluginBundleLoader {
         case NSExecutableLoadError:
             return String(localized: "The plugin depends on a component that's missing or incompatible with this Mac.")
         case NSExecutableLinkError:
-            return String(localized: "The plugin isn't compatible with this version of TablePro. Update the app or reinstall the plugin.")
+            return String(localized: "The plugin isn't compatible with this version of SchemaStudio. Update the app or reinstall the plugin.")
         default:
             return error.localizedFailureReason ?? error.localizedDescription
         }

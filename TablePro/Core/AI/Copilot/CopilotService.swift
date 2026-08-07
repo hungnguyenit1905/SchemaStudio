@@ -77,7 +77,7 @@ final class CopilotService {
             let client = LSPClient(transport: newTransport)
             let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
             _ = try await client.initialize(
-                clientInfo: LSPClientInfo(name: "TablePro", version: appVersion),
+                clientInfo: LSPClientInfo(name: "SchemaStudio", version: appVersion),
                 editorPluginInfo: LSPClientInfo(name: "tablepro-copilot", version: "1.0.0"),
                 processId: Int(ProcessInfo.processInfo.processIdentifier)
             )

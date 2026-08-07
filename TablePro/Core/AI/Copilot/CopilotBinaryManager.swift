@@ -18,7 +18,7 @@ actor CopilotBinaryManager {
     private init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
-        baseDirectory = appSupport.appendingPathComponent("TablePro/copilot-language-server", isDirectory: true)
+        baseDirectory = appSupport.appendingPathComponent("SchemaStudio/copilot-language-server", isDirectory: true)
     }
 
     func ensureBinary() async throws -> String {

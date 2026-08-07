@@ -3,7 +3,7 @@ title: Redis
 description: Browse keys by namespace, manage TTLs, and run Redis commands directly from the editor
 ---
 
-TablePro connects to standalone Redis servers with hiredis. Keys are grouped by colon-separated namespaces in the sidebar. Values display with type-aware formatting in the data grid (strings, hashes, lists, sets, sorted sets, streams).
+SchemaStudio connects to standalone Redis servers with hiredis. Keys are grouped by colon-separated namespaces in the sidebar. Values display with type-aware formatting in the data grid (strings, hashes, lists, sets, sorted sets, streams).
 
 ## Quick Setup
 
@@ -33,7 +33,7 @@ Open URLs like `redis://:password@host:6379/0` or `rediss://` (TLS) from your br
 
 ## Amazon ElastiCache (IAM)
 
-Set **Authentication** to an AWS IAM mode (Access Key, Profile, or SSO) to connect to an IAM-enabled ElastiCache cache. TablePro generates a short-lived IAM auth token and uses it as the Redis password; the username is your IAM-enabled Redis user. Enter the AWS region and the cache name (replication group ID), and enable TLS, which ElastiCache IAM requires. Profiles resolve from `~/.aws/config` and `~/.aws/credentials`, including `credential_process`, SSO, and assumed roles.
+Set **Authentication** to an AWS IAM mode (Access Key, Profile, or SSO) to connect to an IAM-enabled ElastiCache cache. SchemaStudio generates a short-lived IAM auth token and uses it as the Redis password; the username is your IAM-enabled Redis user. Enter the AWS region and the cache name (replication group ID), and enable TLS, which ElastiCache IAM requires. Profiles resolve from `~/.aws/config` and `~/.aws/credentials`, including `credential_process`, SSO, and assumed roles.
 
 ## SSL/TLS
 
@@ -68,7 +68,7 @@ For untrusted-CA endpoints (Upstash, internal load balancers), pick **Required (
 - Matching runs server-side with `SCAN MATCH` and `SCAN TYPE`, and stops after 10,000 matching keys.
 - Filtering by key value or TTL is not supported, since Redis has no server-side primitive for it.
 
-**Redis CLI**: Each statement is one Redis command. To run several in one go, separate them with `;`. TablePro passes each command through as-is, including commands it does not recognize; only the result formatting is type-aware. Arguments are quoted the same way `redis-cli` quotes them, so `"` and `'` both work and `\xHH` writes a raw byte. Unbalanced quotes are rejected instead of being guessed at. Redis has no comment syntax, and TablePro does not strip comments, so a `--` or `#` line inside a statement is sent to the server and fails.
+**Redis CLI**: Each statement is one Redis command. To run several in one go, separate them with `;`. SchemaStudio passes each command through as-is, including commands it does not recognize; only the result formatting is type-aware. Arguments are quoted the same way `redis-cli` quotes them, so `"` and `'` both work and `\xHH` writes a raw byte. Unbalanced quotes are rejected instead of being guessed at. Redis has no comment syntax, and SchemaStudio does not strip comments, so a `--` or `#` line inside a statement is sent to the server and fails.
 
 The blocks below list one command per line for reference.
 

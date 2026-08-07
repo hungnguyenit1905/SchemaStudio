@@ -18,7 +18,13 @@ These govern every decision — code, architecture, tooling, and process:
 
 ## Project Overview
 
-TablePro is a native macOS database client (SwiftUI + AppKit) — a fast, lightweight alternative to TablePlus. macOS 14.0+, Swift 5.9, Universal Binary (arm64 + x86_64).
+SchemaStudio is a native macOS database client (SwiftUI + AppKit), a hard fork of TablePro. macOS 14.0+, Swift 5.9, Universal Binary (arm64 + x86_64).
+
+**Fork note**: SchemaStudio is a hard fork of [TableProApp/TablePro](https://github.com/TableProApp/TablePro).
+The product identity is renamed, but the plugin ABI is deliberately NOT: the framework name
+`TableProPluginKit`, the `TableProPluginKitVersion` Info.plist key, and all `com.TablePro.<Name>`
+plugin bundle IDs stay as they are, because every built plugin hard-links the framework by name.
+The source folder `TablePro/` also keeps its name. Do not "finish the rename" in those places.
 
 - **Source**: `TablePro/` — `Core/` (business logic, services), `Views/` (UI), `Models/` (data structures), `ViewModels/`, `Extensions/`, `Theme/`
 - **Plugins**: `Plugins/` — `.tableplugin` bundles + `TableProPluginKit` shared framework.
@@ -26,19 +32,19 @@ TablePro is a native macOS database client (SwiftUI + AppKit) — a fast, lightw
     - **Registry-only**: MongoDB, Oracle, DuckDB, MSSQL, Cassandra, Etcd, CloudflareD1, DynamoDB, BigQuery, LibSQL, Snowflake, Elasticsearch. Distributed via [TableProApp/plugins](https://github.com/TableProApp/plugins) `plugins.json`, installed into the user plugins directory.
 - **C bridges**: Each plugin contains its own C bridge module (e.g., `Plugins/MySQLDriverPlugin/CMariaDB/`, `Plugins/PostgreSQLDriverPlugin/CLibPQ/`)
 - **Static libs**: `Libs/` — pre-built `.a` files. `Libs/ios/` — xcframeworks for iOS. Both downloaded via `scripts/download-libs.sh` (not in git)
-- **SPM deps**: CodeEditSourceEditor (`main` branch, tree-sitter editor), Sparkle (2.8.1, auto-update), OracleNIO. Managed via Xcode, no `Package.swift`.
+- **SPM deps**: CodeEditSourceEditor (`main` branch, tree-sitter editor), OracleNIO. Managed via Xcode, no `Package.swift`. Sparkle is still a resolved dependency but no code imports it: this fork ships no auto-update.
 
 ## Build & Development Commands
 
 ```bash
 # Build (development) — -skipPackagePluginValidation required for SwiftLint plugin in CodeEditSourceEditor
-xcodebuild -project TablePro.xcodeproj -scheme TablePro -configuration Debug build -skipPackagePluginValidation
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio -configuration Debug build -skipPackagePluginValidation
 
 # Clean build
-xcodebuild -project TablePro.xcodeproj -scheme TablePro clean
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio clean
 
 # Build and run
-xcodebuild -project TablePro.xcodeproj -scheme TablePro -configuration Debug build -skipPackagePluginValidation && open build/Debug/TablePro.app
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio -configuration Debug build -skipPackagePluginValidation && open build/Debug/SchemaStudio.app
 
 # Release builds
 scripts/build-release.sh arm64|x86_64|both
@@ -49,10 +55,10 @@ swiftlint --fix                   # Auto-fix
 swiftformat .                     # Format code
 
 # Tests
-xcodebuild -project TablePro.xcodeproj -scheme TablePro test -skipPackagePluginValidation
-xcodebuild -project TablePro.xcodeproj -scheme TablePro test -skipPackagePluginValidation -only-testing:TableProTests/TestClassName
-xcodebuild -project TablePro.xcodeproj -scheme TablePro test -skipPackagePluginValidation -only-testing:TableProTests/TestClassName/testMethodName
-xcodebuild -project TablePro.xcodeproj -scheme TablePro test -skipPackagePluginValidation -only-testing:TableProUITests
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio test -skipPackagePluginValidation
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio test -skipPackagePluginValidation -only-testing:TableProTests/TestClassName
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio test -skipPackagePluginValidation -only-testing:TableProTests/TestClassName/testMethodName
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio test -skipPackagePluginValidation -only-testing:TableProUITests
 
 # DMG
 scripts/create-dmg.sh
@@ -207,7 +213,7 @@ Use OSLog for all logging, never `print()`. When debugging issues, add structure
 
 ```swift
 import os
-private static let logger = Logger(subsystem: "com.TablePro", category: "ComponentName")
+private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ComponentName")
 ```
 
 ## Code Style

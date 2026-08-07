@@ -46,7 +46,7 @@ internal actor DefaultExecutionGate: ExecutionGate {
 
         if level.blocksAllWrites, effectiveWrite {
             return .denied(reason: String(
-                localized: "Cannot execute write queries: TablePro's Safe Mode is set to read-only for this connection"
+                localized: "Cannot execute write queries: SchemaStudio's Safe Mode is set to read-only for this connection"
             ))
         }
 

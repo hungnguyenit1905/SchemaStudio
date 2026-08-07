@@ -24,7 +24,7 @@ FORMATTED=$(echo "$ESCAPED" | sed -E \
   -e 's/`([^`]+)`/<code>\1<\/code>/g' \
   -e '/^[[:space:]]*$/d')
 
-TEXT=$(printf '<b>TablePro v%s Released</b>\n\n%s\n\n<a href="%s">View Release</a>' "$VERSION" "$FORMATTED" "$RELEASE_URL")
+TEXT=$(printf '<b>SchemaStudio v%s Released</b>\n\n%s\n\n<a href="%s">View Release</a>' "$VERSION" "$FORMATTED" "$RELEASE_URL")
 
 PAYLOAD=$(jq -n \
   --arg chat_id "$TELEGRAM_CHAT_ID" \

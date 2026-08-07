@@ -5,7 +5,7 @@ import os
 public struct OpenTableTabTool: MCPToolImplementation {
     public static let name = "open_table_tab"
     public static let description = String(
-        localized: "Open a table tab in TablePro for the given connection."
+        localized: "Open a table tab in SchemaStudio for the given connection."
     )
     public static let inputSchema: JsonValue = .object([
         "type": .string("object"),

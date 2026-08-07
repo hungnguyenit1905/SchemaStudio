@@ -9,18 +9,18 @@ description: Development builds, release builds, static libraries, DMG packaging
 
 - `Cmd+R` to build and run
 - `Cmd+B` to build only
-- Scheme: **TablePro**, Destination: **My Mac**
+- Scheme: **SchemaStudio**, Destination: **My Mac**
 
 ### Command Line
 
 ```bash
-xcodebuild -project TablePro.xcodeproj -scheme TablePro -configuration Debug build -skipPackagePluginValidation
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio -configuration Debug build -skipPackagePluginValidation
 ```
 
 Build and run:
 
 ```bash
-xcodebuild -project TablePro.xcodeproj -scheme TablePro -configuration Debug build -skipPackagePluginValidation && open build/Debug/TablePro.app
+xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio -configuration Debug build -skipPackagePluginValidation && open build/Debug/SchemaStudio.app
 ```
 
 <Note>
@@ -37,7 +37,7 @@ scripts/build-release.sh x86_64     # Intel
 scripts/build-release.sh both       # Both architectures
 ```
 
-Output: `build/Release/TablePro-arm64.app` and `build/Release/TablePro-x86_64.app`.
+Output: `build/Release/SchemaStudio-arm64.app` and `build/Release/SchemaStudio-x86_64.app`.
 
 The script extracts the right slice from the universal static libraries, strips the main binary, helpers, PluginKit framework, and plugin binaries, then signs each binary individually and the app bundle last with hardened runtime and entitlements. Environment variables control signing:
 
@@ -47,7 +47,7 @@ The script extracts the right slice from the universal static libraries, strips 
 | `NOTARIZE` | `false` | Set `true` to notarize and staple after building |
 | `APPLE_ID` | Maintainer's Apple ID | Account for notarization |
 
-Notarization uses a `notarytool` keychain profile named `TablePro`. Create it once with `xcrun notarytool store-credentials "TablePro" --apple-id ... --team-id ... --password ...`. Do not sign or notarize by hand; the script already does it per binary, which is what Apple's guidance requires.
+Notarization uses a `notarytool` keychain profile named `SchemaStudio`. Create it once with `xcrun notarytool store-credentials "SchemaStudio" --apple-id ... --team-id ... --password ...`. Do not sign or notarize by hand; the script already does it per binary, which is what Apple's guidance requires.
 
 ## Static Libraries
 
@@ -77,26 +77,26 @@ iOS xcframeworks (`Libs/ios/*.xcframework`) upload to the same release:
 
 ```bash
 tar czf /tmp/tablepro-libs-ios-v1.tar.gz -C Libs/ios .
-gh release upload libs-v1 /tmp/tablepro-libs-ios-v1.tar.gz --clobber --repo TableProApp/TablePro
+gh release upload libs-v1 /tmp/tablepro-libs-ios-v1.tar.gz --clobber --repo TableProApp/SchemaStudio
 ```
 
 ## Creating a DMG
 
-`scripts/create-dmg.sh` takes the version, the architecture (default `universal`), and the source app (default `build/Release/TablePro.app`):
+`scripts/create-dmg.sh` takes the version, the architecture (default `universal`), and the source app (default `build/Release/SchemaStudio.app`):
 
 ```bash
 scripts/build-release.sh arm64
-scripts/create-dmg.sh 0.57.0 arm64 build/Release/TablePro-arm64.app
+scripts/create-dmg.sh 0.57.0 arm64 build/Release/SchemaStudio-arm64.app
 ```
 
-Output: `build/Release/TablePro-0.57.0-arm64.dmg`.
+Output: `build/Release/SchemaStudio-0.57.0-arm64.dmg`.
 
 ## Clean Build
 
 | Method | Command |
 |--------|---------|
 | Xcode | `Cmd+Shift+K` |
-| CLI | `xcodebuild -project TablePro.xcodeproj -scheme TablePro clean` |
+| CLI | `xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio clean` |
 | Nuclear | `rm -rf ~/Library/Developer/Xcode/DerivedData` |
 
 ## CI/CD

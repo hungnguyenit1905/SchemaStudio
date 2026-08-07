@@ -78,7 +78,7 @@ struct OnboardingContentView: View {
                 .resizable()
                 .frame(width: 80, height: 80)
 
-            Text("Welcome to TablePro")
+            Text("Welcome to SchemaStudio")
                 .font(.title.weight(.bold))
 
             Text("A fast, lightweight native macOS database client")

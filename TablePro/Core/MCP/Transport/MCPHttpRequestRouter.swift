@@ -423,7 +423,7 @@ struct MCPHttpRequestRouter: Sendable {
         await context.writePlainJsonError(
             status: .notFound,
             error: "not_found",
-            errorDescription: "TablePro's MCP server does not provide this endpoint."
+            errorDescription: "SchemaStudio's MCP server does not provide this endpoint."
         )
         await context.cancel()
     }

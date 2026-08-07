@@ -5,8 +5,8 @@ set -euo pipefail
 # Usage: ./build-release.sh [arm64|x86_64|both]
 
 ARCH="${1:-both}"
-PROJECT="TablePro.xcodeproj"
-SCHEME="TablePro"
+PROJECT="SchemaStudio.xcodeproj"
+SCHEME="SchemaStudio"
 CONFIG="Release"
 BUILD_DIR="build/Release"
 SIGN_IDENTITY="${SIGN_IDENTITY:-Developer ID Application: Dat Ngo Quoc (D7HJ5TFYCU)}"
@@ -14,7 +14,7 @@ TEAM_ID="D7HJ5TFYCU"
 NOTARIZE="${NOTARIZE:-false}"
 APPLE_ID="${APPLE_ID:-datngoquoc@icloud.com}"
 
-echo "🏗️  Building TablePro for: $ARCH"
+echo "🏗️  Building SchemaStudio for: $ARCH"
 
 # Ensure libmariadb.a has correct architecture
 prepare_mariadb() {
@@ -184,7 +184,7 @@ prepare_hiredis() {
 # so the app runs without Homebrew on end-user machines.
 bundle_dylibs() {
     local app_path=$1
-    local binary="$app_path/Contents/MacOS/TablePro"
+    local binary="$app_path/Contents/MacOS/SchemaStudio"
     local frameworks_dir="$app_path/Contents/Frameworks"
 
     echo "📦 Bundling dynamic libraries into app bundle..."
@@ -368,7 +368,7 @@ build_for_arch() {
     # Deterministic path via -derivedDataPath (no -showBuildSettings needed)
     DERIVED_DATA="build/DerivedData/Build/Products"
 
-    APP_PATH="${DERIVED_DATA}/${CONFIG}/TablePro.app"
+    APP_PATH="${DERIVED_DATA}/${CONFIG}/SchemaStudio.app"
     echo "📂 Expected app path: $APP_PATH"
 
     # Verify app bundle exists
@@ -385,7 +385,7 @@ build_for_arch() {
     }
 
     # Copy and rename app
-    OUTPUT_NAME="TablePro-${arch}.app"
+    OUTPUT_NAME="SchemaStudio-${arch}.app"
     echo "Copying app bundle to release directory..."
     if ! cp -R "$APP_PATH" "$BUILD_DIR/$OUTPUT_NAME"; then
         echo "❌ FATAL: Failed to copy app bundle"
@@ -428,7 +428,7 @@ build_for_arch() {
     fi
 
     # Strip main binary
-    local main_binary="$BUILD_DIR/$OUTPUT_NAME/Contents/MacOS/TablePro"
+    local main_binary="$BUILD_DIR/$OUTPUT_NAME/Contents/MacOS/SchemaStudio"
     if [ -f "$main_binary" ]; then
         local before
         before=$(ls -lh "$main_binary" | awk '{print $5}')
@@ -441,7 +441,7 @@ build_for_arch() {
     # Strip helper executables in Contents/MacOS
     for helper in "$BUILD_DIR/$OUTPUT_NAME/Contents/MacOS"/*; do
         [ -f "$helper" ] || continue
-        [ "$(basename "$helper")" = "TablePro" ] && continue
+        [ "$(basename "$helper")" = "SchemaStudio" ] && continue
         local hname
         hname=$(basename "$helper")
         local before
@@ -557,7 +557,7 @@ build_for_arch() {
     MACOS_DIR="$BUILD_DIR/$OUTPUT_NAME/Contents/MacOS"
     for helper in "$MACOS_DIR"/*; do
         [ -f "$helper" ] || continue
-        [ "$(basename "$helper")" = "TablePro" ] && continue
+        [ "$(basename "$helper")" = "SchemaStudio" ] && continue
         codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp "$helper"
     done
 
@@ -569,7 +569,7 @@ build_for_arch() {
     fi
 
     # Sign the app bundle last
-    codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp --entitlements "TablePro/TablePro.entitlements" "$BUILD_DIR/$OUTPUT_NAME"
+    codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp --entitlements "TablePro/SchemaStudio.entitlements" "$BUILD_DIR/$OUTPUT_NAME"
     echo "✅ Code signing complete"
 
     # Verify signature
@@ -580,7 +580,7 @@ build_for_arch() {
     echo "✅ Signature verified"
 
     # Verify binary exists inside the copied bundle
-    BINARY_PATH="$BUILD_DIR/$OUTPUT_NAME/Contents/MacOS/TablePro"
+    BINARY_PATH="$BUILD_DIR/$OUTPUT_NAME/Contents/MacOS/SchemaStudio"
     if [ ! -f "$BINARY_PATH" ]; then
         echo "❌ FATAL: Binary not found in copied app bundle: $BINARY_PATH"
         exit 1
@@ -602,7 +602,7 @@ build_for_arch() {
     MCP_CLI_PATH="$BUILD_DIR/$OUTPUT_NAME/Contents/MacOS/tablepro-mcp"
     if [ ! -x "$MCP_CLI_PATH" ]; then
         echo "❌ FATAL: tablepro-mcp helper missing from $MCP_CLI_PATH"
-        echo "Check the mcp-server target's Copy Files build phase on the TablePro target."
+        echo "Check the mcp-server target's Copy Files build phase on the SchemaStudio target."
         exit 1
     fi
 
@@ -656,8 +656,8 @@ if [ "$NOTARIZE" = "true" ]; then
     echo ""
     echo "📮 Notarizing..."
 
-    # Requires: xcrun notarytool store-credentials "TablePro" --apple-id ... --team-id ... --password ...
-    for app in "$BUILD_DIR"/TablePro-*.app; do
+    # Requires: xcrun notarytool store-credentials "SchemaStudio" --apple-id ... --team-id ... --password ...
+    for app in "$BUILD_DIR"/SchemaStudio-*.app; do
         [ -d "$app" ] || continue
         name=$(basename "$app")
         zip_path="$BUILD_DIR/${name%.app}.zip"
@@ -665,7 +665,7 @@ if [ "$NOTARIZE" = "true" ]; then
         ditto -c -k --keepParent "$app" "$zip_path"
 
         echo "   Submitting $name for notarization..."
-        submit_output=$(xcrun notarytool submit "$zip_path" --keychain-profile "TablePro" --wait 2>&1)
+        submit_output=$(xcrun notarytool submit "$zip_path" --keychain-profile "SchemaStudio" --wait 2>&1)
         submit_status=$?
         echo "$submit_output"
 
@@ -679,7 +679,7 @@ if [ "$NOTARIZE" = "true" ]; then
             echo "   ❌ Notarization failed for $name"
             if [ -n "$submission_id" ]; then
                 echo "   📋 Fetching notarization log for $submission_id..."
-                xcrun notarytool log "$submission_id" --keychain-profile "TablePro" 2>&1 || true
+                xcrun notarytool log "$submission_id" --keychain-profile "SchemaStudio" 2>&1 || true
             fi
             exit 1
         fi

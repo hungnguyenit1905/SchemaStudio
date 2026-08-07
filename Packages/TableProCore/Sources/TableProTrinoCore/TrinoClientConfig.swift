@@ -55,7 +55,7 @@ public struct TrinoClientConfig: Sendable {
         useTLS: Bool = false,
         tls: TrinoTLSOptions = .systemDefault,
         user: String,
-        source: String = "TablePro",
+        source: String = "SchemaStudio",
         catalog: String? = nil,
         schema: String? = nil,
         timeZone: String? = nil,

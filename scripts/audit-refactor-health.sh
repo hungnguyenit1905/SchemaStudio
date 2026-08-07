@@ -85,13 +85,13 @@ pluginkit_divergent_paths() {
 }
 
 databasetype_extra_defs() {
-    grep_swift '^(public )?(struct|enum) DatabaseType[ :<]' TablePro Plugins Packages TableProMobile \
+    grep_swift '^(public )?(struct|enum) DatabaseType[ :<]' SchemaStudio Plugins Packages TableProMobile \
         | awk -F: '{print $1}' | sort -u | grep -vxF "$DATABASETYPE_AUTHORITATIVE" || true
 }
 
 report_loc_by_area() {
     section "Swift LOC by area"
-    echo "Swift files (app + plugins + packages + mobile): $(count_swift_files TablePro Plugins Packages TableProMobile)"
+    echo "Swift files (app + plugins + packages + mobile): $(count_swift_files SchemaStudio Plugins Packages TableProMobile)"
     for dir in TablePro/Core TablePro/Views TablePro/Models TablePro/ViewModels Plugins Packages/TableProCore/Sources TableProMobile; do
         printf '  %-36s %8s LOC\n' "$dir" "$(count_swift_loc "$dir")"
     done
@@ -102,7 +102,7 @@ report_duplicate_contracts() {
 
     echo "DatabaseType definitions:"
     local dbtype_defs
-    dbtype_defs=$(grep_swift '^(public )?(struct|enum) DatabaseType[ :<]' TablePro Plugins Packages TableProMobile | awk -F: '{print $1}' | sort -u)
+    dbtype_defs=$(grep_swift '^(public )?(struct|enum) DatabaseType[ :<]' SchemaStudio Plugins Packages TableProMobile | awk -F: '{print $1}' | sort -u)
     if [ -n "$dbtype_defs" ]; then
         printf '%s\n' "$dbtype_defs" | sed 's/^/  /'
     else
@@ -156,30 +156,30 @@ report_duplicate_contracts() {
 report_crash_constructs() {
     section "Crash-prone constructs (R-009)"
     local pattern='try!|as!|fatalError|precondition|assertionFailure'
-    for dir in TablePro Plugins TableProMobile; do
+    for dir in SchemaStudio Plugins TableProMobile; do
         printf '  %-16s %6s occurrences\n' "$dir" "$(count_swift_matches "$pattern" "$dir")"
     done
 }
 
 report_global_state() {
     section "Global state usage (R-006)"
-    echo "  .shared references (TablePro):          $(count_swift_matches '\.shared\b' TablePro)"
-    echo "  UserDefaults.standard references:       $(count_swift_matches 'UserDefaults\.standard' TablePro)"
+    echo "  .shared references (SchemaStudio):          $(count_swift_matches '\.shared\b' SchemaStudio)"
+    echo "  UserDefaults.standard references:       $(count_swift_matches 'UserDefaults\.standard' SchemaStudio)"
 }
 
 report_sql_hotspots() {
     section "Raw SQL interpolation hotspots (R-007)"
-    echo "  string-literal SQL statements (app + plugins): $(count_swift_matches '"[[:space:]]*(SELECT|INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRUNCATE)[[:space:]]' TablePro Plugins)"
+    echo "  string-literal SQL statements (app + plugins): $(count_swift_matches '"[[:space:]]*(SELECT|INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRUNCATE)[[:space:]]' SchemaStudio Plugins)"
 }
 
 report_gate_migration() {
     section "Execution-gate migration (R-003)"
-    echo "  ExecutionGate authorize call sites:       $(count_swift_matches 'ExecutionGateProvider\.shared\.authorize' TablePro)"
-    echo "  direct driver execute call sites:         $(count_swift_matches 'driver\.(execute|executeParameterized|executeUserQuery)\(' TablePro)"
+    echo "  ExecutionGate authorize call sites:       $(count_swift_matches 'ExecutionGateProvider\.shared\.authorize' SchemaStudio)"
+    echo "  direct driver execute call sites:         $(count_swift_matches 'driver\.(execute|executeParameterized|executeUserQuery)\(' SchemaStudio)"
     echo "  (direct driver execute should trend down as callers route through the gate)"
 }
 
-echo "TablePro refactor health audit"
+echo "SchemaStudio refactor health audit"
 echo "Repo: $REPO_ROOT"
 report_loc_by_area
 report_duplicate_contracts

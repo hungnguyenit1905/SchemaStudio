@@ -1,6 +1,6 @@
 ---
 title: Keyboard Shortcuts
-description: Every keyboard shortcut in TablePro, plus how to rebind them in Settings > Keyboard
+description: Every keyboard shortcut in SchemaStudio, plus how to rebind them in Settings > Keyboard
 ---
 
 Defaults are listed below. Most shortcuts are rebindable in **Settings > Keyboard**; see [Customizing shortcuts](#customizing-shortcuts). The same key can do different things depending on focus: `Cmd+[` indents in the editor and pages back in the data grid.
@@ -238,14 +238,14 @@ Open **Settings > Keyboard** (`Cmd+,`). Each action has a recorder field: click 
   <img className="hidden dark:block" src="/images/settings-keyboard-dark.png" alt="Keyboard settings" />
 </Frame>
 
-If a combination is already used by another action in the same context, TablePro shows a dialog naming that action: **Cancel** keeps the existing assignment, **Reassign** moves the shortcut and clears it from the other action. Editor and data grid shortcuts can share a key without conflict because focus decides which fires.
+If a combination is already used by another action in the same context, SchemaStudio shows a dialog naming that action: **Cancel** keeps the existing assignment, **Reassign** moves the shortcut and clears it from the other action. Editor and data grid shortcuts can share a key without conflict because focus decides which fires.
 
 Menu actions need a modifier (`Cmd`, `Option`, `Ctrl`, or `Shift`); function keys `F1` through `F12` work bare, as do grid actions that read the key directly, like Preview FK Reference (`Space`).
 
 <Warning>
-Some shortcuts cannot be reassigned: editor built-ins (like `Cmd+/`), tab selection (`Cmd+1` through `Cmd+9`), text size (`Cmd+=`, `Cmd+-`), and macOS system shortcuts, which TablePro reads live from System Settings. The recorder warns if you try.
+Some shortcuts cannot be reassigned: editor built-ins (like `Cmd+/`), tab selection (`Cmd+1` through `Cmd+9`), text size (`Cmd+=`, `Cmd+-`), and macOS system shortcuts, which SchemaStudio reads live from System Settings. The recorder warns if you try.
 </Warning>
 
 ## Outside the App
 
-TablePro can be driven without app shortcuts at all: the Raycast extension, the `tablepro://` URL scheme, and MCP clients are covered in the [External API](/external-api/index) section.
+SchemaStudio can be driven without app shortcuts at all: the Raycast extension, the `tablepro://` URL scheme, and MCP clients are covered in the [External API](/external-api/index) section.

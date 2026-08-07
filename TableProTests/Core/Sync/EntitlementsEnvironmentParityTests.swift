@@ -14,8 +14,8 @@ import Testing
 @Suite("CloudKit environment entitlement parity")
 struct EntitlementsEnvironmentParityTests {
     private static let environmentKey = "com.apple.developer.icloud-container-environment"
-    private static let macEntitlements = "TablePro/TablePro.entitlements"
-    private static let iosEntitlements = "TableProMobile/TableProMobile/TableProMobileRelease.entitlements"
+    private static let macEntitlements = "SchemaStudio/SchemaStudio.entitlements"
+    private static let iosEntitlements = "SchemaStudioMobile/SchemaStudioMobile/SchemaStudioMobileRelease.entitlements"
 
     @Test("Mac app pins the Production CloudKit environment")
     func macTargetsProduction() throws {
@@ -38,7 +38,7 @@ struct EntitlementsEnvironmentParityTests {
     private func repoRoot(file: StaticString = #filePath) throws -> URL {
         var directory = URL(fileURLWithPath: "\(file)").deletingLastPathComponent()
         while directory.path != "/" {
-            let marker = directory.appendingPathComponent("TablePro.xcodeproj")
+            let marker = directory.appendingPathComponent("SchemaStudio.xcodeproj")
             if FileManager.default.fileExists(atPath: marker.path) {
                 return directory
             }

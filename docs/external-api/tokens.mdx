@@ -3,7 +3,7 @@ title: Tokens
 description: Token model, scopes, connection allowlists, expiry, revocation, and the audit log
 ---
 
-Bearer tokens authenticate external requests to the MCP server. Each token carries a scope, an optional connection allowlist, and an optional expiry. TablePro stores only the SHA-256 hash plus a per-token salt at `~/Library/Application Support/TablePro/mcp-tokens.json` with `0600` permissions. The plaintext is shown once at creation and never again.
+Bearer tokens authenticate external requests to the MCP server. Each token carries a scope, an optional connection allowlist, and an optional expiry. SchemaStudio stores only the SHA-256 hash plus a per-token salt at `~/Library/Application Support/SchemaStudio/mcp-tokens.json` with `0600` permissions. The plaintext is shown once at creation and never again.
 
 ## Require authentication
 
@@ -92,7 +92,7 @@ A revoked token returns `401 Unauthorized` and the server terminates its active 
 
 ## Audit log
 
-Every authentication, tool call, and resource read is recorded in `~/Library/Application Support/TablePro/mcp-audit.db` with the token id, never the plaintext. View it via **Settings > Integrations > View Activity**:
+Every authentication, tool call, and resource read is recorded in `~/Library/Application Support/SchemaStudio/mcp-audit.db` with the token id, never the plaintext. View it via **Settings > Integrations > View Activity**:
 
 | Field | Values |
 |-------|--------|
@@ -125,7 +125,7 @@ A successful auth clears the bucket. During lockout the server returns HTTP `429
 | Read SSH keys | no |
 | Read license data | no |
 | Read app settings | no |
-| Read local files outside `~/Library/Application Support/TablePro/` | no |
+| Read local files outside `~/Library/Application Support/SchemaStudio/` | no |
 | Mutate Safe Mode rules | no |
 | Mutate other tokens | no |
 | Mutate connection records | no |

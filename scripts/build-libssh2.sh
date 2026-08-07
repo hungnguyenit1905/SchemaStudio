@@ -13,7 +13,7 @@ run_quiet() {
     rm -f "$logfile"
 }
 
-# Build static libssh2 (with OpenSSL backend) for TablePro
+# Build static libssh2 (with OpenSSL backend) for SchemaStudio
 #
 # Produces architecture-specific and universal static libraries in Libs/:
 #   libssh2_arm64.a, libssh2_x86_64.a, libssh2_universal.a
