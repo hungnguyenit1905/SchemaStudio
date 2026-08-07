@@ -35,7 +35,7 @@ final class MainContentCommandActions {
     // MARK: - Bindings
 
     @ObservationIgnored private let selectionState: GridSelectionState
-    @ObservationIgnored private let selectedTables: Binding<Set<TableInfo>>
+    @ObservationIgnored private let selectedTables: Binding<Set<DatabaseTreeTableRef>>
     @ObservationIgnored private let pendingTruncates: Binding<Set<String>>
     @ObservationIgnored private let pendingDeletes: Binding<Set<String>>
     @ObservationIgnored private let tableOperationOptions: Binding<[String: TableOperationOptions]>
@@ -72,7 +72,7 @@ final class MainContentCommandActions {
         coordinator: MainContentCoordinator,
         connection: DatabaseConnection,
         selectionState: GridSelectionState,
-        selectedTables: Binding<Set<TableInfo>>,
+        selectedTables: Binding<Set<DatabaseTreeTableRef>>,
         pendingTruncates: Binding<Set<String>>,
         pendingDeletes: Binding<Set<String>>,
         tableOperationOptions: Binding<[String: TableOperationOptions]>,
@@ -228,12 +228,13 @@ final class MainContentCommandActions {
             var updatedDeletes = pendingDeletes.wrappedValue
             var updatedTruncates = pendingTruncates.wrappedValue
 
-            for table in selectedTables.wrappedValue {
-                updatedTruncates.remove(table.name)
-                if updatedDeletes.contains(table.name) {
-                    updatedDeletes.remove(table.name)
+            for ref in selectedTables.wrappedValue where ref.connectionId == connection.id {
+                let name = ref.table.name
+                updatedTruncates.remove(name)
+                if updatedDeletes.contains(name) {
+                    updatedDeletes.remove(name)
                 } else {
-                    updatedDeletes.insert(table.name)
+                    updatedDeletes.insert(name)
                 }
             }
 
@@ -641,7 +642,7 @@ final class MainContentCommandActions {
 
     func truncateTables() {
         guard !(selectedTables.wrappedValue.isEmpty) else { return }
-        coordinator?.sidebarViewModel?.batchToggleTruncate()
+        coordinator?.sidebarViewModel?.batchToggleTruncate(connectionId: connection.id)
     }
 
     func createView() {

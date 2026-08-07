@@ -9,15 +9,15 @@ import TableProPluginKit
 struct DatabaseTreeRowActions {
     let coordinator: MainContentCoordinator?
     let isReadOnly: Bool
-    let selectedTables: () -> Set<TableInfo>
+    let selectedTables: (UUID) -> Set<TableInfo>
     let activate: (DatabaseTreeTableRef) async -> Void
     let setActiveDatabase: (String) -> Void
     let setActiveSchema: (_ database: String, _ schema: String) -> Void
     let refreshDatabase: (String) -> Void
     let refreshObjects: (_ database: String, _ schema: String?) -> Void
     let showRoutineDDL: (RoutineInfo) -> Void
-    let batchToggleTruncate: ([String]) -> Void
-    let batchToggleDelete: ([String]) -> Void
+    let batchToggleTruncate: (_ connectionId: UUID, _ tableNames: [String]) -> Void
+    let batchToggleDelete: (_ connectionId: UUID, _ tableNames: [String]) -> Void
     let removeRecent: (DatabaseTreeTableRef) -> Void
     let clearRecents: () -> Void
 }
@@ -27,9 +27,17 @@ struct DatabaseTreeRowContext {
     let activeDatabase: String?
     let activeSchema: String?
     let systemSchemas: Set<String>
-    let pendingTruncates: Set<String>
-    let pendingDeletes: Set<String>
+    let pendingTruncates: [UUID: Set<String>]
+    let pendingDeletes: [UUID: Set<String>]
     var isExternalSchema: @MainActor (String, String) -> Bool = { _, _ in false }
+
+    func isPendingTruncate(_ ref: DatabaseTreeTableRef) -> Bool {
+        pendingTruncates[ref.connectionId]?.contains(ref.table.name) ?? false
+    }
+
+    func isPendingDelete(_ ref: DatabaseTreeTableRef) -> Bool {
+        pendingDeletes[ref.connectionId]?.contains(ref.table.name) ?? false
+    }
 }
 
 struct DatabaseTreeRowView: View {
@@ -73,18 +81,20 @@ struct DatabaseTreeRowView: View {
         case .recentTable(let ref):
             TableRow(
                 table: ref.table,
-                isPendingTruncate: context.pendingTruncates.contains(ref.table.name),
-                isPendingDelete: context.pendingDeletes.contains(ref.table.name)
+                isPendingTruncate: context.isPendingTruncate(ref),
+                isPendingDelete: context.isPendingDelete(ref)
             )
             .foregroundStyle(isEmphasized ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
-        case .database(let metadata):
+        case .connectionRoot, .folder, .connection:
+            EmptyView()
+        case .database(_, let metadata):
             header(
                 text: metadata.name,
                 systemImage: metadata.isSystemDatabase ? "gearshape" : "cylinder",
                 isActive: metadata.name == context.activeDatabase,
                 isSystem: metadata.isSystemDatabase
             )
-        case .schema(let database, let schema):
+        case .schema(_, let database, let schema):
             header(
                 text: schema,
                 systemImage: context.isExternalSchema(database, schema) ? "folder.badge.gearshape" : "folder",
@@ -95,8 +105,8 @@ struct DatabaseTreeRowView: View {
         case .table(let ref):
             TableRow(
                 table: ref.table,
-                isPendingTruncate: context.pendingTruncates.contains(ref.table.name),
-                isPendingDelete: context.pendingDeletes.contains(ref.table.name)
+                isPendingTruncate: context.isPendingTruncate(ref),
+                isPendingDelete: context.isPendingDelete(ref)
             )
             .foregroundStyle(isEmphasized ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
         case .routine(let ref):
@@ -163,15 +173,15 @@ struct DatabaseTreeRowView: View {
     @ViewBuilder
     private var menuItems: some View {
         switch node.kind {
-        case .recentSection:
+        case .connectionRoot, .folder, .connection, .recentSection:
             EmptyView()
         case .recentTable(let ref):
             SidebarContextMenu(
                 clickedTable: ref.table,
                 selectedTables: [ref.table],
                 isReadOnly: actions.isReadOnly,
-                onBatchToggleTruncate: actions.batchToggleTruncate,
-                onBatchToggleDelete: actions.batchToggleDelete,
+                onBatchToggleTruncate: { actions.batchToggleTruncate(ref.connectionId, $0) },
+                onBatchToggleDelete: { actions.batchToggleDelete(ref.connectionId, $0) },
                 coordinator: actions.coordinator,
                 activateBeforeAction: { await actions.activate(ref) }
             )
@@ -182,7 +192,7 @@ struct DatabaseTreeRowView: View {
             Button(String(localized: "Clear Recent Tables")) {
                 actions.clearRecents()
             }
-        case .database(let metadata):
+        case .database(_, let metadata):
             Button(String(format: String(localized: "Use as Active %@"), containerEntityName)) {
                 actions.setActiveDatabase(metadata.name)
             }
@@ -190,7 +200,7 @@ struct DatabaseTreeRowView: View {
             Button(String(localized: "Refresh")) {
                 actions.refreshDatabase(metadata.name)
             }
-        case .schema(let database, let schema):
+        case .schema(_, let database, let schema):
             Button(String(format: String(localized: "Use as Active %@"), schemaEntityName)) {
                 actions.setActiveSchema(database, schema)
             }
@@ -201,10 +211,10 @@ struct DatabaseTreeRowView: View {
         case .table(let ref):
             SidebarContextMenu(
                 clickedTable: ref.table,
-                selectedTables: actions.selectedTables(),
+                selectedTables: actions.selectedTables(ref.connectionId),
                 isReadOnly: actions.isReadOnly,
-                onBatchToggleTruncate: actions.batchToggleTruncate,
-                onBatchToggleDelete: actions.batchToggleDelete,
+                onBatchToggleTruncate: { actions.batchToggleTruncate(ref.connectionId, $0) },
+                onBatchToggleDelete: { actions.batchToggleDelete(ref.connectionId, $0) },
                 coordinator: actions.coordinator,
                 activateBeforeAction: { await actions.activate(ref) }
             )

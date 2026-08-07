@@ -94,17 +94,23 @@ extension MainContentView {
     }
 
     func handleTableSelectionChange(
-        from oldTables: Set<TableInfo>, to newTables: Set<TableInfo>
+        from oldTables: Set<DatabaseTreeTableRef>, to newTables: Set<DatabaseTreeTableRef>
     ) {
         let action = TableSelectionAction.resolve(oldTables: oldTables, newTables: newTables)
 
-        guard case .navigate(let table) = action else {
+        guard case .navigate(let ref) = action else {
+            return
+        }
+
+        guard ref.connectionId == connection.id else {
             return
         }
 
         guard coordinator.isKeyWindow else {
             return
         }
+
+        let table = ref.table
 
         let result = SidebarNavigationResult.resolve(
             clickedTableName: table.name,
@@ -132,11 +138,17 @@ extension MainContentView {
     func syncSidebarToCurrentTab() {
         guard coordinator.isKeyWindow else { return }
         let liveTables = DatabaseManager.shared.session(for: connection.id)?.tables ?? []
-        let target: Set<TableInfo>
-        if let currentTableName = tabManager.selectedTab?.tableContext.tableName,
+        let target: Set<DatabaseTreeTableRef>
+        if let context = tabManager.selectedTab?.tableContext,
+            let currentTableName = context.tableName,
             let match = liveTables.first(where: { $0.name == currentTableName })
         {
-            target = [match]
+            target = [DatabaseTreeTableRef(
+                connectionId: connection.id,
+                database: context.databaseName.isEmpty ? coordinator.browseDatabaseName : context.databaseName,
+                schema: context.schemaName,
+                table: match
+            )]
         } else {
             target = []
         }

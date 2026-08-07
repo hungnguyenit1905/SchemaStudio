@@ -7,12 +7,13 @@ import SwiftUI
 import TableProPluginKit
 
 struct DatabaseTreeTableRef: Hashable, Identifiable {
+    let connectionId: UUID
     let database: String
     let schema: String?
     let table: TableInfo
 
     var id: String {
-        "\(database)|\(schema ?? "")|\(table.id)"
+        "\(connectionId.uuidString)|\(database)|\(schema ?? "")|\(table.id)"
     }
 
     static func == (lhs: DatabaseTreeTableRef, rhs: DatabaseTreeTableRef) -> Bool {
@@ -25,12 +26,13 @@ struct DatabaseTreeTableRef: Hashable, Identifiable {
 }
 
 struct DatabaseTreeRoutineRef: Identifiable {
+    let connectionId: UUID
     let database: String
     let schema: String?
     let routine: RoutineInfo
 
     var id: String {
-        "\(database)|\(schema ?? "")|\(routine.id)"
+        "\(connectionId.uuidString)|\(database)|\(schema ?? "")|\(routine.id)"
     }
 }
 
@@ -117,8 +119,8 @@ struct DatabaseTreeView: View {
             windowState: windowState,
             sidebarState: sidebarState,
             viewModel: viewModel,
-            pendingTruncates: pendingTruncates,
-            pendingDeletes: pendingDeletes,
+            pendingTruncates: [connectionId: pendingTruncates],
+            pendingDeletes: [connectionId: pendingDeletes],
             searchText: searchText,
             connectionToken: connectionToken,
             activeDatabase: activeDatabase,

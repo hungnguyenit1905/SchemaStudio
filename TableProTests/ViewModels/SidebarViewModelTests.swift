@@ -25,6 +25,10 @@ private final class SidebarMockClipboard: ClipboardProvider {
 
 // MARK: - Helper
 
+/// Every view model built by `makeSUT` belongs to this connection, so batch
+/// operations must be addressed to it.
+private let sutConnectionId = UUID()
+
 /// Creates a SidebarViewModel with controllable state bindings for testing
 @MainActor
 private func makeSUT(
@@ -37,13 +41,15 @@ private func makeSUT(
 ) -> (
     vm: SidebarViewModel,
     tables: Binding<[TableInfo]>,
-    selectedTables: Binding<Set<TableInfo>>,
+    selectedTables: Binding<Set<DatabaseTreeTableRef>>,
     pendingTruncates: Binding<Set<String>>,
     pendingDeletes: Binding<Set<String>>,
     tableOperationOptions: Binding<[String: TableOperationOptions]>
 ) {
     var tablesState = tables
-    var selectedState = selectedTables
+    var selectedState = Set(selectedTables.map {
+        DatabaseTreeTableRef(connectionId: sutConnectionId, database: "shop", schema: $0.schema, table: $0)
+    })
     var truncatesState = pendingTruncates
     var deletesState = pendingDeletes
     var optionsState = tableOperationOptions
@@ -60,7 +66,7 @@ private func makeSUT(
         pendingDeletes: deletesBinding,
         tableOperationOptions: optionsBinding,
         databaseType: databaseType,
-        connectionId: UUID()
+        connectionId: sutConnectionId
     )
 
     return (vm, tablesBinding, selectedBinding, truncatesBinding, deletesBinding, optionsBinding)
@@ -79,7 +85,7 @@ struct SidebarViewModelTests {
         let table = TestFixtures.makeTableInfo(name: "users")
         let (vm, _, _, _, _, _) = makeSUT(selectedTables: [table])
 
-        vm.batchToggleTruncate()
+        vm.batchToggleTruncate(connectionId: sutConnectionId)
 
         #expect(vm.showOperationDialog)
         #expect(vm.pendingOperationType == .truncate)
@@ -96,11 +102,37 @@ struct SidebarViewModelTests {
             tableOperationOptions: ["users": TableOperationOptions()]
         )
 
-        vm.batchToggleTruncate()
+        vm.batchToggleTruncate(connectionId: sutConnectionId)
 
         #expect(!vm.showOperationDialog)
         #expect(!truncatesBinding.wrappedValue.contains("users"))
         #expect(optionsBinding.wrappedValue["users"] == nil)
+    }
+
+    @Test("A batch truncate addressed to another connection is refused")
+    @MainActor
+    func batchToggleTruncateIgnoresForeignConnection() {
+        let table = TestFixtures.makeTableInfo(name: "users")
+        let (vm, _, _, truncatesBinding, _, _) = makeSUT(selectedTables: [table])
+
+        vm.batchToggleTruncate(connectionId: UUID())
+
+        #expect(!vm.showOperationDialog)
+        #expect(vm.pendingOperationTables.isEmpty)
+        #expect(truncatesBinding.wrappedValue.isEmpty)
+    }
+
+    @Test("A batch delete addressed to another connection is refused")
+    @MainActor
+    func batchToggleDeleteIgnoresForeignConnection() {
+        let table = TestFixtures.makeTableInfo(name: "orders")
+        let (vm, _, _, _, deletesBinding, _) = makeSUT(selectedTables: [table])
+
+        vm.batchToggleDelete(connectionId: UUID())
+
+        #expect(!vm.showOperationDialog)
+        #expect(vm.pendingOperationTables.isEmpty)
+        #expect(deletesBinding.wrappedValue.isEmpty)
     }
 
     @Test("batchToggleTruncate does nothing when no selection")
@@ -108,7 +140,7 @@ struct SidebarViewModelTests {
     func batchToggleTruncateNoSelection() {
         let (vm, _, _, _, _, _) = makeSUT()
 
-        vm.batchToggleTruncate()
+        vm.batchToggleTruncate(connectionId: sutConnectionId)
 
         #expect(!vm.showOperationDialog)
     }
@@ -121,7 +153,7 @@ struct SidebarViewModelTests {
         let table = TestFixtures.makeTableInfo(name: "orders")
         let (vm, _, _, _, _, _) = makeSUT(selectedTables: [table])
 
-        vm.batchToggleDelete()
+        vm.batchToggleDelete(connectionId: sutConnectionId)
 
         #expect(vm.showOperationDialog)
         #expect(vm.pendingOperationType == .drop)
@@ -138,7 +170,7 @@ struct SidebarViewModelTests {
             tableOperationOptions: ["orders": TableOperationOptions()]
         )
 
-        vm.batchToggleDelete()
+        vm.batchToggleDelete(connectionId: sutConnectionId)
 
         #expect(!vm.showOperationDialog)
         #expect(!deletesBinding.wrappedValue.contains("orders"))
@@ -262,7 +294,7 @@ private func makeViewModel(
     connectionId: UUID = UUID(),
     databaseType: DatabaseType = .postgresql
 ) -> SidebarViewModel {
-    var selectedState: Set<TableInfo> = []
+    var selectedState: Set<DatabaseTreeTableRef> = []
     var truncates: Set<String> = []
     var deletes: Set<String> = []
     var options: [String: TableOperationOptions] = [:]

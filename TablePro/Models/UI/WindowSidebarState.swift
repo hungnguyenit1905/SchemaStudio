@@ -7,12 +7,19 @@ import Foundation
 import Observation
 import TableProPluginKit
 
-struct DatabaseSchemaKey: Hashable, Sendable, Codable {
+struct ConnectionDatabaseKey: Hashable, Sendable, Codable {
+    let connectionId: UUID
+    let database: String
+}
+
+struct ConnectionSchemaKey: Hashable, Sendable, Codable {
+    let connectionId: UUID
     let database: String
     let schema: String
 }
 
-struct DatabaseTableKey: Hashable, Sendable, Codable {
+struct ConnectionTableKey: Hashable, Sendable, Codable {
+    let connectionId: UUID
     let database: String
     let schema: String?
     let table: String
@@ -25,11 +32,11 @@ internal final class WindowSidebarState {
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private var isLoaded = false
 
-    var selectedTables: Set<TableInfo> = []
+    var selectedTables: Set<DatabaseTreeTableRef> = []
     var expandedTreeSchemas: Set<String> = [] { didSet { persistExpansion() } }
-    var expandedTreeDatabases: Set<String> = [] { didSet { persistExpansion() } }
-    var expandedTreeDatabaseSchemas: Set<DatabaseSchemaKey> = [] { didSet { persistExpansion() } }
-    var expandedTreeTables: Set<DatabaseTableKey> = [] { didSet { persistExpansion() } }
+    var expandedTreeDatabases: Set<ConnectionDatabaseKey> = [] { didSet { persistExpansion() } }
+    var expandedTreeDatabaseSchemas: Set<ConnectionSchemaKey> = [] { didSet { persistExpansion() } }
+    var expandedTreeTables: Set<ConnectionTableKey> = [] { didSet { persistExpansion() } }
 
     init(connectionId: UUID? = nil, defaults: UserDefaults = .standard) {
         self.connectionId = connectionId
@@ -40,9 +47,9 @@ internal final class WindowSidebarState {
 
     private struct PersistedExpansion: Codable {
         var schemas: [String]
-        var databases: [String]
-        var databaseSchemas: [DatabaseSchemaKey]
-        var tables: [DatabaseTableKey]?
+        var databases: [ConnectionDatabaseKey]
+        var databaseSchemas: [ConnectionSchemaKey]
+        var tables: [ConnectionTableKey]
     }
 
     private var storageKey: String? {
@@ -56,7 +63,7 @@ internal final class WindowSidebarState {
         expandedTreeSchemas = Set(decoded.schemas)
         expandedTreeDatabases = Set(decoded.databases)
         expandedTreeDatabaseSchemas = Set(decoded.databaseSchemas)
-        expandedTreeTables = Set(decoded.tables ?? [])
+        expandedTreeTables = Set(decoded.tables)
     }
 
     private func persistExpansion() {

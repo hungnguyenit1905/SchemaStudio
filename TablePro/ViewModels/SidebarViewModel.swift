@@ -15,7 +15,7 @@ final class SidebarViewModel {
     static func shared(
         connectionId: UUID,
         databaseType: DatabaseType,
-        selectedTables: Binding<Set<TableInfo>>,
+        selectedTables: Binding<Set<DatabaseTreeTableRef>>,
         pendingTruncates: Binding<Set<String>>,
         pendingDeletes: Binding<Set<String>>,
         tableOperationOptions: Binding<[String: TableOperationOptions]>
@@ -46,7 +46,7 @@ final class SidebarViewModel {
     }
 
     func updateBindings(
-        selectedTables: Binding<Set<TableInfo>>,
+        selectedTables: Binding<Set<DatabaseTreeTableRef>>,
         pendingTruncates: Binding<Set<String>>,
         pendingDeletes: Binding<Set<String>>,
         tableOperationOptions: Binding<[String: TableOperationOptions]>
@@ -122,7 +122,7 @@ final class SidebarViewModel {
 
     // MARK: - Binding Storage
 
-    private var selectedTablesBinding: Binding<Set<TableInfo>>
+    private var selectedTablesBinding: Binding<Set<DatabaseTreeTableRef>>
     private var pendingTruncatesBinding: Binding<Set<String>>
     private var pendingDeletesBinding: Binding<Set<String>>
     private var tableOperationOptionsBinding: Binding<[String: TableOperationOptions]>
@@ -138,7 +138,7 @@ final class SidebarViewModel {
 
     // MARK: - Convenience Accessors
 
-    var selectedTables: Set<TableInfo> {
+    var selectedTables: Set<DatabaseTreeTableRef> {
         get { selectedTablesBinding.wrappedValue }
         set { selectedTablesBinding.wrappedValue = newValue }
     }
@@ -166,7 +166,7 @@ final class SidebarViewModel {
     // MARK: - Initialization
 
     init(
-        selectedTables: Binding<Set<TableInfo>>,
+        selectedTables: Binding<Set<DatabaseTreeTableRef>>,
         pendingTruncates: Binding<Set<String>>,
         pendingDeletes: Binding<Set<String>>,
         tableOperationOptions: Binding<[String: TableOperationOptions]>,
@@ -271,8 +271,9 @@ final class SidebarViewModel {
 
     // MARK: - Batch Operations
 
-    func batchToggleTruncate(tableNames: [String]? = nil) {
-        let tablesToToggle = tableNames ?? (selectedTables.isEmpty ? [] : Array(selectedTables.map { $0.name }))
+    func batchToggleTruncate(connectionId: UUID, tableNames: [String]? = nil) {
+        guard connectionId == self.connectionId else { return }
+        let tablesToToggle = tableNames ?? (selectedTables.isEmpty ? [] : Array(selectedTables.map { $0.table.name }))
         guard !tablesToToggle.isEmpty else { return }
 
         let allAlreadyPending = tablesToToggle.allSatisfy { pendingTruncates.contains($0) }
@@ -290,8 +291,9 @@ final class SidebarViewModel {
         }
     }
 
-    func batchToggleDelete(tableNames: [String]? = nil) {
-        let tablesToToggle = tableNames ?? (selectedTables.isEmpty ? [] : Array(selectedTables.map { $0.name }))
+    func batchToggleDelete(connectionId: UUID, tableNames: [String]? = nil) {
+        guard connectionId == self.connectionId else { return }
+        let tablesToToggle = tableNames ?? (selectedTables.isEmpty ? [] : Array(selectedTables.map { $0.table.name }))
         guard !tablesToToggle.isEmpty else { return }
 
         let allAlreadyPending = tablesToToggle.allSatisfy { pendingDeletes.contains($0) }
@@ -339,7 +341,7 @@ final class SidebarViewModel {
 
     func copySelectedTableNames() {
         guard !selectedTables.isEmpty else { return }
-        let names = selectedTables.map { $0.name }.sorted()
+        let names = selectedTables.map { $0.table.name }.sorted()
         ClipboardService.shared.writeText(names.joined(separator: ","))
     }
 

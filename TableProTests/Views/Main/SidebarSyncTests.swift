@@ -45,7 +45,7 @@ struct SidebarSyncTests {
             TestFixtures.makeTableInfo(name: "users"),
             TestFixtures.makeTableInfo(name: "orders")
         ]
-        let selected: Set<TableInfo> = [TestFixtures.makeTableInfo(name: "users")]
+        let selected: Set<DatabaseTreeTableRef> = [TestFixtures.makeTableRef(name: "users")]
         let result = SidebarSyncAction.resolveOnTablesLoad(
             newTables: tables,
             selectedTables: selected,

@@ -689,7 +689,7 @@ final class MainContentCoordinator {
         let tables = services.schemaService.allLoadedTables(for: connectionId)
         guard let vm = sidebarViewModel else { return }
         let validNames = Set(tables.map(\.name))
-        let staleSelections = vm.selectedTables.filter { !validNames.contains($0.name) }
+        let staleSelections = vm.selectedTables.filter { !validNames.contains($0.table.name) }
         if !staleSelections.isEmpty {
             vm.selectedTables.subtract(staleSelections)
         }

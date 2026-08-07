@@ -197,7 +197,7 @@ struct MainContentView: View {
                 mode: .tables(
                     connection: exportConnection,
                     preselectedTables: coordinator.exportPreselectedTableNames
-                        ?? Set(coordinator.windowSidebarState.selectedTables.map(\.name))
+                        ?? Set(coordinator.windowSidebarState.selectedTables.map(\.table.name))
                 ),
                 sidebarTables: tables
             )
@@ -414,7 +414,12 @@ struct MainContentView: View {
                 if case .select(let tableName) = syncAction,
                     let match = newTables.first(where: { $0.name == tableName })
                 {
-                    coordinator.windowSidebarState.selectedTables = [match]
+                    coordinator.windowSidebarState.selectedTables = [DatabaseTreeTableRef(
+                        connectionId: connection.id,
+                        database: coordinator.browseDatabaseName,
+                        schema: tabManager.selectedTab?.tableContext.schemaName,
+                        table: match
+                    )]
                 }
             }
     }

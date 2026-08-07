@@ -44,7 +44,7 @@ struct SidebarTreeView: View {
         return schemas.filter { schemaIsVisibleDuringSearch($0) }
     }
 
-    private var selectedTablesBinding: Binding<Set<TableInfo>> {
+    private var selectedTablesBinding: Binding<Set<DatabaseTreeTableRef>> {
         Binding(
             get: { windowState.selectedTables },
             set: { windowState.selectedTables = $0 }
@@ -138,10 +138,10 @@ struct SidebarTreeView: View {
     private func tableContextMenu(_ table: TableInfo) -> some View {
         SidebarContextMenu(
             clickedTable: table,
-            selectedTables: windowState.selectedTables,
+            selectedTables: Set(windowState.selectedTables.map(\.table)),
             isReadOnly: coordinator?.safeModeLevel.blocksAllWrites ?? false,
-            onBatchToggleTruncate: { viewModel.batchToggleTruncate(tableNames: $0) },
-            onBatchToggleDelete: { viewModel.batchToggleDelete(tableNames: $0) },
+            onBatchToggleTruncate: { viewModel.batchToggleTruncate(connectionId: connectionId, tableNames: $0) },
+            onBatchToggleDelete: { viewModel.batchToggleDelete(connectionId: connectionId, tableNames: $0) },
             coordinator: coordinator
         )
     }

@@ -52,7 +52,7 @@ struct SidebarView: View {
         return groupingStrategy != .hierarchicalSchema && !usesDatabaseTree
     }
 
-    private var selectedTablesBinding: Binding<Set<TableInfo>> {
+    private var selectedTablesBinding: Binding<Set<DatabaseTreeTableRef>> {
         Binding(
             get: { windowState.selectedTables },
             set: { windowState.selectedTables = $0 }
@@ -372,8 +372,8 @@ struct SidebarView: View {
             clickedTable: clicked,
             selectedTables: selected,
             isReadOnly: coordinator?.safeModeLevel.blocksAllWrites ?? false,
-            onBatchToggleTruncate: { viewModel.batchToggleTruncate(tableNames: $0) },
-            onBatchToggleDelete: { viewModel.batchToggleDelete(tableNames: $0) },
+            onBatchToggleTruncate: { viewModel.batchToggleTruncate(connectionId: connectionId, tableNames: $0) },
+            onBatchToggleDelete: { viewModel.batchToggleDelete(connectionId: connectionId, tableNames: $0) },
             coordinator: coordinator
         )
     }
@@ -448,8 +448,8 @@ struct SidebarView: View {
                 clickedTable: selection.first,
                 selectedTables: selection,
                 isReadOnly: coordinator?.safeModeLevel.blocksAllWrites ?? false,
-                onBatchToggleTruncate: { viewModel.batchToggleTruncate(tableNames: $0) },
-                onBatchToggleDelete: { viewModel.batchToggleDelete(tableNames: $0) },
+                onBatchToggleTruncate: { viewModel.batchToggleTruncate(connectionId: connectionId, tableNames: $0) },
+                onBatchToggleDelete: { viewModel.batchToggleDelete(connectionId: connectionId, tableNames: $0) },
                 coordinator: coordinator
             )
         } primaryAction: { selection in

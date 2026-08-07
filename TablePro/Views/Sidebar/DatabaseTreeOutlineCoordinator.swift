@@ -23,8 +23,8 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     private var connectionToken = ""
     private var activeDatabase: String?
     private var activeSchema: String?
-    private var pendingTruncates: Set<String> = []
-    private var pendingDeletes: Set<String> = []
+    private var pendingTruncates: [UUID: Set<String>] = [:]
+    private var pendingDeletes: [UUID: Set<String>] = [:]
 
     private var nodeCache: [String: DatabaseTreeNode] = [:]
     private var childrenCache: [String: [DatabaseTreeNode]] = [:]
@@ -87,11 +87,12 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
 
     private func persistActiveExpansion() {
         guard let active = activeDatabase, let windowState else { return }
-        if !windowState.expandedTreeDatabases.contains(active) {
-            windowState.expandedTreeDatabases.insert(active)
+        let databaseKey = ConnectionDatabaseKey(connectionId: connectionId, database: active)
+        if !windowState.expandedTreeDatabases.contains(databaseKey) {
+            windowState.expandedTreeDatabases.insert(databaseKey)
         }
         if let schema = activeSchema {
-            let key = DatabaseSchemaKey(database: active, schema: schema)
+            let key = ConnectionSchemaKey(connectionId: connectionId, database: active, schema: schema)
             if !windowState.expandedTreeDatabaseSchemas.contains(key) {
                 windowState.expandedTreeDatabaseSchemas.insert(key)
             }
@@ -127,18 +128,18 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         _ = sidebarState?.recentTables
         for node in nodeCache.values {
             switch node.kind {
-            case .database(let metadata):
+            case .database(let connectionId, let metadata):
                 _ = service.schemaListState(connectionId: connectionId, database: metadata.name)
                 _ = service.tablesLoadState(connectionId: connectionId, database: metadata.name, schema: nil)
                 _ = service.routinesLoadState(connectionId: connectionId, database: metadata.name, schema: nil)
-            case .schema(let database, let schema):
+            case .schema(let connectionId, let database, let schema):
                 _ = service.tablesLoadState(connectionId: connectionId, database: database, schema: schema)
                 _ = service.routinesLoadState(connectionId: connectionId, database: database, schema: schema)
             case .table(let ref) where ref.table.type == .partitionedTable:
                 _ = service.partitionsLoadState(
-                    connectionId: connectionId, database: ref.database, schema: ref.schema, table: ref.table.name
+                    connectionId: ref.connectionId, database: ref.database, schema: ref.schema, table: ref.table.name
                 )
-            case .recentSection, .recentTable, .table, .routine, .status:
+            case .connectionRoot, .folder, .connection, .recentSection, .recentTable, .table, .routine, .status:
                 break
             }
         }
@@ -182,15 +183,15 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
             return recentTableRefs().map {
                 self.node(id: DatabaseTreeNode.recentTableId($0), kind: .recentTable($0))
             }
-        case .database(let metadata):
+        case .database(_, let metadata):
             return supportsSchemaLevel
                 ? schemaNodes(database: metadata.name)
                 : objectNodes(database: metadata.name, schema: nil)
-        case .schema(let database, let schema):
+        case .schema(_, let database, let schema):
             return objectNodes(database: database, schema: schema)
         case .table(let ref):
             return ref.table.type == .partitionedTable ? partitionNodes(of: ref) : []
-        case .recentTable, .routine, .status:
+        case .connectionRoot, .folder, .connection, .recentTable, .routine, .status:
             return []
         }
     }
@@ -198,7 +199,7 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     private func partitionNodes(of ref: DatabaseTreeTableRef) -> [DatabaseTreeNode] {
         let parentId = DatabaseTreeNode.tableId(ref)
         let state = service.partitionsLoadState(
-            connectionId: connectionId, database: ref.database, schema: ref.schema, table: ref.table.name
+            connectionId: ref.connectionId, database: ref.database, schema: ref.schema, table: ref.table.name
         )
         switch state {
         case .idle, .loading:
@@ -208,7 +209,9 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         case .loaded(let partitions):
             if partitions.isEmpty { return [statusNode(parentId: parentId, status: .empty)] }
             return partitions.map { partition in
-                let childRef = DatabaseTreeTableRef(database: ref.database, schema: ref.schema, table: partition)
+                let childRef = DatabaseTreeTableRef(
+                    connectionId: ref.connectionId, database: ref.database, schema: ref.schema, table: partition
+                )
                 return node(id: DatabaseTreeNode.tableId(childRef), kind: .table(childRef))
             }
         }
@@ -217,7 +220,10 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     private func rootNodes() -> [DatabaseTreeNode] {
         var nodes: [DatabaseTreeNode] = []
         if !recentTableRefs().isEmpty {
-            nodes.append(node(id: DatabaseTreeNode.recentSectionId, kind: .recentSection))
+            nodes.append(node(
+                id: DatabaseTreeNode.recentSectionId(connectionId: connectionId),
+                kind: .recentSection(connectionId: connectionId)
+            ))
         }
         let visible = DatabaseTreeVisibility.visible(
             databases: service.databases(for: connectionId),
@@ -228,7 +234,12 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         var seen = Set<String>()
         nodes += matched
             .filter { seen.insert($0.id).inserted }
-            .map { node(id: DatabaseTreeNode.databaseId($0.name), kind: .database($0)) }
+            .map {
+                node(
+                    id: DatabaseTreeNode.databaseId(connectionId: connectionId, database: $0.name),
+                    kind: .database(connectionId: connectionId, metadata: $0)
+                )
+            }
         return nodes
     }
 
@@ -237,12 +248,14 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         let database = mainCoordinator?.browseDatabaseName ?? activeDatabase ?? ""
         return sidebarState.recentEntries(inDatabase: database).compactMap { entry -> DatabaseTreeTableRef? in
             if !searchText.isEmpty, !DatabaseTreeFilter.matches(searchText, entry.name) { return nil }
-            return DatabaseTreeTableRef(database: database, schema: entry.schema, table: entry.tableInfo)
+            return DatabaseTreeTableRef(
+                connectionId: connectionId, database: database, schema: entry.schema, table: entry.tableInfo
+            )
         }
     }
 
     private func schemaNodes(database: String) -> [DatabaseTreeNode] {
-        let parentId = DatabaseTreeNode.databaseId(database)
+        let parentId = DatabaseTreeNode.databaseId(connectionId: connectionId, database: database)
         switch service.schemaListState(connectionId: connectionId, database: database) {
         case .idle, .loading:
             return [statusNode(parentId: parentId, status: .loading)]
@@ -257,14 +270,18 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
             )
             if visible.isEmpty { return [statusNode(parentId: parentId, status: .empty)] }
             return visible.map {
-                node(id: DatabaseTreeNode.schemaId(database: database, schema: $0), kind: .schema(database: database, schema: $0))
+                node(
+                    id: DatabaseTreeNode.schemaId(connectionId: connectionId, database: database, schema: $0),
+                    kind: .schema(connectionId: connectionId, database: database, schema: $0)
+                )
             }
         }
     }
 
     private func objectNodes(database: String, schema: String?) -> [DatabaseTreeNode] {
-        let parentId = schema.map { DatabaseTreeNode.schemaId(database: database, schema: $0) }
-            ?? DatabaseTreeNode.databaseId(database)
+        let parentId = schema
+            .map { DatabaseTreeNode.schemaId(connectionId: connectionId, database: database, schema: $0) }
+            ?? DatabaseTreeNode.databaseId(connectionId: connectionId, database: database)
         switch service.tablesLoadState(connectionId: connectionId, database: database, schema: schema) {
         case .idle, .loading:
             return [statusNode(parentId: parentId, status: .loading)]
@@ -293,11 +310,15 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         }
 
         var nodes: [DatabaseTreeNode] = tables.map { table in
-            let ref = DatabaseTreeTableRef(database: database, schema: schema, table: table)
+            let ref = DatabaseTreeTableRef(
+                connectionId: connectionId, database: database, schema: schema, table: table
+            )
             return node(id: DatabaseTreeNode.tableId(ref), kind: .table(ref))
         }
         nodes += routines.map { routine in
-            let ref = DatabaseTreeRoutineRef(database: database, schema: schema, routine: routine)
+            let ref = DatabaseTreeRoutineRef(
+                connectionId: connectionId, database: database, schema: schema, routine: routine
+            )
             return node(id: DatabaseTreeNode.routineId(ref), kind: .routine(ref))
         }
         if case .failed(let message) = routinesState {
@@ -338,14 +359,16 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         isApplyingExpansion = true
         defer { isApplyingExpansion = false }
         let searching = !searchText.isEmpty
-        for rootNode in resolvedChildren(of: nil) where rootNode.id == DatabaseTreeNode.recentSectionId {
+        let recentId = DatabaseTreeNode.recentSectionId(connectionId: connectionId)
+        for rootNode in resolvedChildren(of: nil) where rootNode.id == recentId {
             setExpanded(rootNode, searching || (viewModel?.isRecentsExpanded ?? true))
         }
         for databaseNode in resolvedChildren(of: nil) {
-            guard case .database(let metadata) = databaseNode.kind else { continue }
+            guard case .database(let connectionId, let metadata) = databaseNode.kind else { continue }
+            let databaseKey = ConnectionDatabaseKey(connectionId: connectionId, database: metadata.name)
             let want = searching
                 ? databaseMatchesSearch(metadata)
-                : windowState?.expandedTreeDatabases.contains(metadata.name) ?? false
+                : windowState?.expandedTreeDatabases.contains(databaseKey) ?? false
             setExpanded(databaseNode, want)
             guard outlineView.isItemExpanded(databaseNode) else { continue }
             triggerLoad(for: databaseNode)
@@ -354,10 +377,11 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
                 continue
             }
             for schemaNode in resolvedChildren(of: databaseNode) {
-                guard case .schema(let database, let schema) = schemaNode.kind else { continue }
+                guard case .schema(let connectionId, let database, let schema) = schemaNode.kind else { continue }
+                let schemaKey = ConnectionSchemaKey(connectionId: connectionId, database: database, schema: schema)
                 let wantSchema = searching
                     ? DatabaseTreeFilter.matches(searchText, schema) || schemaContentMatchesSearch(database: database, schema: schema)
-                    : windowState?.expandedTreeDatabaseSchemas.contains(DatabaseSchemaKey(database: database, schema: schema)) ?? false
+                    : windowState?.expandedTreeDatabaseSchemas.contains(schemaKey) ?? false
                 setExpanded(schemaNode, wantSchema)
                 if outlineView.isItemExpanded(schemaNode) {
                     triggerLoad(for: schemaNode)
@@ -371,7 +395,9 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         guard searchText.isEmpty, let outlineView, let windowState else { return }
         for tableNode in resolvedChildren(of: parent) {
             guard case .table(let ref) = tableNode.kind, ref.table.type == .partitionedTable else { continue }
-            let key = DatabaseTableKey(database: ref.database, schema: ref.schema, table: ref.table.name)
+            let key = ConnectionTableKey(
+                connectionId: ref.connectionId, database: ref.database, schema: ref.schema, table: ref.table.name
+            )
             guard windowState.expandedTreeTables.contains(key) else { continue }
             setExpanded(tableNode, true)
             guard outlineView.isItemExpanded(tableNode) else { continue }
@@ -393,34 +419,49 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         switch node.kind {
         case .recentSection:
             viewModel?.isRecentsExpanded = expanded
-        case .database(let metadata):
+        case .folder(let group):
             if expanded {
-                windowState?.expandedTreeDatabases.insert(metadata.name)
+                ConnectionTreeState.shared.expandedFolderIds.insert(group.id)
             } else {
-                windowState?.expandedTreeDatabases.remove(metadata.name)
+                ConnectionTreeState.shared.expandedFolderIds.remove(group.id)
             }
-        case .schema(let database, let schema):
-            let key = DatabaseSchemaKey(database: database, schema: schema)
+        case .connection(let connection):
+            if expanded {
+                ConnectionTreeState.shared.expandedConnectionIds.insert(connection.id)
+            } else {
+                ConnectionTreeState.shared.expandedConnectionIds.remove(connection.id)
+            }
+        case .database(let connectionId, let metadata):
+            let key = ConnectionDatabaseKey(connectionId: connectionId, database: metadata.name)
+            if expanded {
+                windowState?.expandedTreeDatabases.insert(key)
+            } else {
+                windowState?.expandedTreeDatabases.remove(key)
+            }
+        case .schema(let connectionId, let database, let schema):
+            let key = ConnectionSchemaKey(connectionId: connectionId, database: database, schema: schema)
             if expanded {
                 windowState?.expandedTreeDatabaseSchemas.insert(key)
             } else {
                 windowState?.expandedTreeDatabaseSchemas.remove(key)
             }
         case .table(let ref):
-            let key = DatabaseTableKey(database: ref.database, schema: ref.schema, table: ref.table.name)
+            let key = ConnectionTableKey(
+                connectionId: ref.connectionId, database: ref.database, schema: ref.schema, table: ref.table.name
+            )
             if expanded {
                 windowState?.expandedTreeTables.insert(key)
             } else {
                 windowState?.expandedTreeTables.remove(key)
             }
-        case .recentTable, .routine, .status:
+        case .connectionRoot, .recentTable, .routine, .status:
             break
         }
     }
 
     private func triggerLoad(for node: DatabaseTreeNode) {
         switch node.kind {
-        case .database(let metadata):
+        case .database(_, let metadata):
             if supportsSchemaLevel {
                 if isIdle(service.schemaListState(connectionId: connectionId, database: metadata.name)) {
                     Task { await service.loadSchemas(connectionId: connectionId, database: metadata.name) }
@@ -429,11 +470,11 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
             } else {
                 loadObjects(database: metadata.name, schema: nil)
             }
-        case .schema(let database, let schema):
+        case .schema(_, let database, let schema):
             loadObjects(database: database, schema: schema)
         case .table(let ref):
             loadPartitions(ref)
-        case .recentSection, .recentTable, .routine, .status:
+        case .connectionRoot, .folder, .connection, .recentSection, .recentTable, .routine, .status:
             break
         }
     }
@@ -456,12 +497,12 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     private func loadPartitions(_ ref: DatabaseTreeTableRef) {
         guard ref.table.type == .partitionedTable else { return }
         let state = service.partitionsLoadState(
-            connectionId: connectionId, database: ref.database, schema: ref.schema, table: ref.table.name
+            connectionId: ref.connectionId, database: ref.database, schema: ref.schema, table: ref.table.name
         )
         guard isIdle(state) else { return }
         Task {
             await service.loadPartitions(
-                connectionId: connectionId, database: ref.database, schema: ref.schema, table: ref.table.name
+                connectionId: ref.connectionId, database: ref.database, schema: ref.schema, table: ref.table.name
             )
         }
     }
@@ -580,15 +621,21 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         DatabaseTreeRowActions(
             coordinator: mainCoordinator,
             isReadOnly: mainCoordinator?.safeModeLevel.blocksAllWrites ?? false,
-            selectedTables: { [weak self] in Set((self?.selectedRefs() ?? []).map(\.table)) },
+            selectedTables: { [weak self] connectionId in
+                Set((self?.selectedRefs() ?? []).filter { $0.connectionId == connectionId }.map(\.table))
+            },
             activate: { [weak self] ref in await self?.activate(ref) },
             setActiveDatabase: { [weak self] in self?.setActiveDatabase($0) },
             setActiveSchema: { [weak self] database, schema in self?.setActiveSchema(database: database, schema: schema) },
             refreshDatabase: { [weak self] in self?.refreshDatabase($0) },
             refreshObjects: { [weak self] database, schema in self?.refreshObjects(database: database, schema: schema) },
             showRoutineDDL: { [weak self] routine in self?.mainCoordinator?.showRoutineDDL(routine) },
-            batchToggleTruncate: { [weak self] in self?.viewModel?.batchToggleTruncate(tableNames: $0) },
-            batchToggleDelete: { [weak self] in self?.viewModel?.batchToggleDelete(tableNames: $0) },
+            batchToggleTruncate: { [weak self] connectionId, tableNames in
+                self?.viewModel?.batchToggleTruncate(connectionId: connectionId, tableNames: tableNames)
+            },
+            batchToggleDelete: { [weak self] connectionId, tableNames in
+                self?.viewModel?.batchToggleDelete(connectionId: connectionId, tableNames: tableNames)
+            },
             removeRecent: { [weak self] ref in
                 self?.sidebarState?.removeRecentTable(database: ref.database, schema: ref.schema, name: ref.table.name)
             },
