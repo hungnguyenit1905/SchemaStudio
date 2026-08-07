@@ -2,37 +2,42 @@
 //  EntitlementsEnvironmentParityTests.swift
 //  TableProTests
 //
-//  Guards the CloudKit environment pin. The Mac and iOS apps must both target
-//  the Production environment, or a development iOS build talks to the
-//  Development database while the Mac talks to Production and sync silently
-//  moves nothing across devices.
+//  This fork ships with CloudKit sync disabled and never re-created a container of
+//  its own, so the Mac app must declare no iCloud container and no environment pin.
+//  Declaring one would either point at the upstream project's container or pin an
+//  environment for a container that does not exist.
 //
 
 import Foundation
 import Testing
 
-@Suite("CloudKit environment entitlement parity")
+@Suite("CloudKit entitlements")
 struct EntitlementsEnvironmentParityTests {
     private static let environmentKey = "com.apple.developer.icloud-container-environment"
-    private static let macEntitlements = "SchemaStudio/SchemaStudio.entitlements"
-    private static let iosEntitlements = "SchemaStudioMobile/SchemaStudioMobile/SchemaStudioMobileRelease.entitlements"
+    private static let containerKey = "com.apple.developer.icloud-container-identifiers"
+    private static let servicesKey = "com.apple.developer.icloud-services"
 
-    @Test("Mac app pins the Production CloudKit environment")
-    func macTargetsProduction() throws {
-        try #expect(environment(in: Self.macEntitlements) == "Production")
+    private static let macEntitlements = "TablePro/TablePro.entitlements"
+    private static let macDebugEntitlements = "TablePro/TablePro.Debug.entitlements"
+
+    @Test("Mac app declares no CloudKit container", arguments: [macEntitlements, macDebugEntitlements])
+    func macDeclaresNoContainer(path: String) throws {
+        let entitlements = try entitlements(in: path)
+        #expect(entitlements[Self.containerKey] == nil)
+        #expect(entitlements[Self.servicesKey] == nil)
     }
 
-    @Test("iOS app pins the Production CloudKit environment")
-    func iosTargetsProduction() throws {
-        try #expect(environment(in: Self.iosEntitlements) == "Production")
+    @Test("Mac app pins no CloudKit environment", arguments: [macEntitlements, macDebugEntitlements])
+    func macPinsNoEnvironment(path: String) throws {
+        let entitlements = try entitlements(in: path)
+        #expect(entitlements[Self.environmentKey] == nil)
     }
 
-    private func environment(in relativePath: String) throws -> String? {
+    private func entitlements(in relativePath: String) throws -> [String: Any] {
         let url = try repoRoot().appendingPathComponent(relativePath)
         let data = try Data(contentsOf: url)
         let plist = try PropertyListSerialization.propertyList(from: data, format: nil)
-        let entitlements = try #require(plist as? [String: Any], "Entitlements at \(relativePath) is not a dictionary")
-        return entitlements[Self.environmentKey] as? String
+        return try #require(plist as? [String: Any], "Entitlements at \(relativePath) is not a dictionary")
     }
 
     private func repoRoot(file: StaticString = #filePath) throws -> URL {

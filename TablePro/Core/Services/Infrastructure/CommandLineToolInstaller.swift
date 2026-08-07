@@ -49,7 +49,7 @@ internal final class CommandLineToolInstaller: CommandLineToolInstalling {
     private static let scriptContents = """
         #!/bin/sh
         \(marker)
-        exec open -b com.TablePro "$@"
+        exec open -b com.SchemaStudio "$@"
 
         """
 

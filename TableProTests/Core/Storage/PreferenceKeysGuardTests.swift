@@ -14,7 +14,7 @@ struct PreferenceKeysGuardTests {
         let names = PreferenceKeys.registeredKeyNames
         #expect(Set(names).count == names.count)
         for name in names {
-            #expect(name.hasPrefix("com.SchemaStudio."), "Key '\(name)' is outside the com.TablePro namespace")
+            #expect(name.hasPrefix("com.SchemaStudio."), "Key '\(name)' is outside the com.SchemaStudio namespace")
         }
     }
 
@@ -68,7 +68,7 @@ struct PreferenceKeysGuardTests {
     private static func repoRoot() throws -> URL {
         var directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         for _ in 0 ..< 12 {
-            if FileManager.default.fileExists(atPath: directory.appendingPathComponent("TablePro.xcodeproj").path) {
+            if FileManager.default.fileExists(atPath: directory.appendingPathComponent("SchemaStudio.xcodeproj").path) {
                 return directory
             }
             directory = directory.deletingLastPathComponent()

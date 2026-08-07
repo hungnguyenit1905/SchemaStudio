@@ -101,7 +101,7 @@ struct PluginSettingsStorageTests {
         #expect(storageB.load(String.self) == "fromB")
     }
 
-    @Test("keys are namespaced with com.SchemaStudio.plugin prefix")
+    @Test("keys are namespaced with com.TablePro.plugin prefix")
     func keysNamespaced() {
         let pluginId = "test.namespace.\(UUID().uuidString)"
         let storage = PluginSettingsStorage(pluginId: pluginId)
@@ -109,7 +109,7 @@ struct PluginSettingsStorageTests {
 
         storage.save(true)
 
-        let expectedKey = "com.SchemaStudio.plugin.\(pluginId).settings"
+        let expectedKey = "com.TablePro.plugin.\(pluginId).settings"
         let value = UserDefaults.standard.data(forKey: expectedKey)
         #expect(value != nil)
     }
