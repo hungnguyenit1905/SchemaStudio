@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Rename storage identity"
-status: pending
+status: complete
 priority: P2
 effort: "4h"
 dependencies: [1]

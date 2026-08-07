@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Project and target identity"
-status: pending
+status: complete
 priority: P1
 effort: "4h"
 dependencies: []

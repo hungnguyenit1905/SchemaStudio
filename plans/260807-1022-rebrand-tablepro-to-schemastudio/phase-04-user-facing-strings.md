@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "User facing strings"
-status: pending
+status: complete
 priority: P2
 effort: "3h"
 dependencies: [1]

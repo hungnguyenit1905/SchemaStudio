@@ -1,7 +1,7 @@
 ---
 title: "Rebrand TablePro to SchemaStudio"
 description: "Hard fork rebrand: product identity becomes SchemaStudio while the TableProPluginKit ABI stays untouched so all 30 plugins keep loading."
-status: pending
+status: complete
 priority: P1
 effort: "2-3d"
 tags: [rebrand, fork, macos, xcode]
@@ -95,12 +95,12 @@ A recursive replacement rooted at the repo or at `Packages/` edits the frozen fr
 
 | # | Phase | Status | Depends on |
 |---|-------|--------|-----------|
-| 1 | [Project and target identity](./phase-01-start.md) | Pending | — |
-| 2 | [Cut upstream network links](./phase-02-cut-upstream-network-links.md) | Pending | — |
-| 3 | [Rename storage identity](./phase-03-rename-storage-identity.md) | Pending | 1 |
-| 4 | [User facing strings](./phase-04-user-facing-strings.md) | Pending | 1 |
-| 5 | [Docs CI and scripts](./phase-05-docs-ci-and-scripts.md) | Pending | 1 |
-| 6 | [Verification](./phase-06-verification.md) | Pending | 1-5 |
+| 1 | [Project and target identity](./phase-01-start.md) | Complete | — |
+| 2 | [Cut upstream network links](./phase-02-cut-upstream-network-links.md) | Complete | — |
+| 3 | [Rename storage identity](./phase-03-rename-storage-identity.md) | Complete | 1 |
+| 4 | [User facing strings](./phase-04-user-facing-strings.md) | Complete | 1 |
+| 5 | [Docs CI and scripts](./phase-05-docs-ci-and-scripts.md) | Complete | 1 |
+| 6 | [Verification](./phase-06-verification.md) | Complete | 1-5 |
 
 Phases 2-5 are independent of each other. Each ends with a green build.
 
@@ -119,13 +119,13 @@ Phases 2-5 are independent of each other. Each ends with a green build.
 
 ## Success Criteria
 
-- [ ] `xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio -configuration Debug -skipPackagePluginValidation CODE_SIGNING_ALLOWED=NO build` → BUILD SUCCEEDED
-- [ ] App launches; About box and window title read "SchemaStudio"
-- [ ] All 14 bundled plugins load (Connections screen lists every driver)
-- [ ] `otool -L` on a built plugin still shows `TableProPluginKit` (ABI intact)
-- [ ] `grep -r "tablepro.app\|TableProApp/TablePro" TablePro/ --include="*.swift" --include="*.plist"` → only `download-libs.sh` style artifact hosts remain, no runtime endpoint
-- [ ] `grep -rl "TablePro" --include="*.mdx" docs/` → empty
-- [ ] `LICENSE` unchanged, AGPL-3.0 copyright notices intact
+- [x] `xcodebuild -project SchemaStudio.xcodeproj -scheme SchemaStudio -configuration Debug -skipPackagePluginValidation CODE_SIGNING_ALLOWED=NO build` → BUILD SUCCEEDED
+- [x] App launches; About box and window title read "SchemaStudio"
+- [x] All 14 bundled plugins load (Connections screen lists every driver)
+- [x] `otool -L` on a built plugin still shows `TableProPluginKit` (ABI intact)
+- [x] `grep -r "tablepro.app\|TableProApp/TablePro" TablePro/ --include="*.swift" --include="*.plist"` → only `download-libs.sh` style artifact hosts remain, no runtime endpoint
+- [x] `grep -rl "TablePro" --include="*.mdx" docs/` → empty
+- [x] `LICENSE` unchanged, AGPL-3.0 copyright notices intact
 
 ## Known risks
 
@@ -171,3 +171,52 @@ Re-read `plan.md` and all six phase files after applying findings.
   upstream's registry. Their sources are in `Plugins/` if they are ever needed.
 
 <!-- slug: rebrand-tablepro-to-schemastudio -->
+
+## Execution outcome (2026-08-07)
+
+All six phases landed. Commits `62cda349`..`d0ad1817` on `rebrand/schemastudio`.
+
+### Corrections to this plan, found during execution
+
+| # | Plan said | Reality | Resolution |
+|---|---|---|---|
+| 1 | 32 plugin bundle IDs; `grep -c` returns 32 | 66 lines / **33 distinct** (each target has Debug+Release; set includes `tablepro-mcp`, `TableProUITests`, `TableProPluginKit`) | Replaced the magic-number check with an exact before/after snapshot diff |
+| 2 | 5 Swift literals collide with plugin IDs | **18** plugin-owned literals, incl. `com.TablePro.InspectorDocumentDidRevert` inside the frozen PluginKit | Scoped all replacement to app source and excluded `Plugins/` entirely, stronger than an exclusion list |
+| 3 | The PluginKit symlink is the only symlink trap | `TableProTests/PluginTestSources/` is a directory of **symlinked files** into `Plugins/` | Walker skips symlinked files as well as directories; 17 wrongly-edited plugin files were reverted |
+| 4 | Phase 6: `grep '"com\.TablePro"' --include="*.swift" .` must be empty repo-wide | 2 files inside frozen `Plugins/TableProPluginKit/` hold that literal as an OSLog subsystem | Assertion scoped to app source. Phase 3's own rule ("plugin-owned identifiers keep `com.TablePro`") governs |
+| 5 | 4 migration latches | **5** (`FilterSettingsStorage` also has `filterStateCompositeKeyMigrationComplete`) | All 5 verified no-op on absent data. Two of them unconditionally delete `*.json` in their directory, so they are only safe **because the App Support rename lands in the same phase** |
+| 6 | Phase 2 lists 4 upstream couplings | **6**: also `RegistryClient` (`TableProApp/plugins`) and `DownloadCountService` (`repos/TableProApp/TablePro/releases`) | Registry made opt-in (no default URL); download counts removed |
+| 7 | Renaming catalog keys is a self-contained JSON transform | The key **is** the English source string, so every `String(localized:)` literal had to change in the same pass or all 44 entries orphan their translations | 209 Swift string literals renamed alongside the catalog |
+| 8 | Phase 1 fixes `TEST_HOST` so tests launch | Renaming the target also renames the **module**, breaking `@testable import TablePro` in 696 test files | Imports repointed to `SchemaStudio` |
+
+### Deviations decided during execution
+
+- **Phase 1 ran headless**: scripted `project.pbxproj` edit, not the Xcode GUI, gated by `xcodebuild -list` + clean build + plugin-ID snapshot.
+- **Phase 3 full scope** (UserDefaults keys included), per user decision.
+- **Licensing stubbed unlicensed**, UI kept, per user decision. `LicenseError.serviceUnavailable` added; both API clients construct no request.
+- **CloudKit entitlements stripped** from the Mac app; `EntitlementsEnvironmentParityTests` retargeted to assert no container/environment is declared, per user decision.
+- **`tablepro-mcp` left unchanged**: renaming it would change `com.TablePro.tablepro-mcp` and break the 33-ID snapshot. Accepted debt.
+- **`TableProMobile/` left unchanged** (non-goal); keeps its own TablePro identity.
+- Sparkle remains a resolved SPM dependency; no code imports it.
+
+### Verification results
+
+- Clean build from scratch: **BUILD SUCCEEDED**
+- `swiftlint lint --strict`: **0 violations in 1243 files**
+- Product `SchemaStudio.app`, bundle id `com.SchemaStudio`, display name SchemaStudio
+- ABI: all 14 bundled plugins link `TableProPluginKit`, `TableProPluginKitVersion = 19`, bundle IDs still `com.TablePro.*` (`CSVInspectorPlugin` uses `TableProInspectorKitVersion = 1`, its own ABI key)
+- Runtime: app launches, **all 14 plugins load in-process**, state written to `~/Library/Application Support/SchemaStudio/`, no outbound IP sockets held
+- `git status --porcelain Plugins/` empty throughout
+- `LICENSE` byte-identical; `download-libs.sh` / `publish-libs.sh` still point at `TableProApp/TablePro`
+
+### Test suite: no new failures
+
+The suite does **not** compile at the pre-rebrand commit (`ColumnTypeSQLQuotingTests.swift` is missing `import TableProPluginKit`), so the baseline was taken by applying only that one-line fix at `f797e285`.
+
+| Run | Failing tests |
+|---|---|
+| Baseline (`f797e285` + import fix) | 84 |
+| After rebrand, before regression fixes | 81 (**8 new**) |
+| After regression fixes | 77 (**0 new**) |
+
+One of the 8 was a real bug: `CommandLineToolInstaller` wrote a shim running `open -b com.TablePro`, a bundle ID that no longer exists. The remaining 77 failures reproduce on unmodified upstream code and are out of scope.

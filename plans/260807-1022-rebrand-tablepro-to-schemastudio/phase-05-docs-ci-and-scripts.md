@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Docs CI and scripts"
-status: pending
+status: complete
 priority: P3
 effort: "3h"
 dependencies: [1]

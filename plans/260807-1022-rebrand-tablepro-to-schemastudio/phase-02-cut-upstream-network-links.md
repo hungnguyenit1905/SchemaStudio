@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Cut upstream network links"
-status: pending
+status: complete
 priority: P1
 effort: "3h"
 dependencies: []
