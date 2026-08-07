@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The sidebar lists every saved connection, grouped into the same folders as the welcome window. Expanding a connection connects it and loads its databases.
+- The sidebar lists every saved connection, grouped into the same folders as the welcome window. Expanding a connection connects it and loads its databases. A connect that fails shows the reason on the connection with a retry button, and reopening the app connects nothing until you expand something yourself.
+- Right-clicking a connection in the sidebar offers Connect, Disconnect, Refresh, New Query, and Edit Connection.
+- Adding, editing, or deleting a connection or folder in the welcome window now shows up in the sidebar right away, with no restart.
+- Closing the last tab of a connection that is still expanded in the sidebar keeps it connected. Collapse it first, or use Disconnect, to end the session.
+- Disconnecting a connection keeps its recent tables and sidebar search text, so reconnecting picks up where you left off.
+- Opening a table under a different connection in the sidebar creates a tab for that connection next to the tabs already open, instead of a separate window. The tools below the sidebar follow the connection selected in the tree.
 - The app is now SchemaStudio, a fork of TablePro. Stored settings, connections, and window state start fresh because the app now uses its own storage location and no data is migrated from TablePro.
 - New app icon, with light, dark, and tinted variants.
 
@@ -29,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A table opened from the sidebar now joins the tab group of the window it was opened from. With two windows open it could land in the other one.
+- The schema picker, database filter, and new-object menu below the sidebar now follow the connection selected in that window. Selecting a connection in one window retargeted them in every other window.
 - An open tab now keeps running against the database it was opened on, so changing the database in the sidebar no longer breaks it with a "table doesn't exist" error. (#2026)
 - Saving a table structure change no longer moves the sidebar and toolbar to that tab's database. (#2026)
 - Row edits, fetch all rows, and multi-statement scripts now write to the database the tab is bound to, not whichever database another tab last used. (#2026)

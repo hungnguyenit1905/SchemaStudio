@@ -40,7 +40,11 @@ internal final class TabWindowController: NSWindowController, NSWindowDelegate {
 
     private var activity: NSUserActivity?
 
-    internal init(payload: EditorTabPayload, sessionState: SessionStateFactory.SessionState? = nil) {
+    internal init(
+        payload: EditorTabPayload,
+        sessionState: SessionStateFactory.SessionState? = nil,
+        tabGroup: TabGroupPolicy
+    ) {
         self.payload = payload
         self.controllerId = UUID()
 
@@ -56,7 +60,9 @@ internal final class TabWindowController: NSWindowController, NSWindowDelegate {
         window.toolbarStyle = .unified
         window.titleVisibility = .visible
         window.tabbingMode = .preferred
-        window.tabbingIdentifier = WindowManager.tabbingIdentifier(for: payload.connectionId)
+        window.tabbingIdentifier = WindowManager.tabbingIdentifier(
+            for: payload.connectionId, policy: tabGroup
+        )
         window.collectionBehavior.insert([.fullScreenPrimary, .managed])
 
         let splitVC = MainSplitViewController(payload: payload, sessionState: sessionState)

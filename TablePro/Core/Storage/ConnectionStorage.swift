@@ -126,6 +126,7 @@ final class ConnectionStorage {
             let data = try encoder.encode(storedConnections)
             try data.write(to: fileURL, options: .atomic)
             cachedConnections = nil
+            NotificationCenter.default.post(name: .connectionsDidChange, object: nil)
             return true
         } catch {
             Self.logger.error("Failed to save connections: \(error)")
@@ -252,6 +253,7 @@ final class ConnectionStorage {
         if !connection.localOnly && !connection.isSample {
             syncTracker.markDeleted(.connection, id: connection.id.uuidString)
         }
+        ConnectionTeardown.removeConnection(connection.id)
         deletePassword(for: connection.id)
         deleteSSHPassword(for: connection.id)
         deleteKeyPassphrase(for: connection.id)
@@ -290,6 +292,7 @@ final class ConnectionStorage {
         for conn in connectionsToDelete where !conn.localOnly && !conn.isSample {
             syncTracker.markDeleted(.connection, id: conn.id.uuidString)
         }
+        ConnectionTeardown.removeConnections(idsToDelete)
         for conn in connectionsToDelete {
             deletePassword(for: conn.id)
             deleteSSHPassword(for: conn.id)

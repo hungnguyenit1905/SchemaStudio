@@ -301,8 +301,13 @@ extension MainContentView {
         )
         let isPreview = tabManager.selectedTab?.isPreview ?? payload?.isPreview ?? false
 
-        let resolvedId = WindowManager.tabbingIdentifier(for: connection.id)
-        window.tabbingIdentifier = resolvedId
+        // The window already carries the identifier its opener chose. Recomputing
+        // it here from the setting would drop a tab that was deliberately routed
+        // into the shared group back into its own per-connection group.
+        if window.tabbingIdentifier.isEmpty {
+            window.tabbingIdentifier = WindowManager.tabbingIdentifier(for: connection.id)
+        }
+        let resolvedId = window.tabbingIdentifier
         window.tabbingMode = .preferred
         coordinator.windowId = windowId
 

@@ -21,6 +21,8 @@ struct DatabaseTreeRowActions {
     var connect: (DatabaseConnection) -> Void = { _ in }
     var disconnect: (DatabaseConnection) -> Void = { _ in }
     var refreshConnection: (DatabaseConnection) -> Void = { _ in }
+    var editConnection: (DatabaseConnection) -> Void = { _ in }
+    var newQuery: (DatabaseConnection) -> Void = { _ in }
     let removeRecent: (DatabaseTreeTableRef) -> Void
     let clearRecents: () -> Void
 }
@@ -33,6 +35,7 @@ struct DatabaseTreeRowContext {
     let pendingTruncates: [UUID: Set<String>]
     let pendingDeletes: [UUID: Set<String>]
     var connectionStatus: ConnectionStatus = .disconnected
+    var connectFailureMessage: String?
     var isExternalSchema: @MainActor (String, String) -> Bool = { _, _ in false }
 
     func isPendingTruncate(_ ref: DatabaseTreeTableRef) -> Bool {
@@ -102,7 +105,9 @@ struct DatabaseTreeRowView: View {
             ConnectionRowView(
                 connection: connection,
                 status: context.connectionStatus,
-                isEmphasized: isEmphasized
+                isEmphasized: isEmphasized,
+                failureMessage: context.connectFailureMessage,
+                onRetry: { actions.connect(connection) }
             )
         case .database(_, let metadata):
             header(
@@ -177,6 +182,10 @@ struct DatabaseTreeRowView: View {
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
+        case .disconnected:
+            Label(String(localized: "Not connected"), systemImage: "bolt.horizontal.circle")
+                .font(.callout)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -199,7 +208,9 @@ struct DatabaseTreeRowView: View {
                 isReadOnly: actions.isReadOnly,
                 onConnect: { actions.connect(connection) },
                 onDisconnect: { actions.disconnect(connection) },
-                onRefresh: { actions.refreshConnection(connection) }
+                onRefresh: { actions.refreshConnection(connection) },
+                onEdit: { actions.editConnection(connection) },
+                onNewQuery: { actions.newQuery(connection) }
             )
         case .recentTable(let ref):
             SidebarContextMenu(

@@ -384,8 +384,12 @@ extension DatabaseManager {
         SchemaProviderRegistry.shared.clear(for: sessionId)
         ExternalSchemaTracker.shared.reset(connectionId: sessionId)
 
-        SharedSidebarState.removeConnection(sessionId)
-        SidebarViewModel.removeConnection(sessionId)
+        // The connection stays in every window's tree after a disconnect, so its
+        // sidebar state and view model have to survive with it: dropping them
+        // strands whichever view still holds the old instance and loses the
+        // recent tables and search text the user had. Only the key tree is bound
+        // to the session itself, and it must not leak into the next connect.
+        SharedSidebarState.existing(sessionId)?.redisKeyTreeViewModel = nil
 
         if lastActiveSessionId == sessionId {
             if let nextSessionId = activeSessions.keys.first {

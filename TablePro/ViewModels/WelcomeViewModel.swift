@@ -99,6 +99,7 @@ final class WelcomeViewModel {
     @ObservationIgnored private var connectionUpdatedCancellable: AnyCancellable?
     @ObservationIgnored private var linkedFoldersCancellable: AnyCancellable?
     @ObservationIgnored private var teamLibraryCancellable: AnyCancellable?
+    @ObservationIgnored private var connectionsDidChangeCancellable: AnyCancellable?
     @ObservationIgnored private var welcomeRouterTask: Task<Void, Never>?
     @ObservationIgnored private var searchDebounceTask: Task<Void, Never>?
     private static let searchDebounceNanoseconds: UInt64 = 150_000_000
@@ -207,6 +208,13 @@ final class WelcomeViewModel {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.teamLibraryConnections = Self.buildTeamLibraryConnections()
+            }
+
+        connectionsDidChangeCancellable = NotificationCenter.default
+            .publisher(for: .connectionsDidChange)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.loadConnections()
             }
 
         loadConnections()

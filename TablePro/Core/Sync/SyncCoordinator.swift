@@ -518,6 +518,7 @@ final class SyncCoordinator {
             if !services.connectionStorage.saveConnections(connections) {
                 Self.logger.error("Failed to apply remote connection deletions: persistence error")
             } else {
+                ConnectionTeardown.removeConnections(connectionIdsToDelete)
                 FilterSettingsStorage.shared.removeFilters(for: connectionIdsToDelete)
                 let favoriteManager = services.sqlFavoriteManager
                 Task {
@@ -531,6 +532,9 @@ final class SyncCoordinator {
             var groups = services.groupStorage.loadGroups()
             groups.removeAll { groupIdsToDelete.contains($0.id) }
             services.groupStorage.saveGroups(groups)
+            for id in groupIdsToDelete {
+                ConnectionTreeState.shared.forget(folderId: id)
+            }
         }
         if !tagIdsToDelete.isEmpty {
             var tags = services.tagStorage.loadTags()

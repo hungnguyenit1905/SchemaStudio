@@ -11,6 +11,10 @@ final class DatabaseTreeNode {
         case loading
         case empty
         case error(String)
+        /// An expanded connection with no session. Launch restores the shape of
+        /// the tree without connecting, so this is the resting state of every
+        /// remembered connection, not a transient one on the way to `.loading`.
+        case disconnected
     }
 
     enum Kind {
@@ -88,6 +92,7 @@ final class DatabaseTreeNode {
         case .loading: return "\(parentId)\u{1}status.loading"
         case .empty: return "\(parentId)\u{1}status.empty"
         case .error: return "\(parentId)\u{1}status.error"
+        case .disconnected: return "\(parentId)\u{1}status.disconnected"
         }
     }
 }

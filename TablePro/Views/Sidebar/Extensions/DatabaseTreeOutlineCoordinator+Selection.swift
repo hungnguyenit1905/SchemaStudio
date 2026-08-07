@@ -260,15 +260,53 @@ extension DatabaseTreeOutlineCoordinator {
     }
 
     func open(_ ref: DatabaseTreeTableRef, activateGridFocus: Bool, forceNewWindowTab: Bool = false) {
-        Task { @MainActor in
-            await activate(ref)
-            mainCoordinator?.openTableTab(
-                ref.table,
-                schema: ref.schema,
-                activateGridFocus: activateGridFocus,
-                forceNewWindowTab: forceNewWindowTab
-            )
+        switch SidebarTabRouter.route(nodeConnectionId: ref.connectionId, windowConnectionId: connectionId) {
+        case .currentWindowCoordinator:
+            Task { @MainActor in
+                await activate(ref)
+                mainCoordinator?.openTableTab(
+                    ref.table,
+                    schema: ref.schema,
+                    activateGridFocus: activateGridFocus,
+                    forceNewWindowTab: forceNewWindowTab
+                )
+            }
+        case .newTabForNodeConnection:
+            openInNodeConnection(ref)
         }
+    }
+
+    /// A node under another connection never touches this window's coordinator:
+    /// `activate` would switch the wrong session's database, and `openTableTab`
+    /// would bind the tab to the wrong connection. The tab group is forced
+    /// shared so the new tab lands beside the tree the user clicked in, which is
+    /// what `groupAllConnectionTabs` cannot express.
+    private func openInNodeConnection(_ ref: DatabaseTreeTableRef) {
+        if focusExistingTab(for: ref) { return }
+        let payload = EditorTabPayload(
+            connectionId: ref.connectionId,
+            tabType: .table,
+            tableName: ref.table.name,
+            databaseName: ref.database,
+            schemaName: ref.schema,
+            isView: !ref.table.type.allowsRowEditing
+        )
+        WindowManager.shared.openTab(payload: payload, tabGroup: .shared, anchor: outlineView?.window)
+    }
+
+    private func focusExistingTab(for ref: DatabaseTreeTableRef) -> Bool {
+        for coordinator in MainContentCoordinator.allActiveCoordinators()
+            where coordinator.connectionId == ref.connectionId {
+            guard let match = coordinator.tabManager.tabs.first(where: {
+                $0.tabType == .table
+                    && $0.tableContext.tableName == ref.table.name
+                    && $0.tableContext.databaseName == ref.database
+                    && $0.tableContext.schemaName == ref.schema
+            }) else { continue }
+            coordinator.selectTabAndFocusWindow(match.id)
+            return true
+        }
+        return false
     }
 
     func activate(_ ref: DatabaseTreeTableRef) async {
@@ -356,25 +394,28 @@ extension DatabaseTreeOutlineCoordinator: NSOutlineViewDelegate {
         (item as? DatabaseTreeNode)?.tableRef != nil
     }
 
+    /// The `isApplyingExpansion` guard is what keeps launch from connecting.
+    /// Restoring saved expansion runs through here too, and connecting from that
+    /// replay would fire one connect and one password sheet per remembered
+    /// connection before the user has touched anything.
     func outlineViewItemWillExpand(_ notification: Notification) {
         guard let node = notification.userInfo?["NSObject"] as? DatabaseTreeNode else { return }
         triggerLoad(for: node)
         guard !isApplyingExpansion else { return }
         recordExpansion(node, expanded: true)
+        adoptActiveConnection(node.connectionId)
         if case .connection(let connection) = node.kind {
-            connectIfNeeded(connection)
+            connect(connection)
         }
     }
 
-    /// Reached only from a user-driven expand, never from restoring saved
-    /// expansion. Connecting goes through `DatabaseManager.connectToSession`
-    /// so the attempt registry decides which attempt owns the session; the tree
-    /// keeps no loading flag of its own and reads status back from the session.
-    private func connectIfNeeded(_ connection: DatabaseConnection) {
-        guard DatabaseManager.shared.activeSessions[connection.id]?.driver == nil else { return }
-        Task { @MainActor in
-            try? await DatabaseManager.shared.connectToSession(connection)
-        }
+    /// A root or folder node carries no connection, so it leaves the previous
+    /// choice alone: the bottom bar has nothing meaningful to show for a folder.
+    /// The choice is this window's, so a click here never retargets the tools
+    /// under another window's sidebar.
+    private func adoptActiveConnection(_ connectionId: UUID?) {
+        guard let connectionId else { return }
+        windowState?.activeConnectionId = connectionId
     }
 
     func outlineViewItemWillCollapse(_ notification: Notification) {
@@ -386,6 +427,7 @@ extension DatabaseTreeOutlineCoordinator: NSOutlineViewDelegate {
         guard !isSyncingSelection, !isReloading else { return }
         let refs = Set(selectedRefs())
         if let added = SelectionDelta.singleAddition(old: lastSelection, new: refs) {
+            adoptActiveConnection(added.connectionId)
             if isKeyboardDrivenSelection {
                 pendingSingleClickWork?.cancel()
                 pendingSingleClickWork = nil

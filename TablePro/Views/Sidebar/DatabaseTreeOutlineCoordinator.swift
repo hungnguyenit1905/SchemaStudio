@@ -39,11 +39,36 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     private var hasRenderedOnce = false
     private var reconcileScheduled = false
     private var observationGeneration = 0
+    private var connectionsDidChangeObserver: NSObjectProtocol?
+
+    deinit {
+        if let connectionsDidChangeObserver {
+            NotificationCenter.default.removeObserver(connectionsDidChangeObserver)
+        }
+    }
 
     // MARK: - Attach / input
 
     func attach(outlineView: NSOutlineView) {
         self.outlineView = outlineView
+        observeConnectionListChanges()
+    }
+
+    /// The connection and folder levels come from storage, not from any
+    /// observable the tree already tracks, so an add, an edit or a delete made
+    /// in the welcome window is invisible here without this. The handler only
+    /// rebuilds; writing from it would make the next save post again.
+    private func observeConnectionListChanges() {
+        guard connectionsDidChangeObserver == nil else { return }
+        connectionsDidChangeObserver = NotificationCenter.default.addObserver(
+            forName: .connectionsDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.refresh()
+            }
+        }
     }
 
     func update(from view: DatabaseTreeOutlineView) {
@@ -123,6 +148,7 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     /// transition, and each expanded connection contributes its own metadata.
     private func snapshotDependencies() {
         _ = DatabaseManager.shared.activeSessions
+        _ = ConnectionTreeState.shared.connectFailures
         for expandedId in ConnectionTreeState.shared.expandedConnectionIds {
             _ = service.databaseListState(for: expandedId)
             _ = SharedSidebarState.forConnection(expandedId).recentTables
@@ -153,11 +179,22 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         isReloading = true
         contextCache.removeAll()
         childrenCache.removeAll()
+        discardActiveConnectionIfDeleted()
         outlineView.reloadData()
         applyDesiredExpansion()
         syncSelectionToModel()
         isReloading = false
         beginObserving()
+    }
+
+    /// Deleting a connection cannot reach into every window's state, so each
+    /// tree drops its own pointer at the refresh the deletion triggers. Left
+    /// alone, the tools below the sidebar would keep aiming at an id that no
+    /// longer resolves to anything.
+    private func discardActiveConnectionIfDeleted() {
+        guard let active = windowState?.activeConnectionId,
+              contextResolver.context(for: active) == nil else { return }
+        windowState?.activeConnectionId = nil
     }
 
     // MARK: - Node building

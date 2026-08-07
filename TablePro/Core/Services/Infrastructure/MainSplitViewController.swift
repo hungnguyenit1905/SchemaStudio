@@ -325,16 +325,6 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
         SidebarView(
             sidebarState: SharedSidebarState.forConnection(currentSession.connection.id),
             windowState: sessionState.coordinator.windowSidebarState,
-            onDoubleClick: { [weak self] table in
-                guard let coordinator = self?.sessionState?.coordinator else { return }
-                let activeTab = coordinator.tabManager.selectedTab
-                if activeTab?.tabType == .table, activeTab?.tableContext.tableName == table.name {
-                    coordinator.promotePreviewTab()
-                    coordinator.requestGridFocus()
-                } else {
-                    coordinator.openTableTab(table, forceNonPreview: true, activateGridFocus: true)
-                }
-            },
             pendingTruncates: sessionPendingTruncatesBinding,
             pendingDeletes: sessionPendingDeletesBinding,
             tableOperationOptions: sessionTableOperationOptionsBinding,

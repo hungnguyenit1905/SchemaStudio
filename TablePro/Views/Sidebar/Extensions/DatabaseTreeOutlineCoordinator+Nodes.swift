@@ -82,7 +82,10 @@ extension DatabaseTreeOutlineCoordinator {
 
         switch context.status {
         case .disconnected:
-            return [statusNode(parentId: parentId, status: .loading)]
+            if let failure = connectFailure(for: connectionId) {
+                return [statusNode(parentId: parentId, status: .error(failure))]
+            }
+            return [statusNode(parentId: parentId, status: .disconnected)]
         case .connecting:
             return [statusNode(parentId: parentId, status: .loading)]
         case .error(let message):

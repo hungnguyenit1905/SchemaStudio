@@ -5,6 +5,7 @@
 //  Created by Ngo Quoc Dat on 16/12/25.
 //
 
+import AppKit
 import SwiftUI
 import TableProPluginKit
 
@@ -21,7 +22,6 @@ struct SidebarView: View {
     @Binding var pendingTruncates: Set<String>
     @Binding var pendingDeletes: Set<String>
 
-    var onDoubleClick: ((TableInfo) -> Void)?
     var connectionId: UUID
     private weak var coordinator: MainContentCoordinator?
 
@@ -33,19 +33,49 @@ struct SidebarView: View {
         schemaService.routines(for: connectionId)
     }
 
-    private var groupingStrategy: GroupingStrategy {
-        PluginManager.shared.databaseGroupingStrategy(for: viewModel.databaseType)
+    /// The bottom bar acts on the connection selected in this window's tree,
+    /// not on the connection the window happens to be bound to. Before anything
+    /// is selected it falls back to the window's own connection.
+    private var activeConnectionId: UUID {
+        windowState.activeConnectionId ?? connectionId
+    }
+
+    private var activeContext: SidebarNodeContext? {
+        SidebarNodeContextResolver.live.context(for: activeConnectionId)
+    }
+
+    private var activeDatabaseType: DatabaseType {
+        activeContext?.databaseType ?? viewModel.databaseType
+    }
+
+    private var activeSidebarState: SharedSidebarState {
+        SharedSidebarState.forConnection(activeConnectionId)
+    }
+
+    private var activeCoordinator: MainContentCoordinator? {
+        let keyWindowCoordinator = NSApp.keyWindow.flatMap(MainContentCoordinator.coordinator(forWindow:))
+        switch SidebarCoordinatorResolver.choice(
+            target: activeConnectionId,
+            keyWindowConnectionId: keyWindowCoordinator?.connectionId,
+            hostConnectionId: coordinator?.connectionId
+        ) {
+        case .keyWindow:
+            return keyWindowCoordinator
+        case .host:
+            return coordinator
+        case .none:
+            return nil
+        }
     }
 
     private var supportsSchemaFooter: Bool {
-        PluginManager.shared.supportsSchemaSwitching(for: viewModel.databaseType)
-            && groupingStrategy != .hierarchicalSchema
+        PluginManager.shared.supportsSchemaSwitching(for: activeDatabaseType)
+            && activeContext?.groupingStrategy != .hierarchicalSchema
     }
 
     init(
         sidebarState: SharedSidebarState,
         windowState: WindowSidebarState,
-        onDoubleClick: ((TableInfo) -> Void)? = nil,
         pendingTruncates: Binding<Set<String>>,
         pendingDeletes: Binding<Set<String>>,
         tableOperationOptions: Binding<[String: TableOperationOptions]>,
@@ -55,7 +85,6 @@ struct SidebarView: View {
     ) {
         self.sidebarState = sidebarState
         self.windowState = windowState
-        self.onDoubleClick = onDoubleClick
         _pendingTruncates = pendingTruncates
         _pendingDeletes = pendingDeletes
         let selectedBinding = Binding(
@@ -144,14 +173,14 @@ struct SidebarView: View {
             HStack(spacing: 8) {
                 createObjectMenu
                 databaseFilterButton
-                DelayedProgressIndicator(isActive: schemaService.isRefreshing(connectionId: connectionId))
+                DelayedProgressIndicator(isActive: schemaService.isRefreshing(connectionId: activeConnectionId))
                     .accessibilityLabel(String(localized: "Refreshing"))
                 Spacer()
                 if supportsSchemaFooter {
                     SchemaPickerControl(
-                        connectionId: connectionId,
-                        databaseType: viewModel.databaseType,
-                        coordinator: coordinator
+                        connectionId: activeConnectionId,
+                        databaseType: activeDatabaseType,
+                        coordinator: activeCoordinator
                     )
                 }
             }
@@ -161,13 +190,14 @@ struct SidebarView: View {
     }
 
     private var isDatabaseFilterActive: Bool {
-        !sidebarState.databaseFilterSelected.isEmpty
+        !activeSidebarState.databaseFilterSelected.isEmpty
     }
 
     private var databaseFilterSelectionBinding: Binding<Set<String>> {
-        Binding(
-            get: { sidebarState.databaseFilterSelected },
-            set: { sidebarState.databaseFilterSelected = $0 }
+        let state = activeSidebarState
+        return Binding(
+            get: { state.databaseFilterSelected },
+            set: { state.databaseFilterSelected = $0 }
         )
     }
 
@@ -185,16 +215,23 @@ struct SidebarView: View {
         .accessibilityIdentifier("sidebar-database-filter")
         .popover(isPresented: $showDatabaseFilter) {
             DatabaseTreeFilterPopover(
-                connectionId: connectionId,
+                connectionId: activeConnectionId,
                 selectedDatabases: databaseFilterSelectionBinding
             )
         }
     }
 
+    /// Safe mode follows the connection selected in the tree, not the window.
+    /// With no coordinator for that connection there is nothing to create into.
+    private var isCreateObjectDisabled: Bool {
+        guard activeCoordinator != nil, let activeContext else { return true }
+        return activeContext.safeModeLevel.blocksAllWrites
+    }
+
     private var createObjectMenu: some View {
         Menu {
-            Button(String(localized: "New Table")) { coordinator?.createNewTable() }
-            Button(String(localized: "New View")) { coordinator?.createView() }
+            Button(String(localized: "New Table")) { activeCoordinator?.createNewTable() }
+            Button(String(localized: "New View")) { activeCoordinator?.createView() }
         } label: {
             Image(systemName: "plus")
         }
@@ -202,7 +239,7 @@ struct SidebarView: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .help(String(localized: "Create a new table or view"))
-        .disabled(coordinator?.safeModeLevel.blocksAllWrites ?? true)
+        .disabled(isCreateObjectDisabled)
         .accessibilityIdentifier("sidebar-create-table")
     }
 

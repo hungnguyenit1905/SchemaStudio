@@ -151,6 +151,13 @@ final class SharedSidebarState {
         return state
     }
 
+    /// The registered state, without creating one. Teardown must use this:
+    /// `forConnection` creates on demand, so a late disconnect running after the
+    /// connection was deleted would re-register state under a dead id.
+    static func existing(_ id: UUID) -> SharedSidebarState? {
+        registry[id]
+    }
+
     static func removeConnection(_ id: UUID) {
         registry.removeValue(forKey: id)
     }

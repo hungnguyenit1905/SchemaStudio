@@ -17,7 +17,13 @@ internal final class ConnectionTreeState {
     var expandedFolderIds: Set<UUID> = [] { didSet { persist() } }
     var expandedConnectionIds: Set<UUID> = [] { didSet { persist() } }
     var selectedNodeId: String?
-    var activeConnectionId: UUID?
+
+    /// Why the last connect attempt for a connection failed. A failed connect
+    /// removes its session entry, so `activeSessions` cannot carry the reason;
+    /// this is the only place the tree can read it back from. Deliberately not
+    /// persisted: a message from a previous launch describes nothing the user
+    /// can still act on.
+    private(set) var connectFailures: [UUID: String] = [:]
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -25,9 +31,17 @@ internal final class ConnectionTreeState {
         isLoaded = true
     }
 
+    func recordConnectFailure(_ connectionId: UUID, message: String) {
+        connectFailures[connectionId] = message
+    }
+
+    func clearConnectFailure(_ connectionId: UUID) {
+        connectFailures.removeValue(forKey: connectionId)
+    }
+
     func forget(connectionId: UUID) {
         expandedConnectionIds.remove(connectionId)
-        if activeConnectionId == connectionId { activeConnectionId = nil }
+        connectFailures.removeValue(forKey: connectionId)
     }
 
     func forget(folderId: UUID) {
