@@ -15,6 +15,15 @@ final class DatabaseTreeNode {
         /// the tree without connecting, so this is the resting state of every
         /// remembered connection, not a transient one on the way to `.loading`.
         case disconnected
+
+        var identifierSuffix: String {
+            switch self {
+            case .loading: return "loading"
+            case .empty: return "empty"
+            case .error: return "error"
+            case .disconnected: return "disconnected"
+            }
+        }
     }
 
     enum Kind {
@@ -66,6 +75,24 @@ final class DatabaseTreeNode {
     var recentTableRef: DatabaseTreeTableRef? {
         if case .recentTable(let ref) = kind { return ref }
         return nil
+    }
+
+    /// A readable handle for UI tests. The node ids themselves are keyed by
+    /// UUID and joined with a control character, which a test has no way to
+    /// predict or type, so rows are addressed by the names the user sees.
+    var accessibilityIdentifier: String {
+        switch kind {
+        case .connectionRoot: return "tree-root"
+        case .folder(let group): return "tree-folder-\(group.name)"
+        case .connection(let connection): return "tree-connection-\(connection.name)"
+        case .recentSection: return "tree-recent-section"
+        case .recentTable(let ref): return "tree-recent-\(ref.table.name)"
+        case .database(_, let metadata): return "tree-database-\(metadata.name)"
+        case .schema(_, _, let schema): return "tree-schema-\(schema)"
+        case .table(let ref): return "tree-table-\(ref.table.name)"
+        case .routine(let ref): return "tree-routine-\(ref.routine.name)"
+        case .status(let status): return "tree-status-\(status.identifierSuffix)"
+        }
     }
 
     static let connectionRootId = "connections-root"

@@ -140,6 +140,7 @@
               {
                 "group": "Workflow",
                 "pages": [
+                  "features/sidebar",
                   "features/tabs",
                   "features/quick-switcher",
                   "features/query-history",

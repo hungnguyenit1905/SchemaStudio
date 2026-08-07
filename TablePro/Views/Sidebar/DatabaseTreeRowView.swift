@@ -73,6 +73,7 @@ struct DatabaseTreeRowView: View {
         rowContent
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
+            .accessibilityIdentifier(node.accessibilityIdentifier)
     }
 
     @ViewBuilder
