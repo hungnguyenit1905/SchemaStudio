@@ -52,15 +52,21 @@ struct WelcomeWindowView: View {
         } message: {
             if vm.connectionsToDelete.count == 1, let first = vm.connectionsToDelete.first {
                 if vm.pendingDeleteHasFavorites {
-                    Text("Are you sure you want to delete \"\(first.name)\"? Saved queries linked to this connection will also be deleted.")
+                    Text(
+                        "Are you sure you want to delete \"\(first.name)\"? Saved queries linked to this connection will also be deleted."
+                    )
                 } else {
                     Text("Are you sure you want to delete \"\(first.name)\"?")
                 }
             } else {
                 if vm.pendingDeleteHasFavorites {
-                    Text("Are you sure you want to delete \(vm.connectionsToDelete.count) connections? Saved queries linked to these connections will also be deleted. This cannot be undone.")
+                    Text(
+                        "Are you sure you want to delete \(vm.connectionsToDelete.count) connections? Saved queries linked to these connections will also be deleted. This cannot be undone."
+                    )
                 } else {
-                    Text("Are you sure you want to delete \(vm.connectionsToDelete.count) connections? This cannot be undone.")
+                    Text(
+                        "Are you sure you want to delete \(vm.connectionsToDelete.count) connections? This cannot be undone."
+                    )
                 }
             }
         }
@@ -76,7 +82,9 @@ struct WelcomeWindowView: View {
             }
         } message: {
             if let group = vm.groupToDelete {
-                Text("Are you sure you want to delete the group \"\(group.name)\"? Connections in this group will be moved to the top level.")
+                Text(
+                    "Are you sure you want to delete the group \"\(group.name)\"? Connections in this group will be moved to the top level."
+                )
             }
         }
         .sheet(item: $vm.activeSheet, onDismiss: {
@@ -218,7 +226,8 @@ struct WelcomeWindowView: View {
                 Divider()
             }
             ZStack {
-                if vm.treeItems.isEmpty && vm.linkedConnections.isEmpty && vm.teamLibraryConnections.isEmpty && vm.favoriteConnections.isEmpty {
+                if vm.treeItems.isEmpty, vm.linkedConnections.isEmpty, vm.teamLibraryConnections.isEmpty,
+                   vm.favoriteConnections.isEmpty {
                     emptyState
                 } else {
                     connectionList
@@ -491,8 +500,7 @@ struct WelcomeWindowView: View {
 
     // MARK: - Empty State
 
-    @ViewBuilder
-    private var emptyState: some View {
+    @ViewBuilder private var emptyState: some View {
         if vm.searchText.isEmpty {
             EmptyStateView(
                 icon: "cylinder.split.1x2",
@@ -656,7 +664,7 @@ private struct TreeRowsView<ConnectionContent: View>: View {
 
                 Divider()
 
-                ForEach(vm.groups.filter({ $0.id != group.id })) { targetGroup in
+                ForEach(vm.groups.filter { $0.id != group.id }) { targetGroup in
                     let wouldCircle = wouldCreateCircle(
                         movingGroupId: group.id,
                         toParentId: targetGroup.id,

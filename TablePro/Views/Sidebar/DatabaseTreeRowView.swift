@@ -76,8 +76,7 @@ struct DatabaseTreeRowView: View {
             .accessibilityIdentifier(node.accessibilityIdentifier)
     }
 
-    @ViewBuilder
-    private var rowContent: some View {
+    @ViewBuilder private var rowContent: some View {
         switch node.kind {
         case .recentSection:
             header(
@@ -197,8 +196,7 @@ struct DatabaseTreeRowView: View {
         }
     }
 
-    @ViewBuilder
-    private var menuItems: some View {
+    @ViewBuilder private var menuItems: some View {
         switch node.kind {
         case .connectionRoot, .folder, .recentSection:
             EmptyView()

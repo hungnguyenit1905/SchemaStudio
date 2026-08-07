@@ -94,8 +94,7 @@ struct SnowflakeKeyPairAuth {
 
         guard status == errSecSuccess,
               let items = importedItems as? [SecKey],
-              let key = items.first
-        else {
+              let key = items.first else {
             throw SnowflakeError.authFailed(
                 "Failed to load private key (OSStatus \(status)). Ensure the file is a valid RSA .p8 key and the passphrase is correct."
             )
@@ -194,7 +193,7 @@ enum SnowflakeConnectionsTOML {
             let line = stripComment(rawLine).trimmingCharacters(in: .whitespaces)
             if line.isEmpty { continue }
 
-            if line.hasPrefix("[") && line.hasSuffix("]") {
+            if line.hasPrefix("["), line.hasSuffix("]") {
                 var name = String(line.dropFirst().dropLast())
                 if name.hasPrefix("connections.") {
                     name = String(name.dropFirst("connections.".count))
@@ -220,9 +219,9 @@ enum SnowflakeConnectionsTOML {
         var inSingleQuotes = false
         var result = ""
         for char in line {
-            if char == "\"" && !inSingleQuotes { inDoubleQuotes.toggle() }
-            if char == "'" && !inDoubleQuotes { inSingleQuotes.toggle() }
-            if char == "#" && !inDoubleQuotes && !inSingleQuotes { break }
+            if char == "\"", !inSingleQuotes { inDoubleQuotes.toggle() }
+            if char == "'", !inDoubleQuotes { inSingleQuotes.toggle() }
+            if char == "#", !inDoubleQuotes, !inSingleQuotes { break }
             result.append(char)
         }
         return result

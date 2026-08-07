@@ -49,7 +49,7 @@ public enum SurrealRowFlattener {
         switch value {
         case .null, .none:
             return .null
-        case let .bytes(data):
+        case .bytes(let data):
             return .bytes(data)
         default:
             return .text(value.displayText)
@@ -60,7 +60,7 @@ public enum SurrealRowFlattener {
 
     private static func normalize(_ value: SurrealValue) -> [SurrealValue] {
         switch value {
-        case let .array(items):
+        case .array(let items):
             return items
         case .null, .none:
             return []

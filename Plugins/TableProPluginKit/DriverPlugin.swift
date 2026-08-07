@@ -107,6 +107,7 @@ public extension DriverPlugin {
             "JSON": ["JSON"]
         ]
     }
+
     static var sqlDialect: SQLDialectDescriptor? { nil }
     static var statementCompletions: [CompletionEntry] { [] }
     static var tableEntityName: String { "Tables" }
@@ -121,6 +122,7 @@ public extension DriverPlugin {
     static var structureColumnFields: [StructureColumnField] {
         [.name, .type, .nullable, .defaultValue, .autoIncrement, .comment]
     }
+
     static var defaultPrimaryKeyColumn: String? { nil }
     static var supportsQueryProgress: Bool { false }
     static var supportsSSH: Bool { true }

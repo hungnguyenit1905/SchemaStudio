@@ -5,8 +5,8 @@
 
 import Foundation
 @testable import SchemaStudio
-import Testing
 import TableProSyncTransport
+import Testing
 
 @Suite("CustomSlashCommandStorage sync")
 @MainActor

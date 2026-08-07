@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("Table Query Builder - Filtered Query Fallback")
@@ -205,7 +205,7 @@ struct TableQueryBuilderPaginationTests {
 
 @Suite("Table Query Builder - NoSQL Nil Dialect Fallback")
 struct TableQueryBuilderNoSQLTests {
-    // MongoDB has no SQL dialect — should produce bare SELECT without WHERE
+    /// MongoDB has no SQL dialect — should produce bare SELECT without WHERE
     private let builder = TableQueryBuilder(databaseType: .mongodb)
 
     @Test("NoSQL type produces no WHERE for filtered query")

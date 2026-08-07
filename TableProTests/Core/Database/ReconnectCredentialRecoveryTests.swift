@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 @testable import SchemaStudio
 import TableProPluginKit
+import Testing
 
 @Suite("Reconnect credential recovery", .serialized)
 @MainActor
@@ -25,7 +25,7 @@ struct ReconnectCredentialRecoveryTests {
         let session = ConnectionSession(connection: connection)
         let error = FakePluginAuthError(
             pluginErrorMessage: "Access denied",
-            pluginErrorCode: 1045,
+            pluginErrorCode: 1_045,
             pluginSqlState: "28000"
         )
 
@@ -47,7 +47,7 @@ struct ReconnectCredentialRecoveryTests {
         let session = ConnectionSession(connection: connection)
         let error = FakePluginAuthError(
             pluginErrorMessage: "Access denied",
-            pluginErrorCode: 1045,
+            pluginErrorCode: 1_045,
             pluginSqlState: "28000"
         )
 
@@ -69,7 +69,7 @@ struct ReconnectCredentialRecoveryTests {
         let session = ConnectionSession(connection: connection)
         let error = FakePluginAuthError(
             pluginErrorMessage: "Lost connection to server",
-            pluginErrorCode: 2013,
+            pluginErrorCode: 2_013,
             pluginSqlState: "HY000"
         )
 
@@ -96,7 +96,7 @@ struct ReconnectCredentialRecoveryTests {
         let session = ConnectionSession(connection: connection)
         let error = FakePluginAuthError(
             pluginErrorMessage: "Access denied",
-            pluginErrorCode: 1045,
+            pluginErrorCode: 1_045,
             pluginSqlState: "28000"
         )
 

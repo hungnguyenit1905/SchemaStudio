@@ -139,10 +139,17 @@ struct DataGripImporterTests {
     @Test("parses host, port and database from jdbc url")
     func endpointParsing() throws {
         try writeDataSources([
-            source(uuid: "1", name: "A", driverRef: "mysql.8", jdbcURL: "jdbc:mysql://db.example.com:3307/shop", userName: "root")
+            source(
+                uuid: "1",
+                name: "A",
+                driverRef: "mysql.8",
+                jdbcURL: "jdbc:mysql://db.example.com:3307/shop",
+                userName: "root"
+            )
         ])
 
-        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections.first)
+        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections
+            .first)
         #expect(connection.host == "db.example.com")
         #expect(connection.port == 3_307)
         #expect(connection.database == "shop")
@@ -155,7 +162,8 @@ struct DataGripImporterTests {
             source(uuid: "1", name: "A", driverRef: "postgresql", jdbcURL: "jdbc:postgresql://localhost/app")
         ])
 
-        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections.first)
+        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections
+            .first)
         #expect(connection.port == 5_432)
     }
 
@@ -165,7 +173,8 @@ struct DataGripImporterTests {
             source(uuid: "1", name: "A", driverRef: "sqlite.xerial", jdbcURL: "jdbc:sqlite:/Users/me/app.db")
         ])
 
-        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections.first)
+        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections
+            .first)
         #expect(connection.type == "SQLite")
         #expect(connection.database == "/Users/me/app.db")
     }
@@ -191,7 +200,8 @@ struct DataGripImporterTests {
             """
         ])
 
-        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections.first)
+        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections
+            .first)
         #expect(connection.username == "appuser")
         let ssh = try #require(connection.sshConfig)
         #expect(ssh.host == "bastion.example.com")
@@ -216,7 +226,8 @@ struct DataGripImporterTests {
             "<sshConfig host=\"h\" id=\"SSH1\" port=\"22\" username=\"u\" authType=\"PASSWORD\"/>"
         ])
 
-        let ssh = try #require(try importer.importConnections(includePasswords: false).envelope.connections.first?.sshConfig)
+        let ssh = try #require(try importer.importConnections(includePasswords: false).envelope.connections.first?
+            .sshConfig)
         #expect(ssh.authMethod == "Password")
         #expect(ssh.privateKeyPath == "")
     }
@@ -230,7 +241,8 @@ struct DataGripImporterTests {
             localSource(uuid: "1", extra: "<ssh-properties><enabled>false</enabled></ssh-properties>")
         ])
 
-        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections.first)
+        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections
+            .first)
         #expect(connection.sshConfig == nil)
     }
 
@@ -271,7 +283,8 @@ struct DataGripImporterTests {
             localSource(uuid: "1", userName: "postgres")
         ])
 
-        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections.first)
+        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections
+            .first)
         #expect(connection.username == "postgres")
     }
 
@@ -294,7 +307,8 @@ struct DataGripImporterTests {
             """)
         ])
 
-        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections.first)
+        let connection = try #require(try importer.importConnections(includePasswords: false).envelope.connections
+            .first)
         let ssl = try #require(connection.sslConfig)
         #expect(ssl.mode == "Verify Identity")
         #expect(ssl.caCertificatePath == "\(NSHomeDirectory())/certs/ca.pem")

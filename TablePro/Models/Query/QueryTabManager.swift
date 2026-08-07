@@ -105,7 +105,13 @@ final class QueryTabManager {
 
     // MARK: - Tab Management
 
-    func addTab(initialQuery: String? = nil, title: String? = nil, databaseName: String = "", sourceFileURL: URL? = nil, claimFocus: Bool = false) {
+    func addTab(
+        initialQuery: String? = nil,
+        title: String? = nil,
+        databaseName: String = "",
+        sourceFileURL: URL? = nil,
+        claimFocus: Bool = false
+    ) {
         if let sourceFileURL,
            let existingIndex = tabs.firstIndex(where: { $0.content.sourceFileURL == sourceFileURL }) {
             if let query = initialQuery {
@@ -134,7 +140,9 @@ final class QueryTabManager {
         newTab.content.sourceFileURL = sourceFileURL
         if let sourceFileURL {
             newTab.content.savedFileContent = newTab.content.query
-            newTab.content.loadMtime = (try? FileManager.default.attributesOfItem(atPath: sourceFileURL.path)[.modificationDate]) as? Date
+            newTab.content
+                .loadMtime = (try? FileManager.default
+                    .attributesOfItem(atPath: sourceFileURL.path)[.modificationDate]) as? Date
         }
         tabs.append(newTab)
         selectedTabId = newTab.id
@@ -154,7 +162,13 @@ final class QueryTabManager {
         }
     }
 
-    var onTableOpened: ((_ tableName: String, _ schemaName: String?, _ databaseName: String, _ isView: Bool, _ isPreview: Bool) -> Void)?
+    var onTableOpened: ((
+        _ tableName: String,
+        _ schemaName: String?,
+        _ databaseName: String,
+        _ isView: Bool,
+        _ isPreview: Bool
+    ) -> Void)?
 
     private func notifyTableOpened(
         tableName: String, schemaName: String?, databaseName: String, isView: Bool, isPreview: Bool
@@ -321,8 +335,7 @@ final class QueryTabManager {
         quoteIdentifier: ((String) -> String)? = nil
     ) throws -> Bool {
         guard let selectedId = selectedTabId,
-              let selectedIndex = tabs.firstIndex(where: { $0.id == selectedId })
-        else {
+              let selectedIndex = tabs.firstIndex(where: { $0.id == selectedId }) else {
             return false
         }
 

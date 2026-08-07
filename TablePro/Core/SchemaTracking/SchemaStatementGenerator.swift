@@ -52,12 +52,19 @@ struct SchemaStatementGenerator {
                 throw NSError(
                     domain: "SchemaStatementGenerator",
                     code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: String(format: String(localized: "Unsupported schema operation: %@"), change.description)]
+                    userInfo: [NSLocalizedDescriptionKey: String(
+                        format: String(localized: "Unsupported schema operation: %@"),
+                        change.description
+                    )]
                 )
             }
             for stmt in stmts {
                 let sql = stmt.sql.hasSuffix(";") ? stmt.sql : stmt.sql + ";"
-                statements.append(SchemaStatement(sql: sql, description: stmt.description, isDestructive: stmt.isDestructive))
+                statements.append(SchemaStatement(
+                    sql: sql,
+                    description: stmt.description,
+                    isDestructive: stmt.isDestructive
+                ))
             }
         }
 
@@ -145,7 +152,10 @@ struct SchemaStatementGenerator {
         return SchemaStatement(sql: sql, description: "Add column '\(column.name)'", isDestructive: false)
     }
 
-    private func generateModifyColumn(old: EditableColumnDefinition, new: EditableColumnDefinition) -> SchemaStatement? {
+    private func generateModifyColumn(
+        old: EditableColumnDefinition,
+        new: EditableColumnDefinition
+    ) -> SchemaStatement? {
         guard let sql = pluginDriver.generateModifyColumnSQL(
             table: tableName,
             oldColumn: old.toPlugin(),
@@ -206,7 +216,10 @@ struct SchemaStatementGenerator {
         return SchemaStatement(sql: sql, description: "Add foreign key '\(fk.name)'", isDestructive: false)
     }
 
-    private func generateModifyForeignKey(old: EditableForeignKeyDefinition, new: EditableForeignKeyDefinition) -> [SchemaStatement] {
+    private func generateModifyForeignKey(
+        old: EditableForeignKeyDefinition,
+        new: EditableForeignKeyDefinition
+    ) -> [SchemaStatement] {
         guard let dropSql = pluginDriver.generateDropForeignKeySQL(table: tableName, constraintName: old.name),
               let addSql = pluginDriver.generateAddForeignKeySQL(table: tableName, fk: new.toPlugin()) else {
             return []

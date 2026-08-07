@@ -57,10 +57,10 @@ struct TableStructureLoader {
     func coreTabs(includingForeignKeys: Bool) async throws -> CoreTabs {
         let table = tableName
         return try await perform { driver in
-            CoreTabs(
-                columns: try await driver.fetchColumns(table: table),
-                indexes: try await driver.fetchIndexes(table: table),
-                foreignKeys: includingForeignKeys ? try await driver.fetchForeignKeys(table: table) : []
+            try await CoreTabs(
+                columns: driver.fetchColumns(table: table),
+                indexes: driver.fetchIndexes(table: table),
+                foreignKeys: includingForeignKeys ? driver.fetchForeignKeys(table: table) : []
             )
         }
     }

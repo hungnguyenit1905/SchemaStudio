@@ -34,7 +34,7 @@ internal struct BlobHexEditorView: View {
             TextField("Hex bytes", text: $hexEditText, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
                 .font(.system(.caption2, design: .monospaced))
-                .lineLimit(3...8)
+                .lineLimit(3 ... 8)
                 .autocorrectionDisabled(true)
                 .focused($isFocused)
                 .onAppear {

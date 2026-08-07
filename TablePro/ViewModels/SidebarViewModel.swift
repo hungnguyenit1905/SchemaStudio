@@ -96,6 +96,7 @@ final class SidebarViewModel {
     var expanded: ExpansionState {
         didSet { persistExpansion(oldValue: oldValue) }
     }
+
     var isRedisKeysExpanded: Bool {
         didSet {
             UserDefaults.standard.set(
@@ -104,6 +105,7 @@ final class SidebarViewModel {
             )
         }
     }
+
     var isRecentsExpanded: Bool {
         didSet {
             UserDefaults.standard.set(
@@ -112,10 +114,12 @@ final class SidebarViewModel {
             )
         }
     }
+
     var redisKeyTreeViewModel: RedisKeyTreeViewModel? {
         get { sharedState.redisKeyTreeViewModel }
         set { sharedState.redisKeyTreeViewModel = newValue }
     }
+
     var showOperationDialog = false
     var pendingOperationType: TableOperationType?
     var pendingOperationTables: [String] = []
@@ -412,7 +416,7 @@ final class SidebarViewModel {
     }
 
     func effectiveExpanded(kind: SidebarObjectKind, hasMatches: Bool) -> Bool {
-        if !filterQuery.isEmpty && hasMatches { return true }
+        if !filterQuery.isEmpty, hasMatches { return true }
         return expanded[kind]
     }
 
@@ -438,10 +442,10 @@ final class SidebarViewModel {
 
     private static func sidebarObjectKind(for tableType: TableInfo.TableType) -> SidebarObjectKind {
         switch tableType.rawValue {
-        case "VIEW":               return .view
-        case "MATERIALIZED VIEW":  return .materializedView
-        case "FOREIGN TABLE":      return .foreignTable
-        default:                   return .table
+        case "VIEW": return .view
+        case "MATERIALIZED VIEW": return .materializedView
+        case "FOREIGN TABLE": return .foreignTable
+        default: return .table
         }
     }
 

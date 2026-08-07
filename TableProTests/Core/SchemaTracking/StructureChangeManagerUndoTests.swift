@@ -6,34 +6,66 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 // MARK: - StructureChangeManager Undo Integration Tests
 
 @Suite("Structure Change Manager Undo/Redo Integration")
 struct StructureChangeManagerUndoTests {
-
     // MARK: - Helpers
 
-    @MainActor private func makeManager() -> StructureChangeManager {
-        let manager = StructureChangeManager()
-        return manager
+    @MainActor
+    private func makeManager() -> StructureChangeManager {
+        return StructureChangeManager()
     }
 
-    @MainActor private func loadSampleSchema(_ manager: StructureChangeManager) {
+    @MainActor
+    private func loadSampleSchema(_ manager: StructureChangeManager) {
         let columns: [ColumnInfo] = [
-            ColumnInfo(name: "id", dataType: "INT", isNullable: false, isPrimaryKey: true,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil),
-            ColumnInfo(name: "name", dataType: "VARCHAR(255)", isNullable: true, isPrimaryKey: false,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil),
-            ColumnInfo(name: "email", dataType: "VARCHAR(255)", isNullable: true, isPrimaryKey: false,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil)
+            ColumnInfo(
+                name: "id",
+                dataType: "INT",
+                isNullable: false,
+                isPrimaryKey: true,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            ),
+            ColumnInfo(
+                name: "name",
+                dataType: "VARCHAR(255)",
+                isNullable: true,
+                isPrimaryKey: false,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            ),
+            ColumnInfo(
+                name: "email",
+                dataType: "VARCHAR(255)",
+                isNullable: true,
+                isPrimaryKey: false,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            )
         ]
         let indexes: [IndexInfo] = [
-            IndexInfo(name: "PRIMARY", columns: ["id"], isUnique: true, isPrimary: true,
-                      type: "BTREE")
+            IndexInfo(
+                name: "PRIMARY",
+                columns: ["id"],
+                isUnique: true,
+                isPrimary: true,
+                type: "BTREE"
+            )
         ]
         manager.loadSchema(
             tableName: "users",
@@ -47,7 +79,8 @@ struct StructureChangeManagerUndoTests {
     // MARK: - Column Undo Tests
 
     @Test("Undo column edit reverts to previous value")
-    @MainActor func undoColumnEdit() {
+    @MainActor
+    func undoColumnEdit() {
         let manager = makeManager()
         loadSampleSchema(manager)
 
@@ -66,7 +99,8 @@ struct StructureChangeManagerUndoTests {
     }
 
     @Test("Redo column edit re-applies the change")
-    @MainActor func redoColumnEdit() {
+    @MainActor
+    func redoColumnEdit() {
         let manager = makeManager()
         loadSampleSchema(manager)
 
@@ -84,7 +118,8 @@ struct StructureChangeManagerUndoTests {
     }
 
     @Test("Undo add column removes it")
-    @MainActor func undoAddColumn() {
+    @MainActor
+    func undoAddColumn() {
         let manager = makeManager()
         loadSampleSchema(manager)
 
@@ -98,7 +133,8 @@ struct StructureChangeManagerUndoTests {
     }
 
     @Test("Undo delete column restores it")
-    @MainActor func undoDeleteColumn() {
+    @MainActor
+    func undoDeleteColumn() {
         let manager = makeManager()
         loadSampleSchema(manager)
 
@@ -114,7 +150,8 @@ struct StructureChangeManagerUndoTests {
     }
 
     @Test("Multiple undo operations work in sequence")
-    @MainActor func multipleUndos() {
+    @MainActor
+    func multipleUndos() {
         let manager = makeManager()
         loadSampleSchema(manager)
 
@@ -140,7 +177,8 @@ struct StructureChangeManagerUndoTests {
     // MARK: - Index Undo Tests
 
     @Test("Undo add index removes it")
-    @MainActor func undoAddIndex() {
+    @MainActor
+    func undoAddIndex() {
         let manager = makeManager()
         loadSampleSchema(manager)
 
@@ -154,7 +192,8 @@ struct StructureChangeManagerUndoTests {
     }
 
     @Test("Undo delete index restores it")
-    @MainActor func undoDeleteIndex() {
+    @MainActor
+    func undoDeleteIndex() {
         let manager = makeManager()
         loadSampleSchema(manager)
 
@@ -171,7 +210,8 @@ struct StructureChangeManagerUndoTests {
     // MARK: - Foreign Key Undo Tests
 
     @Test("Undo add foreign key removes it")
-    @MainActor func undoAddForeignKey() {
+    @MainActor
+    func undoAddForeignKey() {
         let manager = makeManager()
         loadSampleSchema(manager)
 
@@ -186,7 +226,8 @@ struct StructureChangeManagerUndoTests {
     // MARK: - Duplicate Row Bug Tests
 
     @Test("Undo delete of existing column does NOT duplicate the row")
-    @MainActor func undoDeleteExistingColumnNoDuplicate() {
+    @MainActor
+    func undoDeleteExistingColumnNoDuplicate() {
         let manager = makeManager()
         loadSampleSchema(manager)
 
@@ -203,7 +244,8 @@ struct StructureChangeManagerUndoTests {
     }
 
     @Test("Undo two sequential deletes of existing columns restores both without duplicates")
-    @MainActor func undoTwoDeletesNoDuplicates() {
+    @MainActor
+    func undoTwoDeletesNoDuplicates() {
         let manager = makeManager()
         loadSampleSchema(manager)
 
@@ -227,7 +269,8 @@ struct StructureChangeManagerUndoTests {
     }
 
     @Test("Undo delete of NEW column re-adds it")
-    @MainActor func undoDeleteNewColumnReAdds() {
+    @MainActor
+    func undoDeleteNewColumnReAdds() {
         let manager = makeManager()
         loadSampleSchema(manager)
 
@@ -248,7 +291,8 @@ struct StructureChangeManagerUndoTests {
     // MARK: - Discard Clears Undo
 
     @Test("Discard changes clears undo stack")
-    @MainActor func discardClearsUndo() {
+    @MainActor
+    func discardClearsUndo() {
         let manager = makeManager()
         loadSampleSchema(manager)
 

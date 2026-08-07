@@ -37,10 +37,11 @@ public struct ConnectionField: Codable, Sendable {
             self.upperBound = upperBound
         }
 
-        public var closedRange: ClosedRange<Int> { lowerBound...upperBound }
+        public var closedRange: ClosedRange<Int> { lowerBound ... upperBound }
 
         private enum CodingKeys: String, CodingKey {
-            case lowerBound, upperBound
+            case lowerBound
+            case upperBound
         }
 
         public init(from decoder: Decoder) throws {
@@ -156,7 +157,16 @@ public struct ConnectionField: Codable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, label, placeholder, isRequired, defaultValue, fieldType, section, hidesPassword, visibleWhen
-        case dynamicOptions, hidesUsername
+        case id
+        case label
+        case placeholder
+        case isRequired
+        case defaultValue
+        case fieldType
+        case section
+        case hidesPassword
+        case visibleWhen
+        case dynamicOptions
+        case hidesUsername
     }
 }

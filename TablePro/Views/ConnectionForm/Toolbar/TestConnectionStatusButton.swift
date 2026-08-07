@@ -15,13 +15,13 @@ struct TestConnectionStatusButton: View {
             HStack(spacing: 6) {
                 statusIcon
                 Text(coordinator.testSucceeded
-                     ? String(localized: "Connected")
-                     : String(localized: "Test Connection"))
+                    ? String(localized: "Connected")
+                    : String(localized: "Test Connection"))
             }
         }
         .disabled(coordinator.isTesting
-                  || coordinator.isInstallingPlugin
-                  || !coordinator.isFormValid)
+            || coordinator.isInstallingPlugin
+            || !coordinator.isFormValid)
         .help(helpText)
         .accessibilityLabel(helpText)
     }
@@ -36,8 +36,7 @@ struct TestConnectionStatusButton: View {
         return String(localized: "Test the current connection settings")
     }
 
-    @ViewBuilder
-    private var statusIcon: some View {
+    @ViewBuilder private var statusIcon: some View {
         if coordinator.isTesting {
             ProgressView()
                 .controlSize(.small)

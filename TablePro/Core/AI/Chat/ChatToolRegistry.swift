@@ -20,7 +20,8 @@ final class ChatToolRegistry {
         let existing = tools[tool.name]
         tools[tool.name] = tool
         if existing != nil {
-            Self.logger.warning("Replaced ChatTool '\(tool.name, privacy: .public)' in registry; second registration won")
+            Self.logger
+                .warning("Replaced ChatTool '\(tool.name, privacy: .public)' in registry; second registration won")
         }
     }
 

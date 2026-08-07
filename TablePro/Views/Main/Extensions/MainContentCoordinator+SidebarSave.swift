@@ -15,13 +15,12 @@ extension MainContentCoordinator {
         editState: MultiRowEditState
     ) async throws {
         guard let tab = tabManager.selectedTab,
-            !selectionState.indices.isEmpty,
-            tab.tableContext.tableName != nil,
-            GridSelectionOwner.resolve(
-                tabType: tab.tabType,
-                resultsViewMode: tab.display.resultsViewMode
-            ) == .dataGrid
-        else {
+              !selectionState.indices.isEmpty,
+              tab.tableContext.tableName != nil,
+              GridSelectionOwner.resolve(
+                  tabType: tab.tabType,
+                  resultsViewMode: tab.display.resultsViewMode
+              ) == .dataGrid else {
             return
         }
 

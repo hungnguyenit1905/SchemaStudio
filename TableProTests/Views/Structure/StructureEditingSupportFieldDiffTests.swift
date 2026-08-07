@@ -151,7 +151,7 @@ struct StructureEditingSupportFieldDiffTests {
             new: changed,
             orderedFields: Self.mysqlOrderedFields
         )
-        #expect(result == Set(0..<Self.mysqlOrderedFields.count))
+        #expect(result == Set(0 ..< Self.mysqlOrderedFields.count))
     }
 
     // MARK: - indexModifiedIndices
@@ -230,7 +230,7 @@ struct StructureEditingSupportFieldDiffTests {
         changed.onUpdate = .restrict
 
         let result = StructureEditingSupport.foreignKeyModifiedIndices(old: original, new: changed)
-        #expect(result == Set(0..<7))
+        #expect(result == Set(0 ..< 7))
     }
 }
 
@@ -242,10 +242,28 @@ struct StructureChangeManagerUndoDeleteTests {
     private func makeManagerWithSchema() -> StructureChangeManager {
         let manager = StructureChangeManager()
         let columns: [ColumnInfo] = [
-            ColumnInfo(name: "id", dataType: "INT", isNullable: false, isPrimaryKey: true,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil),
-            ColumnInfo(name: "email", dataType: "VARCHAR(255)", isNullable: true, isPrimaryKey: false,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil)
+            ColumnInfo(
+                name: "id",
+                dataType: "INT",
+                isNullable: false,
+                isPrimaryKey: true,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            ),
+            ColumnInfo(
+                name: "email",
+                dataType: "VARCHAR(255)",
+                isNullable: true,
+                isPrimaryKey: false,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            )
         ]
         manager.loadSchema(
             tableName: "users",

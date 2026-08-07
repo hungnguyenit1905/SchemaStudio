@@ -27,7 +27,7 @@ struct AIChatPanelView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if !hasConfiguredProvider && viewModel.messages.isEmpty {
+            if !hasConfiguredProvider, viewModel.messages.isEmpty {
                 noProviderState
             } else if viewModel.messages.isEmpty {
                 emptyState
@@ -66,7 +66,11 @@ struct AIChatPanelView: View {
                 viewModel.denyAIAccess()
             }
         } message: {
-            Text(String(localized: "Your database schema and query data will be sent to the AI provider for analysis. Allow for this connection?"))
+            Text(
+                String(
+                    localized: "Your database schema and query data will be sent to the AI provider for analysis. Allow for this connection?"
+                )
+            )
         }
     }
 
@@ -100,7 +104,7 @@ struct AIChatPanelView: View {
         let visibleMessages = viewModel.messages.filter { isVisibleInMessageList($0) }
         let spacedMessageIDs: Set<UUID> = {
             var ids = Set<UUID>()
-            for i in 1..<visibleMessages.count
+            for i in 1 ..< visibleMessages.count
                 where visibleMessages[i].role == .user && visibleMessages[i - 1].role == .assistant {
                 ids.insert(visibleMessages[i].id)
             }
@@ -311,8 +315,7 @@ struct AIChatPanelView: View {
         .help(settingsManager.ai.chatMode.helpText)
     }
 
-    @ViewBuilder
-    private var sendOrStopButton: some View {
+    @ViewBuilder private var sendOrStopButton: some View {
         if viewModel.isStreaming {
             Button {
                 viewModel.cancelStream()
@@ -339,8 +342,7 @@ struct AIChatPanelView: View {
         }
     }
 
-    @ViewBuilder
-    private var modelPicker: some View {
+    @ViewBuilder private var modelPicker: some View {
         let providers = settingsManager.ai.providers
         if providers.isEmpty {
             EmptyView()
@@ -379,8 +381,7 @@ struct AIChatPanelView: View {
         }
     }
 
-    @ViewBuilder
-    private var mentionMenu: some View {
+    @ViewBuilder private var mentionMenu: some View {
         if let connectionId = viewModel.connection?.id {
             Menu {
                 Button {

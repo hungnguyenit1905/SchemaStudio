@@ -29,7 +29,8 @@ enum ERDiagramSQLExporter {
         if !isSQLite {
             for tableName in orderedTables {
                 guard allColumns[tableName]?.isEmpty == false else { continue }
-                let foreignKeys = (allForeignKeys[tableName] ?? []).filter { exportedTables.contains($0.referencedTable) }
+                let foreignKeys = (allForeignKeys[tableName] ?? [])
+                    .filter { exportedTables.contains($0.referencedTable) }
                 for group in groupByConstraintName(foreignKeys) {
                     statements.append(alterTableForeignKeyStatement(
                         tableName: tableName,
@@ -93,7 +94,7 @@ enum ERDiagramSQLExporter {
 
     private static func formatDefaultValue(_ value: String) -> String {
         let trimmed = value.trimmingCharacters(in: .whitespaces)
-        let passthroughKeywords: Set<String> = [
+        let passthroughKeywords: Set = [
             "NULL", "TRUE", "FALSE",
             "CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()",
             "CURRENT_DATE", "CURRENT_TIME", "NOW()", "LOCALTIMESTAMP"

@@ -58,7 +58,15 @@ final class PostgreSQLPlugin: NSObject, TableProPlugin, DriverPlugin {
         "Integer": ["SMALLINT", "INTEGER", "BIGINT", "SERIAL", "BIGSERIAL", "SMALLSERIAL"],
         "Float": ["REAL", "DOUBLE PRECISION", "NUMERIC", "DECIMAL", "MONEY"],
         "String": ["CHARACTER VARYING", "VARCHAR", "CHARACTER", "CHAR", "TEXT", "NAME"],
-        "Date": ["DATE", "TIME", "TIMESTAMP", "TIMESTAMPTZ", "INTERVAL", "TIME WITH TIME ZONE", "TIMESTAMP WITH TIME ZONE"],
+        "Date": [
+            "DATE",
+            "TIME",
+            "TIMESTAMP",
+            "TIMESTAMPTZ",
+            "INTERVAL",
+            "TIME WITH TIME ZONE",
+            "TIMESTAMP WITH TIME ZONE"
+        ],
         "Binary": ["BYTEA"],
         "Boolean": ["BOOLEAN"],
         "JSON": ["JSON", "JSONB"],

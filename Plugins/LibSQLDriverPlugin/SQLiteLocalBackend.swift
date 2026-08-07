@@ -191,19 +191,19 @@ actor SQLiteLocalBackend {
     }
 
     private func columnNames(of statement: OpaquePointer?, count: Int32) -> [String] {
-        (0..<count).map { index in
+        (0 ..< count).map { index in
             sqlite3_column_name(statement, index).map { String(cString: $0) } ?? "column_\(index)"
         }
     }
 
     private func columnDeclaredTypes(of statement: OpaquePointer?, count: Int32) -> [String] {
-        (0..<count).map { index in
+        (0 ..< count).map { index in
             sqlite3_column_decltype(statement, index).map { String(cString: $0) } ?? ""
         }
     }
 
     private func rowValues(of statement: OpaquePointer?, count: Int32) -> [PluginCellValue] {
-        (0..<count).map { index in
+        (0 ..< count).map { index in
             let colType = sqlite3_column_type(statement, index)
             if colType == SQLITE_NULL {
                 return .null

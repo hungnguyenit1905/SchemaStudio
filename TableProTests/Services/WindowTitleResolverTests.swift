@@ -133,7 +133,11 @@ struct WindowTitleResolverPayloadTitleTests {
     @Test("Query payload with no language name falls back to SQL Query")
     func queryWithoutLanguageFallback() {
         let payload = EditorTabPayload(connectionId: UUID(), tabType: .query)
-        let title = WindowTitleResolver.resolveTitle(payload: payload, databaseType: .postgresql, queryLanguageName: nil)
+        let title = WindowTitleResolver.resolveTitle(
+            payload: payload,
+            databaseType: .postgresql,
+            queryLanguageName: nil
+        )
         #expect(title == String(localized: "SQL Query"))
     }
 

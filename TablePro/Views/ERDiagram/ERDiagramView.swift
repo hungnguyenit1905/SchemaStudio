@@ -50,11 +50,11 @@ struct ERDiagramView: View {
                     ERDiagramCanvasContainer(viewModel: viewModel) { diagramContent }
                 }
                 ERDiagramToolbar(viewModel: viewModel, onExport: exportDiagram)
-                .onKeyPress(characters: .init(charactersIn: "c"), phases: .down) { keyPress in
-                    guard keyPress.modifiers.contains(.command) else { return .ignored }
-                    copyDiagramToClipboard()
-                    return .handled
-                }
+                    .onKeyPress(characters: .init(charactersIn: "c"), phases: .down) { keyPress in
+                        guard keyPress.modifiers.contains(.command) else { return .ignored }
+                        copyDiagramToClipboard()
+                        return .handled
+                    }
             }
         }
         .task { await viewModel.loadDiagram() }
@@ -98,14 +98,14 @@ struct ERDiagramView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .onAppear {
                 viewModel.viewportSize = proxy.size
-                if viewModel.needsInitialFit && proxy.size.width > 0 {
+                if viewModel.needsInitialFit, proxy.size.width > 0 {
                     viewModel.fitToWindow()
                     viewModel.needsInitialFit = false
                 }
             }
             .onChange(of: proxy.size) { _, newSize in
                 viewModel.viewportSize = newSize
-                if viewModel.needsInitialFit && newSize.width > 0 {
+                if viewModel.needsInitialFit, newSize.width > 0 {
                     viewModel.fitToWindow()
                     viewModel.needsInitialFit = false
                 }
@@ -287,8 +287,7 @@ struct ERDiagramView: View {
             guard response == .OK, let url = panel.url else { return }
             guard let tiffData = image.tiffRepresentation,
                   let bitmap = NSBitmapImageRep(data: tiffData),
-                  let pngData = bitmap.representation(using: .png, properties: [:])
-            else { return }
+                  let pngData = bitmap.representation(using: .png, properties: [:]) else { return }
             do {
                 try pngData.write(to: url)
             } catch {

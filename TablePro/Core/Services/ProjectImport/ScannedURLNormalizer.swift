@@ -17,7 +17,7 @@ enum ScannedURLNormalizer {
         guard let schemeRange = trimmed.range(of: "://") else {
             return trimmed
         }
-        let scheme = String(trimmed[trimmed.startIndex..<schemeRange.upperBound])
+        let scheme = String(trimmed[trimmed.startIndex ..< schemeRange.upperBound])
         let remainder = String(trimmed[schemeRange.upperBound...])
         guard !remainder.hasPrefix("/") else {
             return trimmed
@@ -25,14 +25,14 @@ enum ScannedURLNormalizer {
         guard let separator = lastUserInfoSeparator(in: remainder) else {
             return trimmed
         }
-        let userInfo = String(remainder[remainder.startIndex..<separator])
+        let userInfo = String(remainder[remainder.startIndex ..< separator])
         let rest = String(remainder[remainder.index(after: separator)...])
         return scheme + encode(userInfo: userInfo) + "@" + rest
     }
 
     private static func lastUserInfoSeparator(in remainder: String) -> String.Index? {
         let boundary = remainder.firstIndex { $0 == "?" || $0 == "#" } ?? remainder.endIndex
-        let searchable = remainder[remainder.startIndex..<boundary]
+        let searchable = remainder[remainder.startIndex ..< boundary]
         return searchable.lastIndex(of: "@")
     }
 
@@ -40,7 +40,7 @@ enum ScannedURLNormalizer {
         guard let colon = userInfo.firstIndex(of: ":") else {
             return percentEncoded(userInfo)
         }
-        let username = String(userInfo[userInfo.startIndex..<colon])
+        let username = String(userInfo[userInfo.startIndex ..< colon])
         let password = String(userInfo[userInfo.index(after: colon)...])
         return percentEncoded(username) + ":" + percentEncoded(password)
     }

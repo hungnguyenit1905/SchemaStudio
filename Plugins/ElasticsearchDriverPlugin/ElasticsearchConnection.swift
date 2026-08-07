@@ -68,7 +68,7 @@ internal final class ElasticsearchConnection: NSObject, @unchecked Sendable {
 
         let scheme = config.ssl.isEnabled ? "https" : "http"
         let host = config.host.isEmpty ? "localhost" : config.host
-        let port = config.port > 0 ? config.port : 9200
+        let port = config.port > 0 ? config.port : 9_200
         guard let url = URL(string: "\(scheme)://\(host):\(port)") else {
             throw ElasticsearchError.connectionFailed("Invalid host: \(host):\(port)")
         }
@@ -145,7 +145,10 @@ internal final class ElasticsearchConnection: NSObject, @unchecked Sendable {
         let response = try await request(method: "GET", path: "/\(encode(index))/_mapping")
         guard response.statusCode == 200 else { throw mapError(response, fallback: "Failed to fetch mapping") }
         guard let json = response.json as? [String: Any] else {
-            Self.logger.error("mappingProperties \(index, privacy: .public): response.json not a dictionary; raw=\(response.rawText.prefix(300), privacy: .public)")
+            Self.logger
+                .error(
+                    "mappingProperties \(index, privacy: .public): response.json not a dictionary; raw=\(response.rawText.prefix(300), privacy: .public)"
+                )
             return []
         }
         let properties = ElasticsearchMappingFlattener.properties(fromMappingResponse: json, index: index)
@@ -153,7 +156,10 @@ internal final class ElasticsearchConnection: NSObject, @unchecked Sendable {
         Self.logger.debug("""
         mappingProperties \(index, privacy: .public): topKeys=[\(json.keys.joined(separator: ","), privacy: .public)] \
         propertyCount=\(properties.count) columnCount=\(columns.count) \
-        columns=[\(columns.map { "\($0.name):\($0.type)\($0.hasKeywordSubfield ? "+kw" : "")" }.joined(separator: ","), privacy: .public)]
+        columns=[\(
+            columns.map { "\($0.name):\($0.type)\($0.hasKeywordSubfield ? "+kw" : "")" }.joined(separator: ","),
+            privacy: .public
+        )]
         """)
         return columns
     }
@@ -167,7 +173,7 @@ internal final class ElasticsearchConnection: NSObject, @unchecked Sendable {
     func count(index: String, query: [String: Any]?) async throws -> Int {
         let body: String?
         if let query, JSONSerialization.isValidJSONObject(["query": query]) {
-            body = String(data: try JSONSerialization.data(withJSONObject: ["query": query]), encoding: .utf8)
+            body = try String(data: JSONSerialization.data(withJSONObject: ["query": query]), encoding: .utf8)
         } else {
             body = nil
         }
@@ -190,8 +196,7 @@ internal final class ElasticsearchConnection: NSObject, @unchecked Sendable {
         let response = try await request(method: "POST", path: "/\(encode(index))/_pit?keep_alive=\(keepAlive)")
         guard response.statusCode == 200,
               let json = response.json as? [String: Any],
-              let id = json["id"] as? String
-        else { throw mapError(response, fallback: "Failed to open point-in-time") }
+              let id = json["id"] as? String else { throw mapError(response, fallback: "Failed to open point-in-time") }
         return id
     }
 
@@ -321,8 +326,7 @@ extension ElasticsearchConnection: URLSessionDelegate {
     ) {
         guard skipTLSVerify,
               challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
-              let trust = challenge.protectionSpace.serverTrust
-        else {
+              let trust = challenge.protectionSpace.serverTrust else {
             completionHandler(.performDefaultHandling, nil)
             return
         }

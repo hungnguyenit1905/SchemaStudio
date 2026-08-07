@@ -17,24 +17,24 @@ final class StructureGridDelegate: DataGridViewDelegate {
     weak var coordinator: MainContentCoordinator?
     var onSelectedRowsChanged: ((Set<Int>) -> Void)?
 
-    // Column reorder callback (set externally by the view when conditions allow)
+    /// Column reorder callback (set externally by the view when conditions allow)
     var moveRowHandler: ((Int, Int) -> Void)?
 
-    // Sort callback (set by TableStructureView to update its @State)
+    /// Sort callback (set by TableStructureView to update its @State)
     var sortHandler: ((Int, Bool) -> Void)?
 
-    // Current provider for index translation (set each render by the view)
+    /// Current provider for index translation (set each render by the view)
     var currentProvider: StructureRowProvider?
 
-    // Ordered fields for column editing (updated when currentProvider is set)
+    /// Ordered fields for column editing (updated when currentProvider is set)
     var orderedFields: [StructureColumnField] = []
 
-    // Stored when DataGridView calls `dataGridAttach(tableViewCoordinator:)` on
-    // every updateNSView. Lets us tell `NSTableView` which rows to reload after
-    // an edit / soft-delete / undo so the displayed cell value and visual-state
-    // tint stay in sync with the change manager. Without this, edits inside a
-    // row that does not change the row count never trigger `reloadData` because
-    // the SwiftUI re-render only invalidates layout-affecting properties.
+    /// Stored when DataGridView calls `dataGridAttach(tableViewCoordinator:)` on
+    /// every updateNSView. Lets us tell `NSTableView` which rows to reload after
+    /// an edit / soft-delete / undo so the displayed cell value and visual-state
+    /// tint stay in sync with the change manager. Without this, edits inside a
+    /// row that does not change the row count never trigger `reloadData` because
+    /// the SwiftUI re-render only invalidates layout-affecting properties.
     private weak var attachedCoordinator: TableViewCoordinator?
 
     init(

@@ -37,7 +37,7 @@ struct RightPanelStateTests {
     @MainActor
     func teardown_nilsOnSave() {
         let state = RightPanelState()
-        state.onSave = { }
+        state.onSave = {}
         #expect(state.onSave != nil)
 
         state.teardown()

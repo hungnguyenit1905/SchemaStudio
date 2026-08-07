@@ -16,7 +16,9 @@ enum CloudSQLProxyError: Error, LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .binaryNotFound:
-            return String(localized: "cloud-sql-proxy was not found. Install it with `brew install cloud-sql-proxy`, or download it in the Cloud SQL Auth Proxy settings.")
+            return String(
+                localized: "cloud-sql-proxy was not found. Install it with `brew install cloud-sql-proxy`, or download it in the Cloud SQL Auth Proxy settings."
+            )
         case .noAvailablePort:
             return String(localized: "No available local port for the Cloud SQL Auth Proxy.")
         case .invalidInstanceConnectionName:
@@ -30,7 +32,10 @@ enum CloudSQLProxyError: Error, LocalizedError, Equatable {
         case .readinessTimeout(let stderrTail):
             return stderrTail.isEmpty
                 ? String(localized: "The Cloud SQL Auth Proxy did not become ready in time.")
-                : String(format: String(localized: "The Cloud SQL Auth Proxy did not become ready in time: %@"), stderrTail)
+                : String(
+                    format: String(localized: "The Cloud SQL Auth Proxy did not become ready in time: %@"),
+                    stderrTail
+                )
         }
     }
 }

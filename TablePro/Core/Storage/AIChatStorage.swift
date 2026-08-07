@@ -110,7 +110,10 @@ actor AIChatStorage {
                         let data = try Data(contentsOf: fileURL)
                         return try Self.decoder.decode(AIConversation.self, from: data)
                     } catch {
-                        Self.logger.error("Failed to load conversation from \(fileURL.lastPathComponent): \(error.localizedDescription)")
+                        Self.logger
+                            .error(
+                                "Failed to load conversation from \(fileURL.lastPathComponent): \(error.localizedDescription)"
+                            )
                         return nil
                     }
                 }

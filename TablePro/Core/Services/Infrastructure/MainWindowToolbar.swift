@@ -232,8 +232,8 @@ internal final class MainWindowToolbar: NSObject, NSToolbarDelegate {
 
 // MARK: - Sidebar Toggle
 
-extension MainWindowToolbar {
-    fileprivate func makeSidebarToggleItem(coordinator: MainContentCoordinator) -> NSToolbarItem {
+private extension MainWindowToolbar {
+    func makeSidebarToggleItem(coordinator: MainContentCoordinator) -> NSToolbarItem {
         let item = NSToolbarItem(itemIdentifier: Self.sidebarToggle)
         item.label = String(localized: "Sidebar")
         item.paletteLabel = String(localized: "Sidebar")
@@ -281,14 +281,15 @@ extension MainWindowToolbar {
         return button
     }
 
-    @objc fileprivate func sidebarButtonClicked(_ sender: NSButton) {
+    @objc
+    func sidebarButtonClicked(_ sender: NSButton) {
         guard let coordinator else { return }
         let tabs: [SidebarTab] = [.tables, .favorites]
         guard sender.tag >= 0, sender.tag < tabs.count else { return }
         coordinator.splitViewController?.setSidebarTab(tabs[sender.tag])
     }
 
-    fileprivate func syncSidebarButtonState(coordinator: MainContentCoordinator) {
+    func syncSidebarButtonState(coordinator: MainContentCoordinator) {
         guard sidebarButtons.count == 2 else { return }
         let state = coordinator.toolbarState
         let sidebarState = SharedSidebarState.forConnection(coordinator.connectionId)
@@ -299,7 +300,9 @@ extension MainWindowToolbar {
 
         for (index, button) in sidebarButtons.enumerated() {
             let isActive = sidebarVisible && isConnected
-                && (index == 0 ? sidebarState.selectedSidebarTab == .tables : sidebarState.selectedSidebarTab == .favorites)
+                &&
+                (index == 0 ? sidebarState.selectedSidebarTab == .tables : sidebarState
+                    .selectedSidebarTab == .favorites)
             button.isEnabled = isConnected
             button.showsBorderOnlyWhileMouseInside = !isActive
             let icon = isActive ? activeIcons[index] : icons[index]
@@ -307,7 +310,7 @@ extension MainWindowToolbar {
         }
     }
 
-    fileprivate func startSidebarObservation(coordinator: MainContentCoordinator) {
+    func startSidebarObservation(coordinator: MainContentCoordinator) {
         sidebarObservationTask?.cancel()
 
         sidebarObservationTask = Task { [weak self, weak coordinator] in

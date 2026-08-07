@@ -8,29 +8,34 @@ import SwiftUI
 enum TableRowLogic {
     static func iconName(for type: TableInfo.TableType) -> String {
         switch type {
-        case .table:            return "tablecells"
-        case .view:             return "eye"
+        case .table: return "tablecells"
+        case .view: return "eye"
         case .materializedView: return "square.stack.3d.up"
-        case .foreignTable:     return "link"
-        case .systemTable:      return "tablecells.badge.ellipsis"
+        case .foreignTable: return "link"
+        case .systemTable: return "tablecells.badge.ellipsis"
         case .partitionedTable: return "rectangle.split.3x1"
-        case .externalTable:    return "externaldrive.connected.to.line.below"
+        case .externalTable: return "externaldrive.connected.to.line.below"
         }
     }
 
     static func accessibilityKindLabel(for type: TableInfo.TableType) -> String {
         switch type {
-        case .table:            return String(localized: "Table")
-        case .view:             return String(localized: "View")
+        case .table: return String(localized: "Table")
+        case .view: return String(localized: "View")
         case .materializedView: return String(localized: "Materialized View")
-        case .foreignTable:     return String(localized: "Foreign Table")
-        case .systemTable:      return String(localized: "System Table")
+        case .foreignTable: return String(localized: "Foreign Table")
+        case .systemTable: return String(localized: "System Table")
         case .partitionedTable: return String(localized: "Partitioned Table")
-        case .externalTable:    return String(localized: "External Table")
+        case .externalTable: return String(localized: "External Table")
         }
     }
 
-    static func accessibilityLabel(table: TableInfo, isPendingDelete: Bool, isPendingTruncate: Bool, isFavorite: Bool = false) -> String {
+    static func accessibilityLabel(
+        table: TableInfo,
+        isPendingDelete: Bool,
+        isPendingTruncate: Bool,
+        isFavorite: Bool = false
+    ) -> String {
         let kind = accessibilityKindLabel(for: table.type)
         var label = String(format: String(localized: "%@: %@"), kind, table.name)
         if isPendingDelete {
@@ -55,13 +60,11 @@ struct TableRow: View {
 
     private var visibleComment: String? {
         guard AppSettingsManager.shared.general.showObjectComments,
-              let comment = table.comment, !comment.isEmpty
-        else { return nil }
+              let comment = table.comment, !comment.isEmpty else { return nil }
         return comment
     }
 
-    @ViewBuilder
-    private var pendingStateBadge: some View {
+    @ViewBuilder private var pendingStateBadge: some View {
         if isPendingDelete {
             Image(systemName: "minus.circle.fill")
                 .font(.caption)
@@ -114,8 +117,8 @@ struct TableRow: View {
                 .allowsHitTesting(starVisible)
                 .accessibilityHidden(true)
                 .help(isFavorite
-                      ? String(localized: "Remove from Favorites")
-                      : String(localized: "Add to Favorites"))
+                    ? String(localized: "Remove from Favorites")
+                    : String(localized: "Add to Favorites"))
             }
         }
         .onHover { isHovered = $0 }

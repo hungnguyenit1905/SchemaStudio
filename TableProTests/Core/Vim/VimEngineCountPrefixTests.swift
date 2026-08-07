@@ -5,9 +5,9 @@
 //  Specification tests for count prefix parsing and behavior in Normal mode.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineCountPrefixTests: XCTestCase {
@@ -27,7 +27,9 @@ final class VimEngineCountPrefixTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {
@@ -107,8 +109,11 @@ final class VimEngineCountPrefixTests: XCTestCase {
         keys("3")
         _ = engine.process("\u{1B}", shift: false)
         keys("dd")
-        XCTAssertEqual(buffer.text, "second line\nthird line\n",
-            "After Escape, count should not apply to the next operator")
+        XCTAssertEqual(
+            buffer.text,
+            "second line\nthird line\n",
+            "After Escape, count should not apply to the next operator"
+        )
     }
 
     // MARK: - Count Cleared by Unknown Key
@@ -139,24 +144,33 @@ final class VimEngineCountPrefixTests: XCTestCase {
     func testCountAppliesToOperatorDoubling() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("2dd")
-        XCTAssertEqual(buffer.text, "third line\n",
-            "2dd should delete two lines")
+        XCTAssertEqual(
+            buffer.text,
+            "third line\n",
+            "2dd should delete two lines"
+        )
     }
 
     func testCountAppliesToYY() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("2yy")
         keys("p")
-        XCTAssertEqual(buffer.text, "hello world\nhello world\nsecond line\nsecond line\nthird line\n",
-            "2yy should yank two lines for paste")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nhello world\nsecond line\nsecond line\nthird line\n",
+            "2yy should yank two lines for paste"
+        )
     }
 
     func testCountAppliesToCC() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("2cc")
         XCTAssertEqual(engine.mode, .insert)
-        XCTAssertEqual(buffer.text, "\nthird line\n",
-            "2cc should clear two lines and enter insert mode")
+        XCTAssertEqual(
+            buffer.text,
+            "\nthird line\n",
+            "2cc should clear two lines and enter insert mode"
+        )
     }
 
     // MARK: - Overflow Protection

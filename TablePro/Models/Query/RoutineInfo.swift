@@ -7,6 +7,7 @@ struct RoutineInfo: Identifiable, Hashable, Sendable {
         }
         return "\(kind.rawValue)_\(qualifiedName)_\(signature)"
     }
+
     let name: String
     let schema: String?
     let kind: Kind
@@ -19,7 +20,7 @@ struct RoutineInfo: Identifiable, Hashable, Sendable {
         var sidebarObjectKind: SidebarObjectKind {
             switch self {
             case .procedure: return .procedure
-            case .function:  return .function
+            case .function: return .function
             }
         }
     }

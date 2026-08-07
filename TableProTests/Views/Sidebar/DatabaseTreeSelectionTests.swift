@@ -72,28 +72,28 @@ struct DatabaseTreeSelectionTests {
 struct SelectionDeltaTests {
     @Test("Single addition is detected")
     func singleAdditionDetected() {
-        let old: Set<Int> = [1, 2]
-        let new: Set<Int> = [1, 2, 3]
+        let old: Set = [1, 2]
+        let new: Set = [1, 2, 3]
         #expect(SelectionDelta.singleAddition(old: old, new: new) == 3)
     }
 
     @Test("No addition returns nil")
     func noAdditionReturnsNil() {
-        let set: Set<Int> = [1, 2]
+        let set: Set = [1, 2]
         #expect(SelectionDelta.singleAddition(old: set, new: set) == nil)
     }
 
     @Test("Removal returns nil")
     func removalReturnsNil() {
-        let old: Set<Int> = [1, 2, 3]
-        let new: Set<Int> = [1, 2]
+        let old: Set = [1, 2, 3]
+        let new: Set = [1, 2]
         #expect(SelectionDelta.singleAddition(old: old, new: new) == nil)
     }
 
     @Test("Multiple additions return nil")
     func multipleAdditionsReturnNil() {
-        let old: Set<Int> = [1]
-        let new: Set<Int> = [1, 2, 3]
+        let old: Set = [1]
+        let new: Set = [1, 2, 3]
         #expect(SelectionDelta.singleAddition(old: old, new: new) == nil)
     }
 }

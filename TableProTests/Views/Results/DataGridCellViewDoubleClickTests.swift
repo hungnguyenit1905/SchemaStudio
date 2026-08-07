@@ -67,7 +67,7 @@ struct DataGridCellViewDoubleClickTests {
         let delegate = RecordingAccessoryDelegate()
         cell.accessoryDelegate = delegate
 
-        cell.mouseDown(with: try mouseDownEvent(clickCount: 2))
+        try cell.mouseDown(with: mouseDownEvent(clickCount: 2))
 
         #expect(delegate.doubleClicks.count == 1)
         #expect(delegate.doubleClicks.first?.row == 3)
@@ -82,7 +82,7 @@ struct DataGridCellViewDoubleClickTests {
         let delegate = RecordingAccessoryDelegate()
         cell.accessoryDelegate = delegate
 
-        cell.mouseDown(with: try mouseDownEvent(clickCount: 1))
+        try cell.mouseDown(with: mouseDownEvent(clickCount: 1))
 
         #expect(delegate.doubleClicks.isEmpty)
     }

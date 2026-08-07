@@ -1,10 +1,10 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import XCTest
 
 final class SseEncoderDecoderTests: XCTestCase {
-    func testRoundTripSingleLineFrame() async throws {
+    func testRoundTripSingleLineFrame() async {
         let frame = SseFrame(event: "message", id: "1", data: "hello", retry: nil)
         let encoded = SseEncoder.encode(frame)
         let decoder = SseDecoder()
@@ -25,7 +25,7 @@ final class SseEncoderDecoderTests: XCTestCase {
         XCTAssertTrue(text.hasSuffix("\n\n"))
     }
 
-    func testRoundTripMultiLineData() async throws {
+    func testRoundTripMultiLineData() async {
         let frame = SseFrame(data: "alpha\nbeta\ngamma")
         let encoded = SseEncoder.encode(frame)
         let decoder = SseDecoder()
@@ -34,7 +34,7 @@ final class SseEncoderDecoderTests: XCTestCase {
         XCTAssertEqual(frames.first?.data, "alpha\nbeta\ngamma")
     }
 
-    func testDecodesMultipleFramesInOneChunk() async throws {
+    func testDecodesMultipleFramesInOneChunk() async {
         let frameA = SseEncoder.encode(SseFrame(event: "a", data: "first"))
         let frameB = SseEncoder.encode(SseFrame(event: "b", data: "second"))
         var combined = Data()
@@ -48,7 +48,7 @@ final class SseEncoderDecoderTests: XCTestCase {
         XCTAssertEqual(frames[1].data, "second")
     }
 
-    func testBuffersPartialFramesAcrossChunks() async throws {
+    func testBuffersPartialFramesAcrossChunks() async {
         let frame = SseFrame(event: "ping", data: "hello world")
         let encoded = SseEncoder.encode(frame)
 
@@ -64,7 +64,7 @@ final class SseEncoderDecoderTests: XCTestCase {
         XCTAssertEqual(secondFrames.first?.data, "hello world")
     }
 
-    func testDecoderToleratesCrlfFieldSeparators() async throws {
+    func testDecoderToleratesCrlfFieldSeparators() async {
         let raw = "event: x\r\nid: 7\r\ndata: hi\r\n\r\n"
         let decoder = SseDecoder()
         let frames = await decoder.feed(Data(raw.utf8))
@@ -74,7 +74,7 @@ final class SseEncoderDecoderTests: XCTestCase {
         XCTAssertEqual(frames.first?.data, "hi")
     }
 
-    func testDecoderJoinsMultipleDataFieldsWithNewline() async throws {
+    func testDecoderJoinsMultipleDataFieldsWithNewline() async {
         let raw = "data: a\ndata: b\ndata: c\n\n"
         let decoder = SseDecoder()
         let frames = await decoder.feed(Data(raw.utf8))
@@ -82,7 +82,7 @@ final class SseEncoderDecoderTests: XCTestCase {
         XCTAssertEqual(frames.first?.data, "a\nb\nc")
     }
 
-    func testDecoderIgnoresCommentLines() async throws {
+    func testDecoderIgnoresCommentLines() async {
         let raw = ": this is a comment\ndata: payload\n\n"
         let decoder = SseDecoder()
         let frames = await decoder.feed(Data(raw.utf8))

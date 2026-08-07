@@ -106,7 +106,11 @@ struct ElasticsearchStatementGenerator {
         }
 
         guard !doc.isEmpty, let body = serialize(["doc": doc]) else { return nil }
-        return encode(.init(method: "POST", path: "/\(encodedIndex)/_update/\(encodePathComponent(id))\(Self.refreshQuery)", body: body))
+        return encode(.init(
+            method: "POST",
+            path: "/\(encodedIndex)/_update/\(encodePathComponent(id))\(Self.refreshQuery)",
+            body: body
+        ))
     }
 
     // MARK: - DELETE
@@ -126,8 +130,7 @@ struct ElasticsearchStatementGenerator {
               let idIndex = columns.firstIndex(of: ElasticsearchMappingFlattener.idColumn),
               idIndex < originalRow.count,
               let id = originalRow[idIndex].asText,
-              !id.isEmpty
-        else { return nil }
+              !id.isEmpty else { return nil }
         return id
     }
 
@@ -172,8 +175,7 @@ struct ElasticsearchStatementGenerator {
 
     private func serialize(_ object: [String: Any]) -> String? {
         guard JSONSerialization.isValidJSONObject(object),
-              let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
-        else { return nil }
+              let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]) else { return nil }
         return String(data: data, encoding: .utf8)
     }
 
@@ -193,8 +195,7 @@ struct ElasticsearchStatementGenerator {
         let parts = String(statement.dropFirst(writeTag.count)).components(separatedBy: ":")
         guard parts.count >= 3,
               let method = decodeBase64(parts[0]),
-              let path = decodeBase64(parts[1])
-        else { return nil }
+              let path = decodeBase64(parts[1]) else { return nil }
         let body = decodeBase64(parts[2])
         return ElasticsearchWriteRequest(method: method, path: path, body: (body?.isEmpty ?? true) ? nil : body)
     }

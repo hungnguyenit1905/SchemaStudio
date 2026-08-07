@@ -1,6 +1,6 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("MCP Rate Limiter")
@@ -15,7 +15,7 @@ struct MCPRateLimiterNewTests {
         let limiter = MCPRateLimiter(clock: clock)
         let key = standardKey()
 
-        for _ in 0..<4 {
+        for _ in 0 ..< 4 {
             let verdict = await limiter.recordAttempt(key: key, success: false)
             #expect(verdict == .allowed)
         }
@@ -41,7 +41,7 @@ struct MCPRateLimiterNewTests {
         )
         let key = standardKey()
 
-        for _ in 0..<3 {
+        for _ in 0 ..< 3 {
             _ = await limiter.recordAttempt(key: key, success: false)
         }
         let lockedNow = await limiter.isLocked(key: key)
@@ -59,7 +59,7 @@ struct MCPRateLimiterNewTests {
         let keyA = MCPRateLimitKey(clientAddress: .loopback, principalFingerprint: "tokenA")
         let keyB = MCPRateLimitKey(clientAddress: .loopback, principalFingerprint: "tokenB")
 
-        for _ in 0..<5 {
+        for _ in 0 ..< 5 {
             _ = await limiter.recordAttempt(key: keyA, success: false)
         }
         let lockedA = await limiter.isLocked(key: keyA)
@@ -75,7 +75,7 @@ struct MCPRateLimiterNewTests {
         let attacker = MCPRateLimitKey(clientAddress: .loopback, principalFingerprint: "bad")
         let legitimate = MCPRateLimitKey(clientAddress: .loopback, principalFingerprint: "good")
 
-        for _ in 0..<5 {
+        for _ in 0 ..< 5 {
             _ = await limiter.recordAttempt(key: attacker, success: false)
         }
         let allowed = await limiter.recordAttempt(key: legitimate, success: true)
@@ -95,12 +95,12 @@ struct MCPRateLimiterNewTests {
         )
         let key = standardKey()
 
-        for _ in 0..<3 {
+        for _ in 0 ..< 3 {
             _ = await limiter.recordAttempt(key: key, success: false)
         }
         _ = await limiter.recordAttempt(key: key, success: true)
 
-        for _ in 0..<4 {
+        for _ in 0 ..< 4 {
             let verdict = await limiter.recordAttempt(key: key, success: false)
             #expect(verdict == .allowed)
         }
@@ -121,7 +121,7 @@ struct MCPRateLimiterNewTests {
         )
         let key = standardKey()
 
-        for _ in 0..<4 {
+        for _ in 0 ..< 4 {
             _ = await limiter.recordAttempt(key: key, success: false)
         }
         await clock.advance(by: .seconds(120))
@@ -134,7 +134,7 @@ struct MCPRateLimiterNewTests {
         let clock = MCPTestClock()
         let limiter = MCPRateLimiter(clock: clock)
         let key = standardKey()
-        for _ in 0..<5 {
+        for _ in 0 ..< 5 {
             _ = await limiter.recordAttempt(key: key, success: false)
         }
         await limiter.reset(key: key)

@@ -25,13 +25,13 @@ extension String {
     }
 }
 
-extension Array where Element == String {
+extension [String] {
     var asRedisArguments: [Data] {
         map { Data($0.utf8) }
     }
 }
 
-extension Array where Element == RedisArgument {
+extension [RedisArgument] {
     var asRedisArguments: [Data] {
         map(\.bytes)
     }

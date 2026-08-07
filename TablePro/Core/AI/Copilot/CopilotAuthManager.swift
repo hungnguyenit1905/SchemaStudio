@@ -49,7 +49,7 @@ final class CopilotAuthManager {
         let maxAttempts = 60
         let pollInterval: Duration = .seconds(2)
 
-        for _ in 0..<maxAttempts {
+        for _ in 0 ..< maxAttempts {
             guard !Task.isCancelled else {
                 throw CopilotError.authenticationFailed(String(localized: "Sign-in cancelled"))
             }

@@ -27,79 +27,82 @@ enum AIProviderType: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var displayName: String {
         switch self {
-        case .copilot:      return "GitHub Copilot"
+        case .copilot: return "GitHub Copilot"
         case .chatgptCodex: return "ChatGPT"
-        case .cursor:       return "Cursor"
-        case .claude:       return "Claude"
-        case .claudeAgent:  return "Claude Agent"
-        case .openAI:       return "OpenAI"
-        case .openRouter:   return "OpenRouter"
-        case .gemini:       return "Gemini"
-        case .xai:          return "xAI"
-        case .ollama:       return "Ollama"
-        case .llamaCpp:     return "llama.cpp"
-        case .mlx:          return "MLX"
-        case .openCode:     return "OpenCode Zen"
-        case .custom:       return String(localized: "Custom")
+        case .cursor: return "Cursor"
+        case .claude: return "Claude"
+        case .claudeAgent: return "Claude Agent"
+        case .openAI: return "OpenAI"
+        case .openRouter: return "OpenRouter"
+        case .gemini: return "Gemini"
+        case .xai: return "xAI"
+        case .ollama: return "Ollama"
+        case .llamaCpp: return "llama.cpp"
+        case .mlx: return "MLX"
+        case .openCode: return "OpenCode Zen"
+        case .custom: return String(localized: "Custom")
         }
     }
 
     var defaultEndpoint: String {
         switch self {
-        case .copilot:      return ""
+        case .copilot: return ""
         case .chatgptCodex: return ""
-        case .cursor:       return ""
-        case .claude:       return "https://api.anthropic.com"
-        case .claudeAgent:  return ""
-        case .openAI:       return "https://api.openai.com"
-        case .openRouter:   return "https://openrouter.ai/api"
-        case .gemini:       return "https://generativelanguage.googleapis.com"
-        case .xai:          return "https://api.x.ai"
-        case .ollama:       return "http://localhost:11434"
-        case .llamaCpp:     return "http://localhost:8080"
-        case .mlx:          return "http://localhost:8080"
-        case .openCode:     return "https://opencode.ai/zen"
-        case .custom:       return ""
+        case .cursor: return ""
+        case .claude: return "https://api.anthropic.com"
+        case .claudeAgent: return ""
+        case .openAI: return "https://api.openai.com"
+        case .openRouter: return "https://openrouter.ai/api"
+        case .gemini: return "https://generativelanguage.googleapis.com"
+        case .xai: return "https://api.x.ai"
+        case .ollama: return "http://localhost:11434"
+        case .llamaCpp: return "http://localhost:8080"
+        case .mlx: return "http://localhost:8080"
+        case .openCode: return "https://opencode.ai/zen"
+        case .custom: return ""
         }
     }
 
     enum AuthStyle: Sendable {
-        case apiKey, optionalApiKey, oauth, none
+        case apiKey
+        case optionalApiKey
+        case oauth
+        case none
 
         var usesAPIKey: Bool { self == .apiKey || self == .optionalApiKey }
     }
 
     var authStyle: AuthStyle {
         switch self {
-        case .copilot:      return .oauth
+        case .copilot: return .oauth
         case .chatgptCodex: return .oauth
-        case .cursor:       return .optionalApiKey
-        case .claudeAgent:  return .none
-        case .xai:          return .optionalApiKey
-        case .ollama:       return .none
-        case .llamaCpp:     return .none
-        case .mlx:          return .none
-        case .openCode:     return .optionalApiKey
-        default:            return .apiKey
+        case .cursor: return .optionalApiKey
+        case .claudeAgent: return .none
+        case .xai: return .optionalApiKey
+        case .ollama: return .none
+        case .llamaCpp: return .none
+        case .mlx: return .none
+        case .openCode: return .optionalApiKey
+        default: return .apiKey
         }
     }
 
     var symbolName: String {
         switch self {
-        case .copilot:      return "chevron.left.forwardslash.chevron.right"
+        case .copilot: return "chevron.left.forwardslash.chevron.right"
         case .chatgptCodex: return "bubble.left.and.bubble.right"
-        case .cursor:       return "cursorarrow"
-        case .claude:       return "brain"
-        case .claudeAgent:  return "terminal"
-        case .openAI:       return "cpu"
-        case .openRouter:   return "globe"
-        case .gemini:       return "wand.and.stars"
-        case .xai:          return "x.circle"
-        case .ollama:       return "desktopcomputer"
-        case .llamaCpp:     return "memorychip"
-        case .mlx:          return "m.square"
-        case .openCode:     return "sparkles"
-        case .custom:       return "server.rack"
+        case .cursor: return "cursorarrow"
+        case .claude: return "brain"
+        case .claudeAgent: return "terminal"
+        case .openAI: return "cpu"
+        case .openRouter: return "globe"
+        case .gemini: return "wand.and.stars"
+        case .xai: return "x.circle"
+        case .ollama: return "desktopcomputer"
+        case .llamaCpp: return "memorychip"
+        case .mlx: return "m.square"
+        case .openCode: return "sparkles"
+        case .custom: return "server.rack"
         }
     }
 }
@@ -167,7 +170,7 @@ enum AIConnectionPolicy: String, Codable, CaseIterable, Identifiable, Sendable {
         switch self {
         case .alwaysAllow: return String(localized: "Always Allow")
         case .askEachTime: return String(localized: "Ask Each Time")
-        case .never:       return String(localized: "Never")
+        case .never: return String(localized: "Never")
         }
     }
 }
@@ -183,16 +186,16 @@ enum AIChatMode: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var displayName: String {
         switch self {
-        case .ask:   return String(localized: "Ask")
-        case .edit:  return String(localized: "Edit")
+        case .ask: return String(localized: "Ask")
+        case .edit: return String(localized: "Edit")
         case .agent: return String(localized: "Agent")
         }
     }
 
     var symbolName: String {
         switch self {
-        case .ask:   return "questionmark.bubble"
-        case .edit:  return "pencil.and.outline"
+        case .ask: return "questionmark.bubble"
+        case .edit: return "pencil.and.outline"
         case .agent: return "infinity"
         }
     }
@@ -204,7 +207,9 @@ enum AIChatMode: String, Codable, CaseIterable, Identifiable, Sendable {
         case .edit:
             return String(localized: "Edit: read-only tools plus running queries. Destructive DDL stays blocked.")
         case .agent:
-            return String(localized: "Agent: full tool access including destructive DDL. Safe mode still gates execution.")
+            return String(
+                localized: "Agent: full tool access including destructive DDL. Safe mode still gates execution."
+            )
         }
     }
 
@@ -238,9 +243,9 @@ struct AISettings: Codable, Equatable, Sendable {
     var chatMode: AIChatMode
 
     static let defaultInlineSuggestionDebounceMs: Int = 500
-    static let inlineSuggestionDebounceRange: ClosedRange<Int> = 100...3_000
+    static let inlineSuggestionDebounceRange: ClosedRange<Int> = 100 ... 3_000
     static let defaultMaxToolRoundtrips: Int = 25
-    static let maxToolRoundtripsRange: ClosedRange<Int> = 5...200
+    static let maxToolRoundtripsRange: ClosedRange<Int> = 5 ... 200
 
     static let `default` = AISettings(
         enabled: true,

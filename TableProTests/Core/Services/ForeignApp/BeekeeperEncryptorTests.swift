@@ -5,8 +5,8 @@
 
 import CommonCrypto
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("BeekeeperEncryptor")
 struct BeekeeperEncryptorTests {
@@ -24,7 +24,7 @@ struct BeekeeperEncryptorTests {
     @Test
     func decryptsDictionaryEncryptedInSimpleEncryptorFormat() throws {
         let key = BeekeeperEncryptor.defaultKey
-        let plaintext: [String: String] = ["encryptionKey": "abc123"]
+        let plaintext = ["encryptionKey": "abc123"]
 
         let payload = try encryptForTesting(jsonValue: plaintext, key: key)
         let decoded = BeekeeperEncryptor.decryptDictionary(payload, key: key)

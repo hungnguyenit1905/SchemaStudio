@@ -35,6 +35,7 @@ internal final class QuickSwitcherViewModel {
     @ObservationIgnored internal var allItems: [QuickSwitcherItem] = [] {
         didSet { scheduleFilter(debounced: false) }
     }
+
     @ObservationIgnored private var filterTask: Task<Void, Never>?
     @ObservationIgnored private var activeLoadId = UUID()
 
@@ -146,9 +147,10 @@ internal final class QuickSwitcherViewModel {
             )
             : []
         do {
-            let databases = try await services.databaseManager.withBrowseMetadataDriver(connectionId: connectionId) { driver in
-                try await driver.fetchDatabases()
-            }
+            let databases = try await services.databaseManager
+                .withBrowseMetadataDriver(connectionId: connectionId) { driver in
+                    try await driver.fetchDatabases()
+                }
             let databaseSubtitle = switchTarget == .database
                 ? services.pluginManager.containerEntityName(for: databaseType)
                 : String(localized: "Database")
@@ -173,9 +175,10 @@ internal final class QuickSwitcherViewModel {
 
         if services.pluginManager.supportsSchemaSwitching(for: databaseType) {
             do {
-                let schemas = try await services.databaseManager.withBrowseMetadataDriver(connectionId: connectionId) { driver in
-                    try await driver.fetchSchemas()
-                }
+                let schemas = try await services.databaseManager
+                    .withBrowseMetadataDriver(connectionId: connectionId) { driver in
+                        try await driver.fetchSchemas()
+                    }
                 let schemaSubtitle = switchTarget == .schema
                     ? services.pluginManager.containerEntityName(for: databaseType)
                     : String(localized: "Schema")
@@ -355,11 +358,11 @@ internal final class QuickSwitcherViewModel {
         }
 
         switch (nameMatch, subtitleScore) {
-        case let (match?, score?) where score > Double(match.score):
+        case (let match?, let score?) where score > Double(match.score):
             return (score, [])
-        case let (match?, _):
+        case (let match?, _):
             return (Double(match.score), match.matchedIndices)
-        case let (nil, score?):
+        case (nil, let score?):
             return (score, [])
         case (nil, nil):
             return nil

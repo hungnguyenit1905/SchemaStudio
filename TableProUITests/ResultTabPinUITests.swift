@@ -18,7 +18,7 @@ final class ResultTabPinUITests: XCTestCase {
         XCUIApplication().terminate()
     }
 
-    func testResultTabExposesPinButtonAndPinMenuItem() throws {
+    func testResultTabExposesPinButtonAndPinMenuItem() {
         let app = launchWithSampleDatabase()
 
         let editor = editorTextView(in: app)
@@ -51,7 +51,7 @@ final class ResultTabPinUITests: XCTestCase {
     }
 
     private var paddedQuery: String {
-        let padding = (1...60).map { "-- line \($0)" }.joined(separator: "\n")
+        let padding = (1 ... 60).map { "-- line \($0)" }.joined(separator: "\n")
         return "\(padding)\nSELECT 1;"
     }
 

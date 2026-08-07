@@ -13,7 +13,11 @@ import TableProPluginKit
 enum CellDisplayFormatter {
     static let maxDisplayLength = 10_000
 
-    static func format(_ rawValue: PluginCellValue, columnType: ColumnType?, displayFormat: ValueDisplayFormat? = nil) -> String? {
+    static func format(
+        _ rawValue: PluginCellValue,
+        columnType: ColumnType?,
+        displayFormat: ValueDisplayFormat? = nil
+    ) -> String? {
         switch rawValue {
         case .null:
             return nil

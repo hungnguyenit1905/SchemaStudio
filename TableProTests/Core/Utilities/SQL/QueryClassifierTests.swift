@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("QueryClassifier isExplainStatement")
 struct QueryClassifierExplainTests {

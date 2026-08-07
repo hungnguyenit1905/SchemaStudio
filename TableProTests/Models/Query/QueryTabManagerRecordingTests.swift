@@ -27,7 +27,13 @@ struct QueryTabManagerRecordingTests {
     func addTableTabReportsCommitted() throws {
         let (manager, opened) = recorder()
         try manager.addTableTab(tableName: "orders", databaseName: "shop", schemaName: "sales")
-        #expect(opened() == [Opened(name: "orders", schema: "sales", database: "shop", isView: false, isPreview: false)])
+        #expect(opened() == [Opened(
+            name: "orders",
+            schema: "sales",
+            database: "shop",
+            isView: false,
+            isPreview: false
+        )])
     }
 
     @Test("addTableTab carries the view flag")

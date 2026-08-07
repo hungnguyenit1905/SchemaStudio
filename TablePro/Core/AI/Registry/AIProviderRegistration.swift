@@ -13,7 +13,15 @@ enum AIProviderRegistration {
             typeID: AIProviderType.claude.rawValue,
             displayName: "Claude",
             defaultEndpoint: "https://api.anthropic.com",
-            capabilities: [.chat, .models, .reasoning, .images, .endpointConfigurable, .maxOutputTokens, .modelListFetchable],
+            capabilities: [
+                .chat,
+                .models,
+                .reasoning,
+                .images,
+                .endpointConfigurable,
+                .maxOutputTokens,
+                .modelListFetchable
+            ],
             symbolName: "brain",
             curatedModels: claudeCuratedModels,
             makeProvider: { config, apiKey in
@@ -60,7 +68,15 @@ enum AIProviderRegistration {
             typeID: AIProviderType.openAI.rawValue,
             displayName: AIProviderType.openAI.displayName,
             defaultEndpoint: AIProviderType.openAI.defaultEndpoint,
-            capabilities: [.chat, .models, .reasoning, .images, .endpointConfigurable, .maxOutputTokens, .modelListFetchable],
+            capabilities: [
+                .chat,
+                .models,
+                .reasoning,
+                .images,
+                .endpointConfigurable,
+                .maxOutputTokens,
+                .modelListFetchable
+            ],
             symbolName: iconForType(.openAI),
             curatedModels: openAICuratedModels,
             makeProvider: { config, apiKey in
@@ -122,6 +138,10 @@ enum AIProviderRegistration {
             ))
         }
 
+        registerRemainingProviders(into: registry)
+    }
+
+    private static func registerRemainingProviders(into registry: AIProviderRegistry) {
         registry.register(AIProviderDescriptor(
             typeID: AIProviderType.copilot.rawValue,
             displayName: "GitHub Copilot",

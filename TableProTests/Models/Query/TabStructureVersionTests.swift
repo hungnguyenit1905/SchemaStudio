@@ -4,14 +4,13 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("QueryTabManager.tabStructureVersion")
 @MainActor
 struct TabStructureVersionTests {
-
     @Test("New manager starts at version 0")
     func initialVersionIsZero() {
         let manager = QueryTabManager()

@@ -22,7 +22,7 @@ enum QuerySqlParser {
 
         if let regex = tableNameRegex,
            let match = regex.firstMatch(in: sql, options: [], range: nsRange) {
-            for group in 1...3 {
+            for group in 1 ... 3 {
                 let r = match.range(at: group)
                 if r.location != NSNotFound, let range = Range(r, in: sql) {
                     return String(sql[range])

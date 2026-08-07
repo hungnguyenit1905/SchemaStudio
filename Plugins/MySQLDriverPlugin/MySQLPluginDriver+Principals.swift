@@ -121,9 +121,9 @@ extension MySQLPluginDriver: PluginPrincipalManagement {
 
     func fetchGrantableChildren(of scope: PluginPrivilegeScope) async throws -> [PluginPrivilegeScope] {
         switch scope {
-        case let .database(database):
+        case .database(let database):
             try await tables(in: database)
-        case let .table(database, _, table):
+        case .table(let database, _, let table):
             try await columns(in: database, table: table)
         case .server, .schema, .column:
             []
@@ -136,13 +136,13 @@ extension MySQLPluginDriver: PluginPrincipalManagement {
     ) async throws -> [PluginPrivilegeScope] {
         let pattern = escapeStringLiteral(MySQLGrantPatternEscaping.escapeDatabasePattern(query))
         let sql = """
-            SELECT TABLE_SCHEMA, TABLE_NAME
-            FROM information_schema.TABLES
-            WHERE TABLE_SCHEMA NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys')
-              AND TABLE_NAME LIKE '%\(pattern)%'
-            ORDER BY TABLE_SCHEMA, TABLE_NAME
-            LIMIT \(max(1, limit))
-            """
+        SELECT TABLE_SCHEMA, TABLE_NAME
+        FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys')
+          AND TABLE_NAME LIKE '%\(pattern)%'
+        ORDER BY TABLE_SCHEMA, TABLE_NAME
+        LIMIT \(max(1, limit))
+        """
         let result = try await execute(query: sql)
 
         return result.rows.compactMap { row in
@@ -223,20 +223,20 @@ extension MySQLPluginDriver: PluginPrincipalManagement {
         return "\(name)@\(host)"
     }
 
-    // MySQL treats `_` and `%` in the database position as LIKE wildcards only for global and
-    // database-level grants. In a table-level target the database name is a literal identifier, so
-    // escaping it there would grant on a database whose name contains a backslash.
+    /// MySQL treats `_` and `%` in the database position as LIKE wildcards only for global and
+    /// database-level grants. In a table-level target the database name is a literal identifier, so
+    /// escaping it there would grant on a database whose name contains a backslash.
     func grantTarget(for scope: PluginPrivilegeScope) -> String? {
         switch scope {
         case .server:
             "*.*"
-        case let .database(name):
+        case .database(let name):
             "\(quotedDatabasePattern(name)).*"
-        case let .schema(database, _):
+        case .schema(let database, _):
             "\(quotedDatabasePattern(database)).*"
-        case let .table(database, _, table):
+        case .table(let database, _, let table):
             "\(quoteIdentifier(database)).\(quoteIdentifier(table))"
-        case let .column(database, _, table, _):
+        case .column(let database, _, let table, _):
             "\(quoteIdentifier(database)).\(quoteIdentifier(table))"
         }
     }

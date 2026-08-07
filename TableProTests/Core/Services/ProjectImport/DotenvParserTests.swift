@@ -4,12 +4,11 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("Dotenv Parser")
 struct DotenvParserTests {
-
     private func value(_ source: String, _ key: String, env: [String: String] = [:]) -> String? {
         DotenvParser.parse(source, processEnvironment: env).entry(for: key)?.value
     }

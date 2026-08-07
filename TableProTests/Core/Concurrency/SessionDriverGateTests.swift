@@ -58,7 +58,7 @@ private struct GateBodyError: Error, Equatable {}
 /// Lets queued work reach its next suspension point without sleeping.
 @MainActor
 private func drainMainActor(_ times: Int = 8) async {
-    for _ in 0..<times {
+    for _ in 0 ..< times {
         await Task.yield()
     }
 }

@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("TableInfo")
 struct TableInfoTests {
-
     // MARK: - Identifiable
 
     @Test("id returns name_TABLE for a table")

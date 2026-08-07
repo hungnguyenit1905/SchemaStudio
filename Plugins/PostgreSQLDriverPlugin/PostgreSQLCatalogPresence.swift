@@ -11,12 +11,12 @@ struct PostgreSQLCatalogPresence: Sendable, Equatable {
     let hasSequences: Bool
 
     static let probeQuery = """
-        SELECT c.relname
-        FROM pg_catalog.pg_class c
-        JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-        WHERE n.nspname = 'pg_catalog'
-          AND c.relname IN ('pg_matviews', 'pg_foreign_table', 'pg_sequences')
-        """
+    SELECT c.relname
+    FROM pg_catalog.pg_class c
+    JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'pg_catalog'
+      AND c.relname IN ('pg_matviews', 'pg_foreign_table', 'pg_sequences')
+    """
 
     init(relationNames: [String]) {
         let names = Set(relationNames)

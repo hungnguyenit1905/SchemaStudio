@@ -43,29 +43,26 @@ struct ImportFromAppSourcePicker: View {
 
     // MARK: - Source List
 
-    private var sourceList: some View {
-        Group {
-            if isLoading {
-                VStack {
-                    Spacer()
-                    ProgressView()
-                        .controlSize(.small)
-                    Spacer()
-                }
-            } else {
-                List(selection: $selectedId) {
-                    ForEach(importerStates, id: \.importer.id) { state in
-                        sourceRow(state)
-                            .tag(state.importer.id)
-                            .disabled(!state.available)
-                    }
-                }
-                .listStyle(.inset)
+    @ViewBuilder private var sourceList: some View {
+        if isLoading {
+            VStack {
+                Spacer()
+                ProgressView()
+                    .controlSize(.small)
+                Spacer()
             }
+        } else {
+            List(selection: $selectedId) {
+                ForEach(importerStates, id: \.importer.id) { state in
+                    sourceRow(state)
+                        .tag(state.importer.id)
+                        .disabled(!state.available)
+                }
+            }
+            .listStyle(.inset)
         }
     }
 
-    @ViewBuilder
     private func sourceRow(_ state: (importer: any ForeignAppImporter, available: Bool, count: Int)) -> some View {
         HStack(spacing: 12) {
             appIcon(for: state.importer)

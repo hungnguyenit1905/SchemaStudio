@@ -68,10 +68,10 @@ struct LibPQByteaDecoderHexTests {
 
     @Test("All 256 byte values 0x00-0xFF decode losslessly")
     func allByteValues() {
-        let hex = (0..<256).map { String(format: "%02x", $0) }.joined()
+        let hex = (0 ..< 256).map { String(format: "%02x", $0) }.joined()
         let result = LibPQByteaDecoder.decode("\\x" + hex)
         #expect(result?.count == 256)
-        #expect(result == Data((0..<256).map { UInt8($0) }))
+        #expect(result == Data((0 ..< 256).map { UInt8($0) }))
     }
 }
 
@@ -168,14 +168,14 @@ struct LibPQByteaDecoderEncodeTests {
 
     @Test("Round-trip preserves bytes exactly")
     func roundTrip() {
-        let original = Data((0..<64).map { UInt8(truncatingIfNeeded: $0 &* 7 &+ 13) })
+        let original = Data((0 ..< 64).map { UInt8(truncatingIfNeeded: $0 &* 7 &+ 13) })
         let encoded = LibPQByteaDecoder.encodeHexText(original)
         #expect(LibPQByteaDecoder.decode(encoded) == original)
     }
 
     @Test("Round-trip across all 256 byte values")
     func roundTripAllBytes() {
-        let original = Data((0..<256).map { UInt8($0) })
+        let original = Data((0 ..< 256).map { UInt8($0) })
         let encoded = LibPQByteaDecoder.encodeHexText(original)
         #expect(LibPQByteaDecoder.decode(encoded) == original)
     }

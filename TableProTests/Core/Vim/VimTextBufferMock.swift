@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 
 @MainActor
 final class VimTextBufferMock: VimTextBuffer {
@@ -54,7 +54,7 @@ final class VimTextBufferMock: VimTextBuffer {
         while index < nsString.length {
             let range = nsString.lineRange(for: NSRange(location: index, length: 0))
             let rangeEnd = range.location + range.length
-            if clampedOffset >= range.location && clampedOffset < rangeEnd {
+            if clampedOffset >= range.location, clampedOffset < rangeEnd {
                 return (line, clampedOffset - range.location)
             }
             line += 1
@@ -73,7 +73,7 @@ final class VimTextBufferMock: VimTextBuffer {
         let nsString = text as NSString
         var currentLine = 0
         var index = 0
-        while index < nsString.length && currentLine < line {
+        while index < nsString.length, currentLine < line {
             let range = nsString.lineRange(for: NSRange(location: index, length: 0))
             currentLine += 1
             index = range.location + range.length
@@ -81,8 +81,8 @@ final class VimTextBufferMock: VimTextBuffer {
         let lineRange = nsString.lineRange(for: NSRange(location: min(index, nsString.length), length: 0))
         let lineEnd = lineRange.location + lineRange.length
         let contentLength: Int
-        if lineEnd > lineRange.location && lineEnd <= nsString.length
-            && nsString.character(at: lineEnd - 1) == 0x0A {
+        if lineEnd > lineRange.location, lineEnd <= nsString.length,
+           nsString.character(at: lineEnd - 1) == 0x0A {
             contentLength = lineRange.length - 1
         } else {
             contentLength = lineRange.length
@@ -93,7 +93,7 @@ final class VimTextBufferMock: VimTextBuffer {
 
     func character(at offset: Int) -> unichar {
         let nsString = text as NSString
-        guard offset >= 0 && offset < nsString.length else { return 0 }
+        guard offset >= 0, offset < nsString.length else { return 0 }
         return nsString.character(at: offset)
     }
 
@@ -104,14 +104,14 @@ final class VimTextBufferMock: VimTextBuffer {
             var pos = min(offset, nsString.length - 1)
             let startClass = charClass(nsString.character(at: pos))
             if startClass == .whitespace {
-                while pos < nsString.length && charClass(nsString.character(at: pos)) == .whitespace {
+                while pos < nsString.length, charClass(nsString.character(at: pos)) == .whitespace {
                     pos += 1
                 }
             } else {
-                while pos < nsString.length && charClass(nsString.character(at: pos)) == startClass {
+                while pos < nsString.length, charClass(nsString.character(at: pos)) == startClass {
                     pos += 1
                 }
-                while pos < nsString.length && charClass(nsString.character(at: pos)) == .whitespace {
+                while pos < nsString.length, charClass(nsString.character(at: pos)) == .whitespace {
                     pos += 1
                 }
             }
@@ -119,11 +119,11 @@ final class VimTextBufferMock: VimTextBuffer {
         } else {
             var pos = min(offset, nsString.length)
             if pos > 0 { pos -= 1 }
-            while pos > 0 && charClass(nsString.character(at: pos)) == .whitespace {
+            while pos > 0, charClass(nsString.character(at: pos)) == .whitespace {
                 pos -= 1
             }
             let cls = charClass(nsString.character(at: pos))
-            while pos > 0 && charClass(nsString.character(at: pos - 1)) == cls {
+            while pos > 0, charClass(nsString.character(at: pos - 1)) == cls {
                 pos -= 1
             }
             return max(0, pos)
@@ -134,12 +134,12 @@ final class VimTextBufferMock: VimTextBuffer {
         let nsString = text as NSString
         guard nsString.length > 0 else { return 0 }
         var pos = min(offset + 1, nsString.length - 1)
-        while pos < nsString.length && charClass(nsString.character(at: pos)) == .whitespace {
+        while pos < nsString.length, charClass(nsString.character(at: pos)) == .whitespace {
             pos += 1
         }
         guard pos < nsString.length else { return nsString.length - 1 }
         let cls = charClass(nsString.character(at: pos))
-        while pos < nsString.length - 1 && charClass(nsString.character(at: pos + 1)) == cls {
+        while pos < nsString.length - 1, charClass(nsString.character(at: pos + 1)) == cls {
             pos += 1
         }
         return min(pos, nsString.length - 1)
@@ -151,18 +151,18 @@ final class VimTextBufferMock: VimTextBuffer {
         var pos = min(max(0, offset), nsString.length - 1)
         if pos > 0 { pos -= 1 }
         if charClass(nsString.character(at: pos)) == .whitespace {
-            while pos > 0 && charClass(nsString.character(at: pos)) == .whitespace {
+            while pos > 0, charClass(nsString.character(at: pos)) == .whitespace {
                 pos -= 1
             }
             return pos
         }
         let cls = charClass(nsString.character(at: pos))
-        while pos > 0 && charClass(nsString.character(at: pos - 1)) == cls {
+        while pos > 0, charClass(nsString.character(at: pos - 1)) == cls {
             pos -= 1
         }
         guard pos > 0 else { return 0 }
         pos -= 1
-        while pos > 0 && charClass(nsString.character(at: pos)) == .whitespace {
+        while pos > 0, charClass(nsString.character(at: pos)) == .whitespace {
             pos -= 1
         }
         return pos
@@ -174,14 +174,14 @@ final class VimTextBufferMock: VimTextBuffer {
         if forward {
             var pos = min(offset, nsString.length - 1)
             if isWhitespace(nsString.character(at: pos)) {
-                while pos < nsString.length && isWhitespace(nsString.character(at: pos)) {
+                while pos < nsString.length, isWhitespace(nsString.character(at: pos)) {
                     pos += 1
                 }
             } else {
-                while pos < nsString.length && !isWhitespace(nsString.character(at: pos)) {
+                while pos < nsString.length, !isWhitespace(nsString.character(at: pos)) {
                     pos += 1
                 }
-                while pos < nsString.length && isWhitespace(nsString.character(at: pos)) {
+                while pos < nsString.length, isWhitespace(nsString.character(at: pos)) {
                     pos += 1
                 }
             }
@@ -189,10 +189,10 @@ final class VimTextBufferMock: VimTextBuffer {
         }
         var pos = min(offset, nsString.length)
         if pos > 0 { pos -= 1 }
-        while pos > 0 && isWhitespace(nsString.character(at: pos)) {
+        while pos > 0, isWhitespace(nsString.character(at: pos)) {
             pos -= 1
         }
-        while pos > 0 && !isWhitespace(nsString.character(at: pos - 1)) {
+        while pos > 0, !isWhitespace(nsString.character(at: pos - 1)) {
             pos -= 1
         }
         return max(0, pos)
@@ -202,11 +202,11 @@ final class VimTextBufferMock: VimTextBuffer {
         let nsString = text as NSString
         guard nsString.length > 0 else { return 0 }
         var pos = min(offset + 1, nsString.length - 1)
-        while pos < nsString.length && isWhitespace(nsString.character(at: pos)) {
+        while pos < nsString.length, isWhitespace(nsString.character(at: pos)) {
             pos += 1
         }
         guard pos < nsString.length else { return nsString.length - 1 }
-        while pos < nsString.length - 1 && !isWhitespace(nsString.character(at: pos + 1)) {
+        while pos < nsString.length - 1, !isWhitespace(nsString.character(at: pos + 1)) {
             pos += 1
         }
         return min(pos, nsString.length - 1)
@@ -218,17 +218,17 @@ final class VimTextBufferMock: VimTextBuffer {
         var pos = min(max(0, offset), nsString.length - 1)
         if pos > 0 { pos -= 1 }
         if isWhitespace(nsString.character(at: pos)) {
-            while pos > 0 && isWhitespace(nsString.character(at: pos)) {
+            while pos > 0, isWhitespace(nsString.character(at: pos)) {
                 pos -= 1
             }
             return pos
         }
-        while pos > 0 && !isWhitespace(nsString.character(at: pos - 1)) {
+        while pos > 0, !isWhitespace(nsString.character(at: pos - 1)) {
             pos -= 1
         }
         guard pos > 0 else { return 0 }
         pos -= 1
-        while pos > 0 && isWhitespace(nsString.character(at: pos)) {
+        while pos > 0, isWhitespace(nsString.character(at: pos)) {
             pos -= 1
         }
         return pos
@@ -246,7 +246,7 @@ final class VimTextBufferMock: VimTextBuffer {
         let step = pair.forward ? 1 : -1
         var depth = 1
         var pos = offset + step
-        while pos >= 0 && pos < nsString.length {
+        while pos >= 0, pos < nsString.length {
             let cur = nsString.character(at: pos)
             if cur == ch {
                 depth += 1
@@ -303,7 +303,9 @@ final class VimTextBufferMock: VimTextBuffer {
     func redo() { redoCallCount += 1 }
 
     private enum CharClass {
-        case word, punctuation, whitespace
+        case word
+        case punctuation
+        case whitespace
     }
 
     private func charClass(_ char: unichar) -> CharClass {

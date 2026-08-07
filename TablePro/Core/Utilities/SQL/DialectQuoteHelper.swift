@@ -13,7 +13,9 @@ enum SQLDialectError: Error, LocalizedError {
         switch self {
         case .dialectUnavailable(let typeId):
             return String(
-                format: String(localized: "SQL dialect for %@ is not available. The plugin may not be installed or loaded."),
+                format: String(
+                    localized: "SQL dialect for %@ is not available. The plugin may not be installed or loaded."
+                ),
                 typeId
             )
         }

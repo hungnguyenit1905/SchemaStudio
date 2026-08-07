@@ -77,8 +77,7 @@ struct SQLReviewSheet: View {
         .task { await prepare() }
     }
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         if statements.isEmpty {
             emptyState
         } else if let prepared {
@@ -231,7 +230,6 @@ struct SQLReviewSheet: View {
         )
     }
 
-    @ViewBuilder
     private var footer: some View {
         VStack(spacing: 8) {
             if let failure {

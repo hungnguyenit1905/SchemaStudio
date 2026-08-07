@@ -60,6 +60,7 @@ final class PluginDriverAdapter: DatabaseDriver, SchemaSwitchable {
         }
         return pluginDriver
     }
+
     var currentSchema: String? {
         guard pluginDriver.supportsSchemas else { return nil }
         return pluginDriver.currentSchema
@@ -204,7 +205,10 @@ final class PluginDriverAdapter: DatabaseDriver, SchemaSwitchable {
         case "external table", "external_table":
             tableType = .externalTable
         default:
-            Self.logger.warning("Unknown plugin table type \"\(table.type, privacy: .public)\" for \"\(table.name, privacy: .public)\"; defaulting to .table")
+            Self.logger
+                .warning(
+                    "Unknown plugin table type \"\(table.type, privacy: .public)\" for \"\(table.name, privacy: .public)\"; defaulting to .table"
+                )
             tableType = .table
         }
         return TableInfo(
@@ -222,7 +226,10 @@ final class PluginDriverAdapter: DatabaseDriver, SchemaSwitchable {
     }
 
     func fetchColumns(table: String, schema: String?) async throws -> [ColumnInfo] {
-        let pluginColumns = try await pluginDriver.fetchColumns(table: table, schema: schema ?? pluginDriver.currentSchema)
+        let pluginColumns = try await pluginDriver.fetchColumns(
+            table: table,
+            schema: schema ?? pluginDriver.currentSchema
+        )
         return mapPluginColumns(pluginColumns)
     }
 
@@ -475,10 +482,18 @@ final class PluginDriverAdapter: DatabaseDriver, SchemaSwitchable {
         var result: [String: [ColumnInfo]] = [:]
         for (table, cols) in pluginResult {
             result[table] = cols.map { col in
-                ColumnInfo(name: col.name, dataType: col.dataType, isNullable: col.isNullable,
-                           isPrimaryKey: col.isPrimaryKey, defaultValue: col.defaultValue,
-                           extra: col.extra, charset: col.charset, collation: col.collation, comment: col.comment,
-                           allowedValues: col.allowedValues)
+                ColumnInfo(
+                    name: col.name,
+                    dataType: col.dataType,
+                    isNullable: col.isNullable,
+                    isPrimaryKey: col.isPrimaryKey,
+                    defaultValue: col.defaultValue,
+                    extra: col.extra,
+                    charset: col.charset,
+                    collation: col.collation,
+                    comment: col.comment,
+                    allowedValues: col.allowedValues
+                )
             }
         }
         return result
@@ -489,9 +504,15 @@ final class PluginDriverAdapter: DatabaseDriver, SchemaSwitchable {
         var result: [String: [ForeignKeyInfo]] = [:]
         for (table, fks) in pluginResult {
             result[table] = fks.map { fk in
-                ForeignKeyInfo(name: fk.name, column: fk.column, referencedTable: fk.referencedTable,
-                               referencedColumn: fk.referencedColumn, referencedSchema: fk.referencedSchema,
-                               onDelete: fk.onDelete, onUpdate: fk.onUpdate)
+                ForeignKeyInfo(
+                    name: fk.name,
+                    column: fk.column,
+                    referencedTable: fk.referencedTable,
+                    referencedColumn: fk.referencedColumn,
+                    referencedSchema: fk.referencedSchema,
+                    onDelete: fk.onDelete,
+                    onUpdate: fk.onUpdate
+                )
             }
         }
         return result
@@ -500,10 +521,15 @@ final class PluginDriverAdapter: DatabaseDriver, SchemaSwitchable {
     func fetchAllDatabaseMetadata() async throws -> [DatabaseMetadata] {
         let pluginResult = try await pluginDriver.fetchAllDatabaseMetadata()
         return pluginResult.map { meta in
-            DatabaseMetadata(id: meta.name, name: meta.name, tableCount: meta.tableCount,
-                             sizeBytes: meta.sizeBytes, lastAccessed: nil,
-                             isSystemDatabase: meta.isSystemDatabase,
-                             icon: meta.isSystemDatabase ? "gearshape.fill" : "cylinder.fill")
+            DatabaseMetadata(
+                id: meta.name,
+                name: meta.name,
+                tableCount: meta.tableCount,
+                sizeBytes: meta.sizeBytes,
+                lastAccessed: nil,
+                isSystemDatabase: meta.isSystemDatabase,
+                icon: meta.isSystemDatabase ? "gearshape.fill" : "cylinder.fill"
+            )
         }
     }
 
@@ -581,8 +607,18 @@ final class PluginDriverAdapter: DatabaseDriver, SchemaSwitchable {
         pluginDriver.generateDropForeignKeySQL(table: table, constraintName: constraintName)
     }
 
-    func generateModifyPrimaryKeySQL(table: String, oldColumns: [String], newColumns: [String], constraintName: String?) -> [String]? {
-        pluginDriver.generateModifyPrimaryKeySQL(table: table, oldColumns: oldColumns, newColumns: newColumns, constraintName: constraintName)
+    func generateModifyPrimaryKeySQL(
+        table: String,
+        oldColumns: [String],
+        newColumns: [String],
+        constraintName: String?
+    ) -> [String]? {
+        pluginDriver.generateModifyPrimaryKeySQL(
+            table: table,
+            oldColumns: oldColumns,
+            newColumns: newColumns,
+            constraintName: constraintName
+        )
     }
 
     func generateMoveColumnSQL(table: String, column: PluginColumnDefinition, afterColumn: String?) -> String? {
@@ -619,7 +655,12 @@ final class PluginDriverAdapter: DatabaseDriver, SchemaSwitchable {
     }
 
     func dropObjectStatement(name: String, objectType: String, schema: String?, cascade: Bool) -> String {
-        if let stmt = pluginDriver.dropObjectStatement(name: name, objectType: objectType, schema: schema, cascade: cascade) {
+        if let stmt = pluginDriver.dropObjectStatement(
+            name: name,
+            objectType: objectType,
+            schema: schema,
+            cascade: cascade
+        ) {
             return stmt
         }
         let qualName = qualifiedName(name, schema: schema)
@@ -642,7 +683,12 @@ final class PluginDriverAdapter: DatabaseDriver, SchemaSwitchable {
     }
 
     func maintenanceStatements(operation: String, table: String?, options: [String: String]) -> [String]? {
-        pluginDriver.maintenanceStatements(operation: operation, table: table, schema: pluginDriver.currentSchema, options: options)
+        pluginDriver.maintenanceStatements(
+            operation: operation,
+            table: table,
+            schema: pluginDriver.currentSchema,
+            options: options
+        )
     }
 
     // MARK: - All Tables Metadata SQL

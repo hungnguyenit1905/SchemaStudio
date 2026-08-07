@@ -1,7 +1,7 @@
 import Foundation
 import TableProImport
-import Testing
 import TableProSyncTransport
+import Testing
 
 @testable import SchemaStudio
 
@@ -517,7 +517,10 @@ struct ConnectionImportServiceTests {
         imported: ExportableConnection,
         existing: DatabaseConnection
     ) -> (ConnectionImportPreview, ImportItem) {
-        let item = ImportItem(connection: imported, status: .duplicate(existingId: existing.id, existingName: existing.name))
+        let item = ImportItem(
+            connection: imported,
+            status: .duplicate(existingId: existing.id, existingName: existing.name)
+        )
         let preview = ConnectionImportPreview(
             envelope: makeEnvelope(with: [imported]),
             items: [item]

@@ -5,7 +5,7 @@
 
 import TableProPluginKit
 
-extension Collection where Element == ConnectionField {
+extension Collection<ConnectionField> {
     /// Fields that decide whether the built-in Username and Password appear: either they carry the
     /// flag themselves (an auth-method dropdown, a password-file toggle), or they gate a dependent
     /// field that carries it (SQL Server's Kerberos principal, Snowflake's OAuth token).

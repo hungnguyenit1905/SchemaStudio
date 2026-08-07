@@ -91,13 +91,13 @@ public extension PluginPrivilegeScope {
         switch self {
         case .server:
             nil
-        case let .database(name):
+        case .database(let name):
             name
-        case let .schema(database, _):
+        case .schema(let database, _):
             database
-        case let .table(database, _, _):
+        case .table(let database, _, _):
             database
-        case let .column(database, _, _, _):
+        case .column(let database, _, _, _):
             database
         }
     }
@@ -106,11 +106,11 @@ public extension PluginPrivilegeScope {
         switch self {
         case .server, .database:
             nil
-        case let .schema(_, schema):
+        case .schema(_, let schema):
             schema
-        case let .table(_, schema, _):
+        case .table(_, let schema, _):
             schema
-        case let .column(_, schema, _, _):
+        case .column(_, let schema, _, _):
             schema
         }
     }
@@ -119,15 +119,15 @@ public extension PluginPrivilegeScope {
         switch self {
         case .server, .database, .schema:
             nil
-        case let .table(_, _, table):
+        case .table(_, _, let table):
             table
-        case let .column(_, _, table, _):
+        case .column(_, _, let table, _):
             table
         }
     }
 
     var columnName: String? {
-        guard case let .column(_, _, _, column) = self else { return nil }
+        guard case .column(_, _, _, let column) = self else { return nil }
         return column
     }
 
@@ -137,15 +137,15 @@ public extension PluginPrivilegeScope {
             nil
         case .database:
             .server
-        case let .schema(database, _):
+        case .schema(let database, _):
             .database(database)
-        case let .table(database, schema, _):
+        case .table(let database, let schema, _):
             if let schema {
                 .schema(database: database, schema: schema)
             } else {
                 .database(database)
             }
-        case let .column(database, schema, table, _):
+        case .column(let database, let schema, let table, _):
             .table(database: database, schema: schema, table: table)
         }
     }

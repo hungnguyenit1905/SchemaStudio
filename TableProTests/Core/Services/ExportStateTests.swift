@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("ExportState")
@@ -74,8 +74,8 @@ struct ExportStateTests {
         state.processedRows = 500
         #expect(state.processedRows == 500)
 
-        state.totalRows = 1000
-        #expect(state.totalRows == 1000)
+        state.totalRows = 1_000
+        #expect(state.totalRows == 1_000)
 
         state.statusMessage = "In progress"
         #expect(state.statusMessage == "In progress")

@@ -54,8 +54,7 @@ internal struct DynamoDBPartiQLParser {
         switch firstUpper {
         case "SELECT":
             if let fromIndex = tokens.firstIndex(where: { $0.uppercased() == "FROM" }),
-               fromIndex + 1 < tokens.count
-            {
+               fromIndex + 1 < tokens.count {
                 return normalizeIdentifierToken(tokens[fromIndex + 1])
             }
         case "INSERT":
@@ -108,17 +107,17 @@ internal struct DynamoDBPartiQLParser {
                 continue
             }
 
-            if char == "\"" && !inSingleQuote {
+            if char == "\"", !inSingleQuote {
                 inDoubleQuote.toggle()
                 current.append(char)
                 i += 1
                 continue
             }
 
-            if char == "'" && !inDoubleQuote {
+            if char == "'", !inDoubleQuote {
                 if inSingleQuote {
                     // Check for doubled single-quote escape ('')
-                    if i + 1 < chars.count && chars[i + 1] == "'" {
+                    if i + 1 < chars.count, chars[i + 1] == "'" {
                         current.append(char)
                         current.append(chars[i + 1])
                         i += 2
@@ -133,7 +132,7 @@ internal struct DynamoDBPartiQLParser {
                 continue
             }
 
-            if char.isWhitespace && !inDoubleQuote && !inSingleQuote {
+            if char.isWhitespace, !inDoubleQuote, !inSingleQuote {
                 if !current.isEmpty {
                     tokens.append(current)
                     current = ""
@@ -164,7 +163,7 @@ internal struct DynamoDBPartiQLParser {
 
     /// Remove surrounding double quotes from an identifier if present.
     private static func unquoteIdentifier(_ identifier: String) -> String {
-        if identifier.hasPrefix("\"") && identifier.hasSuffix("\"") && identifier.count >= 2 {
+        if identifier.hasPrefix("\""), identifier.hasSuffix("\""), identifier.count >= 2 {
             let inner = String(identifier.dropFirst().dropLast())
             return inner.replacingOccurrences(of: "\"\"", with: "\"")
         }

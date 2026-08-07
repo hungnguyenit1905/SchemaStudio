@@ -4,9 +4,9 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 // MARK: - Mock DriverPlugin for Testing
 
@@ -20,7 +20,7 @@ private final class MockDriverPlugin: NSObject, TableProPlugin, DriverPlugin {
     static var databaseTypeId = "mock-db"
     static var databaseDisplayName = "Mock Database"
     static var iconName = "cylinder.fill"
-    static var defaultPort = 9999
+    static var defaultPort = 9_999
 
     func createDriver(config: DriverConnectionConfig) -> any PluginDatabaseDriver {
         fatalError("Not used in tests")
@@ -47,9 +47,9 @@ private final class MockDriverPlugin: NSObject, TableProPlugin, DriverPlugin {
 
 @Suite("PluginManager.validateDriverDescriptor", .serialized)
 struct ValidateDriverDescriptorTests {
-
     @Test("rejects empty databaseTypeId")
-    @MainActor func rejectsEmptyTypeId() {
+    @MainActor
+    func rejectsEmptyTypeId() {
         MockDriverPlugin.reset(typeId: "")
         let pm = PluginManager.shared
         #expect(throws: PluginError.self) {
@@ -58,7 +58,8 @@ struct ValidateDriverDescriptorTests {
     }
 
     @Test("rejects whitespace-only databaseTypeId")
-    @MainActor func rejectsWhitespaceTypeId() {
+    @MainActor
+    func rejectsWhitespaceTypeId() {
         MockDriverPlugin.reset(typeId: "   ")
         let pm = PluginManager.shared
         #expect(throws: PluginError.self) {
@@ -67,7 +68,8 @@ struct ValidateDriverDescriptorTests {
     }
 
     @Test("rejects empty databaseDisplayName")
-    @MainActor func rejectsEmptyDisplayName() {
+    @MainActor
+    func rejectsEmptyDisplayName() {
         MockDriverPlugin.reset(typeId: "valid-id", displayName: "")
         let pm = PluginManager.shared
         #expect(throws: PluginError.self) {
@@ -76,7 +78,8 @@ struct ValidateDriverDescriptorTests {
     }
 
     @Test("rejects whitespace-only databaseDisplayName")
-    @MainActor func rejectsWhitespaceDisplayName() {
+    @MainActor
+    func rejectsWhitespaceDisplayName() {
         MockDriverPlugin.reset(typeId: "valid-id", displayName: "   ")
         let pm = PluginManager.shared
         #expect(throws: PluginError.self) {
@@ -85,14 +88,16 @@ struct ValidateDriverDescriptorTests {
     }
 
     @Test("accepts valid descriptor with no conflicts")
-    @MainActor func acceptsValidDescriptor() throws {
+    @MainActor
+    func acceptsValidDescriptor() throws {
         MockDriverPlugin.reset(typeId: "unique-test-db-type", displayName: "Unique Test DB")
         let pm = PluginManager.shared
         try pm.validateDriverDescriptor(MockDriverPlugin.self, pluginId: "test")
     }
 
     @Test("rejects duplicate primary type ID already registered")
-    @MainActor func rejectsDuplicatePrimaryTypeId() {
+    @MainActor
+    func rejectsDuplicatePrimaryTypeId() {
         // "MySQL" is registered by the built-in MySQL plugin
         MockDriverPlugin.reset(typeId: "MySQL", displayName: "Fake MySQL")
         let pm = PluginManager.shared
@@ -102,7 +107,8 @@ struct ValidateDriverDescriptorTests {
     }
 
     @Test("rejects duplicate additional type ID already registered")
-    @MainActor func rejectsDuplicateAdditionalTypeId() {
+    @MainActor
+    func rejectsDuplicateAdditionalTypeId() {
         MockDriverPlugin.reset(
             typeId: "unique-test-db-type-2",
             displayName: "Test DB",
@@ -119,7 +125,6 @@ struct ValidateDriverDescriptorTests {
 
 @Suite("PluginError.invalidDescriptor")
 struct PluginErrorInvalidDescriptorTests {
-
     @Test("error description includes plugin ID and reason")
     func errorDescription() {
         let error = PluginError.invalidDescriptor(
@@ -148,9 +153,9 @@ struct PluginErrorInvalidDescriptorTests {
 
 @Suite("PluginManager.validateConnectionFields")
 struct ValidateConnectionFieldsTests {
-
     @Test("duplicate field IDs are detected")
-    @MainActor func duplicateFieldIds() {
+    @MainActor
+    func duplicateFieldIds() {
         let fields = [
             ConnectionField(id: "encoding", label: "Encoding"),
             ConnectionField(id: "timeout", label: "Timeout"),
@@ -161,19 +166,22 @@ struct ValidateConnectionFieldsTests {
     }
 
     @Test("empty field ID is detected without crash")
-    @MainActor func emptyFieldId() {
+    @MainActor
+    func emptyFieldId() {
         let fields = [ConnectionField(id: "", label: "Something")]
         PluginManager.shared.validateConnectionFields(fields, pluginId: "test")
     }
 
     @Test("empty field label is detected without crash")
-    @MainActor func emptyFieldLabel() {
+    @MainActor
+    func emptyFieldLabel() {
         let fields = [ConnectionField(id: "test", label: "")]
         PluginManager.shared.validateConnectionFields(fields, pluginId: "test")
     }
 
     @Test("dropdown with empty options is detected without crash")
-    @MainActor func emptyDropdownOptions() {
+    @MainActor
+    func emptyDropdownOptions() {
         let fields = [
             ConnectionField(
                 id: "encoding",
@@ -185,7 +193,8 @@ struct ValidateConnectionFieldsTests {
     }
 
     @Test("valid fields pass without issue")
-    @MainActor func validFields() {
+    @MainActor
+    func validFields() {
         let fields = [
             ConnectionField(id: "encoding", label: "Encoding"),
             ConnectionField(

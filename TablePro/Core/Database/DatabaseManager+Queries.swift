@@ -14,7 +14,7 @@ import TableProPluginKit
 extension DatabaseManager {
     /// Track an in-flight operation for the given session, preventing health monitor
     /// pings from racing on the same non-thread-safe driver connection.
-    internal func trackOperation<T>(
+    func trackOperation<T>(
         sessionId: UUID,
         operation: () async throws -> T
     ) async throws -> T {

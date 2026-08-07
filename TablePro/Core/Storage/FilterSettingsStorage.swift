@@ -7,9 +7,9 @@ import Foundation
 import os
 
 enum FilterDefaultColumn: String, CaseIterable, Identifiable, Codable {
-    case rawSQL = "rawSQL"
-    case primaryKey = "primaryKey"
-    case anyColumn = "anyColumn"
+    case rawSQL
+    case primaryKey
+    case anyColumn
 
     var id: String { rawValue }
 
@@ -23,8 +23,8 @@ enum FilterDefaultColumn: String, CaseIterable, Identifiable, Codable {
 }
 
 enum FilterDefaultOperator: String, CaseIterable, Identifiable, Codable {
-    case equal = "equal"
-    case contains = "contains"
+    case equal
+    case contains
 
     var id: String { rawValue }
 
@@ -43,9 +43,9 @@ enum FilterDefaultOperator: String, CaseIterable, Identifiable, Codable {
 }
 
 enum FilterPanelDefaultState: String, CaseIterable, Identifiable, Codable {
-    case restoreLast = "restoreLast"
-    case alwaysShow = "alwaysShow"
-    case alwaysHide = "alwaysHide"
+    case restoreLast
+    case alwaysShow
+    case alwaysHide
 
     var id: String { rawValue }
 

@@ -88,12 +88,12 @@ enum SSHConfigParser {
             var remaining = hop
 
             if let atIndex = remaining.firstIndex(of: "@") {
-                jumpHost.username = String(remaining[remaining.startIndex..<atIndex])
+                jumpHost.username = String(remaining[remaining.startIndex ..< atIndex])
                 remaining = String(remaining[remaining.index(after: atIndex)...])
             }
 
             if remaining.hasPrefix("["), let closeBracket = remaining.firstIndex(of: "]") {
-                jumpHost.host = String(remaining[remaining.index(after: remaining.startIndex)..<closeBracket])
+                jumpHost.host = String(remaining[remaining.index(after: remaining.startIndex) ..< closeBracket])
                 let afterBracket = remaining.index(after: closeBracket)
                 if afterBracket < remaining.endIndex,
                    remaining[afterBracket] == ":",
@@ -102,7 +102,7 @@ enum SSHConfigParser {
                 }
             } else if let colonIndex = remaining.lastIndex(of: ":"),
                       let port = Int(String(remaining[remaining.index(after: colonIndex)...])) {
-                jumpHost.host = String(remaining[remaining.startIndex..<colonIndex])
+                jumpHost.host = String(remaining[remaining.startIndex ..< colonIndex])
                 jumpHost.port = port
             } else {
                 jumpHost.host = remaining
@@ -206,7 +206,7 @@ enum SSHConfigParser {
         guard let separatorRange = line.rangeOfCharacter(from: CharacterSet(charactersIn: " \t=")) else {
             return (line, "")
         }
-        let key = String(line[line.startIndex..<separatorRange.lowerBound])
+        let key = String(line[line.startIndex ..< separatorRange.lowerBound])
         var value = String(line[separatorRange.upperBound...])
             .trimmingCharacters(in: CharacterSet(charactersIn: " \t="))
         if value.count >= 2, value.first == "\"", value.last == "\"" {
@@ -365,7 +365,7 @@ enum SSHConfigParser {
         }
 
         var paths: [String] = []
-        for i in 0..<Int(gt.gl_matchc) {
+        for i in 0 ..< Int(gt.gl_matchc) {
             if let cStr = gt.gl_pathv[i] {
                 paths.append(String(cString: cStr))
             }

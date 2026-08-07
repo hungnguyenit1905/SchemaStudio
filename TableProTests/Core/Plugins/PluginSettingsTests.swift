@@ -4,13 +4,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("PluginSettingsStorage")
 struct PluginSettingsStorageTests {
-
     private let testPluginId = "test.settings.\(UUID().uuidString)"
 
     private func cleanup(storage: PluginSettingsStorage) {
@@ -219,7 +218,6 @@ struct SettablePluginSnapshotTests {
 
 @Suite("PluginCapability")
 struct PluginCapabilityTests {
-
     @Test("only has 3 cases: databaseDriver, exportFormat, importFormat")
     func onlyThreeCases() {
         let allCases: [PluginCapability] = [.databaseDriver, .exportFormat, .importFormat]
@@ -251,7 +249,6 @@ struct PluginCapabilityTests {
 
 @Suite("DisabledPlugins Key Migration", .serialized)
 struct DisabledPluginsMigrationTests {
-
     @Test("migration moves legacy key to namespaced key")
     func migrationMovesKey() {
         let testKey = "disabledPlugins"

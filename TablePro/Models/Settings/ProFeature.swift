@@ -61,9 +61,13 @@ internal enum ProFeature: String, CaseIterable {
         case .linkedFolders:
             return String(localized: "Watch shared folders for connection files.")
         case .teamCatalog:
-            return String(localized: "Publish connections to a shared folder your team reads from. Passwords are never included.")
+            return String(
+                localized: "Publish connections to a shared folder your team reads from. Passwords are never included."
+            )
         case .teamLibrary:
-            return String(localized: "Share connections and saved queries with your team through your account. Passwords are never included.")
+            return String(
+                localized: "Share connections and saved queries with your team through your account. Passwords are never included."
+            )
         }
     }
 

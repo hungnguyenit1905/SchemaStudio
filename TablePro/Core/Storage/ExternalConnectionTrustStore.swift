@@ -58,8 +58,7 @@ internal final class ExternalConnectionTrustStore: ExternalConnectionTrustChecki
 
     internal func entries() -> [TrustedExternalConnection] {
         guard let data = defaults.data(forKey: Self.storageKey),
-              let decoded = try? JSONDecoder().decode([TrustedExternalConnection].self, from: data)
-        else { return [] }
+              let decoded = try? JSONDecoder().decode([TrustedExternalConnection].self, from: data) else { return [] }
         return decoded.filter { $0.key.isLoopbackHost }
     }
 

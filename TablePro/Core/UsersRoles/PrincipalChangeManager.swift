@@ -22,22 +22,18 @@ final class PrincipalChangeManager {
     /// `groupsByEvent` is off: with it on, NSUndoManager coalesces every registration made in the
     /// same run-loop event into one group, so undo granularity would depend on how fast the user
     /// clicked. Each mutation opens and closes its own group instead.
-    @ObservationIgnored
-    let undoManager: UndoManager = {
+    @ObservationIgnored let undoManager: UndoManager = {
         let manager = UndoManager()
         manager.groupsByEvent = false
         manager.levelsOfUndo = 100
         return manager
     }()
 
-    @ObservationIgnored
-    private var baselineKeys: [PluginPrincipalRef: Set<PrincipalGrantKey>] = [:]
+    @ObservationIgnored private var baselineKeys: [PluginPrincipalRef: Set<PrincipalGrantKey>] = [:]
 
-    @ObservationIgnored
-    private var closureCache: [PluginPrincipalRef: Set<PluginPrivilegeScope>] = [:]
+    @ObservationIgnored private var closureCache: [PluginPrincipalRef: Set<PluginPrivilegeScope>] = [:]
 
-    @ObservationIgnored
-    var cascades: (PluginPrivilegeScope, PluginPrivilegeScope) -> Bool = { _, _ in false }
+    @ObservationIgnored var cascades: (PluginPrivilegeScope, PluginPrivilegeScope) -> Bool = { _, _ in false }
 
     var hasChanges: Bool { changeCount > 0 }
 

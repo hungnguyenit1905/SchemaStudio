@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @MainActor @Suite("MultiRowEditState")
 struct MultiRowEditStateTests {
-
     // MARK: - Helper
 
     private func makeSUT(
@@ -36,7 +35,6 @@ struct MultiRowEditStateTests {
 
     @MainActor @Suite("FieldEditState Computed Properties")
     struct FieldEditStateTests {
-
         @Test("hasEdit is false when no pending changes")
         func hasEditFalseWhenNoPendingChanges() {
             let field = FieldEditState(
@@ -122,7 +120,6 @@ struct MultiRowEditStateTests {
 
     @MainActor @Suite("configure()")
     struct ConfigureTests {
-
         private func makeSUT(
             columns: [String] = ["id", "name", "email"],
             columnTypes: [ColumnType]? = nil,
@@ -358,7 +355,6 @@ struct MultiRowEditStateTests {
 
     @MainActor @Suite("updateField()")
     struct UpdateFieldTests {
-
         private func makeSUT(
             columns: [String] = ["id", "name", "email"],
             columnTypes: [ColumnType]? = nil,
@@ -465,7 +461,6 @@ struct MultiRowEditStateTests {
 
     @MainActor @Suite("Set Field Special Values")
     struct SetFieldSpecialValuesTests {
-
         private func makeSUT(
             columns: [String] = ["id", "name", "email"],
             columnTypes: [ColumnType]? = nil,
@@ -553,7 +548,6 @@ struct MultiRowEditStateTests {
 
     @MainActor @Suite("clearEdits()")
     struct ClearEditsTests {
-
         private func makeSUT(
             columns: [String] = ["id", "name", "email"],
             columnTypes: [ColumnType]? = nil,
@@ -604,7 +598,6 @@ struct MultiRowEditStateTests {
 
     @MainActor @Suite("getEditedFields()")
     struct GetEditedFieldsTests {
-
         private func makeSUT(
             columns: [String] = ["id", "name", "email"],
             columnTypes: [ColumnType]? = nil,
@@ -671,7 +664,6 @@ struct MultiRowEditStateTests {
 
     @MainActor @Suite("onFieldChanged Callback")
     struct OnFieldChangedCallbackTests {
-
         private func makeSUT(
             columns: [String] = ["id", "name", "email"],
             columnTypes: [ColumnType]? = nil,
@@ -843,7 +835,6 @@ struct MultiRowEditStateTests {
 
     @MainActor @Suite("externallyModifiedColumns")
     struct ExternallyModifiedColumnsTests {
-
         private func makeSUT(
             columns: [String] = ["id", "name", "email"],
             columnTypes: [ColumnType]? = nil,
@@ -945,7 +936,6 @@ struct MultiRowEditStateTests {
 
     @MainActor @Suite("clearEdits then configure")
     struct ClearEditsThenConfigureTests {
-
         @Test("Clears stale green dots after clearEdits and reconfigure")
         func clearsStaleGreenDotsAfterClearEditsAndReconfigure() {
             let sut = MultiRowEditState()
@@ -1014,8 +1004,12 @@ struct MultiRowEditStateTests {
             [
                 InspectorRowField(name: "Name", value: "email", editor: .schemaText),
                 InspectorRowField(name: "Type", value: "VARCHAR(255)", editor: .typePicker),
-                InspectorRowField(name: "Nullable", value: "YES", editor: .enumPicker(values: ["YES", "NO"]),
-                                  isModified: true)
+                InspectorRowField(
+                    name: "Nullable",
+                    value: "YES",
+                    editor: .enumPicker(values: ["YES", "NO"]),
+                    isModified: true
+                )
             ]
         }
 

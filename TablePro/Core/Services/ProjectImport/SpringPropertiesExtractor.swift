@@ -66,7 +66,7 @@ enum SpringPropertiesExtractor {
         guard let index = line.firstIndex(where: { separators.contains($0) }) else {
             return nil
         }
-        let key = String(line[line.startIndex..<index]).trimmingCharacters(in: .whitespaces)
+        let key = String(line[line.startIndex ..< index]).trimmingCharacters(in: .whitespaces)
         let value = String(line[line.index(after: index)...]).trimmingCharacters(in: .whitespaces)
         guard !key.isEmpty else {
             return nil
@@ -81,13 +81,13 @@ enum SpringPropertiesExtractor {
         var result = ""
         var remainder = Substring(value)
         while let open = remainder.range(of: "${") {
-            result += remainder[remainder.startIndex..<open.lowerBound]
+            result += remainder[remainder.startIndex ..< open.lowerBound]
             let afterOpen = remainder[open.upperBound...]
             guard let close = afterOpen.firstIndex(of: "}") else {
                 result += remainder[open.lowerBound...]
                 return result
             }
-            let reference = String(afterOpen[afterOpen.startIndex..<close])
+            let reference = String(afterOpen[afterOpen.startIndex ..< close])
             result += resolveReference(reference, processEnvironment: processEnvironment)
             remainder = afterOpen[afterOpen.index(after: close)...]
         }
@@ -99,7 +99,7 @@ enum SpringPropertiesExtractor {
         guard let colon = reference.firstIndex(of: ":") else {
             return processEnvironment[reference] ?? "${\(reference)}"
         }
-        let name = String(reference[reference.startIndex..<colon])
+        let name = String(reference[reference.startIndex ..< colon])
         var fallback = String(reference[reference.index(after: colon)...])
         if fallback.hasPrefix("-") {
             fallback.removeFirst()

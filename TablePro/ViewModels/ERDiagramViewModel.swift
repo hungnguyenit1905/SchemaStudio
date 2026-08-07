@@ -185,14 +185,17 @@ final class ERDiagramViewModel {
             let cancellableBox = OSAllocatedUnfairLock<AnyCancellable?>(initialState: nil)
             let timeoutTaskBox = OSAllocatedUnfairLock<Task<Void, Never>?>(initialState: nil)
 
-            @Sendable func resumeOnce() {
+            @Sendable
+            func resumeOnce() {
                 let alreadyResumed = resumed.withLock { value -> Bool in
                     if value { return true }
                     value = true
                     return false
                 }
                 guard !alreadyResumed else { return }
-                timeoutTaskBox.withLock { $0?.cancel(); $0 = nil }
+                timeoutTaskBox.withLock { $0?.cancel()
+                    $0 = nil
+                }
                 cancellableBox.withLock { $0 = nil }
                 continuation.resume()
             }
@@ -449,14 +452,14 @@ final class ERDiagramViewModel {
         }
 
         autoPanVelocity = v
-        if v != .zero && autoPanTask == nil {
+        if v != .zero, autoPanTask == nil {
             autoPanTask = Task { [weak self] in
                 while !Task.isCancelled {
                     self?.autoPanTick()
                     try? await Task.sleep(for: .milliseconds(16))
                 }
             }
-        } else if v == .zero && autoPanTask != nil {
+        } else if v == .zero, autoPanTask != nil {
             autoPanTask?.cancel()
             autoPanTask = nil
         }

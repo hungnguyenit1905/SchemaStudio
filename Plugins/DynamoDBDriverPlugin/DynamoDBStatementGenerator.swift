@@ -94,7 +94,7 @@ internal struct DynamoDBStatementGenerator {
             guard let value = values[column], let val = value else { continue }
             let typeIndex = columns.firstIndex(of: column) ?? 0
             let typeName = typeIndex < columnTypeNames.count ? columnTypeNames[typeIndex] : "S"
-            attrs.append("'\(escapePartiQL(column))': \(try formatValue(val, typeName: typeName))")
+            try attrs.append("'\(escapePartiQL(column))': \(formatValue(val, typeName: typeName))")
         }
 
         let quotedTable = "\"\(escapeIdentifier(tableName))\""
@@ -166,12 +166,11 @@ internal struct DynamoDBStatementGenerator {
         for key in keySchema {
             guard let colIndex = columns.firstIndex(of: key.name),
                   colIndex < originalRow.count,
-                  let value = originalRow[colIndex].asText
-            else { return nil }
+                  let value = originalRow[colIndex].asText else { return nil }
 
             let typeName = colIndex < columnTypeNames.count ? columnTypeNames[colIndex] : "S"
-            conditions.append(
-                "\"\(escapeIdentifier(key.name))\" = \(try formatValue(value, typeName: typeName))"
+            try conditions.append(
+                "\"\(escapeIdentifier(key.name))\" = \(formatValue(value, typeName: typeName))"
             )
         }
 
@@ -220,8 +219,7 @@ internal struct DynamoDBStatementGenerator {
 
     private func formatStringSet(_ value: String) throws -> String {
         guard let data = value.data(using: .utf8),
-              let array = try? JSONSerialization.jsonObject(with: data) as? [String]
-        else {
+              let array = try? JSONSerialization.jsonObject(with: data) as? [String] else {
             return "<<'\(escapePartiQL(value))'>>"
         }
         let elements = array.map { "'\(escapePartiQL($0))'" }
@@ -230,8 +228,7 @@ internal struct DynamoDBStatementGenerator {
 
     private func formatNumberSet(_ value: String) throws -> String {
         guard let data = value.data(using: .utf8),
-              let array = try? JSONSerialization.jsonObject(with: data) as? [Any]
-        else {
+              let array = try? JSONSerialization.jsonObject(with: data) as? [Any] else {
             throw DynamoDBStatementError.invalidNumber(value: value)
         }
         var elements: [String] = []

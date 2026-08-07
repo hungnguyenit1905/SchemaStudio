@@ -618,7 +618,7 @@ final class FilterCoordinator {
         )
         let filtersToPreview = filtersForPreview(in: state)
 
-        if filtersToPreview.isEmpty && !state.filters.isEmpty {
+        if filtersToPreview.isEmpty, !state.filters.isEmpty {
             let invalidCount = state.filters.count(where: { !$0.isValid })
             if invalidCount > 0 {
                 return "-- No valid filters to preview\n-- Complete \(invalidCount) filter(s) by:\n--   • Selecting a column\n--   • Entering a value (if required)\n--   • Filling in second value for BETWEEN"

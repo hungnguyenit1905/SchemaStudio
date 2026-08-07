@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("SQL Keywords")
 struct SQLKeywordsTests {
-
     @Test("Keywords collection not empty")
     func testKeywordsNotEmpty() {
         #expect(!SQLKeywords.keywords.isEmpty)
@@ -26,8 +25,10 @@ struct SQLKeywordsTests {
         ]
 
         for keyword in essentialKeywords {
-            #expect(SQLKeywords.keywords.contains(keyword),
-                   "Missing essential keyword: \(keyword)")
+            #expect(
+                SQLKeywords.keywords.contains(keyword),
+                "Missing essential keyword: \(keyword)"
+            )
         }
     }
 
@@ -96,8 +97,10 @@ struct SQLKeywordsTests {
         let functionNames = SQLKeywords.allFunctions.map { $0.name }
         let uniqueNames = Set(functionNames)
 
-        #expect(functionNames.count == uniqueNames.count,
-               "Found \(functionNames.count - uniqueNames.count) duplicate function names")
+        #expect(
+            functionNames.count == uniqueNames.count,
+            "Found \(functionNames.count - uniqueNames.count) duplicate function names"
+        )
     }
 
     // MARK: - P2: MP-1 - Missing SQL Keywords
@@ -191,7 +194,15 @@ struct SQLKeywordsTests {
     @Test("JSON functions include PostgreSQL JSON builders")
     func testMissingJSONFunctions() {
         let names = SQLKeywords.jsonFunctions.map(\.name)
-        let expected = ["JSON_BUILD_OBJECT", "JSON_BUILD_ARRAY", "JSONB_SET", "JSON_EACH", "ROW_TO_JSON", "JSON_AGG", "JSONB_AGG"]
+        let expected = [
+            "JSON_BUILD_OBJECT",
+            "JSON_BUILD_ARRAY",
+            "JSONB_SET",
+            "JSON_EACH",
+            "ROW_TO_JSON",
+            "JSON_AGG",
+            "JSONB_AGG"
+        ]
         for fn in expected {
             #expect(names.contains(fn), "Missing JSON function: \(fn)")
         }

@@ -73,7 +73,7 @@ final class CSVExportPlugin: ExportFormatPlugin, SettablePlugin {
                 switch element {
                 case .header(let header):
                     columns = header.columns
-                    if isFirstBatch && settings.includeFieldNames {
+                    if isFirstBatch, settings.includeFieldNames {
                         let headerLine = columns
                             .map { escapeCSVField($0, options: settings) }
                             .joined(separator: settings.delimiter.actualValue)
@@ -145,7 +145,11 @@ final class CSVExportPlugin: ExportFormatPlugin, SettablePlugin {
         try fileHandle.write(contentsOf: (rowLine + lineBreak).toUTF8Data())
     }
 
-    private func escapeCSVField(_ field: String, options: CSVExportOptions, originalHadLineBreaks: Bool = false) -> String {
+    private func escapeCSVField(
+        _ field: String,
+        options: CSVExportOptions,
+        originalHadLineBreaks: Bool = false
+    ) -> String {
         var processed = field
 
         if options.sanitizeFormulas {

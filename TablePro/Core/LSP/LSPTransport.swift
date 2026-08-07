@@ -175,7 +175,10 @@ actor LSPTransport {
             let data = try JSONEncoder().encode(LSPJSONRPCNotification(method: "$/cancelRequest", params: params))
             try writeMessage(data)
         } catch {
-            Self.logger.warning("LSP cancelRequest \(id) failed to send: \(error.localizedDescription); resolving local pending entry")
+            Self.logger
+                .warning(
+                    "LSP cancelRequest \(id) failed to send: \(error.localizedDescription); resolving local pending entry"
+                )
             if let continuation = pendingRequests.removeValue(forKey: id) {
                 continuation.resume(throwing: CancellationError())
             }
@@ -255,7 +258,7 @@ actor LSPTransport {
             return nil
         }
 
-        let headerData = buffer[buffer.startIndex..<separatorRange.lowerBound]
+        let headerData = buffer[buffer.startIndex ..< separatorRange.lowerBound]
         guard let headerString = String(data: headerData, encoding: .utf8) else {
             return nil
         }
@@ -278,7 +281,7 @@ actor LSPTransport {
             return nil
         }
 
-        let body = Data(buffer[bodyStart..<end])
+        let body = Data(buffer[bodyStart ..< end])
         let totalConsumed = end - buffer.startIndex
         buffer.removeFirst(totalConsumed)
         return (body, totalConsumed)

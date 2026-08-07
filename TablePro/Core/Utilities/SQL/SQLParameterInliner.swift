@@ -19,7 +19,8 @@ struct SQLParameterInliner {
     ///   - databaseType: The database type, which determines placeholder style (`?` vs `$N`).
     /// - Returns: A SQL string with placeholders replaced by formatted literal values.
     static func inline(_ statement: ParameterizedStatement, databaseType: DatabaseType) -> String {
-        let style = PluginMetadataRegistry.shared.snapshot(forTypeId: databaseType.pluginTypeId)?.parameterStyle ?? .questionMark
+        let style = PluginMetadataRegistry.shared.snapshot(forTypeId: databaseType.pluginTypeId)?
+            .parameterStyle ?? .questionMark
         if style == .dollar {
             return inlineDollarPlaceholders(statement.sql, parameters: statement.parameters)
         } else {
@@ -64,7 +65,7 @@ struct SQLParameterInliner {
                     inString = false
                     previousWasQuote = false
                 }
-                if ch == questionMark && !inString && paramIndex < parameters.count {
+                if ch == questionMark, !inString, paramIndex < parameters.count {
                     // Flush accumulated characters before the placeholder
                     if rangeStart < i {
                         result += nsSQL.substring(with: NSRange(location: rangeStart, length: i - rangeStart))
@@ -122,12 +123,12 @@ struct SQLParameterInliner {
                     previousWasQuote = false
                 }
 
-                if ch == dollarChar && !inString {
+                if ch == dollarChar, !inString {
                     // Try to parse a number after $
                     var numEnd = i + 1
                     while numEnd < length {
                         let digit = nsSQL.character(at: numEnd)
-                        if digit >= UInt16(UnicodeScalar("0").value) && digit <= UInt16(UnicodeScalar("9").value) {
+                        if digit >= UInt16(UnicodeScalar("0").value), digit <= UInt16(UnicodeScalar("9").value) {
                             numEnd += 1
                         } else {
                             break
@@ -136,7 +137,7 @@ struct SQLParameterInliner {
 
                     if numEnd > i + 1,
                        let paramNumber = Int(nsSQL.substring(with: NSRange(location: i + 1, length: numEnd - i - 1))),
-                       paramNumber >= 1 && paramNumber <= parameters.count {
+                       paramNumber >= 1, paramNumber <= parameters.count {
                         // Flush accumulated characters before the placeholder
                         if rangeStart < i {
                             result += nsSQL.substring(with: NSRange(location: rangeStart, length: i - rangeStart))

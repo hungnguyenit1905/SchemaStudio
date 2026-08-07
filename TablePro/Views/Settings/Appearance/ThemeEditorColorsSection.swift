@@ -152,24 +152,51 @@ internal struct ThemeEditorColorsSection: View {
 
     private var interfaceSection: some View {
         Section(String(localized: "Interface")) {
-            optionalColorRow(String(localized: "Window Background"), keyPath: \.ui.windowBackground,
-                             fallback: .windowBackgroundColor)
-            optionalColorRow(String(localized: "Control Background"), keyPath: \.ui.controlBackground,
-                             fallback: .controlBackgroundColor)
-            optionalColorRow(String(localized: "Card Background"), keyPath: \.ui.cardBackground,
-                             fallback: .controlBackgroundColor)
-            optionalColorRow(String(localized: "Border"), keyPath: \.ui.border,
-                             fallback: .separatorColor)
-            optionalColorRow(String(localized: "Primary Text"), keyPath: \.ui.primaryText,
-                             fallback: .labelColor)
-            optionalColorRow(String(localized: "Secondary Text"), keyPath: \.ui.secondaryText,
-                             fallback: .secondaryLabelColor)
-            optionalColorRow(String(localized: "Tertiary Text"), keyPath: \.ui.tertiaryText,
-                             fallback: .tertiaryLabelColor)
-            optionalColorRow(String(localized: "Selection"), keyPath: \.ui.selectionBackground,
-                             fallback: .selectedContentBackgroundColor)
-            optionalColorRow(String(localized: "Hover"), keyPath: \.ui.hoverBackground,
-                             fallback: .unemphasizedSelectedContentBackgroundColor)
+            optionalColorRow(
+                String(localized: "Window Background"),
+                keyPath: \.ui.windowBackground,
+                fallback: .windowBackgroundColor
+            )
+            optionalColorRow(
+                String(localized: "Control Background"),
+                keyPath: \.ui.controlBackground,
+                fallback: .controlBackgroundColor
+            )
+            optionalColorRow(
+                String(localized: "Card Background"),
+                keyPath: \.ui.cardBackground,
+                fallback: .controlBackgroundColor
+            )
+            optionalColorRow(
+                String(localized: "Border"),
+                keyPath: \.ui.border,
+                fallback: .separatorColor
+            )
+            optionalColorRow(
+                String(localized: "Primary Text"),
+                keyPath: \.ui.primaryText,
+                fallback: .labelColor
+            )
+            optionalColorRow(
+                String(localized: "Secondary Text"),
+                keyPath: \.ui.secondaryText,
+                fallback: .secondaryLabelColor
+            )
+            optionalColorRow(
+                String(localized: "Tertiary Text"),
+                keyPath: \.ui.tertiaryText,
+                fallback: .tertiaryLabelColor
+            )
+            optionalColorRow(
+                String(localized: "Selection"),
+                keyPath: \.ui.selectionBackground,
+                fallback: .selectedContentBackgroundColor
+            )
+            optionalColorRow(
+                String(localized: "Hover"),
+                keyPath: \.ui.hoverBackground,
+                fallback: .unemphasizedSelectedContentBackgroundColor
+            )
         }
     }
 
@@ -208,16 +235,31 @@ internal struct ThemeEditorColorsSection: View {
 
     private var sidebarSection: some View {
         Section(String(localized: "Sidebar")) {
-            optionalColorRow(String(localized: "Background"), keyPath: \.sidebar.background,
-                             fallback: .windowBackgroundColor)
-            optionalColorRow(String(localized: "Text"), keyPath: \.sidebar.text,
-                             fallback: .labelColor)
-            optionalColorRow(String(localized: "Selected Item"), keyPath: \.sidebar.selectedItem,
-                             fallback: .selectedContentBackgroundColor)
-            optionalColorRow(String(localized: "Hover"), keyPath: \.sidebar.hover,
-                             fallback: .unemphasizedSelectedContentBackgroundColor)
-            optionalColorRow(String(localized: "Section Header"), keyPath: \.sidebar.sectionHeader,
-                             fallback: .secondaryLabelColor)
+            optionalColorRow(
+                String(localized: "Background"),
+                keyPath: \.sidebar.background,
+                fallback: .windowBackgroundColor
+            )
+            optionalColorRow(
+                String(localized: "Text"),
+                keyPath: \.sidebar.text,
+                fallback: .labelColor
+            )
+            optionalColorRow(
+                String(localized: "Selected Item"),
+                keyPath: \.sidebar.selectedItem,
+                fallback: .selectedContentBackgroundColor
+            )
+            optionalColorRow(
+                String(localized: "Hover"),
+                keyPath: \.sidebar.hover,
+                fallback: .unemphasizedSelectedContentBackgroundColor
+            )
+            optionalColorRow(
+                String(localized: "Section Header"),
+                keyPath: \.sidebar.sectionHeader,
+                fallback: .secondaryLabelColor
+            )
         }
     }
 
@@ -225,10 +267,16 @@ internal struct ThemeEditorColorsSection: View {
 
     private var toolbarSection: some View {
         Section(String(localized: "Toolbar")) {
-            optionalColorRow(String(localized: "Secondary Text"), keyPath: \.toolbar.secondaryText,
-                             fallback: .secondaryLabelColor)
-            optionalColorRow(String(localized: "Tertiary Text"), keyPath: \.toolbar.tertiaryText,
-                             fallback: .tertiaryLabelColor)
+            optionalColorRow(
+                String(localized: "Secondary Text"),
+                keyPath: \.toolbar.secondaryText,
+                fallback: .secondaryLabelColor
+            )
+            optionalColorRow(
+                String(localized: "Tertiary Text"),
+                keyPath: \.toolbar.tertiaryText,
+                fallback: .tertiaryLabelColor
+            )
         }
     }
 
@@ -274,7 +322,6 @@ internal struct ThemeEditorColorsSection: View {
         )
     }
 
-    @ViewBuilder
     private func optionalColorRow(
         _ label: String,
         keyPath: WritableKeyPath<ThemeDefinition, String?>,

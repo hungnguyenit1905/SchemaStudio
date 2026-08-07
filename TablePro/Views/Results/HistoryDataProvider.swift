@@ -90,7 +90,7 @@ final class HistoryDataProvider {
     // MARK: - Item Access
 
     func historyEntry(at index: Int) -> QueryHistoryEntry? {
-        guard index >= 0 && index < historyEntries.count else { return nil }
+        guard index >= 0, index < historyEntries.count else { return nil }
         return historyEntries[index]
     }
 

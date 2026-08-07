@@ -44,7 +44,7 @@ struct SharedSidebarSyncTests {
         // But SidebarNavigationResult.resolve skips because clicked == current tab
         let result = SidebarNavigationResult.resolve(
             clickedTableName: "users",
-            currentTabTableName: "users",  // <-- current tab IS "users"
+            currentTabTableName: "users", // <-- current tab IS "users"
             hasExistingTabs: true,
             isActiveTabReusable: false
         )

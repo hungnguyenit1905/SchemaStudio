@@ -103,7 +103,7 @@ enum DockerComposeExtractor {
             guard let text = YamlMappingSupport.string(item), let equals = text.firstIndex(of: "=") else {
                 continue
             }
-            let key = String(text[text.startIndex..<equals])
+            let key = String(text[text.startIndex ..< equals])
             let entry = String(text[text.index(after: equals)...])
             variables[key] = entry
         }
@@ -193,13 +193,13 @@ enum ComposeInterpolator {
         var result = ""
         var remainder = Substring(contents)
         while let open = remainder.range(of: "${") {
-            result += remainder[remainder.startIndex..<open.lowerBound]
+            result += remainder[remainder.startIndex ..< open.lowerBound]
             let afterOpen = remainder[open.upperBound...]
             guard let close = afterOpen.firstIndex(of: "}") else {
                 result += remainder[open.lowerBound...]
                 return result
             }
-            let reference = String(afterOpen[afterOpen.startIndex..<close])
+            let reference = String(afterOpen[afterOpen.startIndex ..< close])
             result += resolve(reference, environment: environment)
             remainder = afterOpen[afterOpen.index(after: close)...]
         }
@@ -213,7 +213,7 @@ enum ComposeInterpolator {
             guard let range = reference.range(of: separator) else {
                 continue
             }
-            let name = String(reference[reference.startIndex..<range.lowerBound])
+            let name = String(reference[reference.startIndex ..< range.lowerBound])
             let fallback = String(reference[range.upperBound...])
             guard !name.isEmpty else {
                 continue

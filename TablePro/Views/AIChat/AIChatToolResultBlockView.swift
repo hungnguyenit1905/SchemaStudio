@@ -73,12 +73,12 @@ struct AIChatToolResultBlockView: View {
     private var displayContent: String {
         guard let data = block.content.data(using: .utf8),
               let parsed = try? JSONSerialization.jsonObject(
-                with: data,
-                options: [.fragmentsAllowed]
+                  with: data,
+                  options: [.fragmentsAllowed]
               ),
               let prettyData = try? JSONSerialization.data(
-                withJSONObject: parsed,
-                options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+                  withJSONObject: parsed,
+                  options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
               ),
               let pretty = String(data: prettyData, encoding: .utf8) else {
             return block.content

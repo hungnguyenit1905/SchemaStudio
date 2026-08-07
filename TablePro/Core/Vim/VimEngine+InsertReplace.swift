@@ -140,8 +140,8 @@ extension VimEngine {
         if outdent {
             let line = buffer.string(in: lineRange) as NSString
             var stripCount = 0
-            while stripCount < indent.count && stripCount < line.length
-                && (line.character(at: stripCount) == 0x20 || line.character(at: stripCount) == 0x09) {
+            while stripCount < indent.count, stripCount < line.length,
+                  line.character(at: stripCount) == 0x20 || line.character(at: stripCount) == 0x09 {
                 stripCount += 1
             }
             guard stripCount > 0 else { return }

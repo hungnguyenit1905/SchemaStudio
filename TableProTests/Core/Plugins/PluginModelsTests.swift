@@ -4,13 +4,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("PluginEntry Computed Properties")
 struct PluginEntryTests {
-
     private func makeEntry(
         databaseTypeId: String? = nil,
         additionalTypeIds: [String] = [],
@@ -70,7 +69,6 @@ struct PluginEntryTests {
 
 @Suite("PluginSource Enum")
 struct PluginSourceTests {
-
     @Test("PluginSource has builtIn and userInstalled cases")
     func pluginSourceCases() {
         let builtIn = PluginSource.builtIn
@@ -82,7 +80,6 @@ struct PluginSourceTests {
 
 @Suite("PluginEntry Identity")
 struct PluginEntryIdentityTests {
-
     @Test("id property serves as the Identifiable conformance")
     func identifiable() {
         let entry = PluginEntry(

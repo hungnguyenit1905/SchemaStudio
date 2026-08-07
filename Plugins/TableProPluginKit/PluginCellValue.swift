@@ -84,9 +84,9 @@ extension PluginCellValue: Codable {
         case .null:
             self = .null
         case .text:
-            self = .text(try container.decode(String.self, forKey: .value))
+            self = try .text(container.decode(String.self, forKey: .value))
         case .bytes:
-            self = .bytes(try container.decode(Data.self, forKey: .value))
+            self = try .bytes(container.decode(Data.self, forKey: .value))
         }
     }
 

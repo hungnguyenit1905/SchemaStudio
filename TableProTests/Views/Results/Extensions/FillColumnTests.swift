@@ -39,7 +39,7 @@ struct FillColumnTests {
             layoutPersister: NoopColumnLayoutPersister()
         )
         let columnTypes: [ColumnType] = Array(repeating: .text(rawType: nil), count: columns.count)
-        let rows = (0..<rowCount).map { i in (0..<columns.count).map { c in "r\(i)c\(c)" } }
+        let rows = (0 ..< rowCount).map { i in (0 ..< columns.count).map { c in "r\(i)c\(c)" } }
         let tableRows = TableRows.from(
             queryRows: rows.map { row in row.map { PluginCellValue.text($0) } },
             columns: columns,
@@ -116,7 +116,7 @@ struct FillColumnTests {
 
         coordinator.applyFillColumn(columnIndex: 0, value: .text("X"))
 
-        for row in 0..<4 {
+        for row in 0 ..< 4 {
             #expect(manager.pending.isCellModified(rowIndex: row, columnIndex: 0))
         }
         #expect(manager.pending.isCellModified(rowIndex: 0, columnIndex: 1) == false)

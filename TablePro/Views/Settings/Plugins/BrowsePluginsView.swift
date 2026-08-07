@@ -24,26 +24,25 @@ struct BrowsePluginsView: View {
 
     var body: some View {
         mainContent
-        .task {
-            await registryClient.ensureManifest(.ifStale)
-        }
-        .alert(errorTitle, isPresented: $showErrorAlert) {
-            Button("OK") {}
-        } message: {
-            Text(errorMessage)
-        }
-        .onChange(of: searchText) {
-            clearSelectionIfNeeded()
-        }
-        .onChange(of: selectedCategory) {
-            clearSelectionIfNeeded()
-        }
+            .task {
+                await registryClient.ensureManifest(.ifStale)
+            }
+            .alert(errorTitle, isPresented: $showErrorAlert) {
+                Button("OK") {}
+            } message: {
+                Text(errorMessage)
+            }
+            .onChange(of: searchText) {
+                clearSelectionIfNeeded()
+            }
+            .onChange(of: selectedCategory) {
+                clearSelectionIfNeeded()
+            }
     }
 
     // MARK: - Main Content
 
-    @ViewBuilder
-    private var mainContent: some View {
+    @ViewBuilder private var mainContent: some View {
         if registryClient.manifest != nil {
             loadedContent
         } else {
@@ -139,7 +138,6 @@ struct BrowsePluginsView: View {
 
     // MARK: - Browse Row
 
-    @ViewBuilder
     private func browseRow(_ plugin: RegistryPlugin) -> some View {
         HStack(spacing: 8) {
             PluginIconView(name: plugin.iconName ?? "puzzlepiece")
@@ -227,8 +225,7 @@ struct BrowsePluginsView: View {
 
     // MARK: - Detail
 
-    @ViewBuilder
-    private var detailContent: some View {
+    @ViewBuilder private var detailContent: some View {
         if let selectedPlugin = selectedRegistryPlugin {
             RegistryPluginDetailView(
                 plugin: selectedPlugin,

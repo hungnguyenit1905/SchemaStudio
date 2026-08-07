@@ -27,9 +27,9 @@ struct PrivilegeScopeRowView: View {
                     .help(
                         String(
                             localized: """
-                                Schema and table privileges in this database are only visible \
-                                when the connection is using it.
-                                """
+                            Schema and table privileges in this database are only visible \
+                            when the connection is using it.
+                            """
                         )
                     )
                     .accessibilityLabel(String(localized: "Not browsable on this connection"))
@@ -54,10 +54,10 @@ struct ScopeSummaryView: View {
                 .foregroundStyle(.tertiary)
                 .accessibilityLabel(String(localized: "No privileges"))
 
-        case let .all(count):
+        case .all(let count):
             Text(String(format: String(localized: "All (%lld)"), count))
 
-        case let .some(names, overflow, hasGrantOption):
+        case .some(let names, let overflow, let hasGrantOption):
             HStack(spacing: 4) {
                 Text(overflow > 0
                     ? String(
@@ -74,14 +74,14 @@ struct ScopeSummaryView: View {
                 }
             }
 
-        case let .descendantsOnly(count):
+        case .descendantsOnly(let count):
             Label(
                 String(format: String(localized: "%lld inside"), count),
                 systemImage: "arrow.turn.down.right"
             )
             .foregroundStyle(.secondary)
 
-        case let .browsingRestricted(direct):
+        case .browsingRestricted(let direct):
             Text(direct.isEmpty
                 ? String(localized: "Not visible")
                 : direct.joined(separator: ", "))

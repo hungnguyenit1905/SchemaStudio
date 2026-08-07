@@ -11,19 +11,22 @@ import TableProPluginKit
 /// Centralized prompt templates for AI-powered editor features
 enum AIPromptTemplates {
     /// Build a prompt asking AI to explain a query
-    @MainActor static func explainQuery(_ query: String, databaseType: DatabaseType = .mysql) -> String {
+    @MainActor
+    static func explainQuery(_ query: String, databaseType: DatabaseType = .mysql) -> String {
         let (typeName, lang) = queryInfo(for: databaseType)
         return explainQuery(query, typeName: typeName, language: lang)
     }
 
     /// Build a prompt asking AI to optimize a query
-    @MainActor static func optimizeQuery(_ query: String, databaseType: DatabaseType = .mysql) -> String {
+    @MainActor
+    static func optimizeQuery(_ query: String, databaseType: DatabaseType = .mysql) -> String {
         let (typeName, lang) = queryInfo(for: databaseType)
         return optimizeQuery(query, typeName: typeName, language: lang)
     }
 
     /// Build a prompt asking AI to fix a query that produced an error
-    @MainActor static func fixError(query: String, error: String, databaseType: DatabaseType = .mysql) -> String {
+    @MainActor
+    static func fixError(query: String, error: String, databaseType: DatabaseType = .mysql) -> String {
         let (typeName, lang) = queryInfo(for: databaseType)
         return fixError(query: query, error: error, typeName: typeName, language: lang)
     }
@@ -42,7 +45,8 @@ enum AIPromptTemplates {
         "This \(typeName) failed with an error. Please fix it.\n\nQuery:\n```\(language)\n\(query)\n```\n\nError: \(error)"
     }
 
-    @MainActor private static func queryInfo(for databaseType: DatabaseType) -> (typeName: String, language: String) {
+    @MainActor
+    private static func queryInfo(for databaseType: DatabaseType) -> (typeName: String, language: String) {
         let snapshot = PluginMetadataRegistry.shared.snapshot(forTypeId: databaseType.pluginTypeId)
         let editorLanguage = snapshot?.editorLanguage ?? .sql
         let lang = editorLanguage.codeBlockTag

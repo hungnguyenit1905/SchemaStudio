@@ -62,7 +62,6 @@ struct MainContentView: View {
 
     // MARK: - Environment
 
-
     // MARK: - Initialization
 
     init(
@@ -369,11 +368,15 @@ struct MainContentView: View {
             }
             .onChange(of: tabManager.selectedTabId) { oldTabId, newTabId in
                 guard !coordinator.isTearingDown else {
-                    Self.lifecycleLogger.debug("[switch] selectedTabId SKIPPED (tearingDown) to=\(newTabId?.uuidString ?? "nil", privacy: .public) windowId=\(windowId, privacy: .public)")
+                    Self.lifecycleLogger
+                        .debug(
+                            "[switch] selectedTabId SKIPPED (tearingDown) to=\(newTabId?.uuidString ?? "nil", privacy: .public) windowId=\(windowId, privacy: .public)"
+                        )
                     return
                 }
                 guard oldTabId != nil || newTabId != nil else {
-                    Self.lifecycleLogger.debug("[switch] selectedTabId SKIPPED (nil→nil) windowId=\(windowId, privacy: .public)")
+                    Self.lifecycleLogger
+                        .debug("[switch] selectedTabId SKIPPED (nil→nil) windowId=\(windowId, privacy: .public)")
                     return
                 }
                 let seq = MainContentCoordinator.nextSwitchSeq()
@@ -400,7 +403,10 @@ struct MainContentView: View {
 
             .onChange(of: coordinator.windowSidebarState.selectedTables) { oldTables, newTables in
                 guard !coordinator.isTearingDown else {
-                    Self.lifecycleLogger.debug("[switch] windowSidebarState.selectedTables SKIPPED (tearingDown) windowId=\(windowId, privacy: .public)")
+                    Self.lifecycleLogger
+                        .debug(
+                            "[switch] windowSidebarState.selectedTables SKIPPED (tearingDown) windowId=\(windowId, privacy: .public)"
+                        )
                     return
                 }
                 handleTableSelectionChange(from: oldTables, to: newTables)
@@ -412,8 +418,7 @@ struct MainContentView: View {
                     currentTabTableName: tabManager.selectedTab?.tableContext.tableName
                 )
                 if case .select(let tableName) = syncAction,
-                    let match = newTables.first(where: { $0.name == tableName })
-                {
+                   let match = newTables.first(where: { $0.name == tableName }) {
                     coordinator.windowSidebarState.selectedTables = [DatabaseTreeTableRef(
                         connectionId: connection.id,
                         database: coordinator.browseDatabaseName,
@@ -426,7 +431,6 @@ struct MainContentView: View {
 
     // MARK: - Main Content
 
-    @ViewBuilder
     private var mainContentView: some View {
         MainEditorContentView(
             tabManager: tabManager,
@@ -438,7 +442,8 @@ struct MainContentView: View {
             selectionState: coordinator.selectionState,
             onCellEdit: { rowIndex, colIndex, value in
                 coordinator.updateCellInTab(
-                    rowIndex: rowIndex, columnIndex: colIndex, value: value)
+                    rowIndex: rowIndex, columnIndex: colIndex, value: value
+                )
                 scheduleInspectorUpdate()
             },
             onSortStateChanged: { newState in
@@ -452,9 +457,8 @@ struct MainContentView: View {
             },
             onSelectionChange: { newIndices in
                 if !newIndices.isEmpty,
-                    AppSettingsManager.shared.dataGrid.autoShowInspector,
-                    tabManager.selectedTab?.tabType == .table
-                {
+                   AppSettingsManager.shared.dataGrid.autoShowInspector,
+                   tabManager.selectedTab?.tabType == .table {
                     coordinator.inspectorProxy?.showInspector()
                 }
                 scheduleInspectorUpdate()

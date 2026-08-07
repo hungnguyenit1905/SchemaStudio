@@ -99,7 +99,10 @@ public enum AWSSTS {
             throw AWSAuthError.assumeRoleFailed(role: roleArn, message: "Unexpected STS response")
         }
         guard http.statusCode == 200 else {
-            throw AWSAuthError.assumeRoleFailed(role: roleArn, message: stsErrorMessage(data) ?? "HTTP \(http.statusCode)")
+            throw AWSAuthError.assumeRoleFailed(
+                role: roleArn,
+                message: stsErrorMessage(data) ?? "HTTP \(http.statusCode)"
+            )
         }
 
         return try parseAssumeRoleResponse(data, roleArn: roleArn)
@@ -110,9 +113,11 @@ public enum AWSSTS {
         guard parser.parse(data),
               let accessKeyId = parser.accessKeyId,
               let secretAccessKey = parser.secretAccessKey,
-              let sessionToken = parser.sessionToken
-        else {
-            throw AWSAuthError.assumeRoleFailed(role: roleArn, message: "Could not read credentials from the STS response")
+              let sessionToken = parser.sessionToken else {
+            throw AWSAuthError.assumeRoleFailed(
+                role: roleArn,
+                message: "Could not read credentials from the STS response"
+            )
         }
         let expiration = parser.expiration.flatMap(AWSCredentialResolver.parseISO8601)
         return AWSCredentials(
@@ -127,11 +132,11 @@ public enum AWSSTS {
         let parser = ErrorXMLParser()
         guard parser.parse(data) else { return nil }
         switch (parser.code, parser.message) {
-        case let (code?, message?):
+        case (let code?, let message?):
             return "\(code): \(message)"
-        case let (code?, nil):
+        case (let code?, nil):
             return code
-        case let (nil, message?):
+        case (nil, let message?):
             return message
         default:
             return nil
@@ -154,8 +159,13 @@ private final class CredentialsXMLParser: NSObject, XMLParserDelegate {
         return parser.parse()
     }
 
-    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?,
-                qualifiedName: String?, attributes: [String: String]) {
+    func parser(
+        _ parser: XMLParser,
+        didStartElement elementName: String,
+        namespaceURI: String?,
+        qualifiedName: String?,
+        attributes: [String: String]
+    ) {
         element = elementName
         buffer = ""
     }
@@ -164,8 +174,12 @@ private final class CredentialsXMLParser: NSObject, XMLParserDelegate {
         buffer += string
     }
 
-    func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?,
-                qualifiedName: String?) {
+    func parser(
+        _ parser: XMLParser,
+        didEndElement elementName: String,
+        namespaceURI: String?,
+        qualifiedName: String?
+    ) {
         let value = buffer.trimmingCharacters(in: .whitespacesAndNewlines)
         switch elementName {
         case "AccessKeyId": accessKeyId = value
@@ -190,8 +204,13 @@ private final class ErrorXMLParser: NSObject, XMLParserDelegate {
         return parser.parse()
     }
 
-    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?,
-                qualifiedName: String?, attributes: [String: String]) {
+    func parser(
+        _ parser: XMLParser,
+        didStartElement elementName: String,
+        namespaceURI: String?,
+        qualifiedName: String?,
+        attributes: [String: String]
+    ) {
         buffer = ""
     }
 
@@ -199,8 +218,12 @@ private final class ErrorXMLParser: NSObject, XMLParserDelegate {
         buffer += string
     }
 
-    func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?,
-                qualifiedName: String?) {
+    func parser(
+        _ parser: XMLParser,
+        didEndElement elementName: String,
+        namespaceURI: String?,
+        qualifiedName: String?
+    ) {
         let value = buffer.trimmingCharacters(in: .whitespacesAndNewlines)
         switch elementName {
         case "Code": code = value

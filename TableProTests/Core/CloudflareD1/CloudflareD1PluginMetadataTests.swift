@@ -4,13 +4,12 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
 import TableProPluginKit
+import Testing
 
 @Suite("Cloudflare D1 Plugin Metadata")
 struct CloudflareD1PluginMetadataTests {
-
     // MARK: - DatabaseType
 
     @Test("DatabaseType.cloudflareD1 has correct rawValue")

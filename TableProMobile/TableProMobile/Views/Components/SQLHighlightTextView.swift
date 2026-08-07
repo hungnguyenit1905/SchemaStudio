@@ -105,7 +105,21 @@ struct SQLHighlightTextView: UIViewRepresentable {
             stackView.spacing = 8
             stackView.translatesAutoresizingMaskIntoConstraints = false
 
-            let keywords = ["SELECT", "FROM", "WHERE", "JOIN", "AND", "OR", "INSERT", "UPDATE", "DELETE", "*", "(", ")", ";"]
+            let keywords = [
+                "SELECT",
+                "FROM",
+                "WHERE",
+                "JOIN",
+                "AND",
+                "OR",
+                "INSERT",
+                "UPDATE",
+                "DELETE",
+                "*",
+                "(",
+                ")",
+                ";"
+            ]
             for keyword in keywords {
                 stackView.addArrangedSubview(makeKeywordButton(keyword))
             }
@@ -162,13 +176,15 @@ struct SQLHighlightTextView: UIViewRepresentable {
             return button
         }
 
-        @objc private func keywordTapped(_ sender: UIButton) {
+        @objc
+        private func keywordTapped(_ sender: UIButton) {
             guard let keyword = sender.configuration?.title else { return }
             let needsSpace = keyword.count > 1
             textView?.insertText(needsSpace ? keyword + " " : keyword)
         }
 
-        @objc private func dismissKeyboard() {
+        @objc
+        private func dismissKeyboard() {
             textView?.resignFirstResponder()
         }
     }

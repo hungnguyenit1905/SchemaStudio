@@ -10,8 +10,7 @@ private let fkTraceLogger = Logger(subsystem: "com.SchemaStudio", category: "Dat
 
 @MainActor
 final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewDataSource,
-                                  NSMenuDelegate
-{
+    NSMenuDelegate {
     var tableRowsProvider: @MainActor () -> TableRows = { TableRows() }
     var tableRowsMutator: @MainActor (@MainActor (inout TableRows) -> Void) -> Void = { _ in }
     var paginationOffsetProvider: @MainActor () -> Int = { 0 }
@@ -45,7 +44,10 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
     var currentSortState = SortState()
 
     private var columnIndexByDataIndex: [Int: Int] = [:]
-    private static let selectionCacheLogger = Logger(subsystem: "com.SchemaStudio", category: "DataGrid.ColumnIndexCache")
+    private static let selectionCacheLogger = Logger(
+        subsystem: "com.SchemaStudio",
+        category: "DataGrid.ColumnIndexCache"
+    )
 
     func tableColumnIndex(for dataIndex: Int) -> Int? {
         if let cached = columnIndexByDataIndex[dataIndex] {
@@ -101,7 +103,7 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         if let columnLayoutKey, let stored = layoutPersister.load(for: columnLayoutKey) {
             return stored
         }
-        if binding.columnWidths.isEmpty && binding.columnOrder == nil {
+        if binding.columnWidths.isEmpty, binding.columnOrder == nil {
             return nil
         }
         return binding
@@ -125,7 +127,7 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         guard let tableView else { return [:] }
         var widths: [String: CGFloat] = [:]
         for column in tableView.tableColumns
-        where column.identifier != ColumnIdentitySchema.rowNumberIdentifier {
+            where column.identifier != ColumnIdentitySchema.rowNumberIdentifier {
             guard let dataIndex = dataColumnIndex(from: column.identifier),
                   let name = identitySchema.columnName(for: dataIndex) else { continue }
             widths[name] = column.width
@@ -141,7 +143,7 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         var widths: [String: CGFloat] = [:]
         var order: [String] = []
         for column in tableView.tableColumns
-        where column.identifier != ColumnIdentitySchema.rowNumberIdentifier {
+            where column.identifier != ColumnIdentitySchema.rowNumberIdentifier {
             guard let colIndex = dataColumnIndex(from: column.identifier),
                   colIndex < tableRows.columns.count else { continue }
             let name = tableRows.columns[colIndex]
@@ -239,8 +241,8 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
                     || prev.nullDisplay != settings.nullDisplay
                     || prev.enableSmartValueDetection != settings.enableSmartValueDetection
 
-                if prev.enableSmartValueDetection != settings.enableSmartValueDetection
-                    && !settings.enableSmartValueDetection {
+                if prev.enableSmartValueDetection != settings.enableSmartValueDetection,
+                   !settings.enableSmartValueDetection {
                     self.updateDisplayFormats([])
                 }
 
@@ -250,8 +252,9 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
                     let visibleRange = tableView.rows(in: visibleRect)
                     if visibleRange.length > 0 {
                         tableView.reloadData(
-                            forRowIndexes: IndexSet(integersIn: visibleRange.location..<(visibleRange.location + visibleRange.length)),
-                            columnIndexes: IndexSet(integersIn: 0..<tableView.numberOfColumns)
+                            forRowIndexes: IndexSet(integersIn: visibleRange
+                                .location ..< (visibleRange.location + visibleRange.length)),
+                            columnIndexes: IndexSet(integersIn: 0 ..< tableView.numberOfColumns)
                         )
                     }
                 }
@@ -381,7 +384,8 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
             return cached
         }
         let format = column >= 0 && column < columnDisplayFormats.count ? columnDisplayFormats[column] : nil
-        let formatted = CellDisplayFormatter.format(rawValue, columnType: columnType, displayFormat: format) ?? rawValue.asText
+        let formatted = CellDisplayFormatter.format(rawValue, columnType: columnType, displayFormat: format) ?? rawValue
+            .asText
 
         let neededCount = max(column + 1, columnDisplayFormats.count, cachedColumnCount)
         let box: RowDisplayBox
@@ -389,12 +393,16 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
             box = existing
             if box.values.count < neededCount {
                 box.values.reserveCapacity(neededCount)
-                for _ in box.values.count..<neededCount { box.values.append(nil) }
+                for _ in box.values.count ..< neededCount {
+                    box.values.append(nil)
+                }
             }
         } else {
             var values = ContiguousArray<String?>()
             values.reserveCapacity(neededCount)
-            for _ in 0..<neededCount { values.append(nil) }
+            for _ in 0 ..< neededCount {
+                values.append(nil)
+            }
             box = RowDisplayBox(values)
         }
         if column >= 0, column < box.values.count {
@@ -429,7 +437,7 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         let displayCount = displayIDs?.count ?? tableRows.count
         let count = min(rowCount, displayCount)
         guard count > 0 else { return }
-        for displayIndex in 0..<count {
+        for displayIndex in 0 ..< count {
             cacheDisplayRow(at: displayIndex, in: tableRows)
         }
     }
@@ -516,8 +524,10 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         let columnCount = tableRows.columns.count
         var values = ContiguousArray<String?>()
         values.reserveCapacity(columnCount)
-        for _ in 0..<columnCount { values.append(nil) }
-        for col in 0..<min(row.values.count, columnCount) {
+        for _ in 0 ..< columnCount {
+            values.append(nil)
+        }
+        for col in 0 ..< min(row.values.count, columnCount) {
             let columnType = col < tableRows.columnTypes.count ? tableRows.columnTypes[col] : nil
             let format = col < columnDisplayFormats.count ? columnDisplayFormats[col] : nil
             values[col] = CellDisplayFormatter.format(
@@ -555,8 +565,7 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         switch delta {
         case .cellChanged(let row, let column):
             guard let tableView,
-                  let tableColumn = tableColumnIndex(for: column)
-            else { return }
+                  let tableColumn = tableColumnIndex(for: column) else { return }
             guard row >= 0, row < tableView.numberOfRows else { return }
             invalidateDisplayCache(forDisplayRow: row, column: column)
             visualIndex.updateRow(row, from: changeManager, sortedIDs: displayIDs)
@@ -643,8 +652,9 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         guard visibleRange.length > 0 else { return }
         invalidateDisplayCache()
         tableView.reloadData(
-            forRowIndexes: IndexSet(integersIn: visibleRange.location..<(visibleRange.location + visibleRange.length)),
-            columnIndexes: IndexSet(integersIn: 0..<tableView.numberOfColumns)
+            forRowIndexes: IndexSet(integersIn: visibleRange
+                .location ..< (visibleRange.location + visibleRange.length)),
+            columnIndexes: IndexSet(integersIn: 0 ..< tableView.numberOfColumns)
         )
         refreshVisibleRowVisualStates()
     }
@@ -657,7 +667,7 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         invalidateDisplayCache(forDisplayRow: row)
         tableView.reloadData(
             forRowIndexes: IndexSet(integer: row),
-            columnIndexes: IndexSet(integersIn: 0..<tableView.numberOfColumns)
+            columnIndexes: IndexSet(integersIn: 0 ..< tableView.numberOfColumns)
         )
         refreshRowVisualState(at: row)
     }
@@ -672,8 +682,7 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
 
     func refreshRowVisualState(at row: Int) {
         guard let tableView,
-              let dataRowView = tableView.rowView(atRow: row, makeIfNecessary: false) as? DataGridRowView
-        else { return }
+              let dataRowView = tableView.rowView(atRow: row, makeIfNecessary: false) as? DataGridRowView else { return }
         dataRowView.applyVisualState(visualState(for: row))
     }
 
@@ -696,8 +705,7 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
 
     func beginEditing(displayRow: Int, column: Int) {
         guard let tableView,
-              let displayCol = tableColumnIndex(for: column)
-        else { return }
+              let displayCol = tableColumnIndex(for: column) else { return }
         guard displayRow >= 0, displayRow < tableView.numberOfRows else { return }
         tableView.scrollRowToVisible(displayRow)
         tableView.selectRowIndexes(IndexSet(integer: displayRow), byExtendingSelection: false)
@@ -721,7 +729,7 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         let visibleRange = tableView.rows(in: tableView.visibleRect)
         guard visibleRange.length > 0 else { return }
         let visibleRows = IndexSet(
-            integersIn: visibleRange.location..<(visibleRange.location + visibleRange.length)
+            integersIn: visibleRange.location ..< (visibleRange.location + visibleRange.length)
         )
         tableView.reloadData(forRowIndexes: visibleRows, columnIndexes: fkColumnIndices)
     }
@@ -754,7 +762,7 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         let enumValues = tableRows.columnEnumValues
         let fkKeys = tableRows.columnForeignKeys
 
-        for i in 0..<columns.count {
+        for i in 0 ..< columns.count {
             let name = columns[i]
             if let values = enumValues[name], !values.isEmpty {
                 let ct = i < types.count ? types[i] : nil

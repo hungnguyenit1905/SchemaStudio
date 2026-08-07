@@ -8,15 +8,14 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 // MARK: - SQL Escaping Correctness
 
 @Suite("PostgreSQL SQL Escaping Correctness")
 struct PostgreSQLSQLEscapingCorrectness {
-
     @Test("ANSI escaping preserves backslashes")
     func backslashPreserved() {
         let input = "test\\table"
@@ -53,7 +52,6 @@ struct PostgreSQLSQLEscapingCorrectness {
 
 @Suite("PostgreSQL DDL Assembly")
 struct PostgreSQLDDLAssembly {
-
     private func assembleDDL(
         schema: String,
         table: String,
@@ -90,12 +88,12 @@ struct PostgreSQLDDLAssembly {
         let result = assembleDDL(schema: "public", table: "users", columns: columns)
 
         let expected = """
-            CREATE TABLE "public"."users" (
-              "id" integer NOT NULL DEFAULT nextval('users_id_seq'::regclass),
-              "name" character varying(255)
-            );
-            """
-            .replacingOccurrences(of: "            ", with: "")
+        CREATE TABLE "public"."users" (
+          "id" integer NOT NULL DEFAULT nextval('users_id_seq'::regclass),
+          "name" character varying(255)
+        );
+        """
+        .replacingOccurrences(of: "            ", with: "")
 
         #expect(result == expected)
     }
@@ -222,6 +220,7 @@ private final class MockPostgreSQLDriver: DatabaseDriver, @unchecked Sendable {
             collation: nil, createTime: nil, updateTime: nil
         )
     }
+
     func fetchDatabases() async throws -> [String] { [] }
     func fetchSchemas() async throws -> [String] { [] }
     func fetchDatabaseMetadata(_ database: String) async throws -> DatabaseMetadata {
@@ -230,6 +229,7 @@ private final class MockPostgreSQLDriver: DatabaseDriver, @unchecked Sendable {
             lastAccessed: nil, isSystemDatabase: false, icon: "cylinder"
         )
     }
+
     func createDatabase(name: String, charset: String, collation: String?) async throws {}
     func cancelQuery() throws {}
     func beginTransaction() async throws {}
@@ -239,13 +239,12 @@ private final class MockPostgreSQLDriver: DatabaseDriver, @unchecked Sendable {
 
 @Suite("DDL Loading Flow with Mock Driver")
 struct DDLLoadingFlowTests {
-
     private func loadDDL(using driver: MockPostgreSQLDriver, table: String) async throws -> String {
         let sequences = try await driver.fetchDependentSequences(forTable: table)
         let enumTypes = try await driver.fetchDependentTypes(forTable: table)
         let baseDDL = try await driver.fetchTableDDL(table: table)
 
-        if sequences.isEmpty && enumTypes.isEmpty {
+        if sequences.isEmpty, enumTypes.isEmpty {
             return baseDDL
         }
 
@@ -266,13 +265,16 @@ struct DDLLoadingFlowTests {
     func successfulFlow() async throws {
         let driver = MockPostgreSQLDriver()
         driver.ddlToReturn = """
-            CREATE TABLE "public"."users" (
-              "id" integer NOT NULL DEFAULT nextval('users_id_seq'::regclass),
-              "name" character varying(255)
-            );
-            """
+        CREATE TABLE "public"."users" (
+          "id" integer NOT NULL DEFAULT nextval('users_id_seq'::regclass),
+          "name" character varying(255)
+        );
+        """
         driver.sequencesToReturn = [
-            (name: "users_id_seq", ddl: "CREATE SEQUENCE \"users_id_seq\" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1;")
+            (
+                name: "users_id_seq",
+                ddl: "CREATE SEQUENCE \"users_id_seq\" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1;"
+            )
         ]
         driver.enumTypesToReturn = [
             (name: "user_role", labels: ["admin", "editor", "viewer"])

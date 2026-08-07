@@ -1,6 +1,6 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 private actor SettingsProviderProbe {
@@ -15,7 +15,7 @@ private actor SettingsProviderProbe {
 @Suite("ExportDataTool")
 struct ExportDataToolTests {
     @Test("Export resolves its row limit from the configured MCP settings")
-    func resolvesLimitsFromSettings() async throws {
+    func resolvesLimitsFromSettings() async {
         let probe = SettingsProviderProbe()
         let tool = ExportDataTool()
         let context = await MCPProtocolHandlerTestSupport.makeContext(method: "tools/call")
@@ -99,7 +99,7 @@ struct ExportDataToolTests {
 
     @Test("An over-fetched extra row marks the export truncated and is trimmed off")
     func overFetchedRowMarksTruncation() {
-        let fetched = (0..<501).map { JsonValue.int($0) }
+        let fetched = (0 ..< 501).map { JsonValue.int($0) }
         let limited = ExportDataTool.applyRowLimit(to: fetched, maxRows: 500, driverReportedTruncation: false)
         #expect(limited.rows.count == 500)
         #expect(limited.isTruncated)
@@ -107,7 +107,7 @@ struct ExportDataToolTests {
 
     @Test("A result that fits the limit is not marked truncated")
     func resultWithinLimitIsNotTruncated() {
-        let fetched = (0..<300).map { JsonValue.int($0) }
+        let fetched = (0 ..< 300).map { JsonValue.int($0) }
         let limited = ExportDataTool.applyRowLimit(to: fetched, maxRows: 500, driverReportedTruncation: false)
         #expect(limited.rows.count == 300)
         #expect(!limited.isTruncated)
@@ -115,7 +115,7 @@ struct ExportDataToolTests {
 
     @Test("A result exactly at the limit is not marked truncated")
     func resultExactlyAtLimitIsNotTruncated() {
-        let fetched = (0..<500).map { JsonValue.int($0) }
+        let fetched = (0 ..< 500).map { JsonValue.int($0) }
         let limited = ExportDataTool.applyRowLimit(to: fetched, maxRows: 500, driverReportedTruncation: false)
         #expect(limited.rows.count == 500)
         #expect(!limited.isTruncated)
@@ -123,7 +123,7 @@ struct ExportDataToolTests {
 
     @Test("Driver-reported truncation is preserved when the row count fits")
     func driverTruncationIsPreserved() {
-        let fetched = (0..<500).map { JsonValue.int($0) }
+        let fetched = (0 ..< 500).map { JsonValue.int($0) }
         let limited = ExportDataTool.applyRowLimit(to: fetched, maxRows: 500, driverReportedTruncation: true)
         #expect(limited.rows.count == 500)
         #expect(limited.isTruncated)

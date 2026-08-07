@@ -57,7 +57,10 @@ enum ElasticsearchMappingFlattener {
     static func fieldInfo(from columns: [ElasticsearchColumn]) -> [String: ElasticsearchFieldInfo] {
         var result: [String: ElasticsearchFieldInfo] = [:]
         for column in columns {
-            result[column.name] = ElasticsearchFieldInfo(type: column.type, hasKeywordSubfield: column.hasKeywordSubfield)
+            result[column.name] = ElasticsearchFieldInfo(
+                type: column.type,
+                hasKeywordSubfield: column.hasKeywordSubfield
+            )
         }
         return result
     }
@@ -160,8 +163,7 @@ enum ElasticsearchMappingFlattener {
     private static func serializeJson(_ value: Any) -> String {
         guard JSONSerialization.isValidJSONObject(value),
               let data = try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]),
-              let json = String(data: data, encoding: .utf8)
-        else {
+              let json = String(data: data, encoding: .utf8) else {
             return String(describing: value)
         }
         if (json as NSString).length > maxNestedJsonLength {

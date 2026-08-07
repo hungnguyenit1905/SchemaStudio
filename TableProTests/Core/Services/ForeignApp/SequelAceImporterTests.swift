@@ -4,9 +4,9 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProImport
 import TableProPluginKit
-@testable import SchemaStudio
 import Testing
 
 @Suite("SequelAceImporter", .serialized)
@@ -168,7 +168,7 @@ struct SequelAceImporterTests {
                 id: 1,
                 sshHost: "bastion.example.com",
                 sshUser: "deploy",
-                sshPort: 2222,
+                sshPort: 2_222,
                 sshKeyEnabled: 1,
                 sshKeyLocation: "~/.ssh/id_ed25519"
             )
@@ -181,7 +181,7 @@ struct SequelAceImporterTests {
         #expect(ssh != nil)
         #expect(ssh?.enabled == true)
         #expect(ssh?.host == "bastion.example.com")
-        #expect(ssh?.port == 2222)
+        #expect(ssh?.port == 2_222)
         #expect(ssh?.username == "deploy")
         #expect(ssh?.authMethod == "Private Key")
         #expect(ssh?.privateKeyPath == "~/.ssh/id_ed25519")
@@ -388,7 +388,7 @@ struct SequelAceImporterTests {
         try writeFavorites(makeFavoritesRoot(children: children))
 
         let result = try importer.importConnections(includePasswords: false)
-        #expect(result.envelope.connections[0].port == 3306)
+        #expect(result.envelope.connections[0].port == 3_306)
     }
 
     @Test("importConnections envelope metadata")
@@ -429,7 +429,7 @@ struct SequelAceImporterTests {
                 id: 1,
                 sshHost: "bastion.com",
                 sshUser: "deploy",
-                sshPort: 2222
+                sshPort: 2_222
             )
         ]
         try writeFavorites(makeFavoritesRoot(children: children))
@@ -437,7 +437,7 @@ struct SequelAceImporterTests {
         let result = try importer.importConnections(includePasswords: false)
         let ssh = result.envelope.connections[0].sshConfig
 
-        #expect(ssh?.port == 2222)
+        #expect(ssh?.port == 2_222)
     }
 
     @Test("importConnections SSH port parsed as String fallback")
@@ -457,6 +457,6 @@ struct SequelAceImporterTests {
         let result = try importer.importConnections(includePasswords: false)
         let ssh = result.envelope.connections[0].sshConfig
 
-        #expect(ssh?.port == 3333)
+        #expect(ssh?.port == 3_333)
     }
 }

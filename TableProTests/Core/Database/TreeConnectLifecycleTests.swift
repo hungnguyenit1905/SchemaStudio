@@ -79,7 +79,7 @@ struct TreeConnectLifecycleTests {
         defaults.removePersistentDomain(forName: "TreeConnectLifecycleTests.launch")
         defer { defaults.removePersistentDomain(forName: "TreeConnectLifecycleTests.launch") }
 
-        let remembered = (0..<8).map { _ in UUID() }
+        let remembered = (0 ..< 8).map { _ in UUID() }
         let seed = ConnectionTreeState(defaults: defaults)
         seed.expandedConnectionIds = Set(remembered)
 
@@ -96,7 +96,7 @@ struct TreeConnectLifecycleTests {
     @Test("Replaying saved expansion starts no connect")
     func restoringExpansionDoesNotConnect() {
         let coordinator = DatabaseTreeOutlineCoordinator()
-        let connections = (0..<8).map { TestFixtures.makeConnection(name: "Remembered \($0)") }
+        let connections = (0 ..< 8).map { TestFixtures.makeConnection(name: "Remembered \($0)") }
         defer {
             for connection in connections {
                 DatabaseManager.shared.removeSession(for: connection.id)

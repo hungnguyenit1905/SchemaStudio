@@ -30,11 +30,19 @@ public struct ExportDataTool: MCPToolImplementation {
             ]),
             "output_path": .object([
                 "type": .string("string"),
-                "description": .string(String(localized: "File path inside the user's Downloads directory (returns inline data if omitted). Paths outside Downloads are rejected."))
+                "description": .string(
+                    String(
+                        localized: "File path inside the user's Downloads directory (returns inline data if omitted). Paths outside Downloads are rejected."
+                    )
+                )
             ]),
             "max_rows": .object([
                 "type": .string("integer"),
-                "description": .string(String(localized: "Maximum rows to export. Defaults to the server's configured default row limit and is capped at its maximum row limit."))
+                "description": .string(
+                    String(
+                        localized: "Maximum rows to export. Defaults to the server's configured default row limit and is capped at its maximum row limit."
+                    )
+                )
             ])
         ]),
         "required": .array([.string("connection_id"), .string("format")])
@@ -140,8 +148,7 @@ public struct ExportDataTool: MCPToolImplementation {
             )
 
             guard let columns = result["columns"]?.arrayValue,
-                  let fetched = result["rows"]?.arrayValue
-            else {
+                  let fetched = result["rows"]?.arrayValue else {
                 throw MCPProtocolError.internalError(detail: "Unexpected query result structure")
             }
 
@@ -182,8 +189,7 @@ public struct ExportDataTool: MCPToolImplementation {
             let fileURL = try Self.sandboxedDownloadsURL(for: outputPath)
             let fullContent: String
             if exportResults.count == 1,
-               let data = exportResults.first?["data"]?.stringValue
-            {
+               let data = exportResults.first?["data"]?.stringValue {
                 fullContent = data
             } else {
                 fullContent = exportResults
@@ -362,8 +368,7 @@ public struct ExportDataTool: MCPToolImplementation {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         guard let data = try? encoder.encode(value),
-              let string = String(data: data, encoding: .utf8)
-        else {
+              let string = String(data: data, encoding: .utf8) else {
             return "{}"
         }
         return string

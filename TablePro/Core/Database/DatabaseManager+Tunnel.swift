@@ -127,17 +127,24 @@ extension DatabaseManager {
         }
 
         let maxRetries = 10
-        for retryCount in 0..<maxRetries {
+        for retryCount in 0 ..< maxRetries {
             let delay = ExponentialBackoff.delay(for: retryCount + 1, maxDelay: 120)
-            Self.logger.info("\(kind, privacy: .public) reconnect attempt \(retryCount + 1)/\(maxRetries) in \(delay)s for: \(session.connection.name)")
+            Self.logger
+                .info(
+                    "\(kind, privacy: .public) reconnect attempt \(retryCount + 1)/\(maxRetries) in \(delay)s for: \(session.connection.name)"
+                )
             try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
 
             do {
                 try await connectToSession(session.connection)
-                Self.logger.info("Successfully reconnected \(kind, privacy: .public) tunnel for: \(session.connection.name)")
+                Self.logger
+                    .info("Successfully reconnected \(kind, privacy: .public) tunnel for: \(session.connection.name)")
                 return
             } catch {
-                Self.logger.warning("\(kind, privacy: .public) reconnect attempt \(retryCount + 1) failed: \(error.localizedDescription)")
+                Self.logger
+                    .warning(
+                        "\(kind, privacy: .public) reconnect attempt \(retryCount + 1) failed: \(error.localizedDescription)"
+                    )
             }
         }
 

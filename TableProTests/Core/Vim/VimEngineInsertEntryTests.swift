@@ -5,9 +5,9 @@
 //  Specification tests for entering and leaving Insert mode (i, I, a, A, o, O, s, S, gi).
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineInsertEntryTests: XCTestCase {
@@ -27,7 +27,9 @@ final class VimEngineInsertEntryTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {
@@ -118,8 +120,10 @@ final class VimEngineInsertEntryTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 5, length: 0))
         keys("o")
         XCTAssertEqual(engine.mode, .insert)
-        XCTAssertTrue(buffer.text.hasPrefix("hello world\n\n"),
-            "o should insert a newline after the current line")
+        XCTAssertTrue(
+            buffer.text.hasPrefix("hello world\n\n"),
+            "o should insert a newline after the current line"
+        )
     }
 
     func testOPositionsCursorOnNewLine() {
@@ -133,8 +137,11 @@ final class VimEngineInsertEntryTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 5, length: 0))
         keys("o")
-        XCTAssertEqual(buffer.text, "one\ntwo\n",
-            "o on the last line without a newline should append a newline")
+        XCTAssertEqual(
+            buffer.text,
+            "one\ntwo\n",
+            "o on the last line without a newline should append a newline"
+        )
         XCTAssertEqual(pos, 8)
     }
 
@@ -160,23 +167,32 @@ final class VimEngineInsertEntryTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("s")
         XCTAssertEqual(engine.mode, .insert)
-        XCTAssertEqual(buffer.text, "ello world\nsecond line\nthird line\n",
-            "s should delete the char under the cursor and enter insert mode")
+        XCTAssertEqual(
+            buffer.text,
+            "ello world\nsecond line\nthird line\n",
+            "s should delete the char under the cursor and enter insert mode"
+        )
     }
 
     func testSLowerWithCount() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("3s")
         XCTAssertEqual(engine.mode, .insert)
-        XCTAssertEqual(buffer.text, "lo world\nsecond line\nthird line\n",
-            "3s should delete three chars and enter insert mode")
+        XCTAssertEqual(
+            buffer.text,
+            "lo world\nsecond line\nthird line\n",
+            "3s should delete three chars and enter insert mode"
+        )
     }
 
     func testSLowerDoesNotCrossNewline() {
         buffer.setSelectedRange(NSRange(location: 10, length: 0))
         keys("9s")
-        XCTAssertEqual(buffer.text, "hello worl\nsecond line\nthird line\n",
-            "s should not consume the newline even with large count")
+        XCTAssertEqual(
+            buffer.text,
+            "hello worl\nsecond line\nthird line\n",
+            "s should not consume the newline even with large count"
+        )
     }
 
     // MARK: - S: Substitute Entire Line
@@ -185,8 +201,11 @@ final class VimEngineInsertEntryTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 5, length: 0))
         key("S", shift: true)
         XCTAssertEqual(engine.mode, .insert)
-        XCTAssertEqual(buffer.text, "\nsecond line\nthird line\n",
-            "S should delete the entire line content but keep the newline")
+        XCTAssertEqual(
+            buffer.text,
+            "\nsecond line\nthird line\n",
+            "S should delete the entire line content but keep the newline"
+        )
         XCTAssertEqual(pos, 0)
     }
 
@@ -194,8 +213,11 @@ final class VimEngineInsertEntryTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("2")
         key("S", shift: true)
-        XCTAssertEqual(buffer.text, "\nthird line\n",
-            "2S should delete two lines' content")
+        XCTAssertEqual(
+            buffer.text,
+            "\nthird line\n",
+            "2S should delete two lines' content"
+        )
     }
 
     // MARK: - Escape: Insert → Normal

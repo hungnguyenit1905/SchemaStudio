@@ -39,7 +39,12 @@ internal struct FavoritesTabView: View {
         "\(schema ?? "")\u{1}\(name)"
     }
 
-    init(connectionId: UUID, sharedSidebarState: SharedSidebarState, tables: [TableInfo], coordinator: MainContentCoordinator?) {
+    init(
+        connectionId: UUID,
+        sharedSidebarState: SharedSidebarState,
+        tables: [TableInfo],
+        coordinator: MainContentCoordinator?
+    ) {
         self.connectionId = connectionId
         self.sharedSidebarState = sharedSidebarState
         self.tables = tables
@@ -55,12 +60,13 @@ internal struct FavoritesTabView: View {
                     ? availableFavoriteTables
                     : availableFavoriteTables.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
 
-                if !viewModel.isInitialLoadComplete && viewModel.nodes.isEmpty && filteredTables.isEmpty {
+                if !viewModel.isInitialLoadComplete, viewModel.nodes.isEmpty, filteredTables.isEmpty {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if viewModel.nodes.isEmpty && filteredTables.isEmpty && teamLibraryQueries.isEmpty && searchText.isEmpty {
+                } else if viewModel.nodes.isEmpty, filteredTables.isEmpty, teamLibraryQueries.isEmpty,
+                          searchText.isEmpty {
                     emptyState
-                } else if items.isEmpty && filteredTables.isEmpty && teamLibraryQueries.isEmpty {
+                } else if items.isEmpty, filteredTables.isEmpty, teamLibraryQueries.isEmpty {
                     noMatchState
                 } else {
                     favoritesList(items, filteredTables: filteredTables)
@@ -98,7 +104,12 @@ internal struct FavoritesTabView: View {
                 viewModel.deleteFolder(folder)
             }
         } message: { folder in
-            Text(String(format: String(localized: "The folder \"%@\" will be deleted. Items inside will be moved to the parent level."), folder.name))
+            Text(String(
+                format: String(
+                    localized: "The folder \"%@\" will be deleted. Items inside will be moved to the parent level."
+                ),
+                folder.name
+            ))
         }
         .sheet(item: $linkedMetadataTarget) { file in
             LinkedFavoriteMetadataDialog(
@@ -121,7 +132,12 @@ internal struct FavoritesTabView: View {
                 linkedFolderToRemove = nil
             }
         } message: { folder in
-            Text(String(format: String(localized: "\"%@\" will be removed from the sidebar. Files on disk will not be deleted."), folder.name))
+            Text(String(
+                format: String(
+                    localized: "\"%@\" will be removed from the sidebar. Files on disk will not be deleted."
+                ),
+                folder.name
+            ))
         }
         .alert(
             String(localized: "Move File to Trash?"),
@@ -137,7 +153,10 @@ internal struct FavoritesTabView: View {
                 linkedFileToTrash = nil
             }
         } message: { file in
-            Text(String(format: String(localized: "\"%@\" will be moved to Trash. You can recover it from there."), file.name))
+            Text(String(
+                format: String(localized: "\"%@\" will be moved to Trash. You can recover it from there."),
+                file.name
+            ))
         }
         .alert(String(localized: "Delete Favorite?"), isPresented: $viewModel.showDeleteConfirmation) {
             Button(String(localized: "Cancel"), role: .cancel) {
@@ -149,7 +168,10 @@ internal struct FavoritesTabView: View {
         } message: {
             let count = viewModel.favoritesToDelete.count
             if count == 1 {
-                Text(String(format: String(localized: "\"%@\" will be permanently deleted."), viewModel.favoritesToDelete.first?.name ?? ""))
+                Text(String(
+                    format: String(localized: "\"%@\" will be permanently deleted."),
+                    viewModel.favoritesToDelete.first?.name ?? ""
+                ))
             } else {
                 Text(String(format: String(localized: "%d favorites will be permanently deleted."), count))
             }
@@ -163,7 +185,8 @@ internal struct FavoritesTabView: View {
         let all = TeamLibrarySyncCoordinator.shared.library.queries
         guard !searchText.isEmpty else { return all }
         return all.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) || $0.query.localizedCaseInsensitiveContains(searchText)
+            $0.name.localizedCaseInsensitiveContains(searchText) || $0.query
+                .localizedCaseInsensitiveContains(searchText)
         }
     }
 
@@ -218,8 +241,15 @@ internal struct FavoritesTabView: View {
             }
             guard confirmPublishSavedQueries(count: favorites.count) else { return }
             do {
-                _ = try await TeamLibrarySyncCoordinator.shared.publish(connections: [], favorites: favorites, folders: folders)
-                presentTeamLibraryInfo(String(format: String(localized: "Published %d saved queries to your team."), favorites.count))
+                _ = try await TeamLibrarySyncCoordinator.shared.publish(
+                    connections: [],
+                    favorites: favorites,
+                    folders: folders
+                )
+                presentTeamLibraryInfo(String(
+                    format: String(localized: "Published %d saved queries to your team."),
+                    favorites.count
+                ))
             } catch {
                 presentTeamLibraryInfo(error.localizedDescription)
             }
@@ -230,7 +260,9 @@ internal struct FavoritesTabView: View {
         let alert = NSAlert()
         alert.messageText = String(localized: "Publish saved queries to your team?")
         alert.informativeText = String(
-            format: String(localized: "Your team will see the names and SQL of %d saved queries. This replaces what you previously published."),
+            format: String(
+                localized: "Your team will see the names and SQL of %d saved queries. This replaces what you previously published."
+            ),
             count
         )
         alert.addButton(withTitle: String(localized: "Publish"))
@@ -311,7 +343,12 @@ internal struct FavoritesTabView: View {
         Divider()
 
         Button(role: .destructive) {
-            FavoriteTablesStorage.shared.removeFavorite(name: table.name, schema: table.schema, database: activeDatabase, connectionId: connectionId)
+            FavoriteTablesStorage.shared.removeFavorite(
+                name: table.name,
+                schema: table.schema,
+                database: activeDatabase,
+                connectionId: connectionId
+            )
         } label: {
             Text(String(localized: "Remove from Favorites"))
         }
@@ -429,7 +466,11 @@ internal struct FavoritesTabView: View {
                     if folder.id != favorite.folderId {
                         Button(folder.name) {
                             viewModel.moveFavorite(id: favorite.id, toFolder: folder.id)
-                            FavoritesExpansionState.shared.setFolderExpanded(folder.id, expanded: true, for: connectionId)
+                            FavoritesExpansionState.shared.setFolderExpanded(
+                                folder.id,
+                                expanded: true,
+                                for: connectionId
+                            )
                         }
                     }
                 }
@@ -496,10 +537,10 @@ internal struct FavoritesTabView: View {
         Divider()
 
         Button(folder.isEnabled
-               ? String(localized: "Disable")
-               : String(localized: "Enable")) {
-            toggleLinkedFolder(folder)
-        }
+            ? String(localized: "Disable")
+            : String(localized: "Enable")) {
+                toggleLinkedFolder(folder)
+            }
 
         Button(String(localized: "Reload")) {
             SQLFolderWatcher.shared.reload()
@@ -668,8 +709,7 @@ private struct FavoriteNodeRow: View {
         }
     }
 
-    @ViewBuilder
-    private var childRows: some View {
+    @ViewBuilder private var childRows: some View {
         if let children = node.children {
             ForEach(children) { child in
                 FavoriteNodeRow(

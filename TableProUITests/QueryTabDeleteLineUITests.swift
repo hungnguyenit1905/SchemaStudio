@@ -11,7 +11,7 @@ final class QueryTabDeleteLineUITests: XCTestCase {
         XCUIApplication().terminate()
     }
 
-    func testCommandDeleteDeletesTheEditorLineAfterRunningAQuery() throws {
+    func testCommandDeleteDeletesTheEditorLineAfterRunningAQuery() {
         let app = launchWithSampleDatabase()
         let editor = openQueryTab(in: app)
 
@@ -27,7 +27,7 @@ final class QueryTabDeleteLineUITests: XCTestCase {
         )
     }
 
-    func testCommandDeleteDeletesTheEditorLineAfterSelectingAResultRow() throws {
+    func testCommandDeleteDeletesTheEditorLineAfterSelectingAResultRow() {
         let app = launchWithSampleDatabase()
         let editor = openQueryTab(in: app)
 

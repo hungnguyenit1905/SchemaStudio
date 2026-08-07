@@ -102,7 +102,7 @@ final class ImportDataSinkAdapter: PluginImportDataSink, @unchecked Sendable {
             var offset = 0
             while offset < groupValues.count {
                 let end = min(offset + chunkSize, groupValues.count)
-                let chunk = Array(groupValues[offset..<end])
+                let chunk = Array(groupValues[offset ..< end])
                 if let statement = rowGenerator.insertStatement(columns: columns, rows: chunk) {
                     _ = try await driver.executeParameterized(query: statement.sql, parameters: statement.parameters)
                 }

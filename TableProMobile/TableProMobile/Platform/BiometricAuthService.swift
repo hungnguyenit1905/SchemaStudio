@@ -36,7 +36,8 @@ final class BiometricAuthService {
                 .deviceOwnerAuthentication,
                 localizedReason: reason
             )
-        } catch let error as LAError where error.code == .userCancel || error.code == .appCancel || error.code == .systemCancel {
+        } catch let error as LAError
+            where error.code == .userCancel || error.code == .appCancel || error.code == .systemCancel {
             return false
         } catch {
             Self.logger.warning("Biometric auth failed: \(error.localizedDescription, privacy: .public)")

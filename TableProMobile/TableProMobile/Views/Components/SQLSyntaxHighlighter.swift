@@ -54,7 +54,7 @@ enum SQLSyntaxHighlighter {
         )
 
         let highlightRange: NSRange
-        if safeEditedRange.location == 0 && safeEditedRange.length >= cappedLength {
+        if safeEditedRange.location == 0, safeEditedRange.length >= cappedLength {
             highlightRange = NSRange(location: 0, length: cappedLength)
         } else {
             let lineStart = nsString.lineRange(for: NSRange(location: safeEditedRange.location, length: 0)).location
@@ -77,12 +77,50 @@ enum SQLSyntaxHighlighter {
         let scanText = fullText[scanRange]
         var protected: [Range<String.Index>] = []
 
-        apply(blockCommentRegex, color: .systemGray, scanText: scanText, in: fullText, on: textStorage, protected: &protected)
-        apply(lineCommentRegex, color: .systemGray, scanText: scanText, in: fullText, on: textStorage, protected: &protected)
+        apply(
+            blockCommentRegex,
+            color: .systemGray,
+            scanText: scanText,
+            in: fullText,
+            on: textStorage,
+            protected: &protected
+        )
+        apply(
+            lineCommentRegex,
+            color: .systemGray,
+            scanText: scanText,
+            in: fullText,
+            on: textStorage,
+            protected: &protected
+        )
         apply(stringRegex, color: .systemRed, scanText: scanText, in: fullText, on: textStorage, protected: &protected)
-        apply(keywordRegex, color: .systemBlue, scanText: scanText, in: fullText, on: textStorage, protected: &protected, recordsProtection: false)
-        apply(functionRegex, color: .systemPurple, scanText: scanText, in: fullText, on: textStorage, protected: &protected, recordsProtection: false)
-        apply(numberRegex, color: .systemOrange, scanText: scanText, in: fullText, on: textStorage, protected: &protected, recordsProtection: false)
+        apply(
+            keywordRegex,
+            color: .systemBlue,
+            scanText: scanText,
+            in: fullText,
+            on: textStorage,
+            protected: &protected,
+            recordsProtection: false
+        )
+        apply(
+            functionRegex,
+            color: .systemPurple,
+            scanText: scanText,
+            in: fullText,
+            on: textStorage,
+            protected: &protected,
+            recordsProtection: false
+        )
+        apply(
+            numberRegex,
+            color: .systemOrange,
+            scanText: scanText,
+            in: fullText,
+            on: textStorage,
+            protected: &protected,
+            recordsProtection: false
+        )
 
         textStorage.endEditing()
     }

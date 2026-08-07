@@ -89,7 +89,8 @@ extension MainContentCoordinator {
                         isView: isView
                     )
                 } catch {
-                    navigationLogger.error("openTableTab addTableTab failed: \(error.localizedDescription, privacy: .public)")
+                    navigationLogger
+                        .error("openTableTab addTableTab failed: \(error.localizedDescription, privacy: .public)")
                 }
             } else {
                 pendingGridFocusOnOpen = false
@@ -136,7 +137,8 @@ extension MainContentCoordinator {
                     }
                 }
             } catch {
-                navigationLogger.error("openTableTab replaceTabContent failed: \(error.localizedDescription, privacy: .public)")
+                navigationLogger
+                    .error("openTableTab replaceTabContent failed: \(error.localizedDescription, privacy: .public)")
             }
             return
         }
@@ -280,7 +282,8 @@ extension MainContentCoordinator {
                 isPreview: createAsPreview
             )
         } catch {
-            navigationLogger.error("openTableTab replaceTabContent failed: \(error.localizedDescription, privacy: .public)")
+            navigationLogger
+                .error("openTableTab replaceTabContent failed: \(error.localizedDescription, privacy: .public)")
             return
         }
         clearFilterState()
@@ -496,7 +499,8 @@ extension MainContentCoordinator {
                 }
             } catch {
                 if !Task.isCancelled {
-                    navigationLogger.error("Failed to SELECT Redis db\(dbIndex): \(error.localizedDescription, privacy: .public)")
+                    navigationLogger
+                        .error("Failed to SELECT Redis db\(dbIndex): \(error.localizedDescription, privacy: .public)")
                 }
                 return
             }

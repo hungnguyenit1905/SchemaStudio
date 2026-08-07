@@ -127,7 +127,9 @@ internal struct FavoriteEditDialog: View {
             Text("Query")
         } footer: {
             Text(String(
-                format: String(localized: "Type %@ in the query to set where the cursor lands after keyword expansion."),
+                format: String(
+                    localized: "Type %@ in the query to set where the cursor lands after keyword expansion."
+                ),
                 SQLSnippetMarker.token
             ))
             .font(.caption)
@@ -195,7 +197,7 @@ internal struct FavoriteEditDialog: View {
             if let q = initialQuery {
                 query = q
             }
-            if name.isEmpty && !query.isEmpty {
+            if name.isEmpty, !query.isEmpty {
                 name = SQLFavorite.autoName(from: query)
             }
         }

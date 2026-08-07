@@ -69,7 +69,11 @@ struct DataBrowserView: View {
                 ]
             }
             .toolbar { topToolbar }
-            .toolbar(rows.isEmpty && !viewModel.hasActiveSearch && !viewModel.hasActiveFilters && !viewModel.isPageLoading ? .hidden : .visible, for: .bottomBar)
+            .toolbar(
+                rows.isEmpty && !viewModel.hasActiveSearch && !viewModel.hasActiveFilters && !viewModel
+                    .isPageLoading ? .hidden : .visible,
+                for: .bottomBar
+            )
             .toolbar { paginationToolbar }
             .task {
                 viewModel.attach(session: session, table: table, databaseType: connection.type, host: connection.host)
@@ -117,14 +121,16 @@ struct DataBrowserView: View {
             } message: {
                 Text(viewModel.operationError?.message ?? "")
             }
-            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
-                Task { await viewModel.handleSystemMemoryWarning() }
+            .onReceive(NotificationCenter.default
+                .publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
+                    Task { await viewModel.handleSystemMemoryWarning() }
             }
             .onChange(of: MemoryPressureMonitor.shared.currentLevel) { _, level in
                 Task { await viewModel.handlePressure(level) }
             }
             .overlay(alignment: .center) {
-                if let message = viewModel.memoryWarning, rows.isEmpty, !viewModel.isLoading, viewModel.loadError == nil {
+                if let message = viewModel.memoryWarning, rows.isEmpty, !viewModel.isLoading,
+                   viewModel.loadError == nil {
                     ContentUnavailableView {
                         Label("Results Cleared", systemImage: "exclamationmark.triangle")
                     } description: {
@@ -162,8 +168,7 @@ struct DataBrowserView: View {
             }
     }
 
-    @ViewBuilder
-    private var searchableContent: some View {
+    @ViewBuilder private var searchableContent: some View {
         if isRedis {
             content
                 .navigationTitle(table.name)
@@ -192,8 +197,7 @@ struct DataBrowserView: View {
         }
     }
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         if viewModel.isLoading {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -210,7 +214,7 @@ struct DataBrowserView: View {
             } description: {
                 Text("This table is empty.")
             } actions: {
-                if !isView && !connection.safeModeLevel.blocksWrites {
+                if !isView, !connection.safeModeLevel.blocksWrites {
                     Button("Insert Row") { showInsertSheet = true }
                         .buttonStyle(.borderedProminent)
                 }
@@ -251,7 +255,11 @@ struct DataBrowserView: View {
                 onSaved: { Task { await viewModel.load() } },
                 loadFullValue: { ref in
                     guard let session else { return nil }
-                    return try await viewModel.loadFullValue(driver: session.driver, ref: ref, databaseType: connection.type)
+                    return try await viewModel.loadFullValue(
+                        driver: session.driver,
+                        ref: ref,
+                        databaseType: connection.type
+                    )
                 }
             )
         } label: {
@@ -260,7 +268,7 @@ struct DataBrowserView: View {
         .hoverEffect()
         .contextMenu { rowContextMenu(row: row) }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            if !isView && viewModel.hasPrimaryKeys && !connection.safeModeLevel.blocksWrites {
+            if !isView, viewModel.hasPrimaryKeys, !connection.safeModeLevel.blocksWrites {
                 Button {
                     deleteTarget = viewModel.primaryKeyValues(for: row)
                     showDeleteConfirmation = true
@@ -323,8 +331,7 @@ struct DataBrowserView: View {
         }
     }
 
-    @ToolbarContentBuilder
-    private var topToolbar: some ToolbarContent {
+    @ToolbarContentBuilder private var topToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Menu {
                 Picker("Sort By", selection: sortColumnBinding) {
@@ -382,7 +389,7 @@ struct DataBrowserView: View {
                 Image(systemName: "ellipsis.circle")
             }
         }
-        if !isView && !connection.safeModeLevel.blocksWrites {
+        if !isView, !connection.safeModeLevel.blocksWrites {
             ToolbarItem(placement: .primaryAction) {
                 Button { showInsertSheet = true } label: {
                     Image(systemName: "plus")
@@ -392,8 +399,7 @@ struct DataBrowserView: View {
         }
     }
 
-    @ToolbarContentBuilder
-    private var paginationToolbar: some ToolbarContent {
+    @ToolbarContentBuilder private var paginationToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .bottomBar) {
             Button { Task { await viewModel.goToPreviousPage() } } label: {
                 Image(systemName: "chevron.left")

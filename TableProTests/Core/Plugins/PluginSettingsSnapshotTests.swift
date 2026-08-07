@@ -4,10 +4,10 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import SwiftUI
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("PluginSettingsSnapshot", .serialized)
 struct PluginSettingsSnapshotTests {

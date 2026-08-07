@@ -22,7 +22,8 @@ extension TeradataPluginDriver {
         generateStatements(
             table: table, schema: nil, columns: columns, primaryKeyColumns: primaryKeyColumns,
             changes: changes, insertedRowData: insertedRowData,
-            deletedRowIndices: deletedRowIndices, insertedRowIndices: insertedRowIndices)
+            deletedRowIndices: deletedRowIndices, insertedRowIndices: insertedRowIndices
+        )
     }
 
     func generateStatements(
@@ -31,7 +32,8 @@ extension TeradataPluginDriver {
         deletedRowIndices: Set<Int>, insertedRowIndices: Set<Int>
     ) -> [(statement: String, parameters: [PluginCellValue])]? {
         let target = TeradataSchemaQueries.qualifiedName(
-            database: effectiveDatabaseForSchema(schema), table: table)
+            database: effectiveDatabaseForSchema(schema), table: table
+        )
         var statements: [(statement: String, parameters: [PluginCellValue])] = []
 
         for change in changes {

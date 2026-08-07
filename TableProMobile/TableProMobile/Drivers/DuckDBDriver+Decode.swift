@@ -3,7 +3,12 @@ import Foundation
 import TableProModels
 
 extension DuckDBActor {
-    static func decodeCell(vector: duckdb_vector, row: idx_t, column: DuckDBStreamColumn, options: StreamOptions) -> Cell {
+    static func decodeCell(
+        vector: duckdb_vector,
+        row: idx_t,
+        column: DuckDBStreamColumn,
+        options: StreamOptions
+    ) -> Cell {
         if let validity = duckdb_vector_get_validity(vector), !duckdb_validity_row_is_valid(validity, row) {
             return .null
         }
@@ -19,7 +24,8 @@ extension DuckDBActor {
         case DUCKDB_TYPE_BLOB:
             return decodeBlob(data, row: row)
         case DUCKDB_TYPE_BOOLEAN:
-            return .text(data.load(fromByteOffset: Int(row) * MemoryLayout<Bool>.stride, as: Bool.self) ? "true" : "false")
+            return .text(data
+                .load(fromByteOffset: Int(row) * MemoryLayout<Bool>.stride, as: Bool.self) ? "true" : "false")
         case DUCKDB_TYPE_TINYINT:
             return .text(String(element(data, row, Int8.self)))
         case DUCKDB_TYPE_SMALLINT:
@@ -88,7 +94,11 @@ extension DuckDBActor {
         return .text(Data(bytes).base64EncodedString())
     }
 
-    private static func normalizedTimestamp(_ data: UnsafeMutableRawPointer, row: idx_t, type: duckdb_type) -> duckdb_timestamp {
+    private static func normalizedTimestamp(
+        _ data: UnsafeMutableRawPointer,
+        row: idx_t,
+        type: duckdb_type
+    ) -> duckdb_timestamp {
         let raw = element(data, row, duckdb_timestamp.self).micros
         switch type {
         case DUCKDB_TYPE_TIMESTAMP_S:
@@ -111,9 +121,24 @@ extension DuckDBActor {
         let micros = time.micros % 1_000_000
         let year = formatYearISO(date.year)
         if micros == 0 {
-            return String(format: "\(year)-%02d-%02d %02d:%02d:%02d", date.month, date.day, time.hour, time.min, time.sec)
+            return String(
+                format: "\(year)-%02d-%02d %02d:%02d:%02d",
+                date.month,
+                date.day,
+                time.hour,
+                time.min,
+                time.sec
+            )
         }
-        return String(format: "\(year)-%02d-%02d %02d:%02d:%02d.%06d", date.month, date.day, time.hour, time.min, time.sec, micros)
+        return String(
+            format: "\(year)-%02d-%02d %02d:%02d:%02d.%06d",
+            date.month,
+            date.day,
+            time.hour,
+            time.min,
+            time.sec,
+            micros
+        )
     }
 
     static func formatDate(_ date: duckdb_date_struct) -> String {
@@ -137,13 +162,13 @@ extension DuckDBActor {
         let low = value.lower
         let hex = String(format: "%016llx%016llx", high, low)
         let s = Array(hex)
-        return "\(String(s[0..<8]))-\(String(s[8..<12]))-\(String(s[12..<16]))-\(String(s[16..<20]))-\(String(s[20..<32]))"
+        return "\(String(s[0 ..< 8]))-\(String(s[8 ..< 12]))-\(String(s[12 ..< 16]))-\(String(s[16 ..< 20]))-\(String(s[20 ..< 32]))"
     }
 
-    // Single source of truth for which types decodeCell handles directly from
-    // vector data. Anything not in this allowlist is cast to VARCHAR in the
-    // query (requiresTextCast), so an unhandled or future type can never reach
-    // the native decode path and reinterpret non-string bytes as a string.
+    /// Single source of truth for which types decodeCell handles directly from
+    /// vector data. Anything not in this allowlist is cast to VARCHAR in the
+    /// query (requiresTextCast), so an unhandled or future type can never reach
+    /// the native decode path and reinterpret non-string bytes as a string.
     static func isNativelyDecodable(_ type: duckdb_type) -> Bool {
         switch type {
         case DUCKDB_TYPE_VARCHAR, DUCKDB_TYPE_BLOB, DUCKDB_TYPE_BOOLEAN,

@@ -51,9 +51,13 @@ extension VimEngine {
         }
         let startClass = classifier(buffer.character(at: pos))
         var start = pos
-        while start > 0 && classifier(buffer.character(at: start - 1)) == startClass { start -= 1 }
+        while start > 0, classifier(buffer.character(at: start - 1)) == startClass {
+            start -= 1
+        }
         var end = pos
-        while end < buffer.length - 1 && classifier(buffer.character(at: end + 1)) == startClass { end += 1 }
+        while end < buffer.length - 1, classifier(buffer.character(at: end + 1)) == startClass {
+            end += 1
+        }
         var rangeEnd = end + 1
         if around {
             var trail = rangeEnd
@@ -87,7 +91,7 @@ extension VimEngine {
         while scan < contentEnd {
             if buffer.character(at: scan) == quote {
                 if let o = open {
-                    if cursor >= o && cursor <= scan {
+                    if cursor >= o, cursor <= scan {
                         close = scan
                         break
                     }
@@ -140,9 +144,9 @@ extension VimEngine {
         let closeCh = unichar(closeScalar.value)
         var openPos: Int?
         var depth = 0
-        if cursor < buffer.length && buffer.character(at: cursor) == openCh {
+        if cursor < buffer.length, buffer.character(at: cursor) == openCh {
             openPos = cursor
-        } else if cursor < buffer.length && buffer.character(at: cursor) == closeCh {
+        } else if cursor < buffer.length, buffer.character(at: cursor) == closeCh {
             var d = 1
             var i = cursor - 1
             while i >= 0 {
@@ -151,7 +155,9 @@ extension VimEngine {
                     d += 1
                 } else if ch == openCh {
                     d -= 1
-                    if d == 0 { openPos = i; break }
+                    if d == 0 { openPos = i
+                        break
+                    }
                 }
                 i -= 1
             }
@@ -163,7 +169,9 @@ extension VimEngine {
                 if ch == closeCh {
                     depth += 1
                 } else if ch == openCh {
-                    if depth == 0 { openPos = i; break }
+                    if depth == 0 { openPos = i
+                        break
+                    }
                     depth -= 1
                 }
                 i -= 1
@@ -179,7 +187,9 @@ extension VimEngine {
                 d += 1
             } else if ch == closeCh {
                 d -= 1
-                if d == 0 { closePos = i; break }
+                if d == 0 { closePos = i
+                    break
+                }
             }
             i += 1
         }
@@ -197,7 +207,9 @@ extension VimEngine {
             if buffer.character(at: i) == 0x3C {
                 openStart = i
                 var j = i + 1
-                while j < buffer.length && buffer.character(at: j) != 0x3E { j += 1 }
+                while j < buffer.length, buffer.character(at: j) != 0x3E {
+                    j += 1
+                }
                 if j < buffer.length {
                     openEnd = j
                 }
@@ -222,22 +234,22 @@ extension VimEngine {
     func paragraphObject(at cursor: Int, around: Bool, in buffer: VimTextBuffer) -> NSRange? {
         let (currentLine, _) = buffer.lineAndColumn(forOffset: cursor)
         var startLine = currentLine
-        while startLine > 0 && !lineIsBlank(startLine - 1, in: buffer) {
+        while startLine > 0, !lineIsBlank(startLine - 1, in: buffer) {
             startLine -= 1
         }
         var endLine = currentLine
-        while endLine < buffer.lineCount - 1 && !lineIsBlank(endLine + 1, in: buffer) {
+        while endLine < buffer.lineCount - 1, !lineIsBlank(endLine + 1, in: buffer) {
             endLine += 1
         }
         let start = buffer.offset(forLine: startLine, column: 0)
         let lastContentLineRange = buffer.lineRange(forOffset: buffer.offset(forLine: endLine, column: 0))
         var end = lastContentLineRange.location + lastContentLineRange.length
-        if !around && end > start {
+        if !around, end > start {
             end -= 1
         }
         if around {
             var trailing = endLine
-            while trailing < buffer.lineCount - 1 && lineIsBlank(trailing + 1, in: buffer) {
+            while trailing < buffer.lineCount - 1, lineIsBlank(trailing + 1, in: buffer) {
                 trailing += 1
             }
             if trailing > endLine {

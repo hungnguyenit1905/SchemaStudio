@@ -7,15 +7,15 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @MainActor
 @Suite("DataChangeManager ClickHouse UPDATE Validation")
 struct DataChangeManagerClickHouseTests {
     @Test("ClickHouse ALTER TABLE UPDATE is counted as an update statement")
-    func alterTableUpdateCounted() async throws {
+    func alterTableUpdateCounted() throws {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -44,7 +44,7 @@ struct DataChangeManagerClickHouseTests {
     }
 
     @Test("ClickHouse ALTER TABLE UPDATE passes validation without throwing")
-    func alterTableUpdatePassesValidation() async {
+    func alterTableUpdatePassesValidation() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "events",
@@ -69,7 +69,7 @@ struct DataChangeManagerClickHouseTests {
     }
 
     @Test("Standard UPDATE prefix is still detected for non-ClickHouse databases")
-    func standardUpdatePrefixDetected() async throws {
+    func standardUpdatePrefixDetected() throws {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -95,7 +95,7 @@ struct DataChangeManagerClickHouseTests {
     }
 
     @Test("ClickHouse UPDATE without primary key uses all columns in WHERE clause")
-    func clickhouseUpdateWithoutPrimaryKey() async throws {
+    func clickhouseUpdateWithoutPrimaryKey() throws {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "logs",

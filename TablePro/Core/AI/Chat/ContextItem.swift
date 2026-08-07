@@ -14,11 +14,22 @@ enum ContextItem: Codable, Equatable, Sendable {
     case file(url: URL)
 
     private enum CodingKeys: String, CodingKey {
-        case kind, connectionId, name, text, summary, id, url
+        case kind
+        case connectionId
+        case name
+        case text
+        case summary
+        case id
+        case url
     }
 
     private enum Kind: String, Codable {
-        case schema, table, currentQuery, queryResult, savedQuery, file
+        case schema
+        case table
+        case currentQuery
+        case queryResult
+        case savedQuery
+        case file
     }
 
     init(from decoder: Decoder) throws {
@@ -33,15 +44,15 @@ enum ContextItem: Codable, Equatable, Sendable {
             let name = try container.decode(String.self, forKey: .name)
             self = .table(connectionId: connectionId, name: name)
         case .currentQuery:
-            self = .currentQuery(text: try container.decode(String.self, forKey: .text))
+            self = try .currentQuery(text: container.decode(String.self, forKey: .text))
         case .queryResult:
-            self = .queryResult(summary: try container.decode(String.self, forKey: .summary))
+            self = try .queryResult(summary: container.decode(String.self, forKey: .summary))
         case .savedQuery:
             let id = try container.decode(UUID.self, forKey: .id)
             let name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
             self = .savedQuery(id: id, name: name)
         case .file:
-            self = .file(url: try container.decode(URL.self, forKey: .url))
+            self = try .file(url: container.decode(URL.self, forKey: .url))
         }
     }
 

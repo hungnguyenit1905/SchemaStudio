@@ -72,16 +72,18 @@ struct DatabaseTreeView: View {
     /// node; gating the whole outline on one connection would hide the others.
     var body: some View {
         outline
-        .task(id: connectionToken) {
-            await treeService.loadDatabases(connectionId: connectionId, databaseType: databaseType)
-        }
-        .task(id: viewModel.searchText) {
-            let live = viewModel.searchText
-            guard !live.isEmpty else { searchText = ""; return }
-            try? await Task.sleep(nanoseconds: 250_000_000)
-            guard !Task.isCancelled else { return }
-            searchText = live
-        }
+            .task(id: connectionToken) {
+                await treeService.loadDatabases(connectionId: connectionId, databaseType: databaseType)
+            }
+            .task(id: viewModel.searchText) {
+                let live = viewModel.searchText
+                guard !live.isEmpty else { searchText = ""
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 250_000_000)
+                guard !Task.isCancelled else { return }
+                searchText = live
+            }
     }
 
     private var outline: some View {

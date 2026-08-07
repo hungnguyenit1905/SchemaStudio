@@ -61,15 +61,17 @@ final class AnthropicProvider: ChatTransport {
         do {
             (data, response) = try await session.data(for: request)
         } catch {
-            Self.logger.warning("Anthropic model fetch failed; using known models: \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .warning(
+                    "Anthropic model fetch failed; using known models: \(error.localizedDescription, privacy: .public)"
+                )
             return Self.knownModels
         }
 
         guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200,
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let models = json["data"] as? [[String: Any]]
-        else {
+              let models = json["data"] as? [[String: Any]] else {
             Self.logger.warning("Anthropic model fetch returned unexpected response; using known models")
             return Self.knownModels
         }
@@ -188,8 +190,7 @@ final class AnthropicProvider: ChatTransport {
         let jsonString = String(line.dropFirst(6))
         guard jsonString != "[DONE]",
               let data = jsonString.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else { return nil }
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
         return json
     }
 
@@ -229,15 +230,13 @@ final class AnthropicProvider: ChatTransport {
             if deltaType == "input_json_delta" {
                 guard let index = json["index"] as? Int,
                       let id = state.toolUseIdsByIndex[index],
-                      let partial = delta["partial_json"] as? String
-                else { return [] }
+                      let partial = delta["partial_json"] as? String else { return [] }
                 return [.toolUseDelta(id: id, inputJSONDelta: partial)]
             }
             if deltaType == "thinking_delta" {
                 guard let index = json["index"] as? Int,
                       let id = state.thinkingIdsByIndex[index],
-                      let thinking = delta["thinking"] as? String, !thinking.isEmpty
-                else { return [] }
+                      let thinking = delta["thinking"] as? String, !thinking.isEmpty else { return [] }
                 return [.reasoningDelta(id: id, text: thinking)]
             }
             if deltaType == "signature_delta" {
@@ -296,10 +295,10 @@ final class AnthropicProvider: ChatTransport {
     }
 
     static func encodeToolSpec(_ spec: ChatToolSpec) throws -> [String: Any] {
-        [
+        try [
             "name": spec.name,
             "description": spec.description,
-            "input_schema": try spec.inputSchema.jsonObject()
+            "input_schema": spec.inputSchema.jsonObject()
         ]
     }
 
@@ -335,11 +334,11 @@ final class AnthropicProvider: ChatTransport {
             guard !text.isEmpty else { return nil }
             return ["type": "text", "text": text]
         case .toolUse(let toolUse):
-            return [
+            return try [
                 "type": "tool_use",
                 "id": toolUse.id,
                 "name": toolUse.name,
-                "input": try toolUse.input.jsonObject()
+                "input": toolUse.input.jsonObject()
             ]
         case .toolResult(let result):
             var encoded: [String: Any] = [

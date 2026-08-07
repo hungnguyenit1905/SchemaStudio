@@ -184,7 +184,7 @@ final class BeancountIncludeResolver {
                     index += 1
                 }
                 if index < characters.count {
-                    regex += String(characters[start...index])
+                    regex += String(characters[start ... index])
                     index += 1
                 } else {
                     regex += NSRegularExpression.escapedPattern(for: String(character))
@@ -246,7 +246,7 @@ final class BeancountIncludeResolver {
             if character == "\"" {
                 inQuote.toggle()
             }
-            if character == ";" && !inQuote {
+            if character == ";", !inQuote {
                 break
             }
             result.append(character)

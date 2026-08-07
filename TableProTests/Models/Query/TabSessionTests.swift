@@ -63,7 +63,12 @@ struct TabSessionTests {
 
     @Test("snapshot() returns a QueryTab equal to the source")
     func snapshotRoundtripEqualsSource() {
-        var original = makeQueryTab(title: "Orders", query: "SELECT * FROM orders", tabType: .table, tableName: "orders")
+        var original = makeQueryTab(
+            title: "Orders",
+            query: "SELECT * FROM orders",
+            tabType: .table,
+            tableName: "orders"
+        )
         original.tableContext.primaryKeyColumns = ["id"]
         original.execution.rowsAffected = 42
         original.pagination.currentPage = 3

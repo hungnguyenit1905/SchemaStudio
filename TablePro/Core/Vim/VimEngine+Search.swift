@@ -31,9 +31,13 @@ extension VimEngine {
         let pos = buffer.selectedRange().location
         guard pos < buffer.length else { return }
         var start = pos
-        while start > 0 && isWordChar(buffer.character(at: start - 1)) { start -= 1 }
+        while start > 0, isWordChar(buffer.character(at: start - 1)) {
+            start -= 1
+        }
         var end = pos
-        while end < buffer.length && isWordChar(buffer.character(at: end)) { end += 1 }
+        while end < buffer.length, isWordChar(buffer.character(at: end)) {
+            end += 1
+        }
         guard end > start else { return }
         let word = buffer.string(in: NSRange(location: start, length: end - start))
         lastSearchPattern = word

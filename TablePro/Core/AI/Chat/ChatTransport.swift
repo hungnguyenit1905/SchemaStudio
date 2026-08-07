@@ -63,7 +63,10 @@ struct ChatToolSpec: Codable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case name, description, inputSchema, strict
+        case name
+        case description
+        case inputSchema
+        case strict
     }
 }
 

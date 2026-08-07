@@ -16,7 +16,7 @@ struct PrincipalStatementGenerator {
 
     private func statements(for change: PrincipalChange) throws -> [SchemaStatement] {
         switch change {
-        case let .create(definition):
+        case .create(let definition):
             try wrap(
                 driver.generateCreatePrincipalSQL(definition: definition),
                 description: String(
@@ -27,7 +27,7 @@ struct PrincipalStatementGenerator {
                 carriesCredentials: !(definition.password ?? "").isEmpty
             )
 
-        case let .alter(old, new):
+        case .alter(let old, let new):
             try wrap(
                 driver.generateAlterPrincipalSQL(old: old, new: new),
                 description: String(
@@ -38,7 +38,7 @@ struct PrincipalStatementGenerator {
                 carriesCredentials: !(new.password ?? "").isEmpty
             )
 
-        case let .setPassword(ref, password):
+        case .setPassword(let ref, let password):
             try wrap(
                 driver.generateSetPasswordSQL(principal: ref, password: password),
                 description: String(
@@ -49,10 +49,10 @@ struct PrincipalStatementGenerator {
                 carriesCredentials: true
             )
 
-        case let .modifyGrants(changeSet):
+        case .modifyGrants(let changeSet):
             try grantStatements(changeSet)
 
-        case let .drop(ref, options):
+        case .drop(let ref, let options):
             try wrap(
                 driver.generateDropPrincipalSQL(principal: ref, options: options),
                 description: String(

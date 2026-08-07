@@ -99,10 +99,10 @@ internal extension String {
         let nsString = self as NSString
         let length = nsString.length
         guard length > 0 else { return false }
-        for i in 0..<length {
+        for i in 0 ..< length {
             let ch = nsString.character(at: i)
             if ch == 0x0A || ch == 0x0D || ch == 0x0B || ch == 0x0C ||
-               ch == 0x85 || ch == 0x2028 || ch == 0x2029 {
+                ch == 0x85 || ch == 0x2028 || ch == 0x2029 {
                 return true
             }
         }
@@ -116,10 +116,10 @@ internal extension String {
 
         var mutable: NSMutableString?
         var copiedUpTo = 0
-        for i in 0..<length {
+        for i in 0 ..< length {
             let ch = nsString.character(at: i)
             guard ch == 0x0A || ch == 0x0D || ch == 0x0B || ch == 0x0C ||
-                  ch == 0x85 || ch == 0x2028 || ch == 0x2029 else { continue }
+                ch == 0x85 || ch == 0x2028 || ch == 0x2029 else { continue }
 
             if mutable == nil {
                 mutable = NSMutableString(capacity: length)

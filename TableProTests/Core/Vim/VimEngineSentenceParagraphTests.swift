@@ -7,9 +7,9 @@
 //  blank line is a paragraph boundary.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineSentenceParagraphTests: XCTestCase {
@@ -29,7 +29,9 @@ final class VimEngineSentenceParagraphTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private var pos: Int { buffer.selectedRange().location }
@@ -80,7 +82,11 @@ final class VimEngineSentenceParagraphTests: XCTestCase {
         // } from blank line at 9 advances to the next blank line at 32.
         make("para one\n\npara two\nstill two\n\npara three\n", at: 9)
         keys("}")
-        XCTAssertEqual(pos, 29, "} from a blank line should advance to the next paragraph break (offset 29 is the blank line)")
+        XCTAssertEqual(
+            pos,
+            29,
+            "} from a blank line should advance to the next paragraph break (offset 29 is the blank line)"
+        )
     }
 
     func testRightBraceWithCount() {
@@ -94,8 +100,11 @@ final class VimEngineSentenceParagraphTests: XCTestCase {
     func testLeftBraceRetreatsToParagraphStart() {
         make("para one\nstill one\n\npara two\n", at: 21)
         keys("{")
-        XCTAssertEqual(pos, 19,
-            "{ should retreat to the previous blank line (paragraph boundary)")
+        XCTAssertEqual(
+            pos,
+            19,
+            "{ should retreat to the previous blank line (paragraph boundary)"
+        )
     }
 
     func testLeftBraceFromFirstParagraphLandsAtBufferStart() {

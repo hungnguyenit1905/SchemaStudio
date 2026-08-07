@@ -69,7 +69,14 @@ struct TriggerDetailView: View {
     private var emptyState: some View {
         VStack(spacing: 0) {
             if canEdit {
-                TriggerActionBar(triggers: triggers, state: state, canEdit: canEdit, onNew: newTrigger, onEdit: editTrigger, onDelete: { pendingDelete = $0 })
+                TriggerActionBar(
+                    triggers: triggers,
+                    state: state,
+                    canEdit: canEdit,
+                    onNew: newTrigger,
+                    onEdit: editTrigger,
+                    onDelete: { pendingDelete = $0 }
+                )
                 Divider()
             }
             EmptyStateView.triggers()
@@ -81,7 +88,14 @@ struct TriggerDetailView: View {
     private var populated: some View {
         VStack(spacing: 0) {
             if canEdit {
-                TriggerActionBar(triggers: triggers, state: state, canEdit: canEdit, onNew: newTrigger, onEdit: editTrigger, onDelete: { pendingDelete = $0 })
+                TriggerActionBar(
+                    triggers: triggers,
+                    state: state,
+                    canEdit: canEdit,
+                    onNew: newTrigger,
+                    onEdit: editTrigger,
+                    onDelete: { pendingDelete = $0 }
+                )
                 Divider()
             }
             AutosavingSplitView(
@@ -92,7 +106,12 @@ struct TriggerDetailView: View {
             ) {
                 TriggerListPane(triggers: triggers, state: state)
             } secondary: {
-                TriggerDetailPane(triggers: triggers, state: state, databaseType: connection.type, onOpenInEditor: onOpenInEditor)
+                TriggerDetailPane(
+                    triggers: triggers,
+                    state: state,
+                    databaseType: connection.type,
+                    onOpenInEditor: onOpenInEditor
+                )
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -210,8 +229,7 @@ private struct TriggerListPane: View {
         }
     }
 
-    @ViewBuilder
-    private var table: some View {
+    @ViewBuilder private var table: some View {
         if showEnabled {
             Table(state.displayed(triggers), selection: $state.selectedID, sortOrder: $state.sortOrder) {
                 TableColumn(String(localized: "Name"), value: \.name)

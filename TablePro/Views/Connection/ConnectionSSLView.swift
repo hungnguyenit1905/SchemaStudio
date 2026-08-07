@@ -56,12 +56,12 @@ struct ConnectionSSLView: View {
                 if !supportsPerConnectionCertPaths {
                     Section {
                         Text(String(localized: """
-                            SQL Server connections use the system trust store. Per-connection CA and client certificate \
-                            paths are not supported by FreeTDS dblib; configure them in `freetds.conf` if you need a \
-                            custom trust anchor.
-                            """))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        SQL Server connections use the system trust store. Per-connection CA and client certificate \
+                        paths are not supported by FreeTDS dblib; configure them in `freetds.conf` if you need a \
+                        custom trust anchor.
+                        """))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     } header: {
                         Text(String(localized: "Certificate Trust"))
                     }
@@ -70,7 +70,8 @@ struct ConnectionSSLView: View {
                         LabeledContent(String(localized: "Certificate")) {
                             HStack {
                                 TextField(
-                                    "", text: $sslCaCertPath, prompt: Text("/path/to/ca-cert.pem"))
+                                    "", text: $sslCaCertPath, prompt: Text("/path/to/ca-cert.pem")
+                                )
                                 Button(String(localized: "Browse")) {
                                     browseForCertificate(binding: $sslCaCertPath)
                                 }
@@ -86,7 +87,8 @@ struct ConnectionSSLView: View {
                             HStack {
                                 TextField(
                                     "", text: $sslClientCertPath,
-                                    prompt: Text(String(localized: "Optional")))
+                                    prompt: Text(String(localized: "Optional"))
+                                )
                                 Button(String(localized: "Browse")) {
                                     browseForCertificate(binding: $sslClientCertPath)
                                 }
@@ -97,7 +99,8 @@ struct ConnectionSSLView: View {
                             HStack {
                                 TextField(
                                     "", text: $sslClientKeyPath,
-                                    prompt: Text(String(localized: "Optional")))
+                                    prompt: Text(String(localized: "Optional"))
+                                )
                                 Button(String(localized: "Browse")) {
                                     browseForCertificate(binding: $sslClientKeyPath)
                                 }
@@ -109,7 +112,8 @@ struct ConnectionSSLView: View {
                             LabeledContent(String(localized: "Key Passphrase")) {
                                 SecureField(
                                     "", text: $sslClientKeyPassphrase,
-                                    prompt: Text(String(localized: "Required only for an encrypted key")))
+                                    prompt: Text(String(localized: "Required only for an encrypted key"))
+                                )
                             }
                         }
                     } header: {

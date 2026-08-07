@@ -45,7 +45,9 @@ struct CopilotSchemaSanitizationTests {
             "required": .array([.string("connection_id")])
         ])
         let output = ChatToolSpec.sanitizeForCopilot(input)
-        guard case .object(let root) = output else { Issue.record("expected object"); return }
+        guard case .object(let root) = output else { Issue.record("expected object")
+            return
+        }
         #expect(root["required"] == .array([.string("connection_id")]))
     }
 
@@ -126,7 +128,7 @@ struct CopilotSchemaSanitizationTests {
     }
 
     @Test("Real ChatToolSchemaBuilder output passes through Copilot validator shape")
-    func realBuilderOutputIsValid() throws {
+    func realBuilderOutputIsValid() {
         // Simulates what ListTablesChatTool produces.
         let realSchema = ChatToolSchemaBuilder.object(
             properties: [

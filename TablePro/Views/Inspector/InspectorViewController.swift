@@ -114,7 +114,7 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         for displayRow in sortedDisplay {
             guard displayRow >= 0, displayRow < displayToStore.count else { continue }
             let storeRow = displayToStore[displayRow]
-            let cells = (0..<columnCount).map { column -> String in
+            let cells = (0 ..< columnCount).map { column -> String in
                 inspectorDocument.value(row: storeRow, column: column)
                     .replacingOccurrences(of: "\t", with: " ")
                     .replacingOccurrences(of: "\r", with: " ")
@@ -165,7 +165,7 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         guard !storeIndices.isEmpty else { return }
         let columnCount = inspectorDocument.columnNames.count
         let rowsCells = storeIndices.map { storeRow in
-            (0..<columnCount).map { inspectorDocument.value(row: storeRow, column: $0) }
+            (0 ..< columnCount).map { inspectorDocument.value(row: storeRow, column: $0) }
         }
         let firstDisplayRow = sortedDisplay.first ?? 0
         InspectorDeleteConfirmation.confirmDeleteRowsIfNeeded(
@@ -209,20 +209,28 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
 
     // MARK: - Responder-chain actions
 
-    @objc func undo(_ sender: Any?) { handleUndo() }
-    @objc func redo(_ sender: Any?) { handleRedo() }
-    @objc func saveDocument(_ sender: Any?) { nsDocument?.save(sender) }
-    @objc func saveDocumentAs(_ sender: Any?) { nsDocument?.saveAs(sender) }
-    @objc func inspectorAddRow(_ sender: Any?) { handleAddRow() }
-    @objc func inspectorDeleteSelectedRows(_ sender: Any?) {
+    @objc
+    func undo(_ sender: Any?) { handleUndo() }
+    @objc
+    func redo(_ sender: Any?) { handleRedo() }
+    @objc
+    func saveDocument(_ sender: Any?) { nsDocument?.save(sender) }
+    @objc
+    func saveDocumentAs(_ sender: Any?) { nsDocument?.saveAs(sender) }
+    @objc
+    func inspectorAddRow(_ sender: Any?) { handleAddRow() }
+    @objc
+    func inspectorDeleteSelectedRows(_ sender: Any?) {
         handleDeleteRows(state.selectedRowIndices)
     }
 
-    @objc func inspectorToggleHeaderRow(_ sender: Any?) {
+    @objc
+    func inspectorToggleHeaderRow(_ sender: Any?) {
         inspectorDocument?.toggleHeaderRow()
     }
 
-    @objc func inspectorSetCSVProperties(_ sender: Any?) {
+    @objc
+    func inspectorSetCSVProperties(_ sender: Any?) {
         guard let configurable = inspectorDocument as? CSVConfigurableDocument else { return }
         presentCSVProperties(configurable)
     }
@@ -256,7 +264,9 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         }
         let alert = NSAlert()
         alert.messageText = String(localized: "Reload with new properties?")
-        alert.informativeText = String(localized: "This discards your unsaved changes and re-reads the file with the chosen settings.")
+        alert
+            .informativeText =
+            String(localized: "This discards your unsaved changes and re-reads the file with the chosen settings.")
         alert.alertStyle = .warning
         let reloadButton = alert.addButton(withTitle: String(localized: "Reload"))
         reloadButton.hasDestructiveAction = true
@@ -267,11 +277,13 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         }
     }
 
-    @objc func inspectorInsertRowAbove(_ sender: Any?) {
+    @objc
+    func inspectorInsertRowAbove(_ sender: Any?) {
         performInsertRow(anchoredBy: sender, below: false)
     }
 
-    @objc func inspectorInsertRowBelow(_ sender: Any?) {
+    @objc
+    func inspectorInsertRowBelow(_ sender: Any?) {
         performInsertRow(anchoredBy: sender, below: true)
     }
 
@@ -298,7 +310,8 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         )
     }
 
-    @objc func inspectorAddColumn(_ sender: Any?) {
+    @objc
+    func inspectorAddColumn(_ sender: Any?) {
         promptForColumnName(title: String(localized: "Add Column"), initial: "") { [weak self] name in
             guard let self, let name, !name.isEmpty else { return }
             self.inspectorDocument?.appendColumn(name: name)
@@ -308,7 +321,8 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         }
     }
 
-    @objc func inspectorRenameColumn(_ sender: Any?) {
+    @objc
+    func inspectorRenameColumn(_ sender: Any?) {
         guard let menuItem = sender as? NSMenuItem,
               let inspector = inspectorDocument,
               menuItem.tag >= 0, menuItem.tag < inspector.columnNames.count else { return }
@@ -321,11 +335,13 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         }
     }
 
-    @objc func inspectorInsertColumnLeft(_ sender: Any?) {
+    @objc
+    func inspectorInsertColumnLeft(_ sender: Any?) {
         performInsertColumn(anchoredBy: sender, toRight: false)
     }
 
-    @objc func inspectorInsertColumnRight(_ sender: Any?) {
+    @objc
+    func inspectorInsertColumnRight(_ sender: Any?) {
         performInsertColumn(anchoredBy: sender, toRight: true)
     }
 
@@ -352,7 +368,8 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         )
     }
 
-    @objc func inspectorDeleteColumn(_ sender: Any?) {
+    @objc
+    func inspectorDeleteColumn(_ sender: Any?) {
         let columns = columnDeleteTargets(from: sender)
         performDeleteColumns(columns)
     }
@@ -409,12 +426,14 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         return false
     }
 
-    @objc func inspectorSplitColumn(_ sender: Any?) {
+    @objc
+    func inspectorSplitColumn(_ sender: Any?) {
         guard let column = structuralTargetColumn(from: sender) else { return }
         promptSplitColumn(column)
     }
 
-    @objc func inspectorMergeColumns(_ sender: Any?) {
+    @objc
+    func inspectorMergeColumns(_ sender: Any?) {
         guard let inspector = inspectorDocument,
               let column = structuralTargetColumn(from: sender),
               column + 1 < inspector.columnNames.count else { return }
@@ -472,7 +491,8 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
             inspector.columnNames[column],
             inspector.columnNames[column + 1]
         )
-        alert.informativeText = String(localized: "Join the two columns into one, placing this text between the values.")
+        alert
+            .informativeText = String(localized: "Join the two columns into one, placing this text between the values.")
         alert.addButton(withTitle: String(localized: "Merge"))
         alert.addButton(withTitle: String(localized: "Cancel"))
 
@@ -503,7 +523,7 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         guard let oldName else { return }
         let pieceCount = inspector.columnNames.count - oldCount + 1
         let upper = min(column + max(pieceCount, 0), inspector.columnNames.count)
-        let newNames = column < upper ? Array(inspector.columnNames[column..<upper]) : []
+        let newNames = column < upper ? Array(inspector.columnNames[column ..< upper]) : []
         replaceLayoutKey(oldName, with: newNames)
     }
 
@@ -511,7 +531,9 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         guard let window = view.window else { return }
         let alert = NSAlert()
         alert.messageText = String(localized: "Invalid pattern")
-        alert.informativeText = String(localized: "That regular expression could not be read. Check the syntax and try again.")
+        alert
+            .informativeText =
+            String(localized: "That regular expression could not be read. Check the syntax and try again.")
         alert.addButton(withTitle: String(localized: "OK"))
         alert.beginSheetModal(for: window)
     }
@@ -529,7 +551,8 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         return stack
     }
 
-    @objc func inspectorSetColumnType(_ sender: Any?) {
+    @objc
+    func inspectorSetColumnType(_ sender: Any?) {
         guard let menuItem = sender as? NSMenuItem,
               let assignment = menuItem.representedObject as? ColumnTypeAssignment else { return }
         inspectorDocument?.setTypeOverride(assignment.type, forColumn: assignment.column)
@@ -583,7 +606,7 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
 
     private func replaceLayoutKey(_ oldName: String, with newNames: [String]) {
         if var order = state.columnLayout.columnOrder, let position = order.firstIndex(of: oldName) {
-            order.replaceSubrange(position...position, with: newNames)
+            order.replaceSubrange(position ... position, with: newNames)
             state.columnLayout.columnOrder = order
         }
         state.columnLayout.columnWidths.removeValue(forKey: oldName)
@@ -617,7 +640,8 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         }
     }
 
-    @objc func toggleInspectorFilter(_ sender: Any?) {
+    @objc
+    func toggleInspectorFilter(_ sender: Any?) {
         let wasActive = isFilterActive
         state.isFilterVisible.toggle()
         if state.isFilterVisible, state.filters.isEmpty {
@@ -754,7 +778,7 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
                 index += 1
             }
         } else {
-            indices = Array(0..<total)
+            indices = Array(0 ..< total)
         }
 
         guard !Task.isCancelled else { return [] }
@@ -791,15 +815,14 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
 
     nonisolated private static func compareKeys(_ lhs: SortKey, _ rhs: SortKey) -> ComparisonResult {
         switch (lhs, rhs) {
-        case let (.double(a), .double(b)):
+        case (.double(let a), .double(let b)):
             return a < b ? .orderedAscending : (a > b ? .orderedDescending : .orderedSame)
-        case let (.text(a), .text(b)):
+        case (.text(let a), .text(let b)):
             return a < b ? .orderedAscending : (a > b ? .orderedDescending : .orderedSame)
         default:
             return .orderedSame
         }
     }
-
 
     private func refreshVisiblePage() {
         guard let inspectorDocument else { return }
@@ -827,10 +850,10 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         rows.reserveCapacity(end - start)
 
         if let displayIndices {
-            for displayRow in start..<end {
+            for displayRow in start ..< end {
                 let logicalIndex = displayIndices[displayRow]
                 storeIndices.append(logicalIndex)
-                let values = (0..<columnCount).map {
+                let values = (0 ..< columnCount).map {
                     PluginCellValue.text(inspectorDocument.value(row: logicalIndex, column: $0))
                 }
                 rows.append(Row(id: .existing(logicalIndex), values: ContiguousArray(values)))
@@ -846,7 +869,7 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
         }
 
         displayToStore = storeIndices
-        let columnTypes = (0..<columnCount).map {
+        let columnTypes = (0 ..< columnCount).map {
             Self.columnType(for: inspectorDocument.displayedType(forColumn: $0))
         }
         state.tableRows = TableRows(rows: rows, columns: columnNames, columnTypes: columnTypes)
@@ -922,10 +945,10 @@ final class InspectorViewController: NSViewController, NSUserInterfaceValidation
     private static func columnType(for inferred: InspectorColumnType) -> ColumnType {
         switch inferred {
         case .integer: return .integer(rawType: "INTEGER")
-        case .real:    return .decimal(rawType: "REAL")
+        case .real: return .decimal(rawType: "REAL")
         case .boolean: return .boolean(rawType: "BOOLEAN")
-        case .date:    return .date(rawType: "DATE")
-        case .text:    return .text(rawType: "TEXT")
+        case .date: return .date(rawType: "DATE")
+        case .text: return .text(rawType: "TEXT")
         }
     }
 }

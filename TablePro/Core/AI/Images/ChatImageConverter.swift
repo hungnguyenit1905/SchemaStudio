@@ -18,8 +18,8 @@ enum ChatImageConverterError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unsupportedFormat: return String(localized: "Unsupported image format")
-        case .decodingFailed:    return String(localized: "Could not decode image")
-        case .encodingFailed:    return String(localized: "Could not encode image")
+        case .decodingFailed: return String(localized: "Could not decode image")
+        case .encodingFailed: return String(localized: "Could not encode image")
         }
     }
 }
@@ -44,7 +44,8 @@ enum ChatImageConverter {
             let image: NSImage = try await loadObject(itemProvider: itemProvider)
             return try encode(nsImage: image)
         }
-        if let typeIdentifier = itemProvider.registeredTypeIdentifiers.first(where: { UTType($0)?.conforms(to: .image) ?? false }) {
+        if let typeIdentifier = itemProvider.registeredTypeIdentifiers
+            .first(where: { UTType($0)?.conforms(to: .image) ?? false }) {
             let data = try await loadData(itemProvider: itemProvider, typeIdentifier: typeIdentifier)
             return try await convert(data: data, sourceUTI: typeIdentifier)
         }
@@ -133,11 +134,11 @@ enum ChatImageConverter {
 
     private static func mediaType(forExtension ext: String) -> String {
         switch ext.lowercased() {
-        case "png":  return "image/png"
+        case "png": return "image/png"
         case "jpg", "jpeg": return "image/jpeg"
-        case "gif":  return "image/gif"
+        case "gif": return "image/gif"
         case "webp": return "image/webp"
-        default:     return "image/png"
+        default: return "image/png"
         }
     }
 

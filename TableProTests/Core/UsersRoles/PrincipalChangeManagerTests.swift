@@ -161,7 +161,7 @@ struct PrincipalChangeManagerTests {
 
         let changes = manager.pendingChanges()
         #expect(changes.count == 1)
-        guard case let .create(definition) = changes[0] else {
+        guard case .create(let definition) = changes[0] else {
             Issue.record("expected a single create carrying the edit")
             return
         }

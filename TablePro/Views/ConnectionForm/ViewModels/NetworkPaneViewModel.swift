@@ -71,7 +71,7 @@ final class NetworkPaneViewModel {
         let mode = connectionMode
         let needsDatabaseField = mode == .fileBased
             || (mode == .apiOnly && PluginManager.shared.supportsDatabaseSwitching(for: type))
-        if needsDatabaseField && database.trimmingCharacters(in: .whitespaces).isEmpty {
+        if needsDatabaseField, database.trimmingCharacters(in: .whitespaces).isEmpty {
             let label = mode == .fileBased
                 ? String(localized: "Database file path is required")
                 : String(localized: "Database name is required")
@@ -99,8 +99,7 @@ final class NetworkPaneViewModel {
         }
         var values: [String: String] = [:]
         for field in PluginManager.shared.additionalConnectionFields(for: newType)
-            where field.section == .connection
-        {
+            where field.section == .connection {
             if let defaultValue = field.defaultValue {
                 values[field.id] = defaultValue
             }
@@ -139,8 +138,7 @@ final class NetworkPaneViewModel {
             }
         }
         if connection.type.pluginTypeId == "MongoDB",
-           (values["mongoHosts"] ?? "").isEmpty
-        {
+           (values["mongoHosts"] ?? "").isEmpty {
             let existingHost = connection.host.isEmpty ? "localhost" : connection.host
             values["mongoHosts"] = "\(existingHost):\(connection.port)"
         }

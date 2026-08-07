@@ -41,9 +41,8 @@ extension MainContentView {
         switch payload.intent {
         case .openContent:
             if let selectedTab = tabManager.selectedTab,
-                selectedTab.tabType == .table,
-                let tableName = selectedTab.tableContext.tableName
-            {
+               selectedTab.tabType == .table,
+               let tableName = selectedTab.tableContext.tableName {
                 coordinator.restoreLastHiddenColumnsForTable()
                 if selectedTab.filterState.appliedFilters.isEmpty {
                     coordinator.restoreFiltersForTable(tableName)
@@ -57,12 +56,10 @@ extension MainContentView {
                 return
             }
             if let selectedTab = tabManager.selectedTab,
-                selectedTab.tabType == .table,
-                !selectedTab.content.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            {
+               selectedTab.tabType == .table,
+               !selectedTab.content.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 if let session = DatabaseManager.shared.activeSessions[connection.id],
-                    session.isConnected
-                {
+                   session.isConnected {
                     coordinator.lazyLoadCurrentTabIfNeeded()
                 } else {
                     coordinator.pendingLoadTrigger = .userInitiated
@@ -174,8 +171,7 @@ extension MainContentView {
         guard let selected = tabManager.selectedTab else { return }
 
         if selected.tabType == .table, let tableName = selected.tableContext.tableName,
-            !selected.content.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        {
+           !selected.content.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             coordinator.restoreLastHiddenColumnsForTable()
             coordinator.restoreFiltersForTable(tableName)
         }
@@ -267,9 +263,9 @@ extension MainContentView {
         }
         let hasDataChanges =
             changeManager.hasChanges
-            || !pendingTruncates.isEmpty
-            || !pendingDeletes.isEmpty
-            || toolbarState.hasStructureChanges
+                || !pendingTruncates.isEmpty
+                || !pendingDeletes.isEmpty
+                || toolbarState.hasStructureChanges
         let hasFileChanges = tabManager.selectedTab?.content.isFileDirty ?? false
         toolbarState.hasDataPendingChanges = hasDataChanges
         toolbarState.hasPendingChanges = hasDataChanges || hasFileChanges

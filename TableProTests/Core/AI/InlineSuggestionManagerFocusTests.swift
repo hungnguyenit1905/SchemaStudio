@@ -5,8 +5,8 @@
 //  Regression tests for InlineSuggestionManager focus lifecycle
 //
 
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("InlineSuggestionManager Focus Lifecycle")

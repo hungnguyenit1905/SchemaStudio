@@ -323,7 +323,6 @@ struct QueryExecutorTests {
         #expect(parsed.columnEnumValues["status"] == ["open", "closed", "archived"])
     }
 
-
     @Test("parseSchemaMetadata keeps a failed foreign key fetch distinguishable from zero foreign keys")
     func parseSchemaMetadataNilForeignKeys() {
         let schema = FetchedTableSchema(columns: [], foreignKeys: nil, approximateRowCount: nil)

@@ -19,7 +19,9 @@ struct IntegrationsConnectedClientsPane: View {
                 ContentUnavailableView(
                     String(localized: "No clients connected"),
                     systemImage: "person.2.slash",
-                    description: Text(String(localized: "Clients will appear here while they have an active MCP session."))
+                    description: Text(
+                        String(localized: "Clients will appear here while they have an active MCP session.")
+                    )
                 )
             } else {
                 ConnectedClientsTable(
@@ -74,7 +76,10 @@ struct IntegrationsConnectedClientsPane: View {
     }
 
     private func alertMessage(client: MCPServerManager.SessionSnapshot) -> some View {
-        Text(String(format: String(localized: "“%@” will be disconnected and any in-flight requests will be cancelled."), client.clientName))
+        Text(String(
+            format: String(localized: "“%@” will be disconnected and any in-flight requests will be cancelled."),
+            client.clientName
+        ))
     }
 
     private var subtitle: String {
@@ -101,9 +106,11 @@ private struct ConnectedClientsTable: View {
     let onDisconnect: (MCPServerManager.SessionSnapshot) -> Void
 
     var body: some View {
-        Table(of: MCPServerManager.SessionSnapshot.self,
-              selection: $selection,
-              sortOrder: $sortOrder) {
+        Table(
+            of: MCPServerManager.SessionSnapshot.self,
+            selection: $selection,
+            sortOrder: $sortOrder
+        ) {
             TableColumn(String(localized: "Client"), value: \.clientName) { client in
                 clientCell(for: client)
             }
@@ -141,7 +148,6 @@ private struct ConnectedClientsTable: View {
         }
     }
 
-    @ViewBuilder
     private func clientCell(for client: MCPServerManager.SessionSnapshot) -> some View {
         Label {
             Text(client.clientName)
@@ -178,19 +184,16 @@ private struct ConnectedClientsTable: View {
         }
     }
 
-    @ViewBuilder
     private func connectedCell(for client: MCPServerManager.SessionSnapshot) -> some View {
         Text(client.connectedSince, format: .relative(presentation: .named))
             .help(client.connectedSince.formatted(date: .complete, time: .standard))
     }
 
-    @ViewBuilder
     private func lastActivityCell(for client: MCPServerManager.SessionSnapshot) -> some View {
         Text(client.lastActivityAt, format: .relative(presentation: .named))
             .help(client.lastActivityAt.formatted(date: .complete, time: .standard))
     }
 
-    @ViewBuilder
     private func contextMenu(for client: MCPServerManager.SessionSnapshot) -> some View {
         Button(role: .destructive) {
             onDisconnect(client)

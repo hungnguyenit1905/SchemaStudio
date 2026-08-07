@@ -20,31 +20,31 @@ public enum SurrealDBError: PluginDriverError {
         switch self {
         case .notConnected:
             return String(localized: "Not connected to SurrealDB.")
-        case let .invalidEndpoint(endpoint):
+        case .invalidEndpoint(let endpoint):
             return String(format: String(localized: "Could not build a SurrealDB endpoint from %@."), endpoint)
-        case let .missingField(field):
+        case .missingField(let field):
             return String(format: String(localized: "%@ is required for the selected authentication level."), field)
-        case let .authenticationFailed(message):
+        case .authenticationFailed(let message):
             return message
-        case let .unsupportedServerVersion(version):
+        case .unsupportedServerVersion(let version):
             return String(
                 format: String(localized: "SurrealDB %@ is not supported. TablePro requires SurrealDB 2.0 or later."),
                 version
             )
-        case let .requestFailed(_, message):
+        case .requestFailed(_, let message):
             return message
-        case let .queryFailed(message, _):
+        case .queryFailed(let message, _):
             return message
-        case let .decodingFailed(detail):
+        case .decodingFailed(let detail):
             return String(format: String(localized: "Could not read the SurrealDB response: %@"), detail)
         }
     }
 
     public var pluginErrorCode: String? {
         switch self {
-        case let .requestFailed(status, _):
+        case .requestFailed(let status, _):
             return String(status)
-        case let .queryFailed(_, kind):
+        case .queryFailed(_, let kind):
             return kind
         default:
             return nil

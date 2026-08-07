@@ -15,11 +15,11 @@ enum PrincipalChange {
 
     var principal: PluginPrincipalRef {
         switch self {
-        case let .create(definition): definition.ref
-        case let .alter(old, _): old.ref
-        case let .setPassword(ref, _): ref
-        case let .modifyGrants(changeSet): changeSet.principal
-        case let .drop(ref, _): ref
+        case .create(let definition): definition.ref
+        case .alter(let old, _): old.ref
+        case .setPassword(let ref, _): ref
+        case .modifyGrants(let changeSet): changeSet.principal
+        case .drop(let ref, _): ref
         }
     }
 
@@ -27,7 +27,7 @@ enum PrincipalChange {
         switch self {
         case .drop:
             true
-        case let .modifyGrants(changeSet):
+        case .modifyGrants(let changeSet):
             !changeSet.grantsToRemove.isEmpty
         case .create, .alter, .setPassword:
             false

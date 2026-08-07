@@ -50,8 +50,19 @@ struct RegistryPlugin: Codable, Sendable, Identifiable {
     private let legacyMinPluginKitVersion: Int?
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, version, summary, author, homepage, category
-        case databaseTypeIds, binaries, minAppVersion, iconName, isVerified, metadata
+        case id
+        case name
+        case version
+        case summary
+        case author
+        case homepage
+        case category
+        case databaseTypeIds
+        case binaries
+        case minAppVersion
+        case iconName
+        case isVerified
+        case metadata
         case legacyDownloadURL = "downloadURL"
         case legacySha256 = "sha256"
         case legacyMinPluginKitVersion = "minPluginKitVersion"
@@ -125,7 +136,7 @@ extension RegistryPlugin {
         throw PluginError.noCompatibleBinary
     }
 
-    // Themes carry no native code, so PluginKit ABI does not apply; match on architecture only.
+    /// Themes carry no native code, so PluginKit ABI does not apply; match on architecture only.
     func resolvedThemeBinary(for arch: PluginArchitecture = .current) throws -> RegistryBinary {
         if let match = binaries.first(where: { $0.architecture == arch }) {
             return match
@@ -146,8 +157,8 @@ enum RegistryCategory: String, Codable, Sendable, CaseIterable, Identifiable {
     case databaseDriver = "database-driver"
     case exportFormat = "export-format"
     case importFormat = "import-format"
-    case theme = "theme"
-    case other = "other"
+    case theme
+    case other
 
     var id: String { rawValue }
 

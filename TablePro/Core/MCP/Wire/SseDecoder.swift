@@ -40,19 +40,19 @@ public actor SseDecoder {
         while index < buffer.endIndex {
             let byte = buffer[index]
             if byte == 0x0A {
-                let lineData = buffer[buffer.startIndex..<index]
-                buffer.removeSubrange(buffer.startIndex...index)
+                let lineData = buffer[buffer.startIndex ..< index]
+                buffer.removeSubrange(buffer.startIndex ... index)
                 return decodeLine(lineData)
             }
             if byte == 0x0D {
-                let lineData = buffer[buffer.startIndex..<index]
+                let lineData = buffer[buffer.startIndex ..< index]
                 let nextIndex = buffer.index(after: index)
                 if nextIndex < buffer.endIndex, buffer[nextIndex] == 0x0A {
-                    buffer.removeSubrange(buffer.startIndex...nextIndex)
+                    buffer.removeSubrange(buffer.startIndex ... nextIndex)
                 } else if nextIndex == buffer.endIndex {
                     return nil
                 } else {
-                    buffer.removeSubrange(buffer.startIndex...index)
+                    buffer.removeSubrange(buffer.startIndex ... index)
                 }
                 return decodeLine(lineData)
             }
@@ -73,7 +73,7 @@ public actor SseDecoder {
         let field: String
         let value: String
         if let colonIndex = line.firstIndex(of: ":") {
-            field = String(line[line.startIndex..<colonIndex])
+            field = String(line[line.startIndex ..< colonIndex])
             var rest = line[line.index(after: colonIndex)...]
             if rest.first == " " {
                 rest = rest.dropFirst()

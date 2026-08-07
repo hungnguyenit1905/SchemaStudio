@@ -22,7 +22,7 @@ final class AppState {
         if connectionsState.isFailed || groupsState.isFailed || tagsState.isFailed {
             return .failed
         }
-        if connectionsState.isLoaded && groupsState.isLoaded && tagsState.isLoaded {
+        if connectionsState.isLoaded, groupsState.isLoaded, tagsState.isLoaded {
             return .ready
         }
         return .loading
@@ -97,21 +97,21 @@ final class AppState {
 
     private func loadPersistedData() {
         do {
-            connectionsState = .loaded(try storage.load())
+            connectionsState = try .loaded(storage.load())
         } catch {
             connectionsState = .failed(error)
             Self.logger.error("Connections load failed: \(error.localizedDescription, privacy: .public)")
         }
 
         do {
-            groupsState = .loaded(try groupStorage.load())
+            groupsState = try .loaded(groupStorage.load())
         } catch {
             groupsState = .failed(error)
             Self.logger.error("Groups load failed: \(error.localizedDescription, privacy: .public)")
         }
 
         do {
-            tagsState = .loaded(try tagStorage.load())
+            tagsState = try .loaded(tagStorage.load())
         } catch {
             tagsState = .failed(error)
             Self.logger.error("Tags load failed: \(error.localizedDescription, privacy: .public)")

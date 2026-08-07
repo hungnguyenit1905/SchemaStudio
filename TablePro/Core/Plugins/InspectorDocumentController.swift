@@ -15,7 +15,10 @@ final class InspectorDocumentController: NSDocumentController {
         super.init()
         InspectorWindowFactory.make = { nsDocument in
             guard let inspector = nsDocument as? any InspectorDocument else {
-                Self.logger.error("InspectorWindowFactory - document is not an InspectorDocument (\(String(describing: Swift.type(of: nsDocument)), privacy: .public))")
+                Self.logger
+                    .error(
+                        "InspectorWindowFactory - document is not an InspectorDocument (\(String(describing: Swift.type(of: nsDocument)), privacy: .public))"
+                    )
                 return nil
             }
             return InspectorWindowController(nsDocument: nsDocument, inspectorDocument: inspector)

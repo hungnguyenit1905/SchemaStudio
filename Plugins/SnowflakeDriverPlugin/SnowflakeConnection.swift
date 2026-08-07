@@ -191,7 +191,11 @@ final class SnowflakeConnection: @unchecked Sendable {
 
         var extra: [String: Any] = ["PASSWORD": params.password]
         let usesPasscode = !params.mfaPasscode.isEmpty
-            && !SnowflakeMFATokenStore.isPasscodeRejected(params.mfaPasscode, account: params.account, user: params.user)
+            && !SnowflakeMFATokenStore.isPasscodeRejected(
+                params.mfaPasscode,
+                account: params.account,
+                user: params.user
+            )
         if usesPasscode {
             extra["PASSCODE"] = params.mfaPasscode
             extra["EXT_AUTHN_DUO_METHOD"] = "passcode"
@@ -338,7 +342,10 @@ final class SnowflakeConnection: @unchecked Sendable {
             SnowflakeMFATokenStore.store(mfaToken, account: params.account, user: params.user)
             Self.logger.info("Login succeeded (\(authenticator, privacy: .public)); MFA token cached for reuse")
         } else if authenticator == "SNOWFLAKE" || authenticator == "USERNAME_PASSWORD_MFA" {
-            Self.logger.info("Login succeeded (\(authenticator, privacy: .public)); no mfaToken returned; ALLOW_CLIENT_MFA_CACHING may be disabled on this account")
+            Self.logger
+                .info(
+                    "Login succeeded (\(authenticator, privacy: .public)); no mfaToken returned; ALLOW_CLIENT_MFA_CACHING may be disabled on this account"
+                )
         }
         if let idToken = responseData["idToken"] as? String, !idToken.isEmpty {
             SnowflakeIdTokenStore.store(idToken, account: params.account, user: params.user)
@@ -590,7 +597,7 @@ final class SnowflakeConnection: @unchecked Sendable {
         let affectedRows = Self.extractAffectedRows(columns: columns, rows: rows)
 
         if let chunks = data["chunks"] as? [[String: Any]], !chunks.isEmpty {
-            rows.append(contentsOf: try await downloadChunks(chunks, headers: Self.chunkRequestHeaders(from: data)))
+            try await rows.append(contentsOf: downloadChunks(chunks, headers: Self.chunkRequestHeaders(from: data)))
         }
 
         return SnowflakeQueryResult(
@@ -636,7 +643,7 @@ final class SnowflakeConnection: @unchecked Sendable {
                         while nextIndex < min(Self.chunkDownloadWorkers, urls.count) {
                             let index = nextIndex
                             group.addTask {
-                                (index, try await Self.downloadChunk(urls[index], headers: headers, session: session))
+                                try await (index, Self.downloadChunk(urls[index], headers: headers, session: session))
                             }
                             nextIndex += 1
                         }
@@ -650,7 +657,7 @@ final class SnowflakeConnection: @unchecked Sendable {
                             if nextIndex < urls.count {
                                 let next = nextIndex
                                 group.addTask {
-                                    (next, try await Self.downloadChunk(urls[next], headers: headers, session: session))
+                                    try await (next, Self.downloadChunk(urls[next], headers: headers, session: session))
                                 }
                                 nextIndex += 1
                             }
@@ -674,7 +681,10 @@ final class SnowflakeConnection: @unchecked Sendable {
 
     private static let chunkDownloadWorkers = 4
 
-    private func downloadChunks(_ chunks: [[String: Any]], headers: [String: String]) async throws -> [[PluginCellValueBox]] {
+    private func downloadChunks(
+        _ chunks: [[String: Any]],
+        headers: [String: String]
+    ) async throws -> [[PluginCellValueBox]] {
         let urls = chunks.compactMap { ($0["url"] as? String).flatMap(URL.init(string:)) }
         guard !urls.isEmpty else { return [] }
 
@@ -684,7 +694,7 @@ final class SnowflakeConnection: @unchecked Sendable {
             while nextIndex < min(Self.chunkDownloadWorkers, urls.count) {
                 let index = nextIndex
                 group.addTask { [session] in
-                    (index, try await Self.downloadChunk(urls[index], headers: headers, session: session))
+                    try await (index, Self.downloadChunk(urls[index], headers: headers, session: session))
                 }
                 nextIndex += 1
             }
@@ -693,7 +703,7 @@ final class SnowflakeConnection: @unchecked Sendable {
                 if nextIndex < urls.count {
                     let next = nextIndex
                     group.addTask { [session] in
-                        (next, try await Self.downloadChunk(urls[next], headers: headers, session: session))
+                        try await (next, Self.downloadChunk(urls[next], headers: headers, session: session))
                     }
                     nextIndex += 1
                 }
@@ -781,12 +791,15 @@ final class SnowflakeConnection: @unchecked Sendable {
 
     private func send(_ request: URLRequest) async throws -> [String: Any] {
         let (data, http) = try await SnowflakeHTTPClient.send(request, session: session)
-        guard (200..<300).contains(http.statusCode) else {
+        guard (200 ..< 300).contains(http.statusCode) else {
             let bodyText = String(data: data, encoding: .utf8) ?? ""
             Self.logger.error(
                 "HTTP \(http.statusCode, privacy: .public) from \(request.url?.path ?? "?", privacy: .public): \(String(bodyText.prefix(160)), privacy: .public)"
             )
-            throw SnowflakeError.invalidResponse("Snowflake returned HTTP \(http.statusCode) for \(request.url?.path ?? "request"): \(bodyText.prefix(300))")
+            throw SnowflakeError
+                .invalidResponse(
+                    "Snowflake returned HTTP \(http.statusCode) for \(request.url?.path ?? "request"): \(bodyText.prefix(300))"
+                )
         }
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw SnowflakeError.invalidResponse("Snowflake returned a non-JSON response")
@@ -886,24 +899,28 @@ final class SnowflakeConnection: @unchecked Sendable {
             offset += 2 + extraLen
         }
         if flags & 0x08 != 0 {
-            while offset < bytes.count, bytes[offset] != 0 { offset += 1 }
+            while offset < bytes.count, bytes[offset] != 0 {
+                offset += 1
+            }
             offset += 1
         }
         if flags & 0x10 != 0 {
-            while offset < bytes.count, bytes[offset] != 0 { offset += 1 }
+            while offset < bytes.count, bytes[offset] != 0 {
+                offset += 1
+            }
             offset += 1
         }
         if flags & 0x02 != 0 { offset += 2 }
         guard offset < bytes.count - 8 else { return data }
 
-        let deflateBytes = Array(bytes[offset..<(bytes.count - 8)])
+        let deflateBytes = Array(bytes[offset ..< (bytes.count - 8)])
         return inflate(deflateBytes) ?? data
     }
 
     private static func inflate(_ deflate: [UInt8]) -> Data? {
         guard !deflate.isEmpty else { return nil }
         var capacity = max(deflate.count * 8, 65_536)
-        for _ in 0..<6 {
+        for _ in 0 ..< 6 {
             var output = Data(count: capacity)
             let written = output.withUnsafeMutableBytes { (outPtr: UnsafeMutableRawBufferPointer) -> Int in
                 deflate.withUnsafeBufferPointer { (inPtr: UnsafeBufferPointer<UInt8>) -> Int in
@@ -915,7 +932,7 @@ final class SnowflakeConnection: @unchecked Sendable {
                 }
             }
             if written > 0, written < capacity {
-                output.removeSubrange(written..<output.count)
+                output.removeSubrange(written ..< output.count)
                 return output
             }
             capacity *= 2

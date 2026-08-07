@@ -100,7 +100,7 @@ struct OpenAICompatibleProviderParserTests {
                 "tool_calls": [[
                     "function": [
                         "name": "list_tables",
-                        "arguments": ["connection_id": "abc"]  // object, not string
+                        "arguments": ["connection_id": "abc"] // object, not string
                     ]
                 ]]
             ]

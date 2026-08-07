@@ -77,8 +77,7 @@ final class AIImageCache: @unchecked Sendable {
               !filename.contains("/"),
               !filename.contains("\\"),
               filename != ".",
-              filename != ".."
-        else { return nil }
+              filename != ".." else { return nil }
         let candidate = cacheDirectory.appendingPathComponent(filename).standardizedFileURL
         let root = cacheDirectory.standardizedFileURL.path
         guard candidate.path.hasPrefix(root + "/") || candidate.path == root else { return nil }
@@ -87,11 +86,11 @@ final class AIImageCache: @unchecked Sendable {
 
     private func fileExtension(for mediaType: String) -> String {
         switch mediaType {
-        case "image/png":  return "png"
+        case "image/png": return "png"
         case "image/jpeg": return "jpg"
-        case "image/gif":  return "gif"
+        case "image/gif": return "gif"
         case "image/webp": return "webp"
-        default:           return "img"
+        default: return "img"
         }
     }
 }

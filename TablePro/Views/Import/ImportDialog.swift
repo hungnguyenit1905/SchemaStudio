@@ -142,7 +142,7 @@ struct ImportDialog: View {
             .filter { plugin in
                 let supported = type(of: plugin).supportedDatabaseTypeIds
                 let excluded = type(of: plugin).excludedDatabaseTypeIds
-                if !supported.isEmpty && !supported.contains(dbTypeId) {
+                if !supported.isEmpty, !supported.contains(dbTypeId) {
                     return false
                 }
                 if excluded.contains(dbTypeId) {
@@ -215,7 +215,10 @@ struct ImportDialog: View {
                 .frame(width: 80, alignment: .leading)
 
             Picker("", selection: $selectedFormatId) {
-                ForEach(availableFormats.map { (id: type(of: $0).formatId, name: type(of: $0).formatDisplayName) }, id: \.id) { item in
+                ForEach(
+                    availableFormats.map { (id: type(of: $0).formatId, name: type(of: $0).formatDisplayName) },
+                    id: \.id
+                ) { item in
                     Text(item.name).tag(item.id)
                 }
             }
@@ -306,7 +309,8 @@ struct ImportDialog: View {
                 performImport()
             }
             .buttonStyle(.borderedProminent)
-            .disabled(fileURL == nil || (importService?.state.isImporting ?? false) || availableFormats.isEmpty || hasPreviewError)
+            .disabled(fileURL == nil || (importService?.state.isImporting ?? false) || availableFormats
+                .isEmpty || hasPreviewError)
             .keyboardShortcut(.defaultAction)
         }
         .padding(16)
@@ -365,8 +369,7 @@ struct ImportDialog: View {
 
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false), isDirectory: &isDirectory),
-            !isDirectory.boolValue
-        else {
+              !isDirectory.boolValue else {
             filePreview = String(localized: "Error: Selected path is not a regular file")
             hasPreviewError = true
             return
@@ -378,7 +381,10 @@ struct ImportDialog: View {
             let attrs = try FileManager.default.attributesOfItem(atPath: url.path(percentEncoded: false))
             fileSize = attrs[.size] as? Int64 ?? 0
         } catch {
-            Self.logger.warning("Failed to get file attributes for \(url.path(percentEncoded: false), privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .warning(
+                    "Failed to get file attributes for \(url.path(percentEncoded: false), privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
             fileSize = 0
         }
 
@@ -400,7 +406,10 @@ struct ImportDialog: View {
                 do {
                     try handle.close()
                 } catch {
-                    Self.logger.warning("Failed to close file handle for preview: \(error.localizedDescription, privacy: .public)")
+                    Self.logger
+                        .warning(
+                            "Failed to close file handle for preview: \(error.localizedDescription, privacy: .public)"
+                        )
                 }
             }
 
@@ -411,7 +420,12 @@ struct ImportDialog: View {
                 filePreview = preview
                 hasPreviewError = false
             } else {
-                filePreview = String(format: String(localized: "Failed to load preview using encoding: %@. Try selecting a different text encoding."), selectedEncoding.rawValue)
+                filePreview = String(
+                    format: String(
+                        localized: "Failed to load preview using encoding: %@. Try selecting a different text encoding."
+                    ),
+                    selectedEncoding.rawValue
+                )
                 hasPreviewError = true
             }
         } catch {

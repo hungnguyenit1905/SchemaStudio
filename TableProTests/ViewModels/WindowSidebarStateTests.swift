@@ -10,9 +10,9 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @MainActor
 struct WindowSidebarStateTests {
@@ -160,8 +160,8 @@ struct WindowSidebarStateTests {
         let defaults = try makeDefaults()
         let connectionId = UUID()
         let stale = """
-            {"schemas":["public"],"databases":["shop"],"databaseSchemas":[{"database":"shop","schema":"public"}]}
-            """
+        {"schemas":["public"],"databases":["shop"],"databaseSchemas":[{"database":"shop","schema":"public"}]}
+        """
         defaults.set(Data(stale.utf8), forKey: "com.SchemaStudio.sidebar.treeExpansion.\(connectionId.uuidString)")
 
         let restored = WindowSidebarState(connectionId: connectionId, defaults: defaults)

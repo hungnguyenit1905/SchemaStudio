@@ -70,14 +70,13 @@ struct SqlWalkthroughPresentation: Equatable, Sendable {
         guard anchor.startLine >= 1, anchor.endLine >= anchor.startLine, anchor.endLine <= source.count else {
             return nil
         }
-        let joined = source[(anchor.startLine - 1)..<anchor.endLine].joined(separator: "\n")
+        let joined = source[(anchor.startLine - 1) ..< anchor.endLine].joined(separator: "\n")
         return joined.isEmpty ? nil : joined
     }
 
     func resolvedAnchor(_ anchor: SqlWalkthroughAnchor?) -> SqlWalkthroughAnchor? {
         guard let anchor,
-              anchor.isValid(beforeLineCount: beforeLines.count, afterLineCount: afterLines.count)
-        else { return nil }
+              anchor.isValid(beforeLineCount: beforeLines.count, afterLineCount: afterLines.count) else { return nil }
         return anchor
     }
 }

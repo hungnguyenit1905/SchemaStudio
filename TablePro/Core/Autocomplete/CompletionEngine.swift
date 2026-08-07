@@ -150,7 +150,7 @@ final class CompletionEngine {
         let adjustedContext = SQLContext(
             clauseType: context.clauseType,
             prefix: context.prefix,
-            prefixRange: replaceStart..<replaceEnd,
+            prefixRange: replaceStart ..< replaceEnd,
             dotPrefix: context.dotPrefix,
             tableReferences: context.tableReferences,
             isInsideString: context.isInsideString,

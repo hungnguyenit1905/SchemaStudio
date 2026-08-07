@@ -135,7 +135,7 @@ struct MainStatusBarView: View {
                         }
                     }
 
-                    if snapshot.tabType == .query && snapshot.pagination.hasMoreRows && !snapshot.pagination.isLoadingMore {
+                    if snapshot.tabType == .query, snapshot.pagination.hasMoreRows, !snapshot.pagination.isLoadingMore {
                         Text("·")
                             .font(.caption)
                             .foregroundStyle(.quaternary)
@@ -189,8 +189,8 @@ struct MainStatusBarView: View {
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: !columnState.hidden.isEmpty
-                                        ? "eye.slash.circle.fill"
-                                        : "eye.circle")
+                                    ? "eye.slash.circle.fill"
+                                    : "eye.circle")
                                 Text("Columns")
                                 if !columnState.hidden.isEmpty {
                                     let visible = columnState.all.count - columnState.hidden.count
@@ -220,8 +220,8 @@ struct MainStatusBarView: View {
                         )) {
                             HStack(spacing: 4) {
                                 Image(systemName: filterState.hasAppliedFilters
-                                        ? "line.3.horizontal.decrease.circle.fill"
-                                        : "line.3.horizontal.decrease.circle")
+                                    ? "line.3.horizontal.decrease.circle.fill"
+                                    : "line.3.horizontal.decrease.circle")
                                 Text("Filters")
                                 if filterState.hasAppliedFilters {
                                     Text("(\(filterState.appliedFilters.count))")
@@ -261,7 +261,6 @@ struct MainStatusBarView: View {
         }
     }
 
-    @ViewBuilder
     private func structureFooterControls(state: StructureFooterState) -> some View {
         AddRemoveControlGroup(
             addLabel: state.addLabel,

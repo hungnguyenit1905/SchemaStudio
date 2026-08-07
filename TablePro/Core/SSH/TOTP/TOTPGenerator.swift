@@ -8,7 +8,9 @@ import Foundation
 
 internal struct TOTPGenerator {
     enum Algorithm {
-        case sha1, sha256, sha512
+        case sha1
+        case sha256
+        case sha512
     }
 
     let secret: Data
@@ -42,7 +44,7 @@ internal struct TOTPGenerator {
             | UInt32(hmac[offset + 3])
 
         var divisor: UInt32 = 1
-        for _ in 0..<digits {
+        for _ in 0 ..< digits {
             divisor *= 10
         }
         let code = truncated % divisor

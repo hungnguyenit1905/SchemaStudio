@@ -44,7 +44,7 @@ final class DataGridColumnPool {
         var comments: [NSUserInterfaceItemIdentifier: String] = [:]
         var showsComments = false
 
-        for slot in 0..<pooledColumns.count {
+        for slot in 0 ..< pooledColumns.count {
             let column = pooledColumns[slot]
             if slot < visibleCount {
                 let columnName = schema.columnNames[slot]
@@ -120,7 +120,7 @@ final class DataGridColumnPool {
             }
         }
 
-        for slot in 0..<visibleCount where !seen.contains(slot) {
+        for slot in 0 ..< visibleCount where !seen.contains(slot) {
             slots.append(slot)
         }
         return slots
@@ -139,8 +139,8 @@ final class DataGridColumnPool {
             attached.insert(pooledColumns[slot].identifier)
         }
 
-        for slot in 0..<pooledColumns.count
-        where slot >= visibleCount && !attached.contains(pooledColumns[slot].identifier) {
+        for slot in 0 ..< pooledColumns.count
+            where slot >= visibleCount && !attached.contains(pooledColumns[slot].identifier) {
             tableView.addTableColumn(pooledColumns[slot])
             attached.insert(pooledColumns[slot].identifier)
         }

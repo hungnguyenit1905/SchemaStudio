@@ -27,6 +27,7 @@ class DataGridRowView: NSTableRowView {
         canDrawSubviewsIntoLayer = true
     }
 
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -123,7 +124,7 @@ class DataGridRowView: NSTableRowView {
     private func colorsEqual(_ lhs: NSColor?, _ rhs: NSColor?) -> Bool {
         switch (lhs, rhs) {
         case (nil, nil): return true
-        case let (l?, r?): return l == r
+        case (let l?, let r?): return l == r
         default: return false
         }
     }
@@ -166,7 +167,7 @@ class DataGridRowView: NSTableRowView {
     }
 
     override func menu(for event: NSEvent) -> NSMenu? {
-        guard let coordinator = coordinator,
+        guard let coordinator,
               let tableView = coordinator.tableView else { return nil }
 
         let locationInRow = convert(event.locationInWindow, from: nil)
@@ -195,7 +196,8 @@ class DataGridRowView: NSTableRowView {
         }
 
         let copyItem = NSMenuItem(
-            title: String(localized: "Copy"), action: #selector(copyFromContextMenu(_:)), keyEquivalent: "")
+            title: String(localized: "Copy"), action: #selector(copyFromContextMenu(_:)), keyEquivalent: ""
+        )
         copyItem.representedObject = copyTarget
         copyItem.target = self
         menu.addItem(copyItem)
@@ -213,35 +215,40 @@ class DataGridRowView: NSTableRowView {
         let copyWithHeadersItem = NSMenuItem(
             title: String(localized: "With Headers"),
             action: #selector(copySelectedOrCurrentRowWithHeaders),
-            keyEquivalent: "")
+            keyEquivalent: ""
+        )
         copyWithHeadersItem.target = self
         copyAsMenu.addItem(copyWithHeadersItem)
 
         let jsonItem = NSMenuItem(
             title: String(localized: "JSON"),
             action: #selector(copyAsJson),
-            keyEquivalent: "")
+            keyEquivalent: ""
+        )
         jsonItem.target = self
         copyAsMenu.addItem(jsonItem)
 
         let csvItem = NSMenuItem(
             title: String(localized: "CSV"),
             action: #selector(copyAsCsv),
-            keyEquivalent: "")
+            keyEquivalent: ""
+        )
         csvItem.target = self
         copyAsMenu.addItem(csvItem)
 
         let csvHeadersItem = NSMenuItem(
             title: String(localized: "CSV with Headers"),
             action: #selector(copyAsCsvWithHeaders),
-            keyEquivalent: "")
+            keyEquivalent: ""
+        )
         csvHeadersItem.target = self
         copyAsMenu.addItem(csvHeadersItem)
 
         let markdownItem = NSMenuItem(
             title: String(localized: "Markdown"),
             action: #selector(copyAsMarkdown),
-            keyEquivalent: "")
+            keyEquivalent: ""
+        )
         markdownItem.target = self
         copyAsMenu.addItem(markdownItem)
 
@@ -249,28 +256,31 @@ class DataGridRowView: NSTableRowView {
             let inClauseItem = NSMenuItem(
                 title: String(localized: "IN Clause"),
                 action: #selector(copyAsInClause(_:)),
-                keyEquivalent: "")
+                keyEquivalent: ""
+            )
             inClauseItem.representedObject = dataColumnIndex
             inClauseItem.target = self
             copyAsMenu.addItem(inClauseItem)
         }
 
         if let dbType = coordinator.databaseType,
-           dbType != .mongodb && dbType != .redis,
+           dbType != .mongodb, dbType != .redis,
            coordinator.tableName != nil {
             copyAsMenu.addItem(NSMenuItem.separator())
 
             let insertItem = NSMenuItem(
                 title: String(localized: "INSERT Statement(s)"),
                 action: #selector(copyAsInsert),
-                keyEquivalent: "")
+                keyEquivalent: ""
+            )
             insertItem.target = self
             copyAsMenu.addItem(insertItem)
 
             let updateItem = NSMenuItem(
                 title: String(localized: "UPDATE Statement(s)"),
                 action: #selector(copyAsUpdate),
-                keyEquivalent: "")
+                keyEquivalent: ""
+            )
             updateItem.target = self
             copyAsMenu.addItem(updateItem)
         }
@@ -281,7 +291,8 @@ class DataGridRowView: NSTableRowView {
 
         if coordinator.isEditable {
             let pasteItem = NSMenuItem(
-                title: String(localized: "Paste"), action: #selector(pasteRows), keyEquivalent: "")
+                title: String(localized: "Paste"), action: #selector(pasteRows), keyEquivalent: ""
+            )
             pasteItem.target = self
             menu.addItem(pasteItem)
         }
@@ -293,7 +304,7 @@ class DataGridRowView: NSTableRowView {
             menu.addItem(NSMenuItem.separator())
         }
 
-        if coordinator.isEditable && dataColumnIndex >= 0 {
+        if coordinator.isEditable, dataColumnIndex >= 0 {
             let setValueItem = NSMenuItem(title: String(localized: "Set Value"), action: nil, keyEquivalent: "")
             setValueItem.submenu = buildSetValueMenu(dataColumnIndex: dataColumnIndex, tableRows: tableRows)
             menu.addItem(setValueItem)
@@ -329,7 +340,8 @@ class DataGridRowView: NSTableRowView {
             }
 
             let duplicateItem = NSMenuItem(
-                title: String(localized: "Duplicate"), action: #selector(duplicateRow), keyEquivalent: "")
+                title: String(localized: "Duplicate"), action: #selector(duplicateRow), keyEquivalent: ""
+            )
             duplicateItem.target = self
             menu.addItem(duplicateItem)
 
@@ -349,7 +361,8 @@ class DataGridRowView: NSTableRowView {
         let setValueMenu = NSMenu()
 
         let emptyItem = NSMenuItem(
-            title: String(localized: "Empty"), action: #selector(setEmptyValue(_:)), keyEquivalent: "")
+            title: String(localized: "Empty"), action: #selector(setEmptyValue(_:)), keyEquivalent: ""
+        )
         emptyItem.representedObject = dataColumnIndex
         emptyItem.target = self
         setValueMenu.addItem(emptyItem)
@@ -361,16 +374,18 @@ class DataGridRowView: NSTableRowView {
         let isNullable = columnName.flatMap { tableRows.columnNullable[$0] } ?? true
         if isNullable {
             let nullItem = NSMenuItem(
-                title: String(localized: "NULL"), action: #selector(setNullValue(_:)), keyEquivalent: "")
+                title: String(localized: "NULL"), action: #selector(setNullValue(_:)), keyEquivalent: ""
+            )
             nullItem.representedObject = dataColumnIndex
             nullItem.target = self
             setValueMenu.addItem(nullItem)
         }
 
-        let hasDefault = columnName.flatMap({ tableRows.columnDefaults[$0] ?? nil }) != nil
+        let hasDefault = columnName.flatMap { tableRows.columnDefaults[$0] ?? nil } != nil
         if hasDefault {
             let defaultItem = NSMenuItem(
-                title: String(localized: "Default"), action: #selector(setDefaultValue(_:)), keyEquivalent: "")
+                title: String(localized: "Default"), action: #selector(setDefaultValue(_:)), keyEquivalent: ""
+            )
             defaultItem.representedObject = dataColumnIndex
             defaultItem.target = self
             setValueMenu.addItem(defaultItem)
@@ -383,7 +398,8 @@ class DataGridRowView: NSTableRowView {
             setValueMenu.addItem(.separator())
             for function in Self.dateValueFunctions(for: columnType) {
                 let item = NSMenuItem(
-                    title: function, action: #selector(setSqlFunctionValue(_:)), keyEquivalent: "")
+                    title: function, action: #selector(setSqlFunctionValue(_:)), keyEquivalent: ""
+                )
                 item.representedObject = DateSetterContext(columnIndex: dataColumnIndex, value: function)
                 item.target = self
                 setValueMenu.addItem(item)
@@ -393,30 +409,36 @@ class DataGridRowView: NSTableRowView {
         return setValueMenu
     }
 
-    @objc private func deleteRow() {
+    @objc
+    private func deleteRow() {
         guard let coordinator else { return }
         coordinator.delegate?.dataGridDeleteRows(coordinator.currentRowSelection(fallbackRow: rowIndex))
     }
 
-    @objc private func duplicateRow() {
+    @objc
+    private func duplicateRow() {
         coordinator?.delegate?.dataGridDuplicateRow()
     }
 
-    @objc private func undoDeleteRow() {
+    @objc
+    private func undoDeleteRow() {
         coordinator?.undoDeleteRow(at: rowIndex)
     }
 
-    @objc private func copySelectedOrCurrentRowWithHeaders() {
+    @objc
+    private func copySelectedOrCurrentRowWithHeaders() {
         guard let coordinator else { return }
         coordinator.copyRowsWithHeaders(at: coordinator.currentRowSelection(fallbackRow: rowIndex))
     }
 
-    @objc private func copySelectedOrCurrentRow() {
+    @objc
+    private func copySelectedOrCurrentRow() {
         guard let coordinator else { return }
         coordinator.delegate?.dataGridCopyRows(coordinator.currentRowSelection(fallbackRow: rowIndex))
     }
 
-    @objc private func copyFromContextMenu(_ sender: NSMenuItem) {
+    @objc
+    private func copyFromContextMenu(_ sender: NSMenuItem) {
         guard let coordinator else { return }
         if !coordinator.selectionController.isEmpty {
             coordinator.copyGridSelection(coordinator.selectionController.selection)
@@ -436,7 +458,8 @@ class DataGridRowView: NSTableRowView {
         }
     }
 
-    @objc private func pasteRows() {
+    @objc
+    private func pasteRows() {
         coordinator?.delegate?.dataGridPasteRows()
     }
 
@@ -451,22 +474,26 @@ class DataGridRowView: NSTableRowView {
         )
     }
 
-    @objc private func setNullValue(_ sender: NSMenuItem) {
+    @objc
+    private func setNullValue(_ sender: NSMenuItem) {
         guard let columnIndex = sender.representedObject as? Int else { return }
         coordinator?.setCellValueAtColumn(nil, at: rowIndex, columnIndex: columnIndex)
     }
 
-    @objc private func setEmptyValue(_ sender: NSMenuItem) {
+    @objc
+    private func setEmptyValue(_ sender: NSMenuItem) {
         guard let columnIndex = sender.representedObject as? Int else { return }
         coordinator?.setCellValueAtColumn("", at: rowIndex, columnIndex: columnIndex)
     }
 
-    @objc private func setDefaultValue(_ sender: NSMenuItem) {
+    @objc
+    private func setDefaultValue(_ sender: NSMenuItem) {
         guard let columnIndex = sender.representedObject as? Int else { return }
         coordinator?.setCellValueAtColumn("__DEFAULT__", at: rowIndex, columnIndex: columnIndex)
     }
 
-    @objc private func setSqlFunctionValue(_ sender: NSMenuItem) {
+    @objc
+    private func setSqlFunctionValue(_ sender: NSMenuItem) {
         guard let context = sender.representedObject as? DateSetterContext else { return }
         coordinator?.setCellValueAtColumn(context.value, at: rowIndex, columnIndex: context.columnIndex)
     }
@@ -484,45 +511,54 @@ class DataGridRowView: NSTableRowView {
         }
     }
 
-    @objc private func copyAsInsert() {
+    @objc
+    private func copyAsInsert() {
         guard let coordinator else { return }
         coordinator.copyRowsAsInsert(at: coordinator.currentRowSelection(fallbackRow: rowIndex))
     }
 
-    @objc private func copyAsUpdate() {
+    @objc
+    private func copyAsUpdate() {
         guard let coordinator else { return }
         coordinator.copyRowsAsUpdate(at: coordinator.currentRowSelection(fallbackRow: rowIndex))
     }
 
-    @objc private func exportResults() {
+    @objc
+    private func exportResults() {
         AppCommands.shared.exportQueryResults.send(())
     }
 
-    @objc private func clearResults() {
+    @objc
+    private func clearResults() {
         coordinator?.delegate?.dataGridClearResults()
     }
 
-    @objc private func copyAsJson() {
+    @objc
+    private func copyAsJson() {
         guard let coordinator else { return }
         coordinator.copyRowsAsJson(at: coordinator.currentRowSelection(fallbackRow: rowIndex))
     }
 
-    @objc private func copyAsCsv() {
+    @objc
+    private func copyAsCsv() {
         guard let coordinator else { return }
         coordinator.copyRowsAsCsv(at: coordinator.currentRowSelection(fallbackRow: rowIndex), includeHeaders: false)
     }
 
-    @objc private func copyAsCsvWithHeaders() {
+    @objc
+    private func copyAsCsvWithHeaders() {
         guard let coordinator else { return }
         coordinator.copyRowsAsCsv(at: coordinator.currentRowSelection(fallbackRow: rowIndex), includeHeaders: true)
     }
 
-    @objc private func copyAsMarkdown() {
+    @objc
+    private func copyAsMarkdown() {
         guard let coordinator else { return }
         coordinator.copyRowsAsMarkdown(at: coordinator.currentRowSelection(fallbackRow: rowIndex))
     }
 
-    @objc private func copyAsInClause(_ sender: NSMenuItem) {
+    @objc
+    private func copyAsInClause(_ sender: NSMenuItem) {
         guard let coordinator, let columnIndex = sender.representedObject as? Int else { return }
         coordinator.copyRowsAsInClause(
             at: coordinator.currentRowSelection(fallbackRow: rowIndex),
@@ -530,7 +566,8 @@ class DataGridRowView: NSTableRowView {
         )
     }
 
-    @objc private func previewForeignKey(_ sender: NSMenuItem) {
+    @objc
+    private func previewForeignKey(_ sender: NSMenuItem) {
         guard let columnIndex = sender.representedObject as? Int,
               let coordinator, let tableView = coordinator.tableView,
               let column = coordinator.tableColumnIndex(for: columnIndex) else { return }
@@ -539,11 +576,13 @@ class DataGridRowView: NSTableRowView {
         )
     }
 
-    @objc private func navigateToForeignKey(_ sender: NSMenuItem) {
+    @objc
+    private func navigateToForeignKey(_ sender: NSMenuItem) {
         performForeignKeyNavigation(from: sender, openInNewTab: false)
     }
 
-    @objc private func navigateToForeignKeyInNewTab(_ sender: NSMenuItem) {
+    @objc
+    private func navigateToForeignKeyInNewTab(_ sender: NSMenuItem) {
         performForeignKeyNavigation(from: sender, openInNewTab: true)
     }
 

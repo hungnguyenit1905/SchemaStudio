@@ -69,7 +69,8 @@ final class MQLExportPlugin: ExportFormatPlugin, SettablePlugin {
 
         let dbName = tables.first?.databaseName ?? ""
         if !dbName.isEmpty {
-            try fileHandle.write(contentsOf: "// Database: \(PluginExportUtilities.sanitizeForSQLComment(dbName))\n".toUTF8Data())
+            try fileHandle
+                .write(contentsOf: "// Database: \(PluginExportUtilities.sanitizeForSQLComment(dbName))\n".toUTF8Data())
         }
         try fileHandle.write(contentsOf: "\n".toUTF8Data())
 
@@ -86,7 +87,9 @@ final class MQLExportPlugin: ExportFormatPlugin, SettablePlugin {
 
             let collectionAccessor = MQLExportHelpers.collectionAccessor(for: table.name)
 
-            try fileHandle.write(contentsOf: "// Collection: \(PluginExportUtilities.sanitizeForSQLComment(table.name))\n".toUTF8Data())
+            try fileHandle
+                .write(contentsOf: "// Collection: \(PluginExportUtilities.sanitizeForSQLComment(table.name))\n"
+                    .toUTF8Data())
 
             if includeDrop {
                 try fileHandle.write(contentsOf: "\(collectionAccessor).drop();\n".toUTF8Data())
@@ -210,7 +213,10 @@ final class MQLExportPlugin: ExportFormatPlugin, SettablePlugin {
             }
             if foundHeader {
                 var processedLine = line
-                let escapedForDDL = collection.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+                let escapedForDDL = collection.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(
+                    of: "\"",
+                    with: "\\\""
+                )
                 let ddlAccessor = "db[\"\(escapedForDDL)\"]"
                 if processedLine.hasPrefix(ddlAccessor) {
                     processedLine = collectionAccessor + String(processedLine.dropFirst(ddlAccessor.count))

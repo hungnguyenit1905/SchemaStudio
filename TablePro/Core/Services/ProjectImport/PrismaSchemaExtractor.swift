@@ -47,13 +47,13 @@ enum PrismaSchemaExtractor {
         guard let start = contents.range(of: "datasource", options: .caseInsensitive) else {
             return nil
         }
-        guard let open = contents.range(of: "{", range: start.upperBound..<contents.endIndex) else {
+        guard let open = contents.range(of: "{", range: start.upperBound ..< contents.endIndex) else {
             return nil
         }
-        guard let close = contents.range(of: "}", range: open.upperBound..<contents.endIndex) else {
+        guard let close = contents.range(of: "}", range: open.upperBound ..< contents.endIndex) else {
             return nil
         }
-        return String(contents[open.upperBound..<close.lowerBound])
+        return String(contents[open.upperBound ..< close.lowerBound])
     }
 
     static func value(of key: String, in block: String) -> String? {
@@ -88,7 +88,7 @@ enum PrismaSchemaExtractor {
         guard let open = value.firstIndex(of: "("), let close = value.lastIndex(of: ")") else {
             return nil
         }
-        let inner = String(value[value.index(after: open)..<close])
+        let inner = String(value[value.index(after: open) ..< close])
         let name = unquoted(inner.trimmingCharacters(in: .whitespaces))
         return name.isEmpty ? nil : name
     }

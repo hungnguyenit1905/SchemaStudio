@@ -1,7 +1,7 @@
 import Foundation
-import Testing
-import TableProModels
 @testable import TableProMobile
+import TableProModels
+import Testing
 
 @Suite("RowInsertPlanner")
 struct RowInsertPlannerTests {

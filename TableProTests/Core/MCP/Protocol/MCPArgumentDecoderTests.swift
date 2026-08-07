@@ -1,6 +1,6 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("MCP Argument Decoder")
@@ -106,14 +106,14 @@ struct MCPArgumentDecoderTests {
     @Test("optionalInt clamps within range")
     func optionalIntClamps() {
         let args: JsonValue = .object(["count": .int(1_000)])
-        let value = MCPArgumentDecoder.optionalInt(args, key: "count", default: nil, clamp: 1...100)
+        let value = MCPArgumentDecoder.optionalInt(args, key: "count", default: nil, clamp: 1 ... 100)
         #expect(value == 100)
     }
 
     @Test("optionalInt clamps lower bound")
     func optionalIntClampLower() {
         let args: JsonValue = .object(["count": .int(-5)])
-        let value = MCPArgumentDecoder.optionalInt(args, key: "count", default: nil, clamp: 1...100)
+        let value = MCPArgumentDecoder.optionalInt(args, key: "count", default: nil, clamp: 1 ... 100)
         #expect(value == 1)
     }
 

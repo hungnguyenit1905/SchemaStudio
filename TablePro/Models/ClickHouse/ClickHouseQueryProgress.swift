@@ -28,12 +28,12 @@ struct ClickHouseQueryProgress: Equatable {
 
     private static func formatCount(_ count: UInt64) -> String {
         switch count {
-        case 0..<1_000:
+        case 0 ..< 1_000:
             return "\(count)"
-        case 1_000..<1_000_000:
+        case 1_000 ..< 1_000_000:
             let k = Double(count) / 1_000
             return String(format: "%.1fK", k)
-        case 1_000_000..<1_000_000_000:
+        case 1_000_000 ..< 1_000_000_000:
             let m = Double(count) / 1_000_000
             return String(format: "%.1fM", m)
         default:
@@ -44,12 +44,12 @@ struct ClickHouseQueryProgress: Equatable {
 
     private static func formatBytes(_ bytes: UInt64) -> String {
         switch bytes {
-        case 0..<1_024:
+        case 0 ..< 1_024:
             return "\(bytes) B"
-        case 1_024..<1_048_576:
+        case 1_024 ..< 1_048_576:
             let kb = Double(bytes) / 1_024
             return String(format: "%.0f KB", kb)
-        case 1_048_576..<1_073_741_824:
+        case 1_048_576 ..< 1_073_741_824:
             let mb = Double(bytes) / 1_048_576
             return String(format: "%.1f MB", mb)
         default:

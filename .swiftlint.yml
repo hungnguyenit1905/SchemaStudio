@@ -16,7 +16,6 @@ excluded:
 
 # Enabled rules (beyond default)
 opt_in_rules:
-  - closure_end_indentation
   - collection_alignment
   - contains_over_filter_count
   - contains_over_filter_is_empty
@@ -74,6 +73,11 @@ opt_in_rules:
 
 # Disabled rules
 disabled_rules:
+  # SwiftFormat owns wrapping and indentation. Its 120-column wrapping of long
+  # closure signatures and capture lists is what these two reject, so leaving
+  # them on makes the two tools undo each other.
+  - closure_parameter_position
+  - closure_end_indentation
   - trailing_comma
   - todo
   - opening_brace

@@ -33,7 +33,7 @@ final class TeradataAsyncConnection: @unchecked Sendable {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 do {
-                    continuation.resume(returning: try body(self.connection))
+                    try continuation.resume(returning: body(self.connection))
                 } catch {
                     continuation.resume(throwing: error)
                 }

@@ -67,7 +67,10 @@ struct SnowflakeRetryPolicyTests {
 
     @Test("Retried URL tags the attempt and keeps the request id")
     func testRetriedURLTagging() throws {
-        let url = try #require(URL(string: "https://x.snowflakecomputing.com/queries/v1/query-request?requestId=abc&request_guid=old"))
+        let url =
+            try #require(
+                URL(string: "https://x.snowflakecomputing.com/queries/v1/query-request?requestId=abc&request_guid=old")
+            )
         let retried = SnowflakeRetryPolicy.retriedURL(url, retryCount: 2, retryReason: 503, clientStartTime: 1_700_000)
         let components = try #require(URLComponents(url: retried, resolvingAgainstBaseURL: false))
         let items = Dictionary(uniqueKeysWithValues: (components.queryItems ?? []).map { ($0.name, $0.value ?? "") })
@@ -82,7 +85,7 @@ struct SnowflakeRetryPolicyTests {
     func testDelayBounds() {
         var generator = SystemRandomNumberGenerator()
         var delay = SnowflakeRetryPolicy.baseDelay
-        for _ in 0..<20 {
+        for _ in 0 ..< 20 {
             delay = SnowflakeRetryPolicy.nextDelay(after: delay, using: &generator)
             #expect(delay >= SnowflakeRetryPolicy.baseDelay)
             #expect(delay <= SnowflakeRetryPolicy.maxDelay)

@@ -72,7 +72,11 @@ struct PostgreSQLSchemaEscapeTests {
 private func filterRejects(_ name: String, query: String) -> Bool {
     if query.contains("'\(name)'") { return true }
 
-    for (pattern, escape) in extractNotLikePatterns(query) where evaluateLike(pattern: pattern, escape: escape, value: name) {
+    for (pattern, escape) in extractNotLikePatterns(query) where evaluateLike(
+        pattern: pattern,
+        escape: escape,
+        value: name
+    ) {
         return true
     }
     return false
@@ -82,7 +86,7 @@ private func extractNotLikePatterns(_ sql: String) -> [(pattern: String, escape:
     let regex = #"NOT LIKE\s+'((?:[^'\\]|\\.)*)'(?:\s+ESCAPE\s+'(\\?.)')?"#
     guard let nsRegex = try? NSRegularExpression(pattern: regex, options: [.caseInsensitive]) else { return [] }
 
-    let nsRange = NSRange(sql.startIndex..<sql.endIndex, in: sql)
+    let nsRange = NSRange(sql.startIndex ..< sql.endIndex, in: sql)
     var results: [(String, Character?)] = []
 
     nsRegex.enumerateMatches(in: sql, options: [], range: nsRange) { match, _, _ in

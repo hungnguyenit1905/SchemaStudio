@@ -18,7 +18,8 @@ extension TableViewCoordinator {
         visualIndex.updateRow(index, from: changeManager, sortedIDs: displayIDs)
         tableView?.reloadData(
             forRowIndexes: IndexSet(integer: index),
-            columnIndexes: IndexSet(integersIn: 0..<(tableView?.numberOfColumns ?? 0)))
+            columnIndexes: IndexSet(integersIn: 0 ..< (tableView?.numberOfColumns ?? 0))
+        )
         refreshRowVisualState(at: index)
     }
 
@@ -132,7 +133,8 @@ extension TableViewCoordinator {
                 quoteIdentifier: driver?.quoteIdentifier,
                 escapeStringLiteral: driver?.escapeStringLiteral
             )
-            let typedRows = indices.sorted().compactMap { displayRow(at: $0).map { projection.values(Array($0.values)) } }
+            let typedRows = indices.sorted()
+                .compactMap { displayRow(at: $0).map { projection.values(Array($0.values)) } }
             guard !typedRows.isEmpty else { return }
             ClipboardService.shared.writeText(converter.generateInserts(rows: typedRows))
         } catch {
@@ -159,7 +161,8 @@ extension TableViewCoordinator {
                 quoteIdentifier: driver?.quoteIdentifier,
                 escapeStringLiteral: driver?.escapeStringLiteral
             )
-            let typedRows = indices.sorted().compactMap { displayRow(at: $0).map { projection.values(Array($0.values)) } }
+            let typedRows = indices.sorted()
+                .compactMap { displayRow(at: $0).map { projection.values(Array($0.values)) } }
             guard !typedRows.isEmpty else { return }
             ClipboardService.shared.writeText(converter.generateUpdates(rows: typedRows))
         } catch {
@@ -230,7 +233,7 @@ extension TableViewCoordinator {
 
         var lines: [String] = []
         lines.reserveCapacity(rowCount)
-        for rowIndex in 0..<rowCount {
+        for rowIndex in 0 ..< rowCount {
             guard let row = displayRow(at: rowIndex), row.values.indices.contains(columnIndex) else { continue }
             let text = RowValueCopyFormatter.copyText(cell: row.values[columnIndex], columnType: columnType) ?? "NULL"
             lines.append(text)
@@ -327,7 +330,7 @@ extension TableViewCoordinator {
               let fromRow = Int(rowString) else {
             return false
         }
-        guard fromRow != row && fromRow != row - 1 else { return false }
+        guard fromRow != row, fromRow != row - 1 else { return false }
         delegate.dataGridMoveRow(from: fromRow, to: row)
         return true
     }
@@ -355,8 +358,8 @@ extension TableViewCoordinator {
         let rowCount = displayIDs?.count ?? tableRows.rows.count
         let columnCount = tableRows.columns.count
 
-        let rowRange = rect.rows.lowerBound...min(rect.rows.upperBound, max(0, rowCount - 1))
-        let columnRange = rect.columns.lowerBound...min(rect.columns.upperBound, max(0, columnCount - 1))
+        let rowRange = rect.rows.lowerBound ... min(rect.rows.upperBound, max(0, rowCount - 1))
+        let columnRange = rect.columns.lowerBound ... min(rect.columns.upperBound, max(0, columnCount - 1))
         guard rowRange.lowerBound <= rowRange.upperBound,
               columnRange.lowerBound <= columnRange.upperBound else { return }
 
@@ -379,7 +382,9 @@ extension TableViewCoordinator {
                     continue
                 }
                 let columnType = columnTypes.indices.contains(columnIndex) ? columnTypes[columnIndex] : nil
-                let text = RowValueCopyFormatter.copyText(cell: row.values[columnIndex], columnType: columnType) ?? "NULL"
+                let text = RowValueCopyFormatter.copyText(cell: row.values[
+                    columnIndex
+                ], columnType: columnType) ?? "NULL"
                 fields.append(text)
             }
             lines.append(fields.joined(separator: "\t"))

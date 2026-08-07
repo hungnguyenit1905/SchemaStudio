@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
-import SwiftUI
 @testable import SchemaStudio
+import SwiftUI
 import TableProPluginKit
 import Testing
 
@@ -12,9 +12,18 @@ private final class DataGridRowViewCopyClipboard: ClipboardProvider {
 
     func readText() -> String? { text }
     func readGridRows() -> GridRowsClipboardPayload? { nil }
-    func writeText(_ text: String) { self.text = text; hasGridRowsValue = false }
-    func writeCsv(_ csv: String) { text = csv; hasGridRowsValue = false }
-    func writeRows(tsv: String, html: String?, gridRows: GridRowsClipboardPayload) { text = tsv; hasGridRowsValue = true }
+    func writeText(_ text: String) { self.text = text
+        hasGridRowsValue = false
+    }
+
+    func writeCsv(_ csv: String) { text = csv
+        hasGridRowsValue = false
+    }
+
+    func writeRows(tsv: String, html: String?, gridRows: GridRowsClipboardPayload) { text = tsv
+        hasGridRowsValue = true
+    }
+
     var hasText: Bool { text != nil }
     var hasGridRows: Bool { hasGridRowsValue }
 }
@@ -49,7 +58,7 @@ struct DataGridRowViewCopyTests {
         selectedRows: Set<Int> = [],
         delegate: (any DataGridViewDelegate)? = nil
     ) -> TableViewCoordinator {
-        let columns = (0..<columnTypes.count).map { "c\($0)" }
+        let columns = (0 ..< columnTypes.count).map { "c\($0)" }
         let coordinator = TableViewCoordinator(
             changeManager: AnyChangeManager(DataChangeManager()),
             isEditable: true,
@@ -222,7 +231,7 @@ struct DataGridRowViewCopyTests {
         )
         coordinator.selectionController.update(
             .single(
-                GridRect(rows: 0...1, columns: 0...1),
+                GridRect(rows: 0 ... 1, columns: 0 ... 1),
                 anchor: GridCoord(row: 0, column: 0),
                 active: GridCoord(row: 1, column: 0)
             )
@@ -469,7 +478,8 @@ struct DataGridRowViewCopyTests {
 
             _ = rowView.perform(NSSelectorFromString("copyAsUpdate"))
 
-            #expect(clipboard.text == "UPDATE `users` SET `c2` = 'NYC' WHERE `c0` = '1' AND `c1` = 'Alice' AND `c2` = 'NYC';")
+            #expect(clipboard
+                .text == "UPDATE `users` SET `c2` = 'NYC' WHERE `c0` = '1' AND `c1` = 'Alice' AND `c2` = 'NYC';")
         }
     }
 

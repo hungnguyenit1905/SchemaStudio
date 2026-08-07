@@ -154,23 +154,24 @@ final class FakeSOCKS5Server: @unchecked Sendable {
     }
 
     private func echoLoop(_ connection: NWConnection) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 65_536) { [weak self] data, _, isComplete, error in
-            guard let self, error == nil, !isComplete else {
-                connection.cancel()
-                return
-            }
-            if let data, !data.isEmpty {
-                connection.send(content: data, completion: .contentProcessed { sendError in
-                    guard sendError == nil else {
-                        connection.cancel()
-                        return
-                    }
+        connection
+            .receive(minimumIncompleteLength: 1, maximumLength: 65_536) { [weak self] data, _, isComplete, error in
+                guard let self, error == nil, !isComplete else {
+                    connection.cancel()
+                    return
+                }
+                if let data, !data.isEmpty {
+                    connection.send(content: data, completion: .contentProcessed { sendError in
+                        guard sendError == nil else {
+                            connection.cancel()
+                            return
+                        }
+                        self.echoLoop(connection)
+                    })
+                } else {
                     self.echoLoop(connection)
-                })
-            } else {
-                self.echoLoop(connection)
+                }
             }
-        }
     }
 
     private func read(_ connection: NWConnection, count: Int) async throws -> Data {

@@ -11,8 +11,15 @@ import os
 import TableProPluginKit
 
 enum EtcdOperation {
-    // KV
-    case get(key: String, prefix: Bool, limit: Int64?, keysOnly: Bool, sortOrder: EtcdSortOrder?, sortTarget: EtcdSortTarget?)
+    /// KV
+    case get(
+        key: String,
+        prefix: Bool,
+        limit: Int64?,
+        keysOnly: Bool,
+        sortOrder: EtcdSortOrder?,
+        sortTarget: EtcdSortTarget?
+    )
     case put(key: String, value: String, leaseId: Int64?)
     case del(key: String, prefix: Bool)
     case watch(key: String, prefix: Bool, timeout: TimeInterval)
@@ -29,7 +36,7 @@ enum EtcdOperation {
     case endpointStatus
     case endpointHealth
 
-    // Maintenance
+    /// Maintenance
     case compaction(revision: Int64, physical: Bool)
 
     // Auth
@@ -44,7 +51,7 @@ enum EtcdOperation {
     case userGrantRole(user: String, role: String)
     case userRevokeRole(user: String, role: String)
 
-    // Generic fallback
+    /// Generic fallback
     case unknown(command: String, args: [String])
 }
 
@@ -213,7 +220,8 @@ struct EtcdCommandParser {
 
     private static func parseLease(_ tokens: [String]) throws -> EtcdOperation {
         guard let subcommand = tokens.first else {
-            throw EtcdParseError.missingArgument("lease requires a subcommand (grant, revoke, timetolive, list, keep-alive)")
+            throw EtcdParseError
+                .missingArgument("lease requires a subcommand (grant, revoke, timetolive, list, keep-alive)")
         }
 
         let args = Array(tokens.dropFirst())
@@ -322,7 +330,8 @@ struct EtcdCommandParser {
 
     private static func parseUser(_ tokens: [String]) throws -> EtcdOperation {
         guard let subcommand = tokens.first else {
-            throw EtcdParseError.missingArgument("user requires a subcommand (add, delete, list, grant-role, revoke-role)")
+            throw EtcdParseError
+                .missingArgument("user requires a subcommand (add, delete, list, grant-role, revoke-role)")
         }
 
         let args = Array(tokens.dropFirst())
@@ -520,7 +529,7 @@ private struct ParsedFlags {
             if token.hasPrefix("--") {
                 let flagContent = String(token.dropFirst(2))
                 if let equalsIndex = flagContent.firstIndex(of: "=") {
-                    let key = String(flagContent[flagContent.startIndex..<equalsIndex])
+                    let key = String(flagContent[flagContent.startIndex ..< equalsIndex])
                     let value = String(flagContent[flagContent.index(after: equalsIndex)...])
                     valueFlags[key] = value
                 } else if index + 1 < tokens.count, !tokens[index + 1].hasPrefix("--") {

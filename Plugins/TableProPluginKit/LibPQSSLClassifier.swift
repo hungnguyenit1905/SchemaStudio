@@ -12,7 +12,8 @@ public enum LibPQSSLClassifier {
         if lower.contains("server does not support ssl") || lower.contains("ssl is not enabled on the server") {
             return .serverRequiresPlaintext(serverMessage: message)
         }
-        if lower.contains("certificate verify failed") || lower.contains("self-signed certificate") || lower.contains("unable to get local issuer certificate") {
+        if lower.contains("certificate verify failed") || lower.contains("self-signed certificate") || lower
+            .contains("unable to get local issuer certificate") {
             return .untrustedCertificate(serverMessage: message)
         }
         if lower.contains("server certificate") && lower.contains("does not match host name") {

@@ -61,7 +61,6 @@ struct CreateDatabaseSheet: View {
         PluginManager.shared.containerEntityName(for: databaseType)
     }
 
-    @ViewBuilder
     private var formBody: some View {
         Form {
             TextField(
@@ -147,7 +146,6 @@ struct CreateDatabaseSheet: View {
         .padding(.vertical, 14)
     }
 
-    @ViewBuilder
     private func textInputsList(spec: CreateDatabaseFormSpec) -> some View {
         ForEach(spec.textInputs) { input in
             TextField(
@@ -165,7 +163,6 @@ struct CreateDatabaseSheet: View {
         )
     }
 
-    @ViewBuilder
     private func fieldsList(spec: CreateDatabaseFormSpec) -> some View {
         ForEach(visibleFields(in: spec)) { field in
             fieldRow(field: field, spec: spec)

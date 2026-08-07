@@ -17,7 +17,10 @@ struct ConnectionToolbarButton: View {
         } label: {
             Label("Connection", systemImage: "network")
         }
-        .help(AppSettingsManager.shared.keyboard.shortcutHint(String(localized: "Switch Connection"), for: .switchConnection))
+        .help(AppSettingsManager.shared.keyboard.shortcutHint(
+            String(localized: "Switch Connection"),
+            for: .switchConnection
+        ))
         .popover(isPresented: $coordinator.isConnectionSwitcherShown, arrowEdge: .bottom) {
             ConnectionSwitcherPopover()
         }
@@ -37,7 +40,10 @@ struct DatabaseToolbarButton: View {
             } label: {
                 Label(containerName, systemImage: "cylinder")
             }
-            .help(AppSettingsManager.shared.keyboard.shortcutHint(String(format: String(localized: "Open %@"), containerName), for: .openDatabase))
+            .help(AppSettingsManager.shared.keyboard.shortcutHint(
+                String(format: String(localized: "Open %@"), containerName),
+                for: .openDatabase
+            ))
             .disabled(
                 state.connectionState != .connected
                     || PluginManager.shared.connectionMode(for: state.databaseType) == .fileBased
@@ -206,7 +212,10 @@ struct HistoryToolbarButton: View {
         } label: {
             Label("History", systemImage: "clock")
         }
-        .help(AppSettingsManager.shared.keyboard.shortcutHint(String(localized: "Toggle Query History"), for: .toggleHistory))
+        .help(AppSettingsManager.shared.keyboard.shortcutHint(
+            String(localized: "Toggle Query History"),
+            for: .toggleHistory
+        ))
     }
 }
 
@@ -239,7 +248,10 @@ struct ImportToolbarButton: View {
                 } label: {
                     Label("Import", systemImage: "square.and.arrow.down")
                 }
-                .help(AppSettingsManager.shared.keyboard.shortcutHint(String(localized: "Import Data"), for: .importData))
+                .help(AppSettingsManager.shared.keyboard.shortcutHint(
+                    String(localized: "Import Data"),
+                    for: .importData
+                ))
                 .disabled(isDisabled || formats.isEmpty)
             } else {
                 Menu {
@@ -251,7 +263,10 @@ struct ImportToolbarButton: View {
                 } label: {
                     Label("Import", systemImage: "square.and.arrow.down")
                 }
-                .help(AppSettingsManager.shared.keyboard.shortcutHint(String(localized: "Import Data"), for: .importData))
+                .help(AppSettingsManager.shared.keyboard.shortcutHint(
+                    String(localized: "Import Data"),
+                    for: .importData
+                ))
                 .disabled(isDisabled)
             }
         }

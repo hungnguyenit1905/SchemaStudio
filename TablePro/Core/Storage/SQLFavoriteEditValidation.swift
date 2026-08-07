@@ -25,7 +25,7 @@ internal enum SQLFavoriteKeywordValidation: Equatable {
         switch self {
         case .valid:
             return nil
-        case let .error(text), let .warning(text):
+        case .error(let text), .warning(let text):
             return text
         }
     }
@@ -72,13 +72,14 @@ internal final class SQLFavoriteKeywordField {
     private let availabilityCheck: (String, UUID?, UUID?) async -> Bool
 
     init(
-        availabilityCheck: @escaping (String, UUID?, UUID?) async -> Bool = { keyword, connectionId, excludingFavoriteId in
-            await SQLFavoriteManager.shared.isKeywordAvailable(
-                keyword,
-                connectionId: connectionId,
-                excludingFavoriteId: excludingFavoriteId
-            )
-        }
+        availabilityCheck: @escaping (String, UUID?, UUID?) async
+            -> Bool = { keyword, connectionId, excludingFavoriteId in
+                await SQLFavoriteManager.shared.isKeywordAvailable(
+                    keyword,
+                    connectionId: connectionId,
+                    excludingFavoriteId: excludingFavoriteId
+                )
+            }
     ) {
         self.availabilityCheck = availabilityCheck
     }

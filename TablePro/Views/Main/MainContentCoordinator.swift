@@ -79,11 +79,13 @@ final class MainContentCoordinator {
     var browseDatabaseName: String {
         services.databaseManager.browseDatabaseName(for: connection)
     }
+
     var safeModeLevel: SafeModeLevel { toolbarState.safeModeLevel }
     func setSafeModeLevel(_ level: SafeModeLevel) {
         toolbarState.safeModeLevel = level
         services.databaseManager.setSafeModeLevel(level, for: connectionId)
     }
+
     let selectionState = GridSelectionState()
     let tabManager: QueryTabManager
     let changeManager: DataChangeManager
@@ -96,9 +98,8 @@ final class MainContentCoordinator {
 
     internal var queryBuilder: TableQueryBuilder
     let persistence: TabPersistenceCoordinator
-    @ObservationIgnored internal lazy var rowOperationsManager: RowOperationsManager = {
-        RowOperationsManager(changeManager: changeManager)
-    }()
+    @ObservationIgnored internal lazy var rowOperationsManager: RowOperationsManager =
+        .init(changeManager: changeManager)
 
     @ObservationIgnored private(set) var filterCoordinator: FilterCoordinator!
     @ObservationIgnored private(set) var queryExecutionCoordinator: QueryExecutionCoordinator!
@@ -218,6 +219,7 @@ final class MainContentCoordinator {
         let mineContent: String
         let diskContent: String
     }
+
     @ObservationIgnored private var fileWatcher: DatabaseFileWatcher?
 
     /// Set during handleTabChange to suppress redundant column-change reconfiguration
@@ -435,7 +437,7 @@ final class MainContentCoordinator {
     func evictInactiveRowData() {
         let selectedId = tabManager.selectedTabId
         for (index, tab) in tabManager.tabs.enumerated()
-        where tab.id != selectedId && !tab.pendingChanges.hasChanges {
+            where tab.id != selectedId && !tab.pendingChanges.hasChanges {
             tabSessionRegistry.evict(for: tab.id)
             tabManager.mutate(at: index) { $0.loadEpoch &+= 1 }
         }
@@ -544,8 +546,8 @@ final class MainContentCoordinator {
         for index in tabManager.tabs.indices {
             guard let url = tabManager.tabs[index].content.sourceFileURL,
                   let loadMtime = tabManager.tabs[index].content.loadMtime,
-                  let currentMtime = (try? FileManager.default.attributesOfItem(atPath: url.path)[.modificationDate]) as? Date
-            else { continue }
+                  let currentMtime = (try? FileManager.default
+                      .attributesOfItem(atPath: url.path)[.modificationDate]) as? Date else { continue }
 
             let modified = currentMtime > loadMtime.addingTimeInterval(0.5)
             if modified != tabManager.tabs[index].content.externalModificationDetected {
@@ -634,13 +636,19 @@ final class MainContentCoordinator {
     }
 
     func refreshProcedures() async {
-        try? await services.databaseManager.withBrowseMetadataDriver(connectionId: connectionId) { [services, connectionId] driver in
+        try? await services.databaseManager.withBrowseMetadataDriver(connectionId: connectionId) { [
+            services,
+            connectionId
+        ] driver in
             await services.schemaService.reloadProcedures(connectionId: connectionId, driver: driver)
         }
     }
 
     func refreshFunctions() async {
-        try? await services.databaseManager.withBrowseMetadataDriver(connectionId: connectionId) { [services, connectionId] driver in
+        try? await services.databaseManager.withBrowseMetadataDriver(connectionId: connectionId) { [
+            services,
+            connectionId
+        ] driver in
             await services.schemaService.reloadFunctions(connectionId: connectionId, driver: driver)
         }
     }
@@ -733,7 +741,9 @@ final class MainContentCoordinator {
         currentQueryTask = nil
         refreshCoalesceTask?.cancel()
         refreshCoalesceTask = nil
-        for entry in tableLoadTasks.values { entry.task.cancel() }
+        for entry in tableLoadTasks.values {
+            entry.task.cancel()
+        }
         tableLoadTasks.removeAll()
         changeManagerUpdateTask?.cancel()
         changeManagerUpdateTask = nil
@@ -788,7 +798,7 @@ final class MainContentCoordinator {
             return
         }
 
-        if !alreadyHandled && !Self.isAppTerminating {
+        if !alreadyHandled, !Self.isAppTerminating {
             let logger = Logger(subsystem: "com.SchemaStudio", category: "MainContentCoordinator")
             logger.warning("teardown() was not called before deallocation for connection \(connectionId)")
         }
@@ -843,7 +853,10 @@ final class MainContentCoordinator {
 
     func loadSchema() async {
         let connection = connection
-        try? await services.databaseManager.withBrowseMetadataDriver(connectionId: connectionId) { [services, connectionId] driver in
+        try? await services.databaseManager.withBrowseMetadataDriver(connectionId: connectionId) { [
+            services,
+            connectionId
+        ] driver in
             await services.schemaService.load(
                 connectionId: connectionId,
                 driver: driver,
@@ -959,9 +972,8 @@ final class MainContentCoordinator {
         guard !sql.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
 
         let level = safeModeLevel
-        if level.appliesToAllQueries && level.requiresConfirmation,
-           tab.execution.lastExecutedAt == nil
-        {
+        if level.appliesToAllQueries, level.requiresConfirmation,
+           tab.execution.lastExecutedAt == nil {
             guard !isShowingSafeModePrompt else { return }
             isShowingSafeModePrompt = true
             Task {
@@ -1338,7 +1350,7 @@ final class MainContentCoordinator {
         }
         let usesNoSQLBrowsing = services.pluginManager.editorLanguage(for: connection.type) != .sql
             || (services.databaseManager.driver(for: connectionId) as? PluginDriverAdapter)?
-                .queryBuildingPluginDriver != nil
+            .queryBuildingPluginDriver != nil
         if usesNoSQLBrowsing {
             let name = tabManager.selectedTab?.tableContext.tableName
             return (name, name != nil)

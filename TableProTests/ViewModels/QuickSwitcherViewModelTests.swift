@@ -92,7 +92,7 @@ struct QuickSwitcherViewModelTests {
     @Test("Browse scope caps at maxResults")
     func filterCaps() {
         var items: [QuickSwitcherItem] = []
-        for index in 0..<300 {
+        for index in 0 ..< 300 {
             items.append(QuickSwitcherItem(id: "t\(index)", name: "table_\(index)", kind: .table, subtitle: ""))
         }
         let vm = makeViewModel(items: items)
@@ -166,7 +166,7 @@ struct QuickSwitcherViewModelTests {
         let suite = makeDefaults()
         let connectionId = UUID()
         var items: [QuickSwitcherItem] = []
-        for index in 0..<15 {
+        for index in 0 ..< 15 {
             items.append(QuickSwitcherItem(id: "t\(index)", name: "table_\(index)", kind: .table, subtitle: ""))
         }
         let vm = makeViewModel(items: items, connectionId: connectionId, defaults: suite)
@@ -320,7 +320,7 @@ struct QuickSwitcherViewModelTests {
     @Test("listHeight at the row cap shows every row")
     func listHeightAtCap() async throws {
         var items: [QuickSwitcherItem] = []
-        for index in 0..<9 {
+        for index in 0 ..< 9 {
             items.append(QuickSwitcherItem(id: "t\(index)", name: "tbl_\(index)", kind: .table, subtitle: ""))
         }
         let vm = makeViewModel(items: items)
@@ -333,7 +333,7 @@ struct QuickSwitcherViewModelTests {
     @Test("listHeight caps at maxVisibleRows when results overflow")
     func listHeightCapsWhenOverflowing() async throws {
         var items: [QuickSwitcherItem] = []
-        for index in 0..<20 {
+        for index in 0 ..< 20 {
             items.append(QuickSwitcherItem(id: "t\(index)", name: "tbl_\(index)", kind: .table, subtitle: ""))
         }
         let vm = makeViewModel(items: items)
@@ -369,7 +369,7 @@ struct QuickSwitcherViewModelTests {
     @Test("listHeight clamps to the cap when sections and rows overflow")
     func listHeightClampsWithHeaders() {
         var items: [QuickSwitcherItem] = []
-        for index in 0..<30 {
+        for index in 0 ..< 30 {
             items.append(QuickSwitcherItem(id: "t\(index)", name: "table_\(index)", kind: .table, subtitle: ""))
             items.append(QuickSwitcherItem(id: "v\(index)", name: "view_\(index)", kind: .view, subtitle: "View"))
         }

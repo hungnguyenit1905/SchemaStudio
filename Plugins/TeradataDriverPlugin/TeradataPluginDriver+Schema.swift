@@ -21,7 +21,9 @@ extension TeradataPluginDriver {
     func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
         PluginDatabaseMetadata(
             name: database,
-            isSystemDatabase: TeradataPlugin.systemDatabaseNames.contains { $0.caseInsensitiveCompare(database) == .orderedSame })
+            isSystemDatabase: TeradataPlugin.systemDatabaseNames
+                .contains { $0.caseInsensitiveCompare(database) == .orderedSame }
+        )
     }
 
     func fetchTables(schema: String?) async throws -> [PluginTableInfo] {
@@ -49,9 +51,11 @@ extension TeradataPluginDriver {
                 name: name,
                 dataType: TeradataColumnType.displayName(
                     dbcColumnType: dbcType, length: length,
-                    totalDigits: totalDigits, fractionalDigits: fractionalDigits),
+                    totalDigits: totalDigits, fractionalDigits: fractionalDigits
+                ),
                 isNullable: nullable,
-                defaultValue: defaultValue?.trimmingCharacters(in: .whitespaces).isEmpty == true ? nil : defaultValue)
+                defaultValue: defaultValue?.trimmingCharacters(in: .whitespaces).isEmpty == true ? nil : defaultValue
+            )
         }
     }
 
@@ -76,7 +80,8 @@ extension TeradataPluginDriver {
             guard let info = byName[key] else { return nil }
             return PluginIndexInfo(
                 name: key, columns: info.columns, isUnique: info.unique,
-                isPrimary: info.primary, type: "TERADATA")
+                isPrimary: info.primary, type: "TERADATA"
+            )
         }
     }
 
@@ -87,14 +92,16 @@ extension TeradataPluginDriver {
     func fetchTableDDL(table: String, schema: String?) async throws -> String {
         let database = effectiveDatabase(schema)
         let result = try await execute(
-            query: TeradataSchemaQueries.showTableDDL(database: database, table: table))
+            query: TeradataSchemaQueries.showTableDDL(database: database, table: table)
+        )
         return result.rows.compactMap { text($0.first) }.joined()
     }
 
     func fetchViewDefinition(view: String, schema: String?) async throws -> String {
         guard let database = effectiveDatabase(schema) else { return "" }
         let result = try await execute(
-            query: TeradataSchemaQueries.viewDefinition(database: database, view: view))
+            query: TeradataSchemaQueries.viewDefinition(database: database, view: view)
+        )
         return text(result.rows.first?.first) ?? ""
     }
 
@@ -120,7 +127,8 @@ extension TeradataPluginDriver {
     ) -> String? {
         buildBrowseQuery(
             table: table, schema: nil, sortColumns: sortColumns,
-            columns: columns, limit: limit, offset: offset)
+            columns: columns, limit: limit, offset: offset
+        )
     }
 
     func buildBrowseQuery(
@@ -134,7 +142,8 @@ extension TeradataPluginDriver {
         return TeradataSchemaQueries.browse(
             database: effectiveDatabase(schema), table: table,
             columns: columns.isEmpty ? nil : columns, sortColumns: sorts,
-            limit: limit, offset: offset)
+            limit: limit, offset: offset
+        )
     }
 
     private static func tableType(_ kind: String) -> String {

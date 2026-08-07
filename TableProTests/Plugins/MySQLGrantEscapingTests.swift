@@ -131,11 +131,11 @@ struct PluginGrantSQLBuilderTests {
         switch scope {
         case .server:
             return "*.*"
-        case let .database(name):
+        case .database(let name):
             return "\(database(name)).*"
-        case let .schema(db, _):
+        case .schema(let db, _):
             return "\(database(db)).*"
-        case let .table(db, _, table), let .column(db, _, table, _):
+        case .table(let db, _, let table), .column(let db, _, let table, _):
             return "\(database(db)).\(mysqlQuote(table))"
         }
     }

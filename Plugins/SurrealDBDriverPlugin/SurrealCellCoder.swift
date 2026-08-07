@@ -19,9 +19,9 @@ public enum SurrealCellCoder {
         switch cell {
         case .null:
             return .null
-        case let .text(text):
+        case .text(let text):
             return .string(text)
-        case let .bytes(data):
+        case .bytes(let data):
             guard data.count > magic.count, [UInt8](data.prefix(magic.count)) == magic else {
                 return .bytes(data)
             }
@@ -35,9 +35,9 @@ public enum SurrealCellCoder {
         switch cell {
         case .null:
             return (kind?.isOptional ?? true) ? .none : .null
-        case let .bytes(data):
+        case .bytes(let data):
             return .bytes(data)
-        case let .text(text):
+        case .text(let text):
             return value(fromText: text, kind: kind)
         }
     }
@@ -172,7 +172,7 @@ public enum SurrealCellCoder {
         let padded = digits.count >= 9
             ? String(digits.prefix(9))
             : digits + String(repeating: "0", count: 9 - digits.count)
-        let whole = String(text[text.startIndex..<dot]) + String(text[index...])
+        let whole = String(text[text.startIndex ..< dot]) + String(text[index...])
         return (whole, UInt32(padded) ?? 0)
     }
 
@@ -182,12 +182,12 @@ public enum SurrealCellCoder {
 
         let units: [(suffix: String, seconds: Int64, nanos: Int64)] = [
             ("ns", 0, 1),
-            ("µs", 0, 1000),
-            ("us", 0, 1000),
+            ("µs", 0, 1_000),
+            ("us", 0, 1_000),
             ("ms", 0, 1_000_000),
             ("w", 604_800, 0),
             ("d", 86_400, 0),
-            ("h", 3600, 0),
+            ("h", 3_600, 0),
             ("m", 60, 0),
             ("s", 1, 0)
         ]

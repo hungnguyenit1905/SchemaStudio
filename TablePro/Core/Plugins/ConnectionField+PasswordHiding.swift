@@ -5,7 +5,7 @@
 
 import TableProPluginKit
 
-extension Sequence where Element == ConnectionField {
+extension Sequence<ConnectionField> {
     func hidesPassword(forValues values: [String: String]) -> Bool {
         hidesBuiltInField(forValues: values, when: \.hidesPassword)
     }

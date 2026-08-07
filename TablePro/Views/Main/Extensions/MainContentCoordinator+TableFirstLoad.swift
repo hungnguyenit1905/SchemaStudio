@@ -52,8 +52,7 @@ extension MainContentCoordinator {
         guard let index = tabManager.tabs.firstIndex(where: { $0.id == tabId }),
               tabManager.tabs[index].tabType == .table,
               tabManager.tabs[index].tableContext.schemaName == nil,
-              let resolvedSchema = DatabaseManager.shared.resolvedSchemaName(nil, for: connectionId)
-        else { return false }
+              let resolvedSchema = DatabaseManager.shared.resolvedSchemaName(nil, for: connectionId) else { return false }
 
         tabManager.mutate(at: index) { $0.tableContext.schemaName = resolvedSchema }
         filterCoordinator.rebuildTableQuery(at: index)

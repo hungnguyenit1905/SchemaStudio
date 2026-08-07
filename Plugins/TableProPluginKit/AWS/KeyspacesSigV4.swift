@@ -13,7 +13,7 @@ public enum KeyspacesSigV4 {
         let start = range.upperBound
         let end = start + nonceLength
         guard end <= challenge.endIndex else { return nil }
-        return challenge.subdata(in: start..<end)
+        return challenge.subdata(in: start ..< end)
     }
 
     public static func authResponse(

@@ -66,8 +66,7 @@ enum AIProviderError: Error, LocalizedError {
         guard let data = body.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let error = json["error"] as? [String: Any],
-              let message = error["message"] as? String
-        else {
+              let message = error["message"] as? String else {
             return nil
         }
         return message

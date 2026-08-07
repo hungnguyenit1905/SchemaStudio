@@ -16,7 +16,7 @@ internal enum SplitDividerCursorGeometry {
         guard subviewFrames.count == collapsed.count, subviewFrames.count >= 2 else { return [] }
 
         var rects: [CGRect] = []
-        for index in 0..<(subviewFrames.count - 1) where !collapsed[index] && !collapsed[index + 1] {
+        for index in 0 ..< (subviewFrames.count - 1) where !collapsed[index] && !collapsed[index + 1] {
             let first = subviewFrames[index]
             let second = subviewFrames[index + 1]
             if isVertical {

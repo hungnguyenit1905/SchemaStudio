@@ -16,7 +16,9 @@ struct CloudSQLProxyPaneView: View {
             Section {
                 Toggle(String(localized: "Enable Cloud SQL Auth Proxy"), isOn: $coordinator.cloudSQLProxy.state.enabled)
             } footer: {
-                Text("Starts and stops the Cloud SQL Auth Proxy with this connection and routes it through a local port.")
+                Text(
+                    "Starts and stops the Cloud SQL Auth Proxy with this connection and routes it through a local port."
+                )
             }
 
             if coordinator.cloudSQLProxy.state.enabled {
@@ -51,7 +53,6 @@ struct CloudSQLProxyPaneView: View {
         }
     }
 
-    @ViewBuilder
     private var authenticationSection: some View {
         Section {
             Picker(String(localized: "Credentials"), selection: $coordinator.cloudSQLProxy.state.authMode) {
@@ -62,9 +63,11 @@ struct CloudSQLProxyPaneView: View {
 
             switch coordinator.cloudSQLProxy.state.authMode {
             case .applicationDefault:
-                Text("Uses this Mac's Application Default Credentials. Run `gcloud auth application-default login` first, or set GOOGLE_APPLICATION_CREDENTIALS.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Uses this Mac's Application Default Credentials. Run `gcloud auth application-default login` first, or set GOOGLE_APPLICATION_CREDENTIALS."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             case .serviceAccountKey:
                 serviceAccountKeyEditor
             }
@@ -77,7 +80,9 @@ struct CloudSQLProxyPaneView: View {
             Text("Authentication")
         } footer: {
             if coordinator.cloudSQLProxy.state.useIAMAuth {
-                Text("Set the connection's username to the IAM principal (a user email, or `name@project.iam` for a service account). The database password is not used.")
+                Text(
+                    "Set the connection's username to the IAM principal (a user email, or `name@project.iam` for a service account). The database password is not used."
+                )
             }
         }
     }
@@ -108,7 +113,6 @@ struct CloudSQLProxyPaneView: View {
         }
     }
 
-    @ViewBuilder
     private var listenerSection: some View {
         Section {
             Toggle(String(localized: "Choose port automatically"), isOn: $coordinator.cloudSQLProxy.state.automaticPort)
@@ -126,7 +130,6 @@ struct CloudSQLProxyPaneView: View {
         }
     }
 
-    @ViewBuilder
     private var binarySection: some View {
         Section {
             TextField(
@@ -163,7 +166,9 @@ struct CloudSQLProxyPaneView: View {
                         .foregroundStyle(.secondary)
                 } else if viewModel.didResolveBinary {
                     Label(
-                        String(localized: "cloud-sql-proxy not found. Install it with `brew install cloud-sql-proxy`, download it above, or choose the binary."),
+                        String(
+                            localized: "cloud-sql-proxy not found. Install it with `brew install cloud-sql-proxy`, download it above, or choose the binary."
+                        ),
                         systemImage: "exclamationmark.triangle.fill"
                     )
                     .foregroundStyle(.orange)

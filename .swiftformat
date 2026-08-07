@@ -20,7 +20,8 @@
 --wrapconditions after-first
 # The codebase writes `) -> Bool {`; if-multiline breaks it onto its own line.
 --wrapreturntype preserve
---wrapeffects if-multiline
+# Same reason as wrapreturntype: `) async throws {` stays on the closing paren.
+--wrapeffects preserve
 --closingparen balanced
 --funcattributes prev-line
 --typeattributes prev-line
@@ -56,7 +57,6 @@
 # Never "strip": every file in this repo carries a header comment.
 --header ignore
 --stripunusedargs closure-only
---modifierorder
 --emptybraces no-space
 
 # Enabled rules (comment out to disable)
@@ -86,3 +86,32 @@
 --disable wrapSwitchCases
 # Keeps the blank line test files put before `@testable import`.
 --disable blankLinesBetweenImports
+# The codebase assigns with an explicit if/else, not a Swift 5.9 if-expression.
+--disable conditionalAssignment
+# Renames `testFoo()` to `foo()` in swift-testing suites, which breaks the
+# -only-testing filters in CLAUDE.md. A rename, not formatting.
+--disable swiftTestingTestCaseNames
+# Rewrites `x!` into `try #require(x)` and adds `throws`. That changes what a
+# test does, so it belongs in its own reviewed change, not a format pass.
+--disable noForceUnwrapInTests
+# Broken in SwiftFormat 0.62.1: it drops the init and joins the neighbouring
+# declarations onto one line, which will not compile. It is also unsafe here,
+# because deleting a public init from a TableProPluginKit transfer struct
+# breaks the plugin ABI every shipped plugin links against.
+--disable redundantMemberwiseInit
+# Rewrites `<T: Encodable>` into `some Encodable`. That is an API signature
+# change, and one of them lands on a public TableProPluginKit function where
+# CLAUDE.md gates signature edits behind an ABI bump and a plugin re-release.
+--disable opaqueGenericParameters
+# SwiftLint's modifier_order already owns this and wants `nonisolated private`,
+# the opposite of what SwiftFormat produces. One tool per concern.
+--disable modifierOrder
+# Converting `allSatisfy { $0.x }` to `allSatisfy(\.x)` picks the throwing
+# overload of a rethrows method, so the call then needs `try`. Inside a
+# `#expect` macro that is a compile error in the test target.
+--disable preferKeyPath
+# Turns a caseless `struct` namespace into an `enum`. Two of those are public
+# TableProPluginKit types, and swapping struct for enum changes the nominal
+# type descriptor and drops the implicit init, which breaks every plugin
+# binary already linked against them.
+--disable enumNamespaces

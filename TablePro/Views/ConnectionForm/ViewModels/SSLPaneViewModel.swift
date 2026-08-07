@@ -26,7 +26,7 @@ final class SSLPaneViewModel {
         }
         let hasClientCert = !clientCertPath.trimmingCharacters(in: .whitespaces).isEmpty
         let hasClientKey = !clientKeyPath.trimmingCharacters(in: .whitespaces).isEmpty
-        if hasClientCert && !hasClientKey {
+        if hasClientCert, !hasClientKey {
             issues.append(String(localized: "Client key is required when client certificate is set"))
         }
         return issues

@@ -65,7 +65,7 @@ internal enum TransientConnectionFactory {
         )
 
         for (key, value) in parsed.mongoQueryParams where !value.isEmpty {
-            if key != "authMechanism" && key != "replicaSet" {
+            if key != "authMechanism", key != "replicaSet" {
                 connection.additionalFields["mongoParam_\(key)"] = value
             }
         }

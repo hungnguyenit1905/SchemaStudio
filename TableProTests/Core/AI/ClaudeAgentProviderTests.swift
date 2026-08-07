@@ -239,7 +239,7 @@ struct ClaudeAgentMCPBridgeTests {
         let payload = try #require(
             ClaudeAgentMCPBridge.configPayload(endpoint: endpoint, token: "tp_secret")
         )
-        let json = try JSONSerialization.jsonObject(with: try #require(payload.data(using: .utf8)))
+        let json = try JSONSerialization.jsonObject(with: #require(payload.data(using: .utf8)))
         let servers = try #require((json as? [String: Any])?["mcpServers"] as? [String: Any])
         let server = try #require(servers["tablepro"] as? [String: Any])
         #expect(server["type"] as? String == "http")

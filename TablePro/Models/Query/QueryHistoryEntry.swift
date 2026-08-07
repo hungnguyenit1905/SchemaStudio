@@ -15,7 +15,7 @@ struct QueryHistoryEntry: Identifiable, Codable, Hashable {
     let databaseName: String
     let executedAt: Date
     let executionTime: TimeInterval
-    let rowCount: Int  // -1 if unknown
+    let rowCount: Int // -1 if unknown
     let wasSuccessful: Bool
     let errorMessage: String?
     let parameterValues: String?

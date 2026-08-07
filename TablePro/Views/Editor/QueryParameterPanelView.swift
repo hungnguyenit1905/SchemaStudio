@@ -84,8 +84,7 @@ struct QueryParameterPanelView: View {
         .padding(.vertical, 4)
     }
 
-    @ViewBuilder
-    private var parameterList: some View {
+    @ViewBuilder private var parameterList: some View {
         let estimatedHeight = CGFloat(parameters.count) * 32 + 8
         if estimatedHeight > maxParameterListHeight {
             ScrollView {

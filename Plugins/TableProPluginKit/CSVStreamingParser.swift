@@ -48,7 +48,7 @@ public struct CSVStreamingParser: Sendable {
             }
             if byte == 0x0A {
                 i += 1
-                ranges.append(rowStart..<i)
+                ranges.append(rowStart ..< i)
                 rowStart = i
                 atFieldStart = true
                 continue
@@ -56,7 +56,7 @@ public struct CSVStreamingParser: Sendable {
             if byte == 0x0D {
                 i += 1
                 if i < count, bytes[i] == 0x0A { i += 1 }
-                ranges.append(rowStart..<i)
+                ranges.append(rowStart ..< i)
                 rowStart = i
                 atFieldStart = true
                 continue
@@ -65,7 +65,7 @@ public struct CSVStreamingParser: Sendable {
             i += 1
         }
         if rowStart < count {
-            ranges.append(rowStart..<count)
+            ranges.append(rowStart ..< count)
         }
         return ranges
     }

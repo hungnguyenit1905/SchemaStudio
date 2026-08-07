@@ -29,7 +29,13 @@ struct TriggerEditorView: View {
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage("structureCodeFontSize") private var fontSize: Double = 13
 
-    init(connection: DatabaseConnection, tableName: String, mode: Mode, initialSQL: String, onClose: @escaping () -> Void) {
+    init(
+        connection: DatabaseConnection,
+        tableName: String,
+        mode: Mode,
+        initialSQL: String,
+        onClose: @escaping () -> Void
+    ) {
         self.connection = connection
         self.tableName = tableName
         self.mode = mode
@@ -95,7 +101,7 @@ struct TriggerEditorView: View {
         case .create:
             originalName = nil
             originalDefinition = nil
-        case let .edit(name, definition):
+        case .edit(let name, let definition):
             originalName = name
             originalDefinition = definition
         }

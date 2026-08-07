@@ -128,7 +128,7 @@ final class SQLCompletionAdapter: CodeSuggestionDelegate {
         // Suppress noisy completions when prefix is empty in contexts where
         // browsing all items isn't useful (e.g., after "SELECT " or "WHERE ").
         // Manual triggers (Ctrl+Space) always show completions.
-        if !isManualTrigger && context.sqlContext.prefix.isEmpty && context.sqlContext.dotPrefix == nil {
+        if !isManualTrigger, context.sqlContext.prefix.isEmpty, context.sqlContext.dotPrefix == nil {
             switch context.sqlContext.clauseType {
             case .from, .join, .into, .set, .insertColumns, .on,
                  .alterTableColumn, .returning, .using, .dropObject, .createIndex:
@@ -183,7 +183,7 @@ final class SQLCompletionAdapter: CodeSuggestionDelegate {
                 sqlContext: SQLContext(
                     clauseType: .unknown,
                     prefix: "",
-                    prefixRange: prefixStart..<offset,
+                    prefixRange: prefixStart ..< offset,
                     dotPrefix: nil,
                     tableReferences: [],
                     isInsideString: false,

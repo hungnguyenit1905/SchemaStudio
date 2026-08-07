@@ -195,12 +195,24 @@ struct TableViewCoordinatorLayoutTests {
     @Test("Live widths are kept on a same-table reload but discarded on a table switch")
     func liveWidthsGatedByTableIdentity() {
         let connectionId = UUID()
-        let tableA = ColumnLayoutTableKey(connectionId: connectionId, databaseName: "db", schemaName: "public", tableName: "a")
-        let tableB = ColumnLayoutTableKey(connectionId: connectionId, databaseName: "db", schemaName: "public", tableName: "b")
+        let tableA = ColumnLayoutTableKey(
+            connectionId: connectionId,
+            databaseName: "db",
+            schemaName: "public",
+            tableName: "a"
+        )
+        let tableB = ColumnLayoutTableKey(
+            connectionId: connectionId,
+            databaseName: "db",
+            schemaName: "public",
+            tableName: "b"
+        )
         let live: [String: CGFloat] = ["id": 120, "name": 240]
 
-        #expect(TableViewCoordinator.liveWidthsForSameTable(previous: tableA, current: tableA, liveWidths: live) == live)
-        #expect(TableViewCoordinator.liveWidthsForSameTable(previous: tableA, current: tableB, liveWidths: live).isEmpty)
+        #expect(TableViewCoordinator
+            .liveWidthsForSameTable(previous: tableA, current: tableA, liveWidths: live) == live)
+        #expect(TableViewCoordinator.liveWidthsForSameTable(previous: tableA, current: tableB, liveWidths: live)
+            .isEmpty)
         #expect(TableViewCoordinator.liveWidthsForSameTable(previous: nil, current: tableA, liveWidths: live).isEmpty)
         #expect(TableViewCoordinator.liveWidthsForSameTable(previous: nil, current: nil, liveWidths: live) == live)
     }

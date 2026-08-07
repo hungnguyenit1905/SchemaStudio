@@ -23,7 +23,7 @@ struct SQLCompletionProviderFuzzyDedupeTests {
         SQLContext(
             clauseType: .unknown,
             prefix: prefix,
-            prefixRange: 0..<prefix.count,
+            prefixRange: 0 ..< prefix.count,
             dotPrefix: nil,
             tableReferences: [],
             isInsideString: false,
@@ -49,7 +49,7 @@ struct SQLCompletionProviderFuzzyDedupeTests {
         if item.filterText == prefix { score -= 1_000 }
         score += (item.label as NSString).length
         if !prefix.isEmpty {
-            if !item.filterText.hasPrefix(prefix) && !item.filterText.contains(prefix) {
+            if !item.filterText.hasPrefix(prefix), !item.filterText.contains(prefix) {
                 if let fuzzy = referenceFuzzyScore(pattern: prefix, target: item.filterText) {
                     score += fuzzy
                 }
@@ -72,7 +72,7 @@ struct SQLCompletionProviderFuzzyDedupeTests {
         var maxConsecutive = 0
         var lastMatchIdx = -1
 
-        while patternIdx < patternLen && targetIdx < targetLen {
+        while patternIdx < patternLen, targetIdx < targetLen {
             let pChar = nsPattern.character(at: patternIdx)
             let tChar = nsTarget.character(at: targetIdx)
             if pChar == tChar {
@@ -142,7 +142,7 @@ struct SQLCompletionProviderFuzzyDedupeTests {
     func matchedRangesResetOnEmptyPrefix() {
         let provider = makeProvider()
         var items = ["select", "set"].map { SQLCompletionItem.keyword($0) }
-        items[0].matchedRanges = [0..<2]
+        items[0].matchedRanges = [0 ..< 2]
 
         let filtered = provider.filterByPrefix(items, prefix: "")
         for item in filtered {

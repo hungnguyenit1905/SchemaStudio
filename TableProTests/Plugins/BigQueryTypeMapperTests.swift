@@ -9,13 +9,26 @@ import Foundation
 import TableProPluginKit
 import Testing
 
-private func field(_ name: String, _ type: String, mode: String? = nil, description: String? = nil,
-                   fields: [BQTableFieldSchema]? = nil) -> BQTableFieldSchema {
+private func field(
+    _ name: String,
+    _ type: String,
+    mode: String? = nil,
+    description: String? = nil,
+    fields: [BQTableFieldSchema]? = nil
+) -> BQTableFieldSchema {
     BQTableFieldSchema(name: name, type: type, mode: mode, description: description, fields: fields)
 }
 
 private func response(rows: [BQQueryResponse.BQRow]?, totalRows: String = "0") -> BQQueryResponse {
-    BQQueryResponse(schema: nil, rows: rows, totalRows: totalRows, pageToken: nil, jobComplete: true, jobReference: nil, numDmlAffectedRows: nil)
+    BQQueryResponse(
+        schema: nil,
+        rows: rows,
+        totalRows: totalRows,
+        pageToken: nil,
+        jobComplete: true,
+        jobReference: nil,
+        numDmlAffectedRows: nil
+    )
 }
 
 @Suite("BigQueryTypeMapper - Column Type Names")
@@ -176,7 +189,7 @@ private func decodeResponse(_ json: String) throws -> BQQueryResponse {
 }
 
 private func firstCell(_ json: String, schema: BQTableSchema) throws -> PluginCellValue {
-    let rows = BigQueryTypeMapper.flattenRows(from: try decodeResponse(json), schema: schema)
+    let rows = try BigQueryTypeMapper.flattenRows(from: decodeResponse(json), schema: schema)
     return try #require(rows.first?.first)
 }
 

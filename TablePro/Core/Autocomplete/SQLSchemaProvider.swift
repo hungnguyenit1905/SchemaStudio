@@ -12,6 +12,7 @@ import TableProPluginKit
 /// Provides cached database schema information for autocomplete
 actor SQLSchemaProvider {
     private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SQLSchemaProvider")
+
     // MARK: - Properties
 
     private var tables: [TableInfo] = []
@@ -62,7 +63,10 @@ actor SQLSchemaProvider {
             let t0 = Date()
             if let connection { self.connectionInfo = connection }
             await existing.value
-            Self.logger.debug("[schema] loadSchema coalesced — awaited existing task ms=\(Int(Date().timeIntervalSince(t0) * 1_000)) tableCount=\(self.tables.count)")
+            Self.logger
+                .debug(
+                    "[schema] loadSchema coalesced — awaited existing task ms=\(Int(Date().timeIntervalSince(t0) * 1_000)) tableCount=\(self.tables.count)"
+                )
             return
         }
 
@@ -84,7 +88,10 @@ actor SQLSchemaProvider {
         loadTask = task
         await task.value
         loadTask = nil
-        Self.logger.info("[schema] loadSchema done ms=\(Int(Date().timeIntervalSince(t0) * 1_000)) tableCount=\(self.tables.count) error=\(self.lastLoadError != nil)")
+        Self.logger
+            .info(
+                "[schema] loadSchema done ms=\(Int(Date().timeIntervalSince(t0) * 1_000)) tableCount=\(self.tables.count) error=\(self.lastLoadError != nil)"
+            )
     }
 
     private func setLoadedTables(_ newTables: [TableInfo]) {
@@ -369,8 +376,14 @@ actor SQLSchemaProvider {
     func columnCompletionItems(for tableName: String, schema: String? = nil) async -> [SQLCompletionItem] {
         let columns = await getColumns(for: tableName, schema: schema)
         let columnData = columns.map { col in
-            (name: col.name, type: col.dataType, isPK: col.isPrimaryKey,
-             isNullable: col.isNullable, defaultValue: col.defaultValue, comment: col.comment)
+            (
+                name: col.name,
+                type: col.dataType,
+                isPK: col.isPrimaryKey,
+                isNullable: col.isNullable,
+                defaultValue: col.defaultValue,
+                comment: col.comment
+            )
         }
         return await MainActor.run {
             columnData.map {
@@ -402,7 +415,8 @@ actor SQLSchemaProvider {
                             label: label, insertText: label, type: nil,
                             table: refId, isPK: false, isNullable: true,
                             defaultValue: nil, comment: nil
-                        ))
+                        )
+                    )
                 }
                 continue
             }
@@ -417,7 +431,8 @@ actor SQLSchemaProvider {
                         table: ref.tableName, isPK: column.isPrimaryKey,
                         isNullable: column.isNullable, defaultValue: column.defaultValue,
                         comment: column.comment
-                    ))
+                    )
+                )
             }
         }
 

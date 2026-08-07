@@ -40,9 +40,11 @@ final class TeradataPlugin: NSObject, TableProPlugin, DriverPlugin {
     static let defaultPort = 1_025
     static let additionalConnectionFields: [ConnectionField] = [
         ConnectionField(
-            id: "teradataLogMech", label: "Logon Mechanism", placeholder: "TD2", defaultValue: "TD2"),
+            id: "teradataLogMech", label: "Logon Mechanism", placeholder: "TD2", defaultValue: "TD2"
+        ),
         ConnectionField(
-            id: "teradataTMode", label: "Transaction Mode", placeholder: "DEFAULT", defaultValue: "DEFAULT"),
+            id: "teradataTMode", label: "Transaction Mode", placeholder: "DEFAULT", defaultValue: "DEFAULT"
+        ),
     ]
 
     static let brandColorHex = "#F37440"
@@ -66,7 +68,14 @@ final class TeradataPlugin: NSObject, TableProPlugin, DriverPlugin {
         "String": ["CHAR", "VARCHAR", "LONG VARCHAR", "CLOB"],
         "Date": ["DATE", "TIME", "TIMESTAMP", "TIME WITH TIME ZONE", "TIMESTAMP WITH TIME ZONE"],
         "Binary": ["BYTE", "VARBYTE", "BLOB"],
-        "Interval": ["INTERVAL YEAR", "INTERVAL MONTH", "INTERVAL DAY", "INTERVAL HOUR", "INTERVAL MINUTE", "INTERVAL SECOND"],
+        "Interval": [
+            "INTERVAL YEAR",
+            "INTERVAL MONTH",
+            "INTERVAL DAY",
+            "INTERVAL HOUR",
+            "INTERVAL MINUTE",
+            "INTERVAL SECOND"
+        ],
         "Other": ["JSON", "XML", "PERIOD(DATE)", "PERIOD(TIMESTAMP)", "UDT"],
     ]
 
@@ -150,7 +159,8 @@ final class TeradataPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             database: config.database.isEmpty ? nil : config.database,
             logMech: logMech,
             transactionMode: transactionMode,
-            tls: TeradataSSLMapping.tlsOptions(for: config.ssl))
+            tls: TeradataSSLMapping.tlsOptions(for: config.ssl)
+        )
         let connection = TeradataAsyncConnection(config: coreConfig)
         try await connection.connect()
         self.connection = connection
@@ -177,7 +187,11 @@ final class TeradataPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         return result.toPluginResult(executionTime: Date().timeIntervalSince(start))
     }
 
-    func executeUserQuery(query: String, rowCap: Int?, parameters: [PluginCellValue]?) async throws -> PluginQueryResult {
+    func executeUserQuery(
+        query: String,
+        rowCap: Int?,
+        parameters: [PluginCellValue]?
+    ) async throws -> PluginQueryResult {
         try await execute(query: query)
     }
 

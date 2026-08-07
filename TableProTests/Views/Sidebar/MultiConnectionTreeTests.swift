@@ -8,9 +8,9 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @MainActor
 @Suite("Multi-connection tree")
@@ -276,4 +276,3 @@ struct MultiConnectionTreeTests {
         #expect(ids == [sqlite.id, mysql.id])
     }
 }
-

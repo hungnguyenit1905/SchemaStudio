@@ -22,7 +22,7 @@ extension VimEngine {
 
     func replayLastDot(count: Int, in buffer: VimTextBuffer) {
         guard let kind = lastDotKind else { return }
-        for _ in 0..<count {
+        for _ in 0 ..< count {
             switch kind {
             case .deleteCharForward(let original):
                 deleteCharUnderCursor(original, in: buffer)

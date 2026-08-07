@@ -40,7 +40,8 @@ struct TriggerSQLParserTests {
 
     @Test("Handles UPDATE OF columns")
     func updateOfColumns() {
-        let result = TriggerSQLParser.timingAndEvent(from: "CREATE TRIGGER t1 BEFORE UPDATE OF name, email ON users BEGIN END")
+        let result = TriggerSQLParser
+            .timingAndEvent(from: "CREATE TRIGGER t1 BEFORE UPDATE OF name, email ON users BEGIN END")
         #expect(result.timing == "BEFORE")
         #expect(result.event == "UPDATE")
     }
@@ -54,7 +55,8 @@ struct TriggerSQLParserTests {
 
     @Test("Trigger name containing an event keyword does not mislead event")
     func nameWithEventKeyword() {
-        let result = TriggerSQLParser.timingAndEvent(from: "CREATE TRIGGER insert_audit AFTER DELETE ON users BEGIN END")
+        let result = TriggerSQLParser
+            .timingAndEvent(from: "CREATE TRIGGER insert_audit AFTER DELETE ON users BEGIN END")
         #expect(result.timing == "AFTER")
         #expect(result.event == "DELETE")
     }

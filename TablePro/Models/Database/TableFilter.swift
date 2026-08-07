@@ -160,7 +160,7 @@ struct TableFilter: Identifiable, Equatable, Hashable, Codable {
             if value.isEmpty {
                 return String(localized: "Value is required")
             }
-            if filterOperator.requiresSecondValue && (secondValue?.isEmpty ?? true) {
+            if filterOperator.requiresSecondValue, secondValue?.isEmpty ?? true {
                 return String(localized: "Second value is required for BETWEEN")
             }
         }
@@ -203,7 +203,12 @@ struct TabFilterState: Equatable, Hashable, Codable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case filters, commit, isVisible, filterLogicMode, keyPattern, keyTypeScope
+        case filters
+        case commit
+        case isVisible
+        case filterLogicMode
+        case keyPattern
+        case keyTypeScope
     }
 
     init(from decoder: Decoder) throws {

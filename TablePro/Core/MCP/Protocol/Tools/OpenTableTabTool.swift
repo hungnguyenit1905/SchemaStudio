@@ -20,7 +20,9 @@ public struct OpenTableTabTool: MCPToolImplementation {
             ]),
             "database_name": .object([
                 "type": .string("string"),
-                "description": .string(String(localized: "Database name (uses connection's current database if omitted)"))
+                "description": .string(
+                    String(localized: "Database name (uses connection's current database if omitted)")
+                )
             ]),
             "schema_name": .object([
                 "type": .string("string"),

@@ -196,7 +196,8 @@ struct ElasticsearchQueryDSLTests {
             for: ElasticsearchFilterSpec(column: "status", op: "CONTAINS", value: "x"),
             fields: keywordField, caseInsensitive: true
         )
-        #expect((on["wildcard"] as? [String: Any]).map { ($0["status"] as? [String: Any])?["case_insensitive"] as? Bool } == true)
+        #expect((on["wildcard"] as? [String: Any])
+            .map { ($0["status"] as? [String: Any])?["case_insensitive"] as? Bool } == true)
         let off = ElasticsearchQueryBuilder.clause(
             for: ElasticsearchFilterSpec(column: "status", op: "CONTAINS", value: "x"),
             fields: keywordField, caseInsensitive: false

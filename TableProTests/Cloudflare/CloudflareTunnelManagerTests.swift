@@ -145,7 +145,7 @@ struct CloudflareTunnelManagerTests {
 
         try await manager.closeTunnel(connectionId: id)
         #expect(fake.stopCallCount >= 1)
-        #expect(!(await manager.hasTunnel(connectionId: id)))
+        #expect(await !(manager.hasTunnel(connectionId: id)))
     }
 
     @Test("createTunnel surfaces a browser sign-in prompt")
@@ -171,7 +171,10 @@ struct CloudflareTunnelManagerTests {
     @Test("missing binary throws binaryNotFound")
     func missingBinary() async {
         let manager = CloudflareTunnelManager(runnerFactory: { FakeCloudflaredRunner(behavior: .ready) })
-        let badConfig = CloudflareConfiguration(accessHostname: "db.example.com", binaryPath: "/nonexistent/cloudflared")
+        let badConfig = CloudflareConfiguration(
+            accessHostname: "db.example.com",
+            binaryPath: "/nonexistent/cloudflared"
+        )
 
         await #expect(throws: CloudflareTunnelError.binaryNotFound) {
             _ = try await manager.createTunnel(connectionId: UUID(), config: badConfig)

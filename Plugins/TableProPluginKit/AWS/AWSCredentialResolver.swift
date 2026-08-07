@@ -137,7 +137,7 @@ public enum AWSCredentialResolver {
         let output = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
-                    continuation.resume(returning: try executeCredentialProcess(arguments, profileName: profileName))
+                    try continuation.resume(returning: executeCredentialProcess(arguments, profileName: profileName))
                 } catch {
                     continuation.resume(throwing: error)
                 }

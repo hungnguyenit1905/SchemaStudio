@@ -4,9 +4,9 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProImport
 import TableProPluginKit
-@testable import SchemaStudio
 import Testing
 
 @Suite("TablePlusImporter", .serialized)
@@ -96,7 +96,10 @@ struct TablePlusImporterTests {
     @Test("isAvailable returns true when the standalone app is installed")
     func testIsAvailable_whenStandaloneInstalled_returnsTrue() {
         var imp = TablePlusImporter()
-        imp.resolveAppURL = { $0 == "com.tinyapp.TablePlus" ? URL(fileURLWithPath: "/Applications/TablePlus.app") : nil }
+        imp
+            .resolveAppURL = {
+                $0 == "com.tinyapp.TablePlus" ? URL(fileURLWithPath: "/Applications/TablePlus.app") : nil
+            }
         #expect(imp.isAvailable() == true)
     }
 
@@ -449,7 +452,7 @@ struct TablePlusImporterTests {
         ])
 
         let result = try importer.importConnections(includePasswords: false)
-        #expect(result.envelope.connections[0].port == 5433)
+        #expect(result.envelope.connections[0].port == 5_433)
     }
 
     @Test("importConnections uses default port when missing")
@@ -465,11 +468,11 @@ struct TablePlusImporterTests {
         let result = try importer.importConnections(includePasswords: false)
         let connections = result.envelope.connections
 
-        #expect(connections[0].port == 3306)
-        #expect(connections[1].port == 5432)
+        #expect(connections[0].port == 3_306)
+        #expect(connections[1].port == 5_432)
         #expect(connections[2].port == 27_017)
-        #expect(connections[3].port == 6379)
-        #expect(connections[4].port == 1433)
+        #expect(connections[3].port == 6_379)
+        #expect(connections[4].port == 1_433)
     }
 
     @Test("importConnections skips invalid entries")

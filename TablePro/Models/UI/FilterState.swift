@@ -55,7 +55,8 @@ struct PersistedFilterState: Codable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case filters, logicMode
+        case filters
+        case logicMode
     }
 }
 

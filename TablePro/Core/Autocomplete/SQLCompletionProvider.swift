@@ -40,8 +40,12 @@ final class SQLCompletionProvider {
 
     // MARK: - Init
 
-    init(schemaProvider: SQLSchemaProvider?, databaseType: DatabaseType? = nil,
-         dialect: SQLDialectDescriptor? = nil, statementCompletions: [CompletionEntry] = []) {
+    init(
+        schemaProvider: SQLSchemaProvider?,
+        databaseType: DatabaseType? = nil,
+        dialect: SQLDialectDescriptor? = nil,
+        statementCompletions: [CompletionEntry] = []
+    ) {
         self.schemaProvider = schemaProvider
         self.databaseType = databaseType
         self.cachedDialect = dialect
@@ -49,7 +53,11 @@ final class SQLCompletionProvider {
     }
 
     /// Update the database type for context-aware completions
-    func setDatabaseType(_ type: DatabaseType, dialect: SQLDialectDescriptor? = nil, statementCompletions: [CompletionEntry] = []) {
+    func setDatabaseType(
+        _ type: DatabaseType,
+        dialect: SQLDialectDescriptor? = nil,
+        statementCompletions: [CompletionEntry] = []
+    ) {
         self.databaseType = type
         self.cachedDialect = dialect
         self.cachedFunctionItems = nil
@@ -287,13 +295,19 @@ final class SQLCompletionProvider {
 
         case .set:
             if let firstTable = context.tableReferences.first {
-                items = await schemaProvider?.columnCompletionItems(for: firstTable.tableName, schema: firstTable.schema) ?? []
+                items = await schemaProvider?.columnCompletionItems(
+                    for: firstTable.tableName,
+                    schema: firstTable.schema
+                ) ?? []
             }
             items += filterKeywords(["WHERE", "RETURNING"])
 
         case .insertColumns:
             if let firstTable = context.tableReferences.first {
-                items = await schemaProvider?.columnCompletionItems(for: firstTable.tableName, schema: firstTable.schema) ?? []
+                items = await schemaProvider?.columnCompletionItems(
+                    for: firstTable.tableName,
+                    schema: firstTable.schema
+                ) ?? []
             }
 
         case .values:
@@ -314,7 +328,7 @@ final class SQLCompletionProvider {
                     detail: String(localized: "All columns"),
                     documentation: String(localized: "Count all rows")
                 )
-                starItem.sortPriority = 10  // Highest priority
+                starItem.sortPriority = 10 // Highest priority
                 items.append(starItem)
                 // Boost DISTINCT for COUNT(DISTINCT ...)
                 var distinctItem = SQLCompletionItem.keyword("DISTINCT")
@@ -356,7 +370,10 @@ final class SQLCompletionProvider {
 
         case .alterTableColumn:
             if let firstTable = context.tableReferences.first {
-                items = await schemaProvider?.columnCompletionItems(for: firstTable.tableName, schema: firstTable.schema) ?? []
+                items = await schemaProvider?.columnCompletionItems(
+                    for: firstTable.tableName,
+                    schema: firstTable.schema
+                ) ?? []
             }
 
         case .createTable:
@@ -558,7 +575,7 @@ final class SQLCompletionProvider {
             let nsFilterText = item.filterText as NSString
 
             if nsFilterText.range(of: lowerPrefix, options: .anchored).location != NSNotFound {
-                item.matchedRanges = [0..<nsPrefix.length]
+                item.matchedRanges = [0 ..< nsPrefix.length]
                 item.fuzzyPenalty = 0
             } else if let containsRange = optionalRange(of: lowerPrefix, in: nsFilterText) {
                 item.matchedRanges = [containsRange]
@@ -581,7 +598,7 @@ final class SQLCompletionProvider {
     private func optionalRange(of substring: String, in target: NSString) -> Range<Int>? {
         let range = target.range(of: substring)
         guard range.location != NSNotFound else { return nil }
-        return range.location..<(range.location + range.length)
+        return range.location ..< (range.location + range.length)
     }
 
     /// Single fuzzy pass that resolves match state, penalty score, and matched
@@ -605,7 +622,7 @@ final class SQLCompletionProvider {
         var matchedIndices: [Int] = []
         matchedIndices.reserveCapacity(min(patternLen, targetLen))
 
-        while patternIdx < patternLen && targetIdx < targetLen {
+        while patternIdx < patternLen, targetIdx < targetLen {
             let pChar = nsPattern.character(at: patternIdx)
             let tChar = nsTarget.character(at: targetIdx)
 
@@ -647,16 +664,16 @@ final class SQLCompletionProvider {
         var ranges: [Range<Int>] = []
         var start = indices[0]
         var end = indices[0]
-        for i in 1..<indices.count {
+        for i in 1 ..< indices.count {
             if indices[i] == end + 1 {
                 end = indices[i]
             } else {
-                ranges.append(start..<(end + 1))
+                ranges.append(start ..< (end + 1))
                 start = indices[i]
                 end = indices[i]
             }
         }
-        ranges.append(start..<(end + 1))
+        ranges.append(start ..< (end + 1))
         return ranges
     }
 
@@ -691,7 +708,7 @@ final class SQLCompletionProvider {
         // table-operand slot (e.g. "... JOIN |") or at a clause transition point
         // (e.g. "FROM users |" or "WHERE id > 1 |"). In the operand slot, tables
         // lead; otherwise keywords lead so clause transitions surface.
-        if prefix.isEmpty && !context.tableReferences.isEmpty && !context.isAfterComma {
+        if prefix.isEmpty, !context.tableReferences.isEmpty, !context.isAfterComma {
             if context.expectsObjectName {
                 if item.kind == .table || item.kind == .view || item.kind == .schema {
                     score -= 300

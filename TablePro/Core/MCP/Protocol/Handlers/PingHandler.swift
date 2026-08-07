@@ -8,7 +8,7 @@ public struct PingHandler: MCPMethodHandler {
     public init() {}
 
     public func handle(params: JsonValue?, context: MCPRequestContext) async throws -> JsonRpcMessage {
-        await context.session.touch(now: await context.clock.now())
+        await context.session.touch(now: context.clock.now())
         return MCPMethodHandlerHelpers.successResponse(
             id: context.requestId,
             result: .object([:])

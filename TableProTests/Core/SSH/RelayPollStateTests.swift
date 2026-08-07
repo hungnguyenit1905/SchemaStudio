@@ -80,7 +80,8 @@ struct TransportPollOutcomeTests {
 
     @Test("Hangup wins over the requested direction")
     func hangupWinsOverReady() {
-        #expect(transportPollOutcome(revents: Int16(POLLOUT) | Int16(POLLHUP), requestedEvents: Int16(POLLOUT)) == .hangup)
+        #expect(transportPollOutcome(revents: Int16(POLLOUT) | Int16(POLLHUP), requestedEvents: Int16(POLLOUT)) ==
+            .hangup)
     }
 }
 

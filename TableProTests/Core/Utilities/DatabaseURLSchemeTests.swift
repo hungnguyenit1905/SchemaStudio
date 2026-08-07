@@ -4,21 +4,21 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Database URL Scheme Detection")
 @MainActor
 struct DatabaseURLSchemeTests {
-
     // MARK: - Standard Schemes
 
     @Test("MySQL scheme parses successfully")
     func mysqlScheme() {
         let result = ConnectionURLParser.parse("mysql://user:pass@localhost:3306/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mysql)
         #expect(parsed.host == "localhost")
@@ -29,7 +29,8 @@ struct DatabaseURLSchemeTests {
     func postgresqlScheme() {
         let result = ConnectionURLParser.parse("postgresql://user:pass@localhost:5432/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .postgresql)
     }
@@ -38,7 +39,8 @@ struct DatabaseURLSchemeTests {
     func postgresAliasScheme() {
         let result = ConnectionURLParser.parse("postgres://user:pass@localhost/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .postgresql)
     }
@@ -47,7 +49,8 @@ struct DatabaseURLSchemeTests {
     func mariadbScheme() {
         let result = ConnectionURLParser.parse("mariadb://user:pass@localhost:3306/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mariadb)
     }
@@ -56,7 +59,8 @@ struct DatabaseURLSchemeTests {
     func sqliteScheme() {
         let result = ConnectionURLParser.parse("sqlite:///path/to/database.db")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .sqlite)
         #expect(parsed.database == "/path/to/database.db")
@@ -66,7 +70,8 @@ struct DatabaseURLSchemeTests {
     func mongodbScheme() {
         let result = ConnectionURLParser.parse("mongodb://user:pass@localhost:27017/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mongodb)
     }
@@ -75,7 +80,8 @@ struct DatabaseURLSchemeTests {
     func mongodbSrvScheme() {
         let result = ConnectionURLParser.parse("mongodb+srv://user:pass@cluster.example.com/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mongodb)
     }
@@ -84,7 +90,8 @@ struct DatabaseURLSchemeTests {
     func redisScheme() {
         let result = ConnectionURLParser.parse("redis://user:pass@localhost:6379/0")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .redis)
         #expect(parsed.sslMode == nil)
@@ -94,7 +101,8 @@ struct DatabaseURLSchemeTests {
     func redissSchemeWithSsl() {
         let result = ConnectionURLParser.parse("rediss://user:pass@localhost:6379/0")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .redis)
         #expect(parsed.sslMode == .required)
@@ -104,7 +112,8 @@ struct DatabaseURLSchemeTests {
     func redshiftScheme() {
         let result = ConnectionURLParser.parse("redshift://user:pass@cluster.redshift.amazonaws.com:5439/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .redshift)
     }
@@ -113,7 +122,8 @@ struct DatabaseURLSchemeTests {
     func mssqlScheme() {
         let result = ConnectionURLParser.parse("mssql://user:pass@localhost:1433/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mssql)
     }
@@ -122,7 +132,8 @@ struct DatabaseURLSchemeTests {
     func sqlserverScheme() {
         let result = ConnectionURLParser.parse("sqlserver://user:pass@localhost:1433/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mssql)
     }
@@ -133,7 +144,8 @@ struct DatabaseURLSchemeTests {
     func mysqlSshScheme() {
         let result = ConnectionURLParser.parse("mysql+ssh://sshuser@sshhost:22/dbuser:dbpass@dbhost/dbname")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mysql)
         #expect(parsed.sshHost == "sshhost")
@@ -149,7 +161,8 @@ struct DatabaseURLSchemeTests {
     func postgresqlSshScheme() {
         let result = ConnectionURLParser.parse("postgresql+ssh://sshuser@sshhost:22/dbuser:dbpass@dbhost/dbname")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .postgresql)
         #expect(parsed.sshHost == "sshhost")
@@ -160,7 +173,8 @@ struct DatabaseURLSchemeTests {
     func postgresSshAliasScheme() {
         let result = ConnectionURLParser.parse("postgres+ssh://sshuser@sshhost:22/dbuser:dbpass@dbhost/dbname")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .postgresql)
         #expect(parsed.sshHost == "sshhost")
@@ -170,7 +184,8 @@ struct DatabaseURLSchemeTests {
     func mariadbSshScheme() {
         let result = ConnectionURLParser.parse("mariadb+ssh://sshuser@sshhost:22/dbuser:dbpass@dbhost/dbname")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mariadb)
         #expect(parsed.sshHost == "sshhost")
@@ -183,7 +198,8 @@ struct DatabaseURLSchemeTests {
     func ftpSchemeUnsupported() {
         let result = ConnectionURLParser.parse("ftp://user:pass@host/path")
         guard case .failure(let error) = result else {
-            Issue.record("Expected failure"); return
+            Issue.record("Expected failure")
+            return
         }
         #expect(error == .unsupportedScheme("ftp"))
     }
@@ -192,7 +208,8 @@ struct DatabaseURLSchemeTests {
     func httpSchemeUnsupported() {
         let result = ConnectionURLParser.parse("http://example.com/api")
         guard case .failure(let error) = result else {
-            Issue.record("Expected failure"); return
+            Issue.record("Expected failure")
+            return
         }
         #expect(error == .unsupportedScheme("http"))
     }
@@ -201,7 +218,8 @@ struct DatabaseURLSchemeTests {
     func cassandraSchemeSupported() {
         let result = ConnectionURLParser.parse("cassandra://user:pass@host:9042/keyspace")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success, got: \(result)"); return
+            Issue.record("Expected success, got: \(result)")
+            return
         }
         #expect(parsed.type == .cassandra)
         #expect(parsed.host == "host")
@@ -217,7 +235,8 @@ struct DatabaseURLSchemeTests {
     func mysqlCaseInsensitive() {
         let result = ConnectionURLParser.parse("MySQL://user:pass@localhost:3306/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mysql)
     }
@@ -226,7 +245,8 @@ struct DatabaseURLSchemeTests {
     func postgresqlCaseInsensitive() {
         let result = ConnectionURLParser.parse("POSTGRESQL://user:pass@localhost:5432/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .postgresql)
     }
@@ -235,7 +255,8 @@ struct DatabaseURLSchemeTests {
     func mssqlCaseInsensitive() {
         let result = ConnectionURLParser.parse("MSSQL://user:pass@localhost:1433/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mssql)
     }
@@ -244,7 +265,8 @@ struct DatabaseURLSchemeTests {
     func mixedCaseScheme() {
         let result = ConnectionURLParser.parse("PostgreSQL://user:pass@localhost/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .postgresql)
     }
@@ -255,7 +277,8 @@ struct DatabaseURLSchemeTests {
     func postgresqlPsycopgScheme() {
         let result = ConnectionURLParser.parse("postgresql+psycopg://user:pass@localhost:5432/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .postgresql)
         #expect(parsed.host == "localhost")
@@ -266,7 +289,8 @@ struct DatabaseURLSchemeTests {
     func postgresqlAsyncpgScheme() {
         let result = ConnectionURLParser.parse("postgresql+asyncpg://user:pass@localhost/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .postgresql)
     }
@@ -275,7 +299,8 @@ struct DatabaseURLSchemeTests {
     func mysqlPymysqlScheme() {
         let result = ConnectionURLParser.parse("mysql+pymysql://user:pass@localhost:3306/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mysql)
     }
@@ -284,7 +309,8 @@ struct DatabaseURLSchemeTests {
     func mongodbSrvPreserved() {
         let result = ConnectionURLParser.parse("mongodb+srv://user:pass@cluster.example.com/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mongodb)
     }
@@ -293,7 +319,8 @@ struct DatabaseURLSchemeTests {
     func postgresqlSshStillWorks() {
         let result = ConnectionURLParser.parse("postgresql+ssh://user:pass@localhost/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .postgresql)
     }
@@ -304,11 +331,12 @@ struct DatabaseURLSchemeTests {
     func mongodbMultiHost() {
         let result = ConnectionURLParser.parse("mongodb://h1:27017,h2:27018,h3:27019/mydb?replicaSet=rs0")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success, got: \(result)"); return
+            Issue.record("Expected success, got: \(result)")
+            return
         }
         #expect(parsed.type == .mongodb)
         #expect(parsed.host == "h1")
-        #expect(parsed.port == 27017)
+        #expect(parsed.port == 27_017)
         #expect(parsed.database == "mydb")
         #expect(parsed.multiHost == "h1:27017,h2:27018,h3:27019")
         #expect(parsed.mongoQueryParams["replicaSet"] == "rs0")
@@ -318,7 +346,8 @@ struct DatabaseURLSchemeTests {
     func mongodbMultiHostWithAuth() {
         let result = ConnectionURLParser.parse("mongodb://admin:secret@h1:27017,h2:27017/testdb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success, got: \(result)"); return
+            Issue.record("Expected success, got: \(result)")
+            return
         }
         #expect(parsed.host == "h1")
         #expect(parsed.username == "admin")
@@ -331,7 +360,8 @@ struct DatabaseURLSchemeTests {
     func mongodbSingleHostNoMultiHost() {
         let result = ConnectionURLParser.parse("mongodb://user:pass@localhost:27017/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.host == "localhost")
         #expect(parsed.multiHost == nil)
@@ -341,7 +371,8 @@ struct DatabaseURLSchemeTests {
     func mongodbMultiHostDefaultPort() {
         let result = ConnectionURLParser.parse("mongodb://h1,h2:27018/db")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success, got: \(result)"); return
+            Issue.record("Expected success, got: \(result)")
+            return
         }
         #expect(parsed.host == "h1")
         #expect(parsed.port == nil)

@@ -41,7 +41,7 @@ struct AIChatToolUseBlockView: View {
                             .truncationMode(.middle)
                     }
                     .font(.caption)
-                    if hasInput && !isPending {
+                    if hasInput, !isPending {
                         Image(systemName: "chevron.right")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
@@ -83,10 +83,10 @@ struct AIChatToolUseBlockView: View {
 
     private var callingLabel: String {
         switch block.approvalState {
-        case .pending:   return String(localized: "Pending approval for")
+        case .pending: return String(localized: "Pending approval for")
         case .cancelled: return String(localized: "Cancelled")
-        case .denied:    return String(localized: "Blocked")
-        case .approved:  return String(localized: "Calling")
+        case .denied: return String(localized: "Blocked")
+        case .approved: return String(localized: "Calling")
         }
     }
 

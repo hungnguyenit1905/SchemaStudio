@@ -243,7 +243,6 @@ struct SidebarView: View {
         .accessibilityIdentifier("sidebar-create-table")
     }
 
-    @ViewBuilder
     private var databaseTreeContent: some View {
         DatabaseTreeView(
             connectionId: connectionId,
@@ -260,7 +259,6 @@ struct SidebarView: View {
     // MARK: - Table List
 
     // MARK: - Section View
-
 }
 
 // MARK: - Preview

@@ -7,8 +7,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 // MARK: - Mock Driver
@@ -237,7 +237,10 @@ struct SQLSchemaProviderFallbackTests {
             TestFixtures.makeTableInfo(name: "orders")
         ]
         driver.columnsPerTable = [
-            "users": [TestFixtures.makeColumnInfo(name: "id"), TestFixtures.makeColumnInfo(name: "name", dataType: "VARCHAR", isPrimaryKey: false)],
+            "users": [
+                TestFixtures.makeColumnInfo(name: "id"),
+                TestFixtures.makeColumnInfo(name: "name", dataType: "VARCHAR", isPrimaryKey: false)
+            ],
             "orders": [TestFixtures.makeColumnInfo(name: "total", dataType: "DECIMAL", isPrimaryKey: false)]
         ]
 
@@ -426,7 +429,7 @@ struct SQLSchemaProviderFallbackTests {
     func eagerLoadRespectsMaxCachedTables() async throws {
         let driver = MockFallbackDriver()
         var tables: [TableInfo] = []
-        for i in 0..<60 {
+        for i in 0 ..< 60 {
             let name = "table_\(i)"
             tables.append(TestFixtures.makeTableInfo(name: name))
             driver.columnsPerTable[name] = [

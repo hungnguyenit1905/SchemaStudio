@@ -16,7 +16,8 @@ struct FilterPreset: Identifiable, Codable, Equatable {
 }
 
 /// Storage manager for filter presets
-@MainActor final class FilterPresetStorage {
+@MainActor
+final class FilterPresetStorage {
     static let shared = FilterPresetStorage()
 
     private let presetsKey = "com.SchemaStudio.filter.presets"

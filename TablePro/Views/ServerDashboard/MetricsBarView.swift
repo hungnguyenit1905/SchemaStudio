@@ -19,7 +19,7 @@ struct MetricsBarView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
 
-            if metrics.isEmpty && error == nil {
+            if metrics.isEmpty, error == nil {
                 ProgressView()
                     .frame(maxWidth: .infinity, minHeight: 60)
             } else {

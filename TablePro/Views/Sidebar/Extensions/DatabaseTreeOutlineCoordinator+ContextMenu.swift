@@ -66,7 +66,9 @@ extension DatabaseTreeOutlineCoordinator {
             },
             activate: { [weak self] ref in await self?.activate(ref) },
             setActiveDatabase: { [weak self] in self?.setActiveDatabase($0) },
-            setActiveSchema: { [weak self] database, schema in self?.setActiveSchema(database: database, schema: schema) },
+            setActiveSchema: { [weak self] database, schema in
+                self?.setActiveSchema(database: database, schema: schema)
+            },
             refreshDatabase: { [weak self] in self?.refreshDatabase($0, connectionId: nodeConnectionId) },
             refreshObjects: { [weak self] database, schema in
                 self?.refreshObjects(database: database, schema: schema, connectionId: nodeConnectionId)

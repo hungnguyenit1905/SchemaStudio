@@ -4,25 +4,23 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProImport
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Connection Sharing")
 @MainActor
 struct ConnectionSharingTests {
-
     // MARK: - buildImportDeeplink
 
     @Suite("Build Import Deeplink")
     struct BuildDeeplinkTests {
-
         @Test("Emits required fields")
         @MainActor
         func testRequiredFields() {
             let conn = DatabaseConnection(
-                name: "Dev", host: "localhost", port: 3306,
+                name: "Dev", host: "localhost", port: 3_306,
                 database: "mydb", username: "root", type: .mysql
             )
             let link = ConnectionExportService.buildImportDeeplink(for: conn)!
@@ -38,7 +36,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testOmitsEmptyFields() {
             let conn = DatabaseConnection(
-                name: "Minimal", host: "db.com", port: 5432,
+                name: "Minimal", host: "db.com", port: 5_432,
                 database: "", username: "", type: .postgresql
             )
             let link = ConnectionExportService.buildImportDeeplink(for: conn)!
@@ -52,12 +50,12 @@ struct ConnectionSharingTests {
             var ssh = SSHConfiguration()
             ssh.enabled = true
             ssh.host = "bastion.com"
-            ssh.port = 2222
+            ssh.port = 2_222
             ssh.username = "deploy"
             ssh.authMethod = .privateKey
             ssh.privateKeyPath = "~/.ssh/id_ed25519"
             let conn = DatabaseConnection(
-                name: "SSH", host: "db.internal", port: 5432,
+                name: "SSH", host: "db.internal", port: 5_432,
                 database: "main", username: "app", type: .postgresql,
                 sshConfig: ssh
             )
@@ -73,7 +71,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testOmitsSSHWhenDisabled() {
             let conn = DatabaseConnection(
-                name: "NoSSH", host: "localhost", port: 3306,
+                name: "NoSSH", host: "localhost", port: 3_306,
                 database: "", username: "", type: .mysql
             )
             let link = ConnectionExportService.buildImportDeeplink(for: conn)!
@@ -89,7 +87,7 @@ struct ConnectionSharingTests {
             ssh.host = "bastion.com"
             ssh.port = 22
             let conn = DatabaseConnection(
-                name: "SSH", host: "db.com", port: 5432,
+                name: "SSH", host: "db.com", port: 5_432,
                 database: "", username: "", type: .postgresql,
                 sshConfig: ssh
             )
@@ -107,7 +105,7 @@ struct ConnectionSharingTests {
                 clientKeyPath: ""
             )
             let conn = DatabaseConnection(
-                name: "SSL", host: "db.com", port: 5432,
+                name: "SSL", host: "db.com", port: 5_432,
                 database: "", username: "", type: .postgresql,
                 sslConfig: ssl
             )
@@ -120,7 +118,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testOmitsSSLWhenDisabled() {
             let conn = DatabaseConnection(
-                name: "NoSSL", host: "localhost", port: 3306,
+                name: "NoSSL", host: "localhost", port: 3_306,
                 database: "", username: "", type: .mysql
             )
             let link = ConnectionExportService.buildImportDeeplink(for: conn)!
@@ -131,7 +129,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testIncludesMetadata() {
             let conn = DatabaseConnection(
-                name: "Prod", host: "db.com", port: 5432,
+                name: "Prod", host: "db.com", port: 5_432,
                 database: "", username: "", type: .postgresql,
                 color: .red,
                 safeModeLevel: .readOnly,
@@ -147,7 +145,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testOmitsDefaultMetadata() {
             let conn = DatabaseConnection(
-                name: "Default", host: "localhost", port: 3306,
+                name: "Default", host: "localhost", port: 3_306,
                 database: "", username: "", type: .mysql
             )
             let link = ConnectionExportService.buildImportDeeplink(for: conn)!
@@ -160,7 +158,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testIncludesAdditionalFields() {
             let conn = DatabaseConnection(
-                name: "Redis", host: "localhost", port: 6379,
+                name: "Redis", host: "localhost", port: 6_379,
                 database: "", username: "", type: .redis,
                 redisDatabase: 3,
                 additionalFields: ["customField": "customValue"]
@@ -174,7 +172,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testIncludesStartupCommands() {
             let conn = DatabaseConnection(
-                name: "Dev", host: "localhost", port: 5432,
+                name: "Dev", host: "localhost", port: 5_432,
                 database: "", username: "", type: .postgresql,
                 startupCommands: "SET search_path TO myschema;"
             )
@@ -186,7 +184,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testIncludesLocalOnly() {
             let conn = DatabaseConnection(
-                name: "Local", host: "localhost", port: 5432,
+                name: "Local", host: "localhost", port: 5_432,
                 database: "", username: "", type: .postgresql,
                 localOnly: true
             )
@@ -198,7 +196,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testPercentEncodesSpecialChars() {
             let conn = DatabaseConnection(
-                name: "Dev & Staging", host: "db.example.com", port: 5432,
+                name: "Dev & Staging", host: "db.example.com", port: 5_432,
                 database: "my db", username: "user@domain", type: .postgresql
             )
             let link = ConnectionExportService.buildImportDeeplink(for: conn)!
@@ -215,9 +213,9 @@ struct ConnectionSharingTests {
             var ssh = SSHConfiguration()
             ssh.enabled = true
             ssh.host = "bastion.com"
-            ssh.port = 2222
+            ssh.port = 2_222
             let conn = DatabaseConnection(
-                name: "Complex Connection", host: "db.prod.internal", port: 5433,
+                name: "Complex Connection", host: "db.prod.internal", port: 5_433,
                 database: "main", username: "app_user", type: .postgresql,
                 sshConfig: ssh,
                 sslConfig: SSLConfiguration(mode: .required),
@@ -237,12 +235,11 @@ struct ConnectionSharingTests {
 
     @Suite("Build Compact JSON")
     struct BuildCompactJSONTests {
-
         @Test("Returns valid JSON")
         @MainActor
         func testReturnsValidJSON() {
             let conn = DatabaseConnection(
-                name: "Dev", host: "localhost", port: 3306,
+                name: "Dev", host: "localhost", port: 3_306,
                 database: "mydb", username: "root", type: .mysql
             )
             let json = ConnectionExportService.buildCompactJSON(for: conn)
@@ -256,14 +253,14 @@ struct ConnectionSharingTests {
 
         @Test("Excludes SSH profile ID")
         @MainActor
-        func testExcludesSSHProfileId() {
+        func testExcludesSSHProfileId() throws {
             let conn = DatabaseConnection(
-                name: "Dev", host: "localhost", port: 3306,
+                name: "Dev", host: "localhost", port: 3_306,
                 database: "", username: "", type: .mysql
             )
             let json = ConnectionExportService.buildCompactJSON(for: conn)
             let data = json.data(using: .utf8)!
-            let decoded = try! JSONDecoder().decode(ExportableConnection.self, from: data)
+            let decoded = try JSONDecoder().decode(ExportableConnection.self, from: data)
             #expect(decoded.sshProfileId == nil)
         }
 
@@ -271,7 +268,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testIsCompact() {
             let conn = DatabaseConnection(
-                name: "Dev", host: "localhost", port: 3306,
+                name: "Dev", host: "localhost", port: 3_306,
                 database: "", username: "", type: .mysql
             )
             let json = ConnectionExportService.buildCompactJSON(for: conn)
@@ -280,20 +277,20 @@ struct ConnectionSharingTests {
 
         @Test("Includes SSH config when enabled")
         @MainActor
-        func testIncludesSSHInJSON() {
+        func testIncludesSSHInJSON() throws {
             var ssh = SSHConfiguration()
             ssh.enabled = true
             ssh.host = "bastion.com"
             ssh.port = 22
             ssh.username = "admin"
             let conn = DatabaseConnection(
-                name: "SSH", host: "db.com", port: 5432,
+                name: "SSH", host: "db.com", port: 5_432,
                 database: "", username: "", type: .postgresql,
                 sshConfig: ssh
             )
             let json = ConnectionExportService.buildCompactJSON(for: conn)
             let data = json.data(using: .utf8)!
-            let decoded = try! JSONDecoder().decode(ExportableConnection.self, from: data)
+            let decoded = try JSONDecoder().decode(ExportableConnection.self, from: data)
             #expect(decoded.sshConfig != nil)
             #expect(decoded.sshConfig?.host == "bastion.com")
         }
@@ -303,12 +300,11 @@ struct ConnectionSharingTests {
 
     @Suite("Round-Trip: buildImportDeeplink → parseImport")
     struct RoundTripTests {
-
         @Test("Basic connection survives round-trip")
         @MainActor
         func testBasicRoundTrip() {
             let original = DatabaseConnection(
-                name: "Dev MySQL", host: "db.example.com", port: 3307,
+                name: "Dev MySQL", host: "db.example.com", port: 3_307,
                 database: "app_db", username: "dev_user", type: .mysql
             )
             let link = ConnectionExportService.buildImportDeeplink(for: original)!
@@ -331,13 +327,13 @@ struct ConnectionSharingTests {
             var ssh = SSHConfiguration()
             ssh.enabled = true
             ssh.host = "bastion.prod.com"
-            ssh.port = 2222
+            ssh.port = 2_222
             ssh.username = "deploy"
             ssh.authMethod = .privateKey
             ssh.privateKeyPath = "~/.ssh/prod_key"
             ssh.agentSocketPath = "/tmp/agent.sock"
             let original = DatabaseConnection(
-                name: "SSH Prod", host: "db.internal", port: 5432,
+                name: "SSH Prod", host: "db.internal", port: 5_432,
                 database: "main", username: "app", type: .postgresql,
                 sshConfig: ssh
             )
@@ -350,7 +346,7 @@ struct ConnectionSharingTests {
             #expect(parsed.sshConfig != nil)
             #expect(parsed.sshConfig?.enabled == true)
             #expect(parsed.sshConfig?.host == "bastion.prod.com")
-            #expect(parsed.sshConfig?.port == 2222)
+            #expect(parsed.sshConfig?.port == 2_222)
             #expect(parsed.sshConfig?.username == "deploy")
             #expect(parsed.sshConfig?.authMethod == "Private Key")
             #expect(parsed.sshConfig?.privateKeyPath == "~/.ssh/prod_key")
@@ -367,7 +363,7 @@ struct ConnectionSharingTests {
                 clientKeyPath: "~/certs/client.key"
             )
             let original = DatabaseConnection(
-                name: "SSL DB", host: "db.com", port: 5432,
+                name: "SSL DB", host: "db.com", port: 5_432,
                 database: "secure", username: "admin", type: .postgresql,
                 sslConfig: ssl
             )
@@ -388,7 +384,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testMetadataRoundTrip() {
             let original = DatabaseConnection(
-                name: "Prod", host: "db.prod.com", port: 5432,
+                name: "Prod", host: "db.prod.com", port: 5_432,
                 database: "main", username: "app", type: .postgresql,
                 color: .red,
                 safeModeLevel: .readOnly,
@@ -413,7 +409,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testRedisRoundTrip() {
             let original = DatabaseConnection(
-                name: "Cache", host: "redis.local", port: 6379,
+                name: "Cache", host: "redis.local", port: 6_379,
                 database: "", username: "", type: .redis,
                 redisDatabase: 5
             )
@@ -430,7 +426,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testSpecialCharsRoundTrip() {
             let original = DatabaseConnection(
-                name: "Dev & Staging (v2)", host: "db.example.com", port: 5432,
+                name: "Dev & Staging (v2)", host: "db.example.com", port: 5_432,
                 database: "my database", username: "user@company.com", type: .postgresql
             )
             let link = ConnectionExportService.buildImportDeeplink(for: original)!
@@ -448,7 +444,7 @@ struct ConnectionSharingTests {
         @MainActor
         func testMinimalRoundTrip() {
             let original = DatabaseConnection(
-                name: "Bare", host: "localhost", port: 5432,
+                name: "Bare", host: "localhost", port: 5_432,
                 database: "", username: "", type: .postgresql
             )
             let link = ConnectionExportService.buildImportDeeplink(for: original)!
@@ -476,7 +472,7 @@ struct ConnectionSharingTests {
             var ssh = SSHConfiguration()
             ssh.enabled = true
             ssh.host = "bastion.prod.com"
-            ssh.port = 2222
+            ssh.port = 2_222
             ssh.username = "deploy"
             ssh.authMethod = .privateKey
             ssh.privateKeyPath = "~/.ssh/prod_key"
@@ -495,7 +491,7 @@ struct ConnectionSharingTests {
             )
 
             let original = DatabaseConnection(
-                name: "Full Config", host: "db.prod.internal", port: 5433,
+                name: "Full Config", host: "db.prod.internal", port: 5_433,
                 database: "main", username: "app_user", type: .postgresql,
                 sshConfig: ssh,
                 sslConfig: ssl,
@@ -517,13 +513,13 @@ struct ConnectionSharingTests {
 
             #expect(parsed.name == "Full Config")
             #expect(parsed.host == "db.prod.internal")
-            #expect(parsed.port == 5433)
+            #expect(parsed.port == 5_433)
             #expect(parsed.type == "PostgreSQL")
             #expect(parsed.username == "app_user")
             #expect(parsed.database == "main")
 
             #expect(parsed.sshConfig?.host == "bastion.prod.com")
-            #expect(parsed.sshConfig?.port == 2222)
+            #expect(parsed.sshConfig?.port == 2_222)
             #expect(parsed.sshConfig?.username == "deploy")
             #expect(parsed.sshConfig?.authMethod == "Private Key")
             #expect(parsed.sshConfig?.jumpHosts?.count == 1)
@@ -545,7 +541,6 @@ struct ConnectionSharingTests {
 
     @Suite("Import Sanitization")
     struct ImportSanitizationTests {
-
         @Test("Deeplink import drops preConnectScript but keeps benign fields")
         @MainActor
         func testDeeplinkImportDropsPreConnectScript() {

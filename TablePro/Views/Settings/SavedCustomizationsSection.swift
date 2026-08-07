@@ -12,8 +12,10 @@ struct SavedCustomizationsSection: View {
         Group {
             if items.isEmpty {
                 Section {
-                    Text("No saved customizations yet. Column widths, order, visibility, and per-table filters you set appear here so you can review and reset them.")
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "No saved customizations yet. Column widths, order, visibility, and per-table filters you set appear here so you can review and reset them."
+                    )
+                    .foregroundStyle(.secondary)
                 } header: {
                     Text("Saved Customizations")
                 }
@@ -25,7 +27,9 @@ struct SavedCustomizationsSection: View {
                 } header: {
                     Text("Saved Customizations")
                 } footer: {
-                    Text("You edit these inline in the grid and filter bar. Reset a table here to return it to defaults.")
+                    Text(
+                        "You edit these inline in the grid and filter bar. Reset a table here to return it to defaults."
+                    )
                 }
 
                 Section {
@@ -39,7 +43,6 @@ struct SavedCustomizationsSection: View {
         .onAppear(perform: reload)
     }
 
-    @ViewBuilder
     private func row(_ item: SavedTableCustomization) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {

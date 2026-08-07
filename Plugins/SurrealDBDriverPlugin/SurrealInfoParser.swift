@@ -168,7 +168,7 @@ public enum SurrealInfoParser {
                 end = found.lowerBound
             }
         }
-        return String(tail[tail.startIndex..<end]).trimmingCharacters(in: .whitespaces)
+        return String(tail[tail.startIndex ..< end]).trimmingCharacters(in: .whitespaces)
     }
 
     private static func indexColumns(_ value: SurrealValue?) -> [String] {

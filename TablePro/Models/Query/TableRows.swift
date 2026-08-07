@@ -98,7 +98,7 @@ struct TableRows: Sendable {
         let normalized = Self.normalize(values: values, toCount: columns.count)
         let row = Row(id: .inserted(UUID()), values: normalized)
         rows.insert(row, at: index)
-        for offset in index..<rows.count {
+        for offset in index ..< rows.count {
             indexByID[rows[offset].id] = offset
         }
         return .rowsInserted(IndexSet(integer: index))
@@ -117,7 +117,7 @@ struct TableRows: Sendable {
             rows.append(row)
             indexByID[row.id] = newIndex
         }
-        return .rowsInserted(IndexSet(integersIn: firstIndex...(rows.count - 1)))
+        return .rowsInserted(IndexSet(integersIn: firstIndex ... (rows.count - 1)))
     }
 
     @discardableResult
@@ -233,14 +233,17 @@ struct TableRows: Sendable {
             indexByID.removeValue(forKey: removedID)
         }
         if let minRemoved = indices.min(), minRemoved < rows.count {
-            for offset in minRemoved..<rows.count {
+            for offset in minRemoved ..< rows.count {
                 indexByID[rows[offset].id] = offset
             }
         }
         return .rowsRemoved(indices)
     }
 
-    private static func normalize(values: [PluginCellValue], toCount targetCount: Int) -> ContiguousArray<PluginCellValue> {
+    private static func normalize(
+        values: [PluginCellValue],
+        toCount targetCount: Int
+    ) -> ContiguousArray<PluginCellValue> {
         if values.count == targetCount {
             return ContiguousArray(values)
         }

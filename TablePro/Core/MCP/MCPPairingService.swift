@@ -80,7 +80,7 @@ actor PairingExchangeStore {
         let rhsBytes = Array(rhs.utf8)
         guard lhsBytes.count == rhsBytes.count else { return false }
         var result: UInt8 = 0
-        for index in 0..<lhsBytes.count {
+        for index in 0 ..< lhsBytes.count {
             result |= lhsBytes[index] ^ rhsBytes[index]
         }
         return result == 0

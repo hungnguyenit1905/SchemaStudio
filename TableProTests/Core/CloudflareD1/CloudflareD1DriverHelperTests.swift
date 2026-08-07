@@ -9,7 +9,6 @@ import Testing
 
 @Suite("Cloudflare D1 Driver Helpers")
 struct CloudflareD1DriverHelperTests {
-
     // MARK: - Local copies of helper functions for testing
 
     private static func quoteIdentifier(_ name: String) -> String {
@@ -60,10 +59,10 @@ struct CloudflareD1DriverHelperTests {
             } else if char == ")" {
                 depth -= 1
                 result.append(char)
-            } else if char == "," && depth == 1 {
+            } else if char == ",", depth == 1 {
                 result.append(",\n  ")
                 charIndex += 1
-                while charIndex < chars.count && chars[charIndex].isWhitespace {
+                while charIndex < chars.count, chars[charIndex].isWhitespace {
                     charIndex += 1
                 }
                 charIndex -= 1

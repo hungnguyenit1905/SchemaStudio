@@ -80,7 +80,8 @@ struct ConnectionFormView: View {
             .task {
                 await viewModel.loadStoredCredentials(secureStore: appState.secureStore)
             }
-            .navigationTitle(viewModel.isEditing ? String(localized: "Edit Connection") : String(localized: "New Connection"))
+            .navigationTitle(viewModel
+                .isEditing ? String(localized: "Edit Connection") : String(localized: "New Connection"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -191,7 +192,6 @@ struct ConnectionFormView: View {
 
     // MARK: - SQLite Section
 
-    @ViewBuilder
     private func sqliteSection(viewModel: ConnectionFormViewModel) -> some View {
         Section("Database File") {
             if let url = viewModel.selectedFileURL {
@@ -244,7 +244,6 @@ struct ConnectionFormView: View {
         }
     }
 
-    @ViewBuilder
     private func selectedFileRow(_ url: URL, viewModel: ConnectionFormViewModel) -> some View {
         HStack {
             Image(systemName: "doc.fill")

@@ -43,7 +43,7 @@ enum BeekeeperEncryptor {
         guard payload.count > 96 else { return nil }
         let ivHexStart = payload.index(payload.startIndex, offsetBy: 64)
         let cipherStart = payload.index(payload.startIndex, offsetBy: 96)
-        let ivHex = String(payload[ivHexStart..<cipherStart])
+        let ivHex = String(payload[ivHexStart ..< cipherStart])
         let cipherBase64 = String(payload[cipherStart...])
 
         guard let iv = Data(hex: ivHex), iv.count == kCCBlockSizeAES128,
@@ -78,7 +78,11 @@ enum BeekeeperEncryptor {
         var hash = Data(count: Int(CC_SHA256_DIGEST_LENGTH))
         hash.withUnsafeMutableBytes { hashBytes in
             data.withUnsafeBytes { dataBytes in
-                _ = CC_SHA256(dataBytes.baseAddress, CC_LONG(data.count), hashBytes.bindMemory(to: UInt8.self).baseAddress)
+                _ = CC_SHA256(
+                    dataBytes.baseAddress,
+                    CC_LONG(data.count),
+                    hashBytes.bindMemory(to: UInt8.self).baseAddress
+                )
             }
         }
         return hash
@@ -120,7 +124,7 @@ private extension Data {
         var index = cleaned.startIndex
         while index < cleaned.endIndex {
             let next = cleaned.index(index, offsetBy: 2)
-            guard let byte = UInt8(cleaned[index..<next], radix: 16) else { return nil }
+            guard let byte = UInt8(cleaned[index ..< next], radix: 16) else { return nil }
             data.append(byte)
             index = next
         }

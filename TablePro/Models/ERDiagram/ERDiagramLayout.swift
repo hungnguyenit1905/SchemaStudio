@@ -73,8 +73,7 @@ enum ERDiagramLayout {
         for edge in graph.edges {
             guard let from = graph.nodeIndex[edge.fromTable],
                   let to = graph.nodeIndex[edge.toTable],
-                  from != to
-            else { continue }
+                  from != to else { continue }
             adjacency[from, default: []].append(to)
             adjacency[to, default: []].append(from)
         }
@@ -103,7 +102,7 @@ enum ERDiagramLayout {
         let iterations = max(60, min(300, 2_000 / count))
         var temperature = spacing * 2
 
-        for _ in 0..<iterations {
+        for _ in 0 ..< iterations {
             let displacement = forceStep(
                 members: members,
                 edges: edges,
@@ -189,7 +188,9 @@ enum ERDiagramLayout {
         idealDistance: CGFloat
     ) -> [UUID: CGVector] {
         var displacement: [UUID: CGVector] = [:]
-        for id in members { displacement[id] = .zero }
+        for id in members {
+            displacement[id] = .zero
+        }
 
         var centerX: CGFloat = 0
         var centerY: CGFloat = 0
@@ -201,10 +202,10 @@ enum ERDiagramLayout {
         centerY /= CGFloat(members.count)
 
         let count = members.count
-        for i in 0..<count {
+        for i in 0 ..< count {
             let lhs = members[i]
             guard let posLhs = positions[lhs] else { continue }
-            for j in (i + 1)..<count {
+            for j in (i + 1) ..< count {
                 let rhs = members[j]
                 guard let posRhs = positions[rhs] else { continue }
                 var dx = posLhs.x - posRhs.x
@@ -279,11 +280,11 @@ enum ERDiagramLayout {
         let count = members.count
         let padding = horizontalGap * 0.5
         let passes = max(20, min(count, 60))
-        for _ in 0..<passes {
+        for _ in 0 ..< passes {
             var moved = false
-            for i in 0..<count {
+            for i in 0 ..< count {
                 let lhs = members[i]
-                for j in (i + 1)..<count {
+                for j in (i + 1) ..< count {
                     let rhs = members[j]
                     guard let posLhs = positions[lhs], let posRhs = positions[rhs],
                           let sizeLhs = sizes[lhs], let sizeRhs = sizes[rhs] else { continue }

@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("Connection URL Formatter")
@@ -338,7 +338,8 @@ struct ConnectionURLFormatterTests {
         let parseResult = ConnectionURLParser.parse(url)
 
         guard case .success(let parsed) = parseResult else {
-            Issue.record("Expected successful parse"); return
+            Issue.record("Expected successful parse")
+            return
         }
 
         #expect(parsed.sshUsername == "deploy")
@@ -511,7 +512,8 @@ struct ConnectionURLFormatterTests {
         #expect(url == "quack://myhost:9495/remotedb")
 
         guard case .success(let parsed) = ConnectionURLParser.parse(url) else {
-            Issue.record("Expected the formatted URL to parse"); return
+            Issue.record("Expected the formatted URL to parse")
+            return
         }
         #expect(parsed.type == .duckdb)
         #expect(parsed.host == "myhost")

@@ -57,7 +57,6 @@ struct ConnectionInfoView: View {
         }
     }
 
-    @ViewBuilder
     private var serverSection: some View {
         Section("Server") {
             LabeledContent("Host") {
@@ -83,7 +82,10 @@ struct ConnectionInfoView: View {
                 }
             }
             if !activeDatabaseLabel.isEmpty {
-                LabeledContent(coordinator.activeDatabase.isEmpty ? "Default DB" : "Active DB", value: activeDatabaseLabel)
+                LabeledContent(
+                    coordinator.activeDatabase.isEmpty ? "Default DB" : "Active DB",
+                    value: activeDatabaseLabel
+                )
             }
             if coordinator.supportsSchemas, !coordinator.activeSchema.isEmpty {
                 LabeledContent("Schema", value: coordinator.activeSchema)
@@ -96,7 +98,6 @@ struct ConnectionInfoView: View {
         return connection.database
     }
 
-    @ViewBuilder
     private func sshSection(_ ssh: SSHConfiguration) -> some View {
         Section("SSH Tunnel") {
             LabeledContent("SSH Host") {
@@ -108,7 +109,6 @@ struct ConnectionInfoView: View {
         }
     }
 
-    @ViewBuilder
     private var sqliteFileSection: some View {
         Section("File") {
             let url = URL(fileURLWithPath: connection.database)
@@ -124,7 +124,6 @@ struct ConnectionInfoView: View {
         }
     }
 
-    @ViewBuilder
     private var statsSection: some View {
         Section("Stats") {
             LabeledContent("Tables", value: "\(coordinator.tables.count)")

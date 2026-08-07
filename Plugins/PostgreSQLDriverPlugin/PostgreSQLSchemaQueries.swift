@@ -51,21 +51,21 @@ enum PostgreSQLSchemaQueries {
     /// single-char wildcard and `'pg_%'` would also exclude legitimate user
     /// schemas such as `pgboss`, `pgcrypto`, or `pgvector`.
     static let listSchemas = """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name NOT LIKE 'pg!_%' ESCAPE '!'
-          AND schema_name <> 'information_schema'
-        ORDER BY schema_name
-        """
+    SELECT schema_name FROM information_schema.schemata
+    WHERE schema_name NOT LIKE 'pg!_%' ESCAPE '!'
+      AND schema_name <> 'information_schema'
+    ORDER BY schema_name
+    """
 
     /// Redshift variant: queries `pg_namespace` directly and additionally
     /// requires the connected role to hold `USAGE` on the schema.
     static let listSchemasRedshift = """
-        SELECT nspname FROM pg_namespace
-        WHERE nspname NOT LIKE 'pg!_%' ESCAPE '!'
-          AND nspname NOT IN ('information_schema', 'catalog_history')
-          AND has_schema_privilege(current_user, nspname, 'USAGE')
-        ORDER BY nspname
-        """
+    SELECT nspname FROM pg_namespace
+    WHERE nspname NOT LIKE 'pg!_%' ESCAPE '!'
+      AND nspname NOT IN ('information_schema', 'catalog_history')
+      AND has_schema_privilege(current_user, nspname, 'USAGE')
+    ORDER BY nspname
+    """
 
     /// Lists tables and views, optionally including materialized views and
     /// foreign tables. The optional unions reference `pg_matviews` and
@@ -107,9 +107,9 @@ enum PostgreSQLSchemaQueries {
 
         let partitionJoin = includePartitionAwareness ? """
 
-            LEFT JOIN pg_catalog.pg_namespace pn ON pn.nspname = t.table_schema
-            LEFT JOIN pg_catalog.pg_class pc ON pc.relnamespace = pn.oid AND pc.relname = t.table_name
-            """ : ""
+        LEFT JOIN pg_catalog.pg_namespace pn ON pn.nspname = t.table_schema
+        LEFT JOIN pg_catalog.pg_class pc ON pc.relnamespace = pn.oid AND pc.relname = t.table_name
+        """ : ""
 
         let tableTypeColumn = includePartitionAwareness
             ? "CASE WHEN pc.relkind = 'p' THEN 'PARTITIONED TABLE' ELSE t.table_type END"
@@ -117,18 +117,22 @@ enum PostgreSQLSchemaQueries {
 
         let partitionFilter = includePartitionAwareness ? """
 
-              AND NOT EXISTS (
-                    SELECT 1
-                    FROM pg_catalog.pg_inherits i
-                    JOIN pg_catalog.pg_class parent ON parent.oid = i.inhparent
-                    WHERE i.inhrelid = pc.oid
-                      AND parent.relkind IN ('p', 'I'))
-            """ : ""
+          AND NOT EXISTS (
+                SELECT 1
+                FROM pg_catalog.pg_inherits i
+                JOIN pg_catalog.pg_class parent ON parent.oid = i.inhparent
+                WHERE i.inhrelid = pc.oid
+                  AND parent.relkind IN ('p', 'I'))
+        """ : ""
 
-        var unions: [String] = [
+        var unions = [
             """
             SELECT t.table_name, \(tableTypeColumn) AS table_type,
-                   \(commentColumn("obj_description(to_regclass(quote_ident(t.table_schema) || '.' || quote_ident(t.table_name)), 'pg_class')")) AS table_comment
+                   \(
+                       commentColumn(
+                           "obj_description(to_regclass(quote_ident(t.table_schema) || '.' || quote_ident(t.table_name)), 'pg_class')"
+                       )
+                   ) AS table_comment
             FROM information_schema.tables t\(partitionJoin)
             WHERE t.table_schema = '\(schemaLiteral)'
               AND t.table_type IN ('BASE TABLE', 'VIEW')\(partitionFilter)
@@ -139,7 +143,11 @@ enum PostgreSQLSchemaQueries {
             unions.append(
                 """
                 SELECT m.matviewname AS table_name, 'MATERIALIZED VIEW' AS table_type,
-                       \(commentColumn("obj_description(to_regclass(quote_ident(m.schemaname) || '.' || quote_ident(m.matviewname)), 'pg_class')")) AS table_comment
+                       \(
+                           commentColumn(
+                               "obj_description(to_regclass(quote_ident(m.schemaname) || '.' || quote_ident(m.matviewname)), 'pg_class')"
+                           )
+                       ) AS table_comment
                 FROM pg_matviews m
                 WHERE m.schemaname = '\(schemaLiteral)'
                 """
@@ -204,36 +212,36 @@ enum PostgreSQLSchemaQueries {
     ) -> String {
         let shape = ColumnQueryShape.fragments(tableLiteral: tableLiteral)
         return """
-            SELECT
-                \(shape.selectPrefix)c.column_name,
-                c.data_type,
-                c.is_nullable,
-                c.column_default,
-                c.collation_name,
-                pgd.description,
-                c.udt_name,
-                CASE WHEN pk.column_name IS NOT NULL THEN 'YES' ELSE 'NO' END AS is_pk,
-                \(identityProjection),
-                \(generatedProjection)
-            FROM information_schema.columns c
-            LEFT JOIN pg_catalog.pg_statio_all_tables st
-                ON st.schemaname = c.table_schema
-                AND st.relname = c.table_name
-            LEFT JOIN pg_catalog.pg_description pgd
-                ON pgd.objoid = st.relid
-                AND pgd.objsubid = c.ordinal_position
-            \(attributeJoin)
-            LEFT JOIN (
-                SELECT DISTINCT \(shape.pkSelect)
-                FROM information_schema.table_constraints tc
-                JOIN information_schema.key_column_usage kcu
-                    ON tc.constraint_name = kcu.constraint_name
-                    AND tc.table_schema = kcu.table_schema
-                WHERE tc.constraint_type = 'PRIMARY KEY'
-                    AND tc.table_schema = '\(schemaLiteral)'\(shape.pkTableFilter)
-            ) pk ON \(shape.pkJoin)
-            WHERE c.table_schema = '\(schemaLiteral)'\(shape.mainTableFilter)
-            ORDER BY \(shape.orderBy)
-            """
+        SELECT
+            \(shape.selectPrefix)c.column_name,
+            c.data_type,
+            c.is_nullable,
+            c.column_default,
+            c.collation_name,
+            pgd.description,
+            c.udt_name,
+            CASE WHEN pk.column_name IS NOT NULL THEN 'YES' ELSE 'NO' END AS is_pk,
+            \(identityProjection),
+            \(generatedProjection)
+        FROM information_schema.columns c
+        LEFT JOIN pg_catalog.pg_statio_all_tables st
+            ON st.schemaname = c.table_schema
+            AND st.relname = c.table_name
+        LEFT JOIN pg_catalog.pg_description pgd
+            ON pgd.objoid = st.relid
+            AND pgd.objsubid = c.ordinal_position
+        \(attributeJoin)
+        LEFT JOIN (
+            SELECT DISTINCT \(shape.pkSelect)
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.key_column_usage kcu
+                ON tc.constraint_name = kcu.constraint_name
+                AND tc.table_schema = kcu.table_schema
+            WHERE tc.constraint_type = 'PRIMARY KEY'
+                AND tc.table_schema = '\(schemaLiteral)'\(shape.pkTableFilter)
+        ) pk ON \(shape.pkJoin)
+        WHERE c.table_schema = '\(schemaLiteral)'\(shape.mainTableFilter)
+        ORDER BY \(shape.orderBy)
+        """
     }
 }

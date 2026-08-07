@@ -82,7 +82,8 @@ public struct ConfirmDestructiveOperationTool: MCPToolImplementation {
         let mcpSettings = await services.settingsProvider()
         let timeoutSeconds = MCPLimitResolver.resolveTimeoutSeconds(requested: nil, settings: mcpSettings)
 
-        Self.logger.debug("confirm_destructive_operation invoked for connection \(connectionId.uuidString, privacy: .public)")
+        Self.logger
+            .debug("confirm_destructive_operation invoked for connection \(connectionId.uuidString, privacy: .public)")
 
         let scope = try await services.connectionBridge.resolveScope(
             connectionId: connectionId,

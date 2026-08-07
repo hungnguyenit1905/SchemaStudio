@@ -93,7 +93,7 @@ public actor MCPProtocolDispatcher {
             return
         }
 
-        await session.touch(now: await clock.now())
+        await session.touch(now: clock.now())
         await session.bindPrincipal(tokenId: principal.tokenId)
 
         let token = MCPCancellationToken()
@@ -187,8 +187,7 @@ public actor MCPProtocolDispatcher {
         exchange: MCPInboundExchange
     ) async {
         guard let params = notification.params,
-              let sessionId = exchange.context.sessionId
-        else { return }
+              let sessionId = exchange.context.sessionId else { return }
 
         let requestIdValue = params["requestId"]
         let cancelId: JsonRpcId?

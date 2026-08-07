@@ -14,7 +14,6 @@ import SwiftUI
 struct ToolbarTintModifier: ViewModifier {
     let connectionColor: ConnectionColor
 
-    @ViewBuilder
     func body(content: Content) -> some View {
         if connectionColor.isDefault {
             content

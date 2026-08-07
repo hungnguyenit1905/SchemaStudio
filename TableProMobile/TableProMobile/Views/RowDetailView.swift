@@ -69,7 +69,11 @@ struct RowDetailView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .navigationTitle(viewModel.table?.name ?? String(format: String(localized: "Row %d of %d"), viewModel.currentIndex + 1, viewModel.rows.count))
+        .navigationTitle(viewModel.table?.name ?? String(
+            format: String(localized: "Row %d of %d"),
+            viewModel.currentIndex + 1,
+            viewModel.rows.count
+        ))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { rowDetailToolbar }
         .sensoryFeedback(.success, trigger: hapticSuccess)
@@ -96,7 +100,10 @@ struct RowDetailView: View {
             }
             Button(String(localized: "Cancel"), role: .cancel) {}
         } message: {
-            Text(String(format: String(localized: "This will update a row in %@. Continue?"), viewModel.table?.name ?? ""))
+            Text(String(
+                format: String(localized: "This will update a row in %@. Continue?"),
+                viewModel.table?.name ?? ""
+            ))
         }
         .sheet(item: $fkPreviewItem) { item in
             FKPreviewView(
@@ -111,8 +118,7 @@ struct RowDetailView: View {
         }
     }
 
-    @ToolbarContentBuilder
-    private var rowDetailToolbar: some ToolbarContent {
+    @ToolbarContentBuilder private var rowDetailToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Menu {
                 shareMenuContent
@@ -168,8 +174,7 @@ struct RowDetailView: View {
         }
     }
 
-    @ViewBuilder
-    private var shareMenuContent: some View {
+    @ViewBuilder private var shareMenuContent: some View {
         Section("Share") {
             ForEach(ExportFormat.allCases) { format in
                 Button {
@@ -204,12 +209,12 @@ struct RowDetailView: View {
         let cells = viewModel.cells(at: rowIndex)
         let values = viewModel.isEditing ? viewModel.editedValues : row
         List {
-            ForEach(0..<min(viewModel.columns.count, values.count), id: \.self) { index in
+            ForEach(0 ..< min(viewModel.columns.count, values.count), id: \.self) { index in
                 let column = viewModel.columns[index]
                 let value = values[index]
                 let isPK = viewModel.isPrimaryKey(at: index)
                 Section {
-                    if viewModel.isEditing && !isPK {
+                    if viewModel.isEditing, !isPK {
                         editableField(index: index, value: value)
                     } else {
                         fieldContent(value: value)
@@ -255,7 +260,7 @@ struct RowDetailView: View {
                         }
                         Text(column.name)
 
-                        if viewModel.isEditing && isPK {
+                        if viewModel.isEditing, isPK {
                             Text("read-only")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)

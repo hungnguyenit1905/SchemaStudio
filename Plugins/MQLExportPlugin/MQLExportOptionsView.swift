@@ -12,10 +12,12 @@ struct MQLExportOptionsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Exports data as mongosh-compatible scripts. Drop, Indexes, and Data options are configured per collection in the collection list.")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Text(
+                "Exports data as mongosh-compatible scripts. Drop, Indexes, and Data options are configured per collection in the collection list."
+            )
+            .font(.system(size: 11))
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
 
             Divider()
                 .padding(.vertical, 2)

@@ -86,12 +86,16 @@ struct ColumnWidthOptimizationTests {
     func manyColumnsProduceValidWidths() {
         let factory = DataGridCellFactory()
         let columnCount = 60
-        let columns = (0..<columnCount).map { "col_\($0)" }
+        let columns = (0 ..< columnCount).map { "col_\($0)" }
         let columnTypes = Array(repeating: ColumnType.text(rawType: nil), count: columnCount)
-        let rawRows: [[String?]] = (0..<100).map { rowIdx in
+        let rawRows: [[String?]] = (0 ..< 100).map { rowIdx in
             columns.map { "\($0)_val_\(rowIdx)" }
         }
-        let tableRows = TableRows.from(queryRows: rawRows.map { row in row.map(PluginCellValue.fromOptional) }, columns: columns, columnTypes: columnTypes)
+        let tableRows = TableRows.from(
+            queryRows: rawRows.map { row in row.map(PluginCellValue.fromOptional) },
+            columns: columns,
+            columnTypes: columnTypes
+        )
 
         for (index, column) in columns.enumerated() {
             let width = factory.calculateOptimalColumnWidth(

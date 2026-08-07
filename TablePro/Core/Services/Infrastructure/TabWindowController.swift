@@ -117,28 +117,33 @@ internal final class TabWindowController: NSWindowController, NSWindowDelegate {
         let seq = MainContentCoordinator.nextSwitchSeq()
         let t0 = Date()
         guard let window = notification.object as? NSWindow,
-              let coordinator = MainContentCoordinator.coordinator(forWindow: window)
-        else { return }
+              let coordinator = MainContentCoordinator.coordinator(forWindow: window) else { return }
         Self.lifecycleLogger.debug(
             "[switch] windowDidBecomeKey seq=\(seq) controllerId=\(self.controllerId, privacy: .public) connId=\(coordinator.connectionId, privacy: .public)"
         )
         if let splitVC = window.contentViewController as? MainSplitViewController {
             splitVC.installToolbar(coordinator: coordinator)
         }
-        Self.lifecycleLogger.debug("[switch] windowDidBecomeKey seq=\(seq) installToolbar ms=\(Int(Date().timeIntervalSince(t0) * 1_000))")
+        Self.lifecycleLogger
+            .debug(
+                "[switch] windowDidBecomeKey seq=\(seq) installToolbar ms=\(Int(Date().timeIntervalSince(t0) * 1_000))"
+            )
         CommandActionsRegistry.shared.current = coordinator.commandActions
         updateUserActivity(coordinator: coordinator)
-        Self.lifecycleLogger.debug("[switch] windowDidBecomeKey seq=\(seq) userActivity ms=\(Int(Date().timeIntervalSince(t0) * 1_000))")
+        Self.lifecycleLogger
+            .debug(
+                "[switch] windowDidBecomeKey seq=\(seq) userActivity ms=\(Int(Date().timeIntervalSince(t0) * 1_000))"
+            )
         coordinator.handleWindowDidBecomeKey()
-        Self.lifecycleLogger.debug("[switch] windowDidBecomeKey seq=\(seq) total ms=\(Int(Date().timeIntervalSince(t0) * 1_000))")
+        Self.lifecycleLogger
+            .debug("[switch] windowDidBecomeKey seq=\(seq) total ms=\(Int(Date().timeIntervalSince(t0) * 1_000))")
     }
 
     internal func windowDidResignKey(_ notification: Notification) {
         let seq = MainContentCoordinator.nextSwitchSeq()
         let t0 = Date()
         guard let window = notification.object as? NSWindow,
-              let coordinator = MainContentCoordinator.coordinator(forWindow: window)
-        else { return }
+              let coordinator = MainContentCoordinator.coordinator(forWindow: window) else { return }
         Self.lifecycleLogger.debug(
             "[switch] windowDidResignKey seq=\(seq) controllerId=\(self.controllerId, privacy: .public)"
         )
@@ -148,14 +153,16 @@ internal final class TabWindowController: NSWindowController, NSWindowDelegate {
         }
         activity?.resignCurrent()
         coordinator.handleWindowDidResignKey()
-        Self.lifecycleLogger.debug("[switch] windowDidResignKey seq=\(seq) total ms=\(Int(Date().timeIntervalSince(t0) * 1_000))")
+        Self.lifecycleLogger
+            .debug("[switch] windowDidResignKey seq=\(seq) total ms=\(Int(Date().timeIntervalSince(t0) * 1_000))")
     }
 
     internal func windowWillClose(_ notification: Notification) {
         let seq = MainContentCoordinator.nextSwitchSeq()
         let t0 = Date()
         guard let window = notification.object as? NSWindow else { return }
-        Self.lifecycleLogger.info("[close] windowWillClose seq=\(seq) controllerId=\(self.controllerId, privacy: .public)")
+        Self.lifecycleLogger
+            .info("[close] windowWillClose seq=\(seq) controllerId=\(self.controllerId, privacy: .public)")
 
         cancelPendingConnectionIfNeeded()
 
@@ -167,14 +174,18 @@ internal final class TabWindowController: NSWindowController, NSWindowDelegate {
 
         let coordinator = MainContentCoordinator.coordinator(forWindow: window)
         coordinator?.handleWindowWillClose()
-        Self.lifecycleLogger.info("[close] windowWillClose seq=\(seq) handleWindowWillClose ms=\(Int(Date().timeIntervalSince(t0) * 1_000))")
+        Self.lifecycleLogger
+            .info(
+                "[close] windowWillClose seq=\(seq) handleWindowWillClose ms=\(Int(Date().timeIntervalSince(t0) * 1_000))"
+            )
         if let actions = coordinator?.commandActions,
            CommandActionsRegistry.shared.current === actions {
             CommandActionsRegistry.shared.current = nil
         }
         activity?.invalidate()
         activity = nil
-        Self.lifecycleLogger.info("[close] windowWillClose seq=\(seq) total ms=\(Int(Date().timeIntervalSince(t0) * 1_000))")
+        Self.lifecycleLogger
+            .info("[close] windowWillClose seq=\(seq) total ms=\(Int(Date().timeIntervalSince(t0) * 1_000))")
     }
 
     private func cancelPendingConnectionIfNeeded() {
@@ -191,8 +202,7 @@ internal final class TabWindowController: NSWindowController, NSWindowDelegate {
 
     internal func refreshUserActivity() {
         guard let window, window.isKeyWindow,
-              let coordinator = MainContentCoordinator.coordinator(forWindow: window)
-        else { return }
+              let coordinator = MainContentCoordinator.coordinator(forWindow: window) else { return }
         updateUserActivity(coordinator: coordinator)
     }
 

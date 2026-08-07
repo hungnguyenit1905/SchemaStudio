@@ -13,18 +13,21 @@ private final class MockRegistryProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) private static var received: [URLRequest] = []
 
     static func reset(responses: [(status: Int, body: Data)]) {
-        lock.lock(); defer { lock.unlock() }
+        lock.lock()
+        defer { lock.unlock() }
         queue = responses
         received = []
     }
 
     static var requestCount: Int {
-        lock.lock(); defer { lock.unlock() }
+        lock.lock()
+        defer { lock.unlock() }
         return received.count
     }
 
     private static func next(recording request: URLRequest) -> (status: Int, body: Data) {
-        lock.lock(); defer { lock.unlock() }
+        lock.lock()
+        defer { lock.unlock() }
         received.append(request)
         return queue.isEmpty ? (200, Data()) : queue.removeFirst()
     }
@@ -39,8 +42,7 @@ private final class MockRegistryProtocol: URLProtocol, @unchecked Sendable {
               let httpResponse = HTTPURLResponse(
                   url: url, statusCode: response.status, httpVersion: "HTTP/1.1",
                   headerFields: ["Content-Type": "application/json"]
-              )
-        else { return }
+              ) else { return }
         client?.urlProtocol(self, didReceive: httpResponse, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: response.body)
         client?.urlProtocolDidFinishLoading(self)

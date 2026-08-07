@@ -9,8 +9,8 @@
 
 import AppKit
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 // MARK: - QueryTab sourceFileURL Property Tests

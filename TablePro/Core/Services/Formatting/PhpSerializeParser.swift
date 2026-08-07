@@ -25,7 +25,7 @@ internal indirect enum PhpValue: Equatable {
         case (.bool(let a), .bool(let b)): return a == b
         case (.int(let a), .int(let b)): return a == b
         case (.float(let a), .float(let b)):
-            if a.isNaN && b.isNaN { return true }
+            if a.isNaN, b.isNaN { return true }
             return a == b
         case (.string(let a), .string(let b)): return a == b
         case (.array(let a), .array(let b)): return a == b
@@ -165,7 +165,7 @@ private struct Cursor {
         guard let length = Int(lengthRaw), length >= 0 else { return nil }
         guard expect(UInt8(ascii: ":")), expect(UInt8(ascii: "\"")) else { return nil }
         guard index + length <= bytes.count else { return nil }
-        guard let decoded = String(bytes: bytes[index..<(index + length)], encoding: .utf8) else { return nil }
+        guard let decoded = String(bytes: bytes[index ..< (index + length)], encoding: .utf8) else { return nil }
         index += length
         guard expect(UInt8(ascii: "\"")), expect(UInt8(ascii: ";")) else { return nil }
         return .string(decoded)
@@ -180,7 +180,7 @@ private struct Cursor {
 
         var entries: [PhpKeyValue] = []
         entries.reserveCapacity(count)
-        for _ in 0..<count {
+        for _ in 0 ..< count {
             guard let key = parseValue(depth: depth + 1) else { return nil }
             guard let value = parseValue(depth: depth + 1) else { return nil }
             entries.append(PhpKeyValue(key: key, value: value))
@@ -196,7 +196,7 @@ private struct Cursor {
         guard let nameLength = Int(nameLengthRaw), nameLength >= 0 else { return nil }
         guard expect(UInt8(ascii: ":")), expect(UInt8(ascii: "\"")) else { return nil }
         guard index + nameLength <= bytes.count else { return nil }
-        guard let className = String(bytes: bytes[index..<(index + nameLength)], encoding: .utf8) else { return nil }
+        guard let className = String(bytes: bytes[index ..< (index + nameLength)], encoding: .utf8) else { return nil }
         index += nameLength
         guard expect(UInt8(ascii: "\"")), expect(UInt8(ascii: ":")) else { return nil }
         guard let countRaw = readUntil(UInt8(ascii: ":")) else { return nil }
@@ -205,8 +205,8 @@ private struct Cursor {
 
         var properties: [PhpProperty] = []
         properties.reserveCapacity(count)
-        for _ in 0..<count {
-            guard case let .string(rawKey)? = parseValue(depth: depth + 1) else { return nil }
+        for _ in 0 ..< count {
+            guard case .string(let rawKey)? = parseValue(depth: depth + 1) else { return nil }
             let decoded = decodePropertyKey(rawKey)
             guard let value = parseValue(depth: depth + 1) else { return nil }
             properties.append(PhpProperty(name: decoded.name, visibility: decoded.visibility, value: value))
@@ -222,14 +222,14 @@ private struct Cursor {
         guard let nameLength = Int(nameLengthRaw), nameLength >= 0 else { return nil }
         guard expect(UInt8(ascii: ":")), expect(UInt8(ascii: "\"")) else { return nil }
         guard index + nameLength <= bytes.count else { return nil }
-        guard let className = String(bytes: bytes[index..<(index + nameLength)], encoding: .utf8) else { return nil }
+        guard let className = String(bytes: bytes[index ..< (index + nameLength)], encoding: .utf8) else { return nil }
         index += nameLength
         guard expect(UInt8(ascii: "\"")), expect(UInt8(ascii: ":")) else { return nil }
         guard let payloadLengthRaw = readUntil(UInt8(ascii: ":")) else { return nil }
         guard let payloadLength = Int(payloadLengthRaw), payloadLength >= 0 else { return nil }
         guard expect(UInt8(ascii: ":")), expect(UInt8(ascii: "{")) else { return nil }
         guard index + payloadLength <= bytes.count else { return nil }
-        let payload = String(bytes: bytes[index..<(index + payloadLength)], encoding: .utf8) ?? ""
+        let payload = String(bytes: bytes[index ..< (index + payloadLength)], encoding: .utf8) ?? ""
         index += payloadLength
         guard expect(UInt8(ascii: "}")) else { return nil }
         return .serializable(className: className, rawPayload: payload)
@@ -250,7 +250,7 @@ private struct Cursor {
             index += 1
         }
         guard index < bytes.count else { return nil }
-        return String(bytes: bytes[start..<index], encoding: .utf8)
+        return String(bytes: bytes[start ..< index], encoding: .utf8)
     }
 }
 
@@ -263,7 +263,7 @@ private func decodePropertyKey(_ raw: String) -> (name: String, visibility: PhpV
     guard let nullIndex = secondNullIndex, nullIndex < scalars.count - 1 else {
         return (raw, .publicVisibility)
     }
-    let middle = String(String.UnicodeScalarView(scalars[1..<nullIndex]))
+    let middle = String(String.UnicodeScalarView(scalars[1 ..< nullIndex]))
     let nameScalars = scalars[(nullIndex + 1)...]
     let name = String(String.UnicodeScalarView(nameScalars))
     if middle == "*" {

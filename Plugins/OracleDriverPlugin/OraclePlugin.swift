@@ -60,7 +60,14 @@ final class OraclePlugin: NSObject, TableProPlugin, DriverPlugin, PluginDiagnost
         "Integer": ["NUMBER", "INTEGER", "INT", "SMALLINT"],
         "Float": ["FLOAT", "BINARY_FLOAT", "BINARY_DOUBLE", "DECIMAL", "NUMERIC", "REAL", "DOUBLE PRECISION"],
         "String": ["VARCHAR2", "NVARCHAR2", "CHAR", "NCHAR", "CLOB", "NCLOB", "LONG"],
-        "Date": ["DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE", "INTERVAL YEAR TO MONTH", "INTERVAL DAY TO SECOND"],
+        "Date": [
+            "DATE",
+            "TIMESTAMP",
+            "TIMESTAMP WITH TIME ZONE",
+            "TIMESTAMP WITH LOCAL TIME ZONE",
+            "INTERVAL YEAR TO MONTH",
+            "INTERVAL DAY TO SECOND"
+        ],
         "Binary": ["RAW", "LONG RAW", "BLOB", "BFILE"],
         "Boolean": [],
         "XML": ["XMLTYPE"],
@@ -135,8 +142,12 @@ final class OraclePlugin: NSObject, TableProPlugin, DriverPlugin, PluginDiagnost
                 message: oracleError.message,
                 suggestedActions: [
                     String(localized: "Verify the user account exists and the password is correct."),
-                    String(localized: "Ask your DBA to confirm the user has an 11G or 12C password verifier (SELECT password_versions FROM dba_users WHERE username = '<USER>')."),
-                    String(localized: "If the verifier is brand-new (e.g. 23ai), file an issue with the verifier flag below.")
+                    String(
+                        localized: "Ask your DBA to confirm the user has an 11G or 12C password verifier (SELECT password_versions FROM dba_users WHERE username = '<USER>')."
+                    ),
+                    String(
+                        localized: "If the verifier is brand-new (e.g. 23ai), file an issue with the verifier flag below."
+                    )
                 ],
                 diagnosticInfo: [
                     DiagnosticEntry(label: "Verifier flag", value: flag)
@@ -148,12 +159,21 @@ final class OraclePlugin: NSObject, TableProPlugin, DriverPlugin, PluginDiagnost
                 title: String(localized: "Connection Dropped During Handshake"),
                 message: oracleError.message,
                 suggestedActions: [
-                    String(localized: "Check for a firewall, VPN, or load balancer between you and the server that closes connections mid-handshake."),
-                    String(localized: "If the listener endpoint is TLS-only (TCPS), set the SSL mode in the connection's SSL settings."),
-                    String(localized: "Confirm the host and port reach the database listener directly, not a proxy that resets unknown traffic."),
-                    String(localized: "If this is Oracle 11g, open an issue and include the handshake phase shown below.")
+                    String(
+                        localized: "Check for a firewall, VPN, or load balancer between you and the server that closes connections mid-handshake."
+                    ),
+                    String(
+                        localized: "If the listener endpoint is TLS-only (TCPS), set the SSL mode in the connection's SSL settings."
+                    ),
+                    String(
+                        localized: "Confirm the host and port reach the database listener directly, not a proxy that resets unknown traffic."
+                    ),
+                    String(
+                        localized: "If this is Oracle 11g, open an issue and include the handshake phase shown below."
+                    )
                 ],
-                diagnosticInfo: phase.map { [DiagnosticEntry(label: String(localized: "Handshake phase"), value: $0)] } ?? [],
+                diagnosticInfo: phase
+                    .map { [DiagnosticEntry(label: String(localized: "Handshake phase"), value: $0)] } ?? [],
                 supportURL: URL(string: "https://github.com/TableProApp/TablePro/issues/483")
             )
         case .authVersionNotSupported:
@@ -161,8 +181,12 @@ final class OraclePlugin: NSObject, TableProPlugin, DriverPlugin, PluginDiagnost
                 title: String(localized: "Server Version Not Supported"),
                 message: oracleError.message,
                 suggestedActions: [
-                    String(localized: "TablePro supports Oracle Database 11.1 and later. This server reports an older release (10g or earlier)."),
-                    String(localized: "Upgrade the database to 11.2 or later, or connect with a client that bundles Oracle's OCI client such as SQL Developer or DataGrip.")
+                    String(
+                        localized: "TablePro supports Oracle Database 11.1 and later. This server reports an older release (10g or earlier)."
+                    ),
+                    String(
+                        localized: "Upgrade the database to 11.2 or later, or connect with a client that bundles Oracle's OCI client such as SQL Developer or DataGrip."
+                    )
                 ],
                 supportURL: issuesURL
             )
@@ -172,7 +196,9 @@ final class OraclePlugin: NSObject, TableProPlugin, DriverPlugin, PluginDiagnost
                 message: oracleError.message,
                 suggestedActions: [
                     String(localized: "Run the query again. TablePro reconnects to the server automatically."),
-                    String(localized: "If the same query keeps failing, the server may be returning data the driver cannot decode. File an issue with your Oracle version.")
+                    String(
+                        localized: "If the same query keeps failing, the server may be returning data the driver cannot decode. File an issue with your Oracle version."
+                    )
                 ],
                 supportURL: URL(string: "https://github.com/TableProApp/TablePro/issues/483")
             )
@@ -181,9 +207,15 @@ final class OraclePlugin: NSObject, TableProPlugin, DriverPlugin, PluginDiagnost
                 title: String(localized: "Native Network Encryption Not Completed"),
                 message: oracleError.message,
                 suggestedActions: [
-                    String(localized: "The server requires Oracle native network encryption, and negotiating it with this server did not complete."),
-                    String(localized: "Ask the DBA which encryption and checksum algorithms the server requires. The driver supports AES with a SHA-2 checksum."),
-                    String(localized: "File an issue with your Oracle version and the details below so the driver can add support.")
+                    String(
+                        localized: "The server requires Oracle native network encryption, and negotiating it with this server did not complete."
+                    ),
+                    String(
+                        localized: "Ask the DBA which encryption and checksum algorithms the server requires. The driver supports AES with a SHA-2 checksum."
+                    ),
+                    String(
+                        localized: "File an issue with your Oracle version and the details below so the driver can add support."
+                    )
                 ],
                 supportURL: issuesURL
             )
@@ -192,7 +224,9 @@ final class OraclePlugin: NSObject, TableProPlugin, DriverPlugin, PluginDiagnost
                 title: String(localized: "Login Handshake Timed Out"),
                 message: oracleError.message,
                 suggestedActions: [
-                    String(localized: "Check for a firewall, VPN, or proxy between you and the server that stalls connections after the TCP handshake."),
+                    String(
+                        localized: "Check for a firewall, VPN, or proxy between you and the server that stalls connections after the TCP handshake."
+                    ),
                     String(localized: "Confirm the host and port reach the database listener directly.")
                 ],
                 supportURL: issuesURL
@@ -203,8 +237,12 @@ final class OraclePlugin: NSObject, TableProPlugin, DriverPlugin, PluginDiagnost
                 message: oracleError.message,
                 suggestedActions: [
                     String(localized: "Run the query again. TablePro reconnects to the server automatically."),
-                    String(localized: "If the query legitimately needs more time, raise the query timeout in Settings > General."),
-                    String(localized: "If a metadata query timed out, the schema may hold a very large number of objects; try again once the server is less busy.")
+                    String(
+                        localized: "If the query legitimately needs more time, raise the query timeout in Settings > General."
+                    ),
+                    String(
+                        localized: "If a metadata query timed out, the schema may hold a very large number of objects; try again once the server is less busy."
+                    )
                 ],
                 supportURL: issuesURL
             )
@@ -320,15 +358,15 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let executionTime = Date().timeIntervalSince(startTime)
 
         // OracleNIO may not populate column metadata for empty result sets.
-        if result.columns.isEmpty && result.rows.isEmpty {
+        if result.columns.isEmpty, result.rows.isEmpty {
             if let table = Self.extractTableNameFromSelect(query) {
                 let escapedTable = table.replacingOccurrences(of: "'", with: "''")
                 let schema = effectiveSchemaEscaped(nil)
                 let colSQL = """
-                    SELECT COLUMN_NAME, DATA_TYPE FROM ALL_TAB_COLUMNS \
-                    WHERE OWNER = '\(schema)' AND TABLE_NAME = '\(escapedTable)' \
-                    ORDER BY COLUMN_ID
-                    """
+                SELECT COLUMN_NAME, DATA_TYPE FROM ALL_TAB_COLUMNS \
+                WHERE OWNER = '\(schema)' AND TABLE_NAME = '\(escapedTable)' \
+                ORDER BY COLUMN_ID
+                """
                 if let colResult = try? await conn.executeQuery(colSQL) {
                     let colNames = colResult.rows.compactMap { $0.first?.asText }
                     let colTypes = colResult.rows.map { ($0[safe: 1]?.asText)?.lowercased() ?? "varchar2" }
@@ -381,11 +419,11 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func fetchTables(schema: String?) async throws -> [PluginTableInfo] {
         let escaped = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT table_name, 'BASE TABLE' AS table_type FROM all_tables WHERE owner = '\(escaped)'
-            UNION ALL
-            SELECT view_name, 'VIEW' FROM all_views WHERE owner = '\(escaped)'
-            ORDER BY 1
-            """
+        SELECT table_name, 'BASE TABLE' AS table_type FROM all_tables WHERE owner = '\(escaped)'
+        UNION ALL
+        SELECT view_name, 'VIEW' FROM all_views WHERE owner = '\(escaped)'
+        ORDER BY 1
+        """
         let result = try await execute(query: sql)
         return result.rows.compactMap { row -> PluginTableInfo? in
             guard let name = row[safe: 0]?.asText else { return nil }
@@ -399,28 +437,28 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
         let escaped = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT
-                c.COLUMN_NAME,
-                c.DATA_TYPE,
-                c.DATA_LENGTH,
-                c.DATA_PRECISION,
-                c.DATA_SCALE,
-                c.NULLABLE,
-                CASE WHEN cc.COLUMN_NAME IS NOT NULL THEN 'Y' ELSE 'N' END AS IS_PK
-            FROM ALL_TAB_COLUMNS c
-            LEFT JOIN (
-                SELECT acc.COLUMN_NAME
-                FROM ALL_CONS_COLUMNS acc
-                JOIN ALL_CONSTRAINTS ac ON acc.CONSTRAINT_NAME = ac.CONSTRAINT_NAME
-                    AND acc.OWNER = ac.OWNER
-                WHERE ac.CONSTRAINT_TYPE = 'P'
-                    AND ac.OWNER = '\(escaped)'
-                    AND ac.TABLE_NAME = '\(escapedTable)'
-            ) cc ON c.COLUMN_NAME = cc.COLUMN_NAME
-            WHERE c.OWNER = '\(escaped)'
-              AND c.TABLE_NAME = '\(escapedTable)'
-            ORDER BY c.COLUMN_ID
-            """
+        SELECT
+            c.COLUMN_NAME,
+            c.DATA_TYPE,
+            c.DATA_LENGTH,
+            c.DATA_PRECISION,
+            c.DATA_SCALE,
+            c.NULLABLE,
+            CASE WHEN cc.COLUMN_NAME IS NOT NULL THEN 'Y' ELSE 'N' END AS IS_PK
+        FROM ALL_TAB_COLUMNS c
+        LEFT JOIN (
+            SELECT acc.COLUMN_NAME
+            FROM ALL_CONS_COLUMNS acc
+            JOIN ALL_CONSTRAINTS ac ON acc.CONSTRAINT_NAME = ac.CONSTRAINT_NAME
+                AND acc.OWNER = ac.OWNER
+            WHERE ac.CONSTRAINT_TYPE = 'P'
+                AND ac.OWNER = '\(escaped)'
+                AND ac.TABLE_NAME = '\(escapedTable)'
+        ) cc ON c.COLUMN_NAME = cc.COLUMN_NAME
+        WHERE c.OWNER = '\(escaped)'
+          AND c.TABLE_NAME = '\(escapedTable)'
+        ORDER BY c.COLUMN_ID
+        """
         let result = try await execute(query: sql)
         return result.rows.compactMap { row -> PluginColumnInfo? in
             guard let name = row[safe: 0]?.asText else { return nil }
@@ -431,7 +469,12 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             let isNullable = (row[safe: 5]?.asText) == "Y"
             let isPk = (row[safe: 6]?.asText) == "Y"
 
-            let fullType = buildOracleFullType(dataType: dataType, dataLength: dataLength, precision: precision, scale: scale)
+            let fullType = buildOracleFullType(
+                dataType: dataType,
+                dataLength: dataLength,
+                precision: precision,
+                scale: scale
+            )
 
             return PluginColumnInfo(
                 name: name,
@@ -447,16 +490,16 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
         let escaped = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT i.INDEX_NAME, i.UNIQUENESS, ic.COLUMN_NAME,
-                   CASE WHEN c.CONSTRAINT_TYPE = 'P' THEN 'Y' ELSE 'N' END AS IS_PK
-            FROM ALL_INDEXES i
-            JOIN ALL_IND_COLUMNS ic ON i.INDEX_NAME = ic.INDEX_NAME AND i.OWNER = ic.INDEX_OWNER
-            LEFT JOIN ALL_CONSTRAINTS c ON i.INDEX_NAME = c.INDEX_NAME AND i.OWNER = c.OWNER
-                AND c.CONSTRAINT_TYPE = 'P'
-            WHERE i.TABLE_NAME = '\(escapedTable)'
-              AND i.OWNER = '\(escaped)'
-            ORDER BY i.INDEX_NAME, ic.COLUMN_POSITION
-            """
+        SELECT i.INDEX_NAME, i.UNIQUENESS, ic.COLUMN_NAME,
+               CASE WHEN c.CONSTRAINT_TYPE = 'P' THEN 'Y' ELSE 'N' END AS IS_PK
+        FROM ALL_INDEXES i
+        JOIN ALL_IND_COLUMNS ic ON i.INDEX_NAME = ic.INDEX_NAME AND i.OWNER = ic.INDEX_OWNER
+        LEFT JOIN ALL_CONSTRAINTS c ON i.INDEX_NAME = c.INDEX_NAME AND i.OWNER = c.OWNER
+            AND c.CONSTRAINT_TYPE = 'P'
+        WHERE i.TABLE_NAME = '\(escapedTable)'
+          AND i.OWNER = '\(escaped)'
+        ORDER BY i.INDEX_NAME, ic.COLUMN_POSITION
+        """
         let result = try await execute(query: sql)
         var indexMap: [String: (unique: Bool, primary: Bool, columns: [String])] = [:]
         for row in result.rows {
@@ -484,25 +527,25 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
         let escaped = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT
-                ac.CONSTRAINT_NAME,
-                acc.COLUMN_NAME,
-                rc.TABLE_NAME AS REF_TABLE,
-                rcc.COLUMN_NAME AS REF_COLUMN,
-                ac.DELETE_RULE,
-                rc.OWNER AS REF_SCHEMA
-            FROM ALL_CONSTRAINTS ac
-            JOIN ALL_CONS_COLUMNS acc ON ac.CONSTRAINT_NAME = acc.CONSTRAINT_NAME
-                AND ac.OWNER = acc.OWNER
-            JOIN ALL_CONSTRAINTS rc ON ac.R_CONSTRAINT_NAME = rc.CONSTRAINT_NAME
-                AND ac.R_OWNER = rc.OWNER
-            JOIN ALL_CONS_COLUMNS rcc ON rc.CONSTRAINT_NAME = rcc.CONSTRAINT_NAME
-                AND rc.OWNER = rcc.OWNER AND acc.POSITION = rcc.POSITION
-            WHERE ac.CONSTRAINT_TYPE = 'R'
-              AND ac.TABLE_NAME = '\(escapedTable)'
-              AND ac.OWNER = '\(escaped)'
-            ORDER BY ac.CONSTRAINT_NAME, acc.POSITION
-            """
+        SELECT
+            ac.CONSTRAINT_NAME,
+            acc.COLUMN_NAME,
+            rc.TABLE_NAME AS REF_TABLE,
+            rcc.COLUMN_NAME AS REF_COLUMN,
+            ac.DELETE_RULE,
+            rc.OWNER AS REF_SCHEMA
+        FROM ALL_CONSTRAINTS ac
+        JOIN ALL_CONS_COLUMNS acc ON ac.CONSTRAINT_NAME = acc.CONSTRAINT_NAME
+            AND ac.OWNER = acc.OWNER
+        JOIN ALL_CONSTRAINTS rc ON ac.R_CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+            AND ac.R_OWNER = rc.OWNER
+        JOIN ALL_CONS_COLUMNS rcc ON rc.CONSTRAINT_NAME = rcc.CONSTRAINT_NAME
+            AND rc.OWNER = rcc.OWNER AND acc.POSITION = rcc.POSITION
+        WHERE ac.CONSTRAINT_TYPE = 'R'
+          AND ac.TABLE_NAME = '\(escapedTable)'
+          AND ac.OWNER = '\(escaped)'
+        ORDER BY ac.CONSTRAINT_NAME, acc.POSITION
+        """
         let result = try await execute(query: sql)
         return result.rows.compactMap { row -> PluginForeignKeyInfo? in
             guard let constraintName = row[safe: 0]?.asText,
@@ -526,12 +569,12 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
         let escaped = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT TRIGGER_NAME, TRIGGER_TYPE, TRIGGERING_EVENT, STATUS, WHEN_CLAUSE
-            FROM ALL_TRIGGERS
-            WHERE TABLE_OWNER = '\(escaped)'
-              AND TABLE_NAME = '\(escapedTable)'
-            ORDER BY TRIGGER_NAME
-            """
+        SELECT TRIGGER_NAME, TRIGGER_TYPE, TRIGGERING_EVENT, STATUS, WHEN_CLAUSE
+        FROM ALL_TRIGGERS
+        WHERE TABLE_OWNER = '\(escaped)'
+          AND TABLE_NAME = '\(escapedTable)'
+        ORDER BY TRIGGER_NAME
+        """
         let result = try await execute(query: sql)
         return result.rows.compactMap { row -> PluginTriggerInfo? in
             guard let name = row[safe: 0]?.asText else { return nil }
@@ -553,9 +596,9 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             let forEach = isRowLevel ? " FOR EACH ROW" : ""
             let whenLine = (whenClause?.isEmpty == false) ? "\n    WHEN (\(whenClause ?? ""))" : ""
             let statement = """
-                CREATE OR REPLACE TRIGGER \(quotedName)
-                    \(timing) \(event) ON \(quotedTable)\(forEach)\(whenLine)
-                """
+            CREATE OR REPLACE TRIGGER \(quotedName)
+                \(timing) \(event) ON \(quotedTable)\(forEach)\(whenLine)
+            """
             return PluginTriggerInfo(
                 name: name,
                 timing: timing,
@@ -588,26 +631,26 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func fetchAllColumns(schema: String?) async throws -> [String: [PluginColumnInfo]] {
         let escaped = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT
-                c.TABLE_NAME,
-                c.COLUMN_NAME,
-                c.DATA_TYPE,
-                c.DATA_LENGTH,
-                c.DATA_PRECISION,
-                c.DATA_SCALE,
-                c.NULLABLE,
-                CASE WHEN cc.COLUMN_NAME IS NOT NULL THEN 'Y' ELSE 'N' END AS IS_PK
-            FROM ALL_TAB_COLUMNS c
-            LEFT JOIN (
-                SELECT acc.TABLE_NAME, acc.COLUMN_NAME
-                FROM ALL_CONS_COLUMNS acc
-                JOIN ALL_CONSTRAINTS ac ON acc.CONSTRAINT_NAME = ac.CONSTRAINT_NAME
-                    AND acc.OWNER = ac.OWNER
-                WHERE ac.CONSTRAINT_TYPE = 'P' AND ac.OWNER = '\(escaped)'
-            ) cc ON c.TABLE_NAME = cc.TABLE_NAME AND c.COLUMN_NAME = cc.COLUMN_NAME
-            WHERE c.OWNER = '\(escaped)'
-            ORDER BY c.TABLE_NAME, c.COLUMN_ID
-            """
+        SELECT
+            c.TABLE_NAME,
+            c.COLUMN_NAME,
+            c.DATA_TYPE,
+            c.DATA_LENGTH,
+            c.DATA_PRECISION,
+            c.DATA_SCALE,
+            c.NULLABLE,
+            CASE WHEN cc.COLUMN_NAME IS NOT NULL THEN 'Y' ELSE 'N' END AS IS_PK
+        FROM ALL_TAB_COLUMNS c
+        LEFT JOIN (
+            SELECT acc.TABLE_NAME, acc.COLUMN_NAME
+            FROM ALL_CONS_COLUMNS acc
+            JOIN ALL_CONSTRAINTS ac ON acc.CONSTRAINT_NAME = ac.CONSTRAINT_NAME
+                AND acc.OWNER = ac.OWNER
+            WHERE ac.CONSTRAINT_TYPE = 'P' AND ac.OWNER = '\(escaped)'
+        ) cc ON c.TABLE_NAME = cc.TABLE_NAME AND c.COLUMN_NAME = cc.COLUMN_NAME
+        WHERE c.OWNER = '\(escaped)'
+        ORDER BY c.TABLE_NAME, c.COLUMN_ID
+        """
         let result = try await execute(query: sql)
         var columnsByTable: [String: [PluginColumnInfo]] = [:]
         for row in result.rows {
@@ -620,7 +663,12 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             let isNullable = (row[safe: 6]?.asText) == "Y"
             let isPk = (row[safe: 7]?.asText) == "Y"
 
-            let fullType = buildOracleFullType(dataType: dataType, dataLength: dataLength, precision: precision, scale: scale)
+            let fullType = buildOracleFullType(
+                dataType: dataType,
+                dataLength: dataLength,
+                precision: precision,
+                scale: scale
+            )
 
             let col = PluginColumnInfo(
                 name: name,
@@ -637,24 +685,24 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func fetchAllForeignKeys(schema: String?) async throws -> [String: [PluginForeignKeyInfo]] {
         let escaped = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT
-                ac.TABLE_NAME,
-                ac.CONSTRAINT_NAME,
-                acc.COLUMN_NAME,
-                rc.TABLE_NAME AS REF_TABLE,
-                rcc.COLUMN_NAME AS REF_COLUMN,
-                ac.DELETE_RULE,
-                rc.OWNER AS REF_SCHEMA
-            FROM ALL_CONSTRAINTS ac
-            JOIN ALL_CONS_COLUMNS acc ON ac.CONSTRAINT_NAME = acc.CONSTRAINT_NAME
-                AND ac.OWNER = acc.OWNER
-            JOIN ALL_CONSTRAINTS rc ON ac.R_CONSTRAINT_NAME = rc.CONSTRAINT_NAME
-                AND ac.R_OWNER = rc.OWNER
-            JOIN ALL_CONS_COLUMNS rcc ON rc.CONSTRAINT_NAME = rcc.CONSTRAINT_NAME
-                AND rc.OWNER = rcc.OWNER AND acc.POSITION = rcc.POSITION
-            WHERE ac.CONSTRAINT_TYPE = 'R' AND ac.OWNER = '\(escaped)'
-            ORDER BY ac.TABLE_NAME, ac.CONSTRAINT_NAME, acc.POSITION
-            """
+        SELECT
+            ac.TABLE_NAME,
+            ac.CONSTRAINT_NAME,
+            acc.COLUMN_NAME,
+            rc.TABLE_NAME AS REF_TABLE,
+            rcc.COLUMN_NAME AS REF_COLUMN,
+            ac.DELETE_RULE,
+            rc.OWNER AS REF_SCHEMA
+        FROM ALL_CONSTRAINTS ac
+        JOIN ALL_CONS_COLUMNS acc ON ac.CONSTRAINT_NAME = acc.CONSTRAINT_NAME
+            AND ac.OWNER = acc.OWNER
+        JOIN ALL_CONSTRAINTS rc ON ac.R_CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+            AND ac.R_OWNER = rc.OWNER
+        JOIN ALL_CONS_COLUMNS rcc ON rc.CONSTRAINT_NAME = rcc.CONSTRAINT_NAME
+            AND rc.OWNER = rcc.OWNER AND acc.POSITION = rcc.POSITION
+        WHERE ac.CONSTRAINT_TYPE = 'R' AND ac.OWNER = '\(escaped)'
+        ORDER BY ac.TABLE_NAME, ac.CONSTRAINT_NAME, acc.POSITION
+        """
         let result = try await execute(query: sql)
         var fksByTable: [String: [PluginForeignKeyInfo]] = [:]
         for row in result.rows {
@@ -680,18 +728,18 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     func fetchAllDatabaseMetadata() async throws -> [PluginDatabaseMetadata] {
         let sql = """
-            SELECT u.USERNAME,
-                   NVL(t.table_count, 0) AS table_count,
-                   NVL(s.size_bytes, 0) AS size_bytes
-            FROM ALL_USERS u
-            LEFT JOIN (
-                SELECT OWNER, COUNT(*) AS table_count FROM ALL_TABLES GROUP BY OWNER
-            ) t ON u.USERNAME = t.OWNER
-            LEFT JOIN (
-                SELECT OWNER, SUM(BYTES) AS size_bytes FROM ALL_SEGMENTS GROUP BY OWNER
-            ) s ON u.USERNAME = s.OWNER
-            ORDER BY u.USERNAME
-            """
+        SELECT u.USERNAME,
+               NVL(t.table_count, 0) AS table_count,
+               NVL(s.size_bytes, 0) AS size_bytes
+        FROM ALL_USERS u
+        LEFT JOIN (
+            SELECT OWNER, COUNT(*) AS table_count FROM ALL_TABLES GROUP BY OWNER
+        ) t ON u.USERNAME = t.OWNER
+        LEFT JOIN (
+            SELECT OWNER, SUM(BYTES) AS size_bytes FROM ALL_SEGMENTS GROUP BY OWNER
+        ) s ON u.USERNAME = s.OWNER
+        ORDER BY u.USERNAME
+        """
         let result = try await execute(query: sql)
         return result.rows.compactMap { row -> PluginDatabaseMetadata? in
             guard let name = row[safe: 0]?.asText else { return nil }
@@ -737,15 +785,15 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
         let escaped = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT
-                t.NUM_ROWS,
-                s.BYTES,
-                tc.COMMENTS
-            FROM ALL_TABLES t
-            LEFT JOIN ALL_SEGMENTS s ON t.TABLE_NAME = s.SEGMENT_NAME AND t.OWNER = s.OWNER
-            LEFT JOIN ALL_TAB_COMMENTS tc ON t.TABLE_NAME = tc.TABLE_NAME AND t.OWNER = tc.OWNER
-            WHERE t.TABLE_NAME = '\(escapedTable)' AND t.OWNER = '\(escaped)'
-            """
+        SELECT
+            t.NUM_ROWS,
+            s.BYTES,
+            tc.COMMENTS
+        FROM ALL_TABLES t
+        LEFT JOIN ALL_SEGMENTS s ON t.TABLE_NAME = s.SEGMENT_NAME AND t.OWNER = s.OWNER
+        LEFT JOIN ALL_TAB_COMMENTS tc ON t.TABLE_NAME = tc.TABLE_NAME AND t.OWNER = tc.OWNER
+        WHERE t.TABLE_NAME = '\(escapedTable)' AND t.OWNER = '\(escaped)'
+        """
         let result = try await execute(query: sql)
         if let row = result.rows.first {
             let rowCount = (row[safe: 0]?.asText).flatMap { Int64($0) }
@@ -762,10 +810,10 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         // Fallback for views: ALL_TABLES returns no rows for views
         let viewSQL = """
-            SELECT tc.COMMENTS
-            FROM ALL_TAB_COMMENTS tc
-            WHERE tc.TABLE_NAME = '\(escapedTable)' AND tc.OWNER = '\(escaped)'
-            """
+        SELECT tc.COMMENTS
+        FROM ALL_TAB_COMMENTS tc
+        WHERE tc.TABLE_NAME = '\(escapedTable)' AND tc.OWNER = '\(escaped)'
+        """
         let viewResult = try await execute(query: viewSQL)
         if let row = viewResult.rows.first {
             let comment = row[safe: 0]?.asText
@@ -790,11 +838,11 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
         let escapedDb = database.replacingOccurrences(of: "'", with: "''")
         let sql = """
-            SELECT
-                (SELECT COUNT(*) FROM ALL_TABLES WHERE OWNER = '\(escapedDb)') AS table_count,
-                (SELECT NVL(SUM(BYTES), 0) FROM ALL_SEGMENTS WHERE OWNER = '\(escapedDb)') AS size_bytes
-            FROM DUAL
-            """
+        SELECT
+            (SELECT COUNT(*) FROM ALL_TABLES WHERE OWNER = '\(escapedDb)') AS table_count,
+            (SELECT NVL(SUM(BYTES), 0) FROM ALL_SEGMENTS WHERE OWNER = '\(escapedDb)') AS size_bytes
+        FROM DUAL
+        """
         do {
             let result = try await execute(query: sql)
             if let row = result.rows.first {
@@ -848,7 +896,11 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             case .insert:
                 guard insertedRowIndices.contains(change.rowIndex) else { continue }
                 if let values = insertedRowData[change.rowIndex] {
-                    if let stmt = generateOracleInsert(qualifiedTable: qualifiedTable, columns: columns, values: values) {
+                    if let stmt = generateOracleInsert(
+                        qualifiedTable: qualifiedTable,
+                        columns: columns,
+                        values: values
+                    ) {
                         statements.append(stmt)
                     }
                 }
@@ -1020,12 +1072,19 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         return "ALTER TABLE \(qt) ADD (\(colDef))"
     }
 
-    func generateModifyColumnSQL(table: String, oldColumn: PluginColumnDefinition, newColumn: PluginColumnDefinition) -> String? {
+    func generateModifyColumnSQL(
+        table: String,
+        oldColumn: PluginColumnDefinition,
+        newColumn: PluginColumnDefinition
+    ) -> String? {
         let qt = oracleQualifiedTable(table)
         var stmts: [String] = []
 
         if oldColumn.name != newColumn.name {
-            stmts.append("ALTER TABLE \(qt) RENAME COLUMN \(quoteIdentifier(oldColumn.name)) TO \(quoteIdentifier(newColumn.name))")
+            stmts
+                .append(
+                    "ALTER TABLE \(qt) RENAME COLUMN \(quoteIdentifier(oldColumn.name)) TO \(quoteIdentifier(newColumn.name))"
+                )
         }
 
         var modifyParts: [String] = []
@@ -1092,7 +1151,7 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         if !col.isNullable {
             def += " NOT NULL"
         }
-        if inlinePK && col.isPrimaryKey {
+        if inlinePK, col.isPrimaryKey {
             def += " PRIMARY KEY"
         }
         return def
@@ -1279,7 +1338,6 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         )
     }
 
-
     // MARK: - Private Helpers
 
     private func buildOracleFullType(
@@ -1288,7 +1346,7 @@ final class OraclePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         precision: String?,
         scale: String?
     ) -> String {
-        let fixedTypes: Set<String> = [
+        let fixedTypes: Set = [
             "date", "clob", "nclob", "blob", "bfile", "long", "long raw",
             "rowid", "urowid", "binary_float", "binary_double", "xmltype"
         ]

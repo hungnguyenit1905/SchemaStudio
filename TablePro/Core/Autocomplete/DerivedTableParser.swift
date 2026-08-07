@@ -132,7 +132,8 @@ internal struct DerivedTableParser {
             return []
         }
         let listStart = selectListStart(in: ns, after: select.end, limit: length)
-        let listEnd = topLevelKeyword(in: ns, start: listStart, end: length, keywords: Self.clauseKeywords)?.start ?? length
+        let listEnd = topLevelKeyword(in: ns, start: listStart, end: length, keywords: Self.clauseKeywords)?
+            .start ?? length
         guard listStart < listEnd else { return [] }
 
         var names: [String] = []
@@ -214,7 +215,9 @@ internal struct DerivedTableParser {
             }
             if depth == 0, isWordStart(c) {
                 var j = i + 1
-                while j < end, isWordChar(ns.character(at: j)) { j += 1 }
+                while j < end, isWordChar(ns.character(at: j)) {
+                    j += 1
+                }
                 let word = ns.substring(with: NSRange(location: i, length: j - i))
                 if keywords.contains(word.uppercased()) {
                     return (word, i, j)
@@ -255,7 +258,9 @@ internal struct DerivedTableParser {
     private func readWord(in ns: NSString, at index: Int, limit: Int) -> (text: String, end: Int)? {
         guard index < limit, isWordStart(ns.character(at: index)) else { return nil }
         var j = index + 1
-        while j < limit, isWordChar(ns.character(at: j)) { j += 1 }
+        while j < limit, isWordChar(ns.character(at: j)) {
+            j += 1
+        }
         return (ns.substring(with: NSRange(location: index, length: j - index)), j)
     }
 
@@ -268,7 +273,9 @@ internal struct DerivedTableParser {
         }
         if c == Self.openBracket {
             var j = index + 1
-            while j < limit, ns.character(at: j) != Self.closeBracket { j += 1 }
+            while j < limit, ns.character(at: j) != Self.closeBracket {
+                j += 1
+            }
             guard j > index + 1 else { return nil }
             return ns.substring(with: NSRange(location: index + 1, length: j - index - 1))
         }
@@ -280,19 +287,25 @@ internal struct DerivedTableParser {
         let c = ns.character(at: end)
         if c == Self.backtick || c == Self.doubleQuote {
             var i = end - 1
-            while i >= 0, ns.character(at: i) != c { i -= 1 }
+            while i >= 0, ns.character(at: i) != c {
+                i -= 1
+            }
             guard i >= 0, end - i - 1 > 0 else { return nil }
             return ns.substring(with: NSRange(location: i + 1, length: end - i - 1))
         }
         if c == Self.closeBracket {
             var i = end - 1
-            while i >= 0, ns.character(at: i) != Self.openBracket { i -= 1 }
+            while i >= 0, ns.character(at: i) != Self.openBracket {
+                i -= 1
+            }
             guard i >= 0, end - i - 1 > 0 else { return nil }
             return ns.substring(with: NSRange(location: i + 1, length: end - i - 1))
         }
         guard isWordChar(c) else { return nil }
         var i = end
-        while i >= 0, isWordChar(ns.character(at: i)) { i -= 1 }
+        while i >= 0, isWordChar(ns.character(at: i)) {
+            i -= 1
+        }
         return ns.substring(with: NSRange(location: i + 1, length: end - i))
     }
 
@@ -323,14 +336,18 @@ internal struct DerivedTableParser {
 
     private func precedingToken(in ns: NSString, before index: Int) -> (text: String, start: Int) {
         var i = index - 1
-        while i >= 0, isWhitespace(ns.character(at: i)) { i -= 1 }
+        while i >= 0, isWhitespace(ns.character(at: i)) {
+            i -= 1
+        }
         guard i >= 0 else { return ("", 0) }
         let c = ns.character(at: i)
         if c == Self.comma { return (",", i) }
         if c == Self.closeParen { return (")", i) }
         guard isWordChar(c) else { return (String(utf16CodeUnits: [c], count: 1), i) }
         var start = i
-        while start >= 0, isWordChar(ns.character(at: start)) { start -= 1 }
+        while start >= 0, isWordChar(ns.character(at: start)) {
+            start -= 1
+        }
         start += 1
         return (ns.substring(with: NSRange(location: start, length: i - start + 1)), start)
     }
@@ -394,7 +411,9 @@ internal struct DerivedTableParser {
 
     private func lastCodeIndex(in ns: NSString, before index: Int) -> Int {
         var i = index - 1
-        while i >= 0, isWhitespace(ns.character(at: i)) { i -= 1 }
+        while i >= 0, isWhitespace(ns.character(at: i)) {
+            i -= 1
+        }
         return i
     }
 
@@ -429,7 +448,9 @@ internal struct DerivedTableParser {
 
     private func skipLineComment(in ns: NSString, from index: Int, limit: Int) -> Int {
         var i = index + 2
-        while i < limit, ns.character(at: i) != Self.newline { i += 1 }
+        while i < limit, ns.character(at: i) != Self.newline {
+            i += 1
+        }
         return i
     }
 

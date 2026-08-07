@@ -368,12 +368,18 @@ final class ExportService {
                     }
                 } catch {
                     failedCount += 1
-                    Self.logger.warning("Failed to get approximate row count for \(table.qualifiedName): \(error.localizedDescription)")
+                    Self.logger
+                        .warning(
+                            "Failed to get approximate row count for \(table.qualifiedName): \(error.localizedDescription)"
+                        )
                 }
             }
             if failedCount > 0 {
                 Self.logger.warning("\(failedCount) table(s) failed row count - progress indicator may be inaccurate")
-                state.statusMessage = String(format: String(localized: "Progress estimated (%d table(s) could not be counted)"), failedCount)
+                state.statusMessage = String(
+                    format: String(localized: "Progress estimated (%d table(s) could not be counted)"),
+                    failedCount
+                )
             }
             return total
         }
@@ -407,7 +413,10 @@ final class ExportService {
                         }
                     } catch {
                         failedCount += 1
-                        Self.logger.warning("Failed to get row count for \(table.qualifiedName): \(error.localizedDescription)")
+                        Self.logger
+                            .warning(
+                                "Failed to get row count for \(table.qualifiedName): \(error.localizedDescription)"
+                            )
                     }
                 }
             }
@@ -415,7 +424,10 @@ final class ExportService {
 
         if failedCount > 0 {
             Self.logger.warning("\(failedCount) table(s) failed row count - progress indicator may be inaccurate")
-            state.statusMessage = String(format: String(localized: "Progress estimated (%d table(s) could not be counted)"), failedCount)
+            state.statusMessage = String(
+                format: String(localized: "Progress estimated (%d table(s) could not be counted)"),
+                failedCount
+            )
         }
         return total
     }

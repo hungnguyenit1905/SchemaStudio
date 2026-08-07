@@ -30,7 +30,7 @@ final class CloudflareTunnelPaneViewModel {
         }
 
         if !state.automaticPort {
-            let portIsValid = Int(state.localPort).map { (1...65_535).contains($0) } ?? false
+            let portIsValid = Int(state.localPort).map { (1 ... 65_535).contains($0) } ?? false
             if !portIsValid {
                 issues.append(String(localized: "Local port must be between 1 and 65535"))
             }
@@ -102,7 +102,8 @@ final class CloudflareTunnelPaneViewModel {
             Self.logger.info("Started cloudflared access login for \(hostname, privacy: .public)")
         } catch {
             signInError = error.localizedDescription
-            Self.logger.error("cloudflared access login failed to start: \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .error("cloudflared access login failed to start: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

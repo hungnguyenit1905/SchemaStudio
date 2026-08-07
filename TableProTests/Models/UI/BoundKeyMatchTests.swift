@@ -22,7 +22,7 @@ struct BoundKeyMatchTests {
             charactersIgnoringModifiers: characters,
             isARepeat: false,
             keyCode: keyCode
-        )!  // swiftlint:disable:this force_unwrapping
+        )! // swiftlint:disable:this force_unwrapping
     }
 
     // MARK: - Modifier Combos

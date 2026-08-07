@@ -57,9 +57,9 @@ internal enum FuzzyMatcher {
         var matchScores = [Int](repeating: invalid, count: queryLength * candidateLength)
         var bestScores = [Int](repeating: invalid, count: queryLength * candidateLength)
 
-        for queryIndex in 0..<queryLength {
+        for queryIndex in 0 ..< queryLength {
             var runningGapScore = invalid
-            for candidateIndex in 0..<candidateLength {
+            for candidateIndex in 0 ..< candidateLength {
                 let cell = queryIndex * candidateLength + candidateIndex
                 var matchScore = invalid
 
@@ -135,7 +135,8 @@ internal enum FuzzyMatcher {
                     ? Weight.exactCase
                     : 0
                 let diagonal = cell - candidateLength - 1
-                matchRequired = matchScores[cell] == matchScores[diagonal] + Weight.consecutive + Weight.match + caseBonus
+                matchRequired = matchScores[cell] == matchScores[diagonal] + Weight.consecutive + Weight
+                    .match + caseBonus
             }
             queryIndex -= 1
             candidateIndex -= 1

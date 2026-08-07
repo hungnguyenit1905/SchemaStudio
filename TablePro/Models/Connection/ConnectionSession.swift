@@ -9,8 +9,8 @@ import Foundation
 
 /// Represents an active database connection session with all associated state
 struct ConnectionSession: Identifiable {
-    let id: UUID  // Same as connection.id
-    var connection: DatabaseConnection  // Made var to allow database switching
+    let id: UUID // Same as connection.id
+    var connection: DatabaseConnection // Made var to allow database switching
     /// The connection used to create the driver (may differ from `connection` for SSH tunneled connections)
     var effectiveConnection: DatabaseConnection?
     var driver: DatabaseDriver?
@@ -33,8 +33,7 @@ struct ConnectionSession: Identifiable {
     var browseSchema: String?
     var browseDatabase: String?
 
-    @MainActor
-    var tables: [TableInfo] {
+    @MainActor var tables: [TableInfo] {
         SchemaService.shared.tables(for: id)
     }
 

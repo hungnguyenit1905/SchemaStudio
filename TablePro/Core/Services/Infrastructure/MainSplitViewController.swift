@@ -317,7 +317,6 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
         }
     }
 
-    @ViewBuilder
     private func sidebarBody(
         currentSession: ConnectionSession,
         sessionState: SessionStateFactory.SessionState
@@ -422,7 +421,11 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
     }
 
     private var sessionTableOperationOptionsBinding: Binding<[String: TableOperationOptions]> {
-        createSessionBinding(get: { $0.tableOperationOptions }, set: { $0.tableOperationOptions = $1 }, defaultValue: [:])
+        createSessionBinding(
+            get: { $0.tableOperationOptions },
+            set: { $0.tableOperationOptions = $1 },
+            defaultValue: [:]
+        )
     }
 
     private var windowTitleBinding: Binding<String> {
@@ -457,7 +460,8 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
         recomputeWindowMinSize()
     }
 
-    @objc override func toggleInspector(_ sender: Any?) {
+    @objc
+    override func toggleInspector(_ sender: Any?) {
         toggleInspector()
     }
 

@@ -24,6 +24,7 @@ struct QueryEditorView: View {
     private var resultRowCount: Int {
         viewModel.legacyRows.count
     }
+
     @State private var saveQueryTask: Task<Void, Never>?
     @State private var executionStartTime: Date?
     @State private var showWriteConfirmation = false
@@ -83,7 +84,11 @@ struct QueryEditorView: View {
         } message: {
             Text("This connection is in read-only mode. Write queries are not allowed.")
         }
-        .confirmationDialog(String(localized: "Execute Write Query?"), isPresented: $showWriteConfirmation, titleVisibility: .visible) {
+        .confirmationDialog(
+            String(localized: "Execute Write Query?"),
+            isPresented: $showWriteConfirmation,
+            titleVisibility: .visible
+        ) {
             Button(String(localized: "Execute"), role: .destructive) {
                 executeTask = Task { await executeQueryDirect(pendingWriteQuery) }
             }
@@ -173,70 +178,68 @@ struct QueryEditorView: View {
 
     // MARK: - Results
 
-    private var resultSection: some View {
-        Group {
-            if isExecuting {
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text("Executing...")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let appError {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.red)
-                            Text(verbatim: appError.message)
-                                .font(.system(.footnote, design: .monospaced))
-                                .foregroundStyle(.red)
-                        }
-                        if let recovery = appError.recovery {
-                            Text(verbatim: recovery)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .padding(.leading, 28)
-                        }
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            } else if hasResult {
-                if viewModel.columns.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.largeTitle)
-                            .foregroundStyle(.green)
-                        Text(String(format: String(localized: "%d row(s) affected"), viewModel.rowsAffected ?? 0))
-                            .font(.body)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if viewModel.legacyRows.isEmpty {
-                    ContentUnavailableView(
-                        "No Results",
-                        systemImage: "tray",
-                        description: Text("The query returned no rows.")
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    VStack(spacing: 0) {
-                        if let message = viewModel.truncationMessage {
-                            truncationBanner(message)
-                            Divider()
-                        }
-                        resultList
-                    }
-                }
-            } else {
-                ContentUnavailableView {
-                    Label("Run a Query", systemImage: "terminal")
-                } description: {
-                    Text("Write SQL and tap the play button.")
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+    @ViewBuilder private var resultSection: some View {
+        if isExecuting {
+            VStack(spacing: 12) {
+                ProgressView()
+                Text("Executing...")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let appError {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.red)
+                        Text(verbatim: appError.message)
+                            .font(.system(.footnote, design: .monospaced))
+                            .foregroundStyle(.red)
+                    }
+                    if let recovery = appError.recovery {
+                        Text(verbatim: recovery)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, 28)
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else if hasResult {
+            if viewModel.columns.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.largeTitle)
+                        .foregroundStyle(.green)
+                    Text(String(format: String(localized: "%d row(s) affected"), viewModel.rowsAffected ?? 0))
+                        .font(.body)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.legacyRows.isEmpty {
+                ContentUnavailableView(
+                    "No Results",
+                    systemImage: "tray",
+                    description: Text("The query returned no rows.")
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                VStack(spacing: 0) {
+                    if let message = viewModel.truncationMessage {
+                        truncationBanner(message)
+                        Divider()
+                    }
+                    resultList
+                }
+            }
+        } else {
+            ContentUnavailableView {
+                Label("Run a Query", systemImage: "terminal")
+            } description: {
+                Text("Write SQL and tap the play button.")
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 

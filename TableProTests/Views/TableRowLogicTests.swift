@@ -59,7 +59,12 @@ struct TableRowLogicTests {
     @Test("Favorite table accessibility label")
     func accessibilityLabelFavoriteTable() {
         let table = TestFixtures.makeTableInfo(name: "users", type: .table)
-        let label = TableRowLogic.accessibilityLabel(table: table, isPendingDelete: false, isPendingTruncate: false, isFavorite: true)
+        let label = TableRowLogic.accessibilityLabel(
+            table: table,
+            isPendingDelete: false,
+            isPendingTruncate: false,
+            isFavorite: true
+        )
         #expect(label == "Table: users, favorite")
     }
 

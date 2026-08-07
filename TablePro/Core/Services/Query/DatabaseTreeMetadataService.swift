@@ -112,7 +112,10 @@ final class DatabaseTreeMetadataService {
             if case .loading = databaseList[connectionId] { databaseList[connectionId] = .idle }
         } catch {
             databaseList[connectionId] = .failed(error.localizedDescription)
-            Self.logger.warning("databases load failed connId=\(connectionId, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .warning(
+                    "databases load failed connId=\(connectionId, privacy: .public) error=\(error.localizedDescription, privacy: .public)"
+                )
         }
     }
 
@@ -135,7 +138,10 @@ final class DatabaseTreeMetadataService {
             if case .loading = schemaList[key] { schemaList[key] = .idle }
         } catch {
             schemaList[key] = .failed(error.localizedDescription)
-            Self.logger.warning("schemas load failed db=\(database, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .warning(
+                    "schemas load failed db=\(database, privacy: .public) error=\(error.localizedDescription, privacy: .public)"
+                )
         }
     }
 
@@ -329,7 +335,9 @@ final class DatabaseTreeMetadataService {
             tableKeys: tablesState.keys, routineKeys: routinesState.keys, connectionId: connectionId
         )
         await databaseDedup.cancel(key: connectionId)
-        for key in schemaKeys { await schemaDedup.cancel(key: key) }
+        for key in schemaKeys {
+            await schemaDedup.cancel(key: key)
+        }
         for key in objectKeys {
             await tablesDedup.cancel(key: key)
             await routinesDedup.cancel(key: key)
@@ -368,12 +376,16 @@ final class DatabaseTreeMetadataService {
         }
 
         if isPending(databaseList[connectionId]) { databaseList[connectionId] = .idle }
-        for key in schemaKeys where isPending(schemaList[key]) { schemaList[key] = .idle }
+        for key in schemaKeys where isPending(schemaList[key]) {
+            schemaList[key] = .idle
+        }
         for key in objectKeys {
             if isPending(tablesState[key]) { tablesState[key] = .idle }
             if isPending(routinesState[key]) { routinesState[key] = .idle }
         }
-        for key in partitionKeys where isPending(partitionsState[key]) { partitionsState[key] = .idle }
+        for key in partitionKeys where isPending(partitionsState[key]) {
+            partitionsState[key] = .idle
+        }
     }
 
     private func isPending<Value>(_ state: MetadataLoadState<Value>?) -> Bool {

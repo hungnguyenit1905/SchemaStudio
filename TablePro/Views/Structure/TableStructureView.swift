@@ -48,7 +48,7 @@ struct TableStructureView: View {
     @State var errorMessage: String?
     @State var tabData = StructureTabDataState()
     @State var partsReloadToken = 0
-    @State var isReloadingAfterSave = false  // Prevent onChange loops during save reload
+    @State var isReloadingAfterSave = false // Prevent onChange loops during save reload
     @State var lastSaveTime: Date?
     @AppStorage("skipSchemaPreview") var skipSchemaPreview = false
 
@@ -127,14 +127,17 @@ struct TableStructureView: View {
             gridDelegate.sortHandler = { [self] column, ascending in
                 structureSortDescriptor = StructureSortDescriptor(column: column, ascending: ascending)
                 var newSortState = SortState()
-                newSortState.columns = [SortColumn(columnIndex: column, direction: ascending ? .ascending : .descending)]
+                newSortState.columns = [SortColumn(
+                    columnIndex: column,
+                    direction: ascending ? .ascending : .descending
+                )]
                 sortState = newSortState
                 displayVersion += 1
             }
             updateGridDelegate()
 
             actionHandler.saveChanges = {
-                if self.structureChangeManager.hasChanges && self.selectedTab != .ddl {
+                if self.structureChangeManager.hasChanges, self.selectedTab != .ddl {
                     Task { await self.executeSchemaChanges() }
                 }
             }
@@ -281,8 +284,7 @@ struct TableStructureView: View {
 
     // MARK: - Content Area
 
-    @ViewBuilder
-    private var contentArea: some View {
+    @ViewBuilder private var contentArea: some View {
         if let error = errorMessage {
             errorView(error)
         } else {
@@ -290,8 +292,7 @@ struct TableStructureView: View {
         }
     }
 
-    @ViewBuilder
-    private var tabContent: some View {
+    @ViewBuilder private var tabContent: some View {
         switch selectedTab {
         case .columns:
             structureGrid

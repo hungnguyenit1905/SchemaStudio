@@ -75,7 +75,7 @@ final class RowEditingCoordinator {
         }
 
         let totalRows = parent.tabSessionRegistry.tableRows(for: tabId).count
-        if deleteResult.nextRowToSelect >= 0 && deleteResult.nextRowToSelect < totalRows {
+        if deleteResult.nextRowToSelect >= 0, deleteResult.nextRowToSelect < totalRows {
             parent.selectionState.indices = [deleteResult.nextRowToSelect]
         } else {
             parent.selectionState.indices.removeAll()

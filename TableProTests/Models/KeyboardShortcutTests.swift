@@ -20,7 +20,11 @@ struct ShortcutActionDefaultsTests {
 
     @Test("Execute All Statements default is Cmd+Shift+Return")
     func executeAllStatementsDefault() {
-        #expect(KeyboardSettings.defaultShortcuts[.executeAllStatements] == .special(.return, command: true, shift: true))
+        #expect(KeyboardSettings.defaultShortcuts[.executeAllStatements] == .special(
+            .return,
+            command: true,
+            shift: true
+        ))
     }
 
     @Test("Cancel Query default is Cmd+.")
@@ -58,12 +62,15 @@ struct DefaultShortcutHygieneTests {
     @Test("No two defaults collide within overlapping contexts")
     func defaultsAreUniqueWithinContext() {
         let entries = Array(KeyboardSettings.defaultShortcuts)
-        for outer in 0..<entries.count {
-            for inner in (outer + 1)..<entries.count {
+        for outer in 0 ..< entries.count {
+            for inner in (outer + 1) ..< entries.count {
                 let (actionA, keyA) = entries[outer]
                 let (actionB, keyB) = entries[inner]
                 guard keyA == keyB, actionA.context.overlaps(actionB.context) else { continue }
-                Issue.record("\(actionA.rawValue) and \(actionB.rawValue) share \(keyA.displayString) in overlapping contexts")
+                Issue
+                    .record(
+                        "\(actionA.rawValue) and \(actionB.rawValue) share \(keyA.displayString) in overlapping contexts"
+                    )
             }
         }
     }
@@ -208,7 +215,8 @@ struct BareKeyValidationTests {
 
     @Test("A bare function-key binding registers and survives sanitization")
     func functionKeyRegistersInMenu() {
-        let settings = KeyboardSettings(shortcuts: [ShortcutAction.refresh.rawValue: BoundKey(keyCode: KeyCode.f5.rawValue)])
+        let settings =
+            KeyboardSettings(shortcuts: [ShortcutAction.refresh.rawValue: BoundKey(keyCode: KeyCode.f5.rawValue)])
         #expect(settings.keyboardShortcut(for: .refresh) != nil)
         #expect(settings.sanitized().shortcut(for: .refresh)?.isFunctionKey == true)
     }
@@ -297,7 +305,11 @@ struct KeyboardSettingsMigrationTests {
 
     @Test("Modern keyCode shortcut decodes unchanged")
     func decodesModernShortcut() throws {
-        let original = KeyboardSettings(shortcuts: [ShortcutAction.toggleHistory.rawValue: .character("y", command: true, shift: true)])
+        let original = KeyboardSettings(shortcuts: [ShortcutAction.toggleHistory.rawValue: .character(
+            "y",
+            command: true,
+            shift: true
+        )])
         let data = try JSONEncoder().encode(original)
         let roundTripped = try JSONDecoder().decode(KeyboardSettings.self, from: data)
         #expect(roundTripped == original)

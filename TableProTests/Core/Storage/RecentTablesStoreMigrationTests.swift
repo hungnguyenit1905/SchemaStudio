@@ -23,7 +23,7 @@ struct RecentTablesStoreMigrationTests {
             openedAt: Date(timeIntervalSince1970: 100)
         )
         let legacyKey = "RecentTables.v1.\(conn.uuidString)"
-        defaults.set(try JSONEncoder().encode([entry]), forKey: legacyKey)
+        try defaults.set(JSONEncoder().encode([entry]), forKey: legacyKey)
 
         #expect(store.entries(connectionId: conn) == [entry])
         #expect(defaults.data(forKey: legacyKey) == nil)

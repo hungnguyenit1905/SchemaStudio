@@ -108,7 +108,7 @@ final class XLSXExportPlugin: ExportFormatPlugin, SettablePlugin {
                         }
                         let batchCount = rowBatch.count
                         rowBatch.removeAll(keepingCapacity: true)
-                        for _ in 0..<batchCount {
+                        for _ in 0 ..< batchCount {
                             progress.incrementRow()
                         }
                     }
@@ -145,7 +145,7 @@ final class XLSXExportPlugin: ExportFormatPlugin, SettablePlugin {
                         currentSheetRowCount += overflow.count
                     }
                 }
-                for _ in 0..<rowBatch.count {
+                for _ in 0 ..< rowBatch.count {
                     progress.incrementRow()
                 }
             }
@@ -161,7 +161,6 @@ final class XLSXExportPlugin: ExportFormatPlugin, SettablePlugin {
                 )
                 writer.finishSheet()
             }
-
         }
 
         try await Task.detached(priority: .userInitiated) {

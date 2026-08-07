@@ -153,8 +153,7 @@ struct AIProviderDetailSheet: View {
 
     // MARK: - Auth
 
-    @ViewBuilder
-    private var authSection: some View {
+    @ViewBuilder private var authSection: some View {
         switch draft.type.authStyle {
         case .apiKey, .optionalApiKey:
             if draft.type == .cursor {
@@ -176,14 +175,11 @@ struct AIProviderDetailSheet: View {
         case .none:
             if draft.type == .claudeAgent {
                 claudeAgentAuthSection
-            } else {
-                EmptyView()
             }
         }
     }
 
-    @ViewBuilder
-    private var claudeAgentAuthSection: some View {
+    @ViewBuilder private var claudeAgentAuthSection: some View {
         Section {
             HStack(spacing: 8) {
                 Image(systemName: claudeAgentService.state.isUsable
@@ -212,9 +208,11 @@ struct AIProviderDetailSheet: View {
         } header: {
             Text("Claude Code")
         } footer: {
-            Text("Runs the claude command line tool so chat bills against your Claude subscription. Database tools need the MCP server turned on in Settings > Integrations.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(
+                "Runs the claude command line tool so chat bills against your Claude subscription. Database tools need the MCP server turned on in Settings > Integrations."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
 
         ClaudeAgentDisclosureSection()
@@ -238,7 +236,8 @@ struct AIProviderDetailSheet: View {
                         Text("Test Connection")
                     }
                 }
-                .disabled(isTesting || (draft.type.authStyle == .apiKey && apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+                .disabled(isTesting ||
+                    (draft.type.authStyle == .apiKey && apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
             }
             if case .success = testResult {
                 Label(String(localized: "Connection successful"), systemImage: "checkmark.circle.fill")
@@ -255,8 +254,7 @@ struct AIProviderDetailSheet: View {
         }
     }
 
-    @ViewBuilder
-    private var cursorAuthSection: some View {
+    @ViewBuilder private var cursorAuthSection: some View {
         cursorAPIKeySection
         cursorSignInSection
     }
@@ -296,7 +294,6 @@ struct AIProviderDetailSheet: View {
         }
     }
 
-    @ViewBuilder
     private var cursorSignInSection: some View {
         Section {
             cursorSignInContent
@@ -315,8 +312,7 @@ struct AIProviderDetailSheet: View {
         }
     }
 
-    @ViewBuilder
-    private var cursorSignInContent: some View {
+    @ViewBuilder private var cursorSignInContent: some View {
         switch cursorAgentService.authState {
         case .notInstalled:
             LabeledContent {
@@ -386,8 +382,7 @@ struct AIProviderDetailSheet: View {
         }
     }
 
-    @ViewBuilder
-    private var xaiAuthSection: some View {
+    @ViewBuilder private var xaiAuthSection: some View {
         xaiAPIKeySection
         xaiSignInSection
     }
@@ -427,7 +422,6 @@ struct AIProviderDetailSheet: View {
         }
     }
 
-    @ViewBuilder
     private var xaiSignInSection: some View {
         Section {
             xaiSignInContent
@@ -440,14 +434,15 @@ struct AIProviderDetailSheet: View {
         } header: {
             Text("Sign in with xAI")
         } footer: {
-            Text("Use your SuperGrok or X Premium+ subscription with no API key. Sign-in opens the Grok Build consent screen. This is an unofficial interface that may change.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(
+                "Use your SuperGrok or X Premium+ subscription with no API key. Sign-in opens the Grok Build consent screen. This is an unofficial interface that may change."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
     }
 
-    @ViewBuilder
-    private var xaiSignInContent: some View {
+    @ViewBuilder private var xaiSignInContent: some View {
         switch xaiService.authState {
         case .signedOut:
             HStack {
@@ -599,9 +594,11 @@ struct AIProviderDetailSheet: View {
         } header: {
             Text("Account")
         } footer: {
-            Text("Access uses your ChatGPT subscription (Plus, Pro, Business, or Enterprise) and follows OpenAI's terms. This is an unofficial interface that may change.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(
+                "Access uses your ChatGPT subscription (Plus, Pro, Business, or Enterprise) and follows OpenAI's terms. This is an unofficial interface that may change."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
     }
 
@@ -630,8 +627,7 @@ struct AIProviderDetailSheet: View {
             : String(format: String(localized: "Signed in as %@"), email)
     }
 
-    @ViewBuilder
-    private var statusRow: some View {
+    @ViewBuilder private var statusRow: some View {
         switch copilotService.status {
         case .stopped:
             Label("Service stopped", systemImage: "circle")
@@ -656,8 +652,7 @@ struct AIProviderDetailSheet: View {
 
     // MARK: - Connection
 
-    @ViewBuilder
-    private var connectionSection: some View {
+    @ViewBuilder private var connectionSection: some View {
         if shouldShowConnectionSection {
             Section {
                 if allowsNameField {
@@ -803,8 +798,7 @@ struct AIProviderDetailSheet: View {
         .pickerStyle(.menu)
     }
 
-    @ViewBuilder
-    private var modelFetchStatus: some View {
+    @ViewBuilder private var modelFetchStatus: some View {
         if isFetchingModels {
             HStack(spacing: 6) {
                 ProgressView().controlSize(.small)
@@ -831,8 +825,7 @@ struct AIProviderDetailSheet: View {
 
     // MARK: - Advanced
 
-    @ViewBuilder
-    private var advancedSection: some View {
+    @ViewBuilder private var advancedSection: some View {
         if showsMaxOutputTokens || showsTelemetryToggle {
             Section {
                 if showsMaxOutputTokens {

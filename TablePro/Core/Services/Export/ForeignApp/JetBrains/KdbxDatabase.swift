@@ -83,7 +83,7 @@ enum KdbxDatabase {
             let length = Int(readUInt16LE(data, pos + 1))
             pos += 3
             guard pos + length <= data.count else { throw KdbxError.malformedHeader }
-            let field = Array(data[pos..<pos + length])
+            let field = Array(data[pos ..< pos + length])
             pos += length
 
             switch fieldType {
@@ -134,7 +134,7 @@ enum KdbxDatabase {
 
         var current = input
         var next = [UInt8](repeating: 0, count: 32)
-        for _ in 0..<rounds {
+        for _ in 0 ..< rounds {
             var moved = 0
             let status = CCCryptorUpdate(cryptor, current, 32, &next, 32, &moved)
             guard status == kCCSuccess, moved == 32 else { return nil }
@@ -154,8 +154,8 @@ enum KdbxDatabase {
             pos += 40
             if size == 0 { return result }
             guard pos + size <= data.count else { return nil }
-            let block = Array(data[pos..<pos + size])
-            guard sha256(block) == Array(data[hashStart..<hashStart + 32]) else { return nil }
+            let block = Array(data[pos ..< pos + size])
+            guard sha256(block) == Array(data[hashStart ..< hashStart + 32]) else { return nil }
             result.append(contentsOf: block)
             pos += size
         }
@@ -170,7 +170,7 @@ enum KdbxDatabase {
             return Salsa20Cipher(key: sha256(streamKey), nonce: Salsa20Cipher.keePassNonce)
         case 3:
             let digest = sha512(streamKey)
-            return ChaCha20Cipher(key: Array(digest[0..<32]), nonce: Array(digest[32..<44]))
+            return ChaCha20Cipher(key: Array(digest[0 ..< 32]), nonce: Array(digest[32 ..< 44]))
         default:
             logger.warning("Unsupported KDBX inner stream id \(id); passwords will be skipped")
             return nil
@@ -259,7 +259,7 @@ enum KdbxDatabase {
     // MARK: - GZIP
 
     private static func gunzip(_ data: [UInt8]) -> [UInt8]? {
-        guard data.count > 18, data[0] == 0x1f, data[1] == 0x8b, data[2] == 0x08 else { return nil }
+        guard data.count > 18, data[0] == 0x1F, data[1] == 0x8B, data[2] == 0x08 else { return nil }
         let flags = data[3]
         var offset = 10
         if flags & 0x04 != 0 {
@@ -268,18 +268,22 @@ enum KdbxDatabase {
             offset += 2 + extraLength
         }
         if flags & 0x08 != 0 {
-            while offset < data.count, data[offset] != 0 { offset += 1 }
+            while offset < data.count, data[offset] != 0 {
+                offset += 1
+            }
             offset += 1
         }
         if flags & 0x10 != 0 {
-            while offset < data.count, data[offset] != 0 { offset += 1 }
+            while offset < data.count, data[offset] != 0 {
+                offset += 1
+            }
             offset += 1
         }
         if flags & 0x02 != 0 {
             offset += 2
         }
         guard offset < data.count - 8 else { return nil }
-        return inflateRawDeflate(Array(data[offset..<(data.count - 8)]))
+        return inflateRawDeflate(Array(data[offset ..< (data.count - 8)]))
     }
 
     private static func inflateRawDeflate(_ input: [UInt8]) -> [UInt8]? {
@@ -317,7 +321,10 @@ enum KdbxDatabase {
                         stream.dst_size = bufferSize
                     }
                 case COMPRESSION_STATUS_END:
-                    output.append(contentsOf: UnsafeBufferPointer(start: destination, count: bufferSize - stream.dst_size))
+                    output.append(contentsOf: UnsafeBufferPointer(
+                        start: destination,
+                        count: bufferSize - stream.dst_size
+                    ))
                     return output
                 default:
                     return nil
@@ -341,7 +348,7 @@ enum KdbxDatabase {
 
     private static func readUInt64LE(_ data: [UInt8], _ index: Int) -> UInt64 {
         var value: UInt64 = 0
-        for offset in 0..<8 {
+        for offset in 0 ..< 8 {
             value |= UInt64(data[index + offset]) << (8 * offset)
         }
         return value

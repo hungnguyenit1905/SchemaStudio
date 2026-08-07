@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @MainActor
@@ -24,7 +24,7 @@ struct DataChangeManagerTests {
     // MARK: - Configuration Tests
 
     @Test("configureForTable sets properties correctly")
-    func configureForTableSetsProperties() async {
+    func configureForTableSetsProperties() {
         let manager = DataChangeManager()
 
         manager.configureForTable(
@@ -58,7 +58,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("configureForTable clears existing changes")
-    func configureForTableClearsChanges() async {
+    func configureForTableClearsChanges() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -88,7 +88,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("Initial state has no changes")
-    func initialStateHasNoChanges() async {
+    func initialStateHasNoChanges() {
         let manager = DataChangeManager()
 
         #expect(!manager.hasChanges)
@@ -100,7 +100,7 @@ struct DataChangeManagerTests {
     // MARK: - Cell Change Recording Tests
 
     @Test("Record cell change makes hasChanges true")
-    func recordCellChangeUpdatesHasChanges() async {
+    func recordCellChangeUpdatesHasChanges() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -121,7 +121,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("Record cell change adds entry to changes array")
-    func recordCellChangeAddsToArray() async {
+    func recordCellChangeAddsToArray() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -148,7 +148,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("Same value is ignored, no change recorded")
-    func sameValueIsIgnored() async {
+    func sameValueIsIgnored() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -170,7 +170,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("Edit same cell again merges change preserving original oldValue")
-    func editSameCellMergesChange() async {
+    func editSameCellMergesChange() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -202,7 +202,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("Edit back to original value removes change")
-    func editBackToOriginalRemovesChange() async {
+    func editBackToOriginalRemovesChange() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -233,7 +233,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("Record changes to different rows creates separate RowChange entries")
-    func differentRowsSeparateEntries() async {
+    func differentRowsSeparateEntries() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -266,7 +266,7 @@ struct DataChangeManagerTests {
     // MARK: - Row Deletion Tests
 
     @Test("Record row deletion makes hasChanges true")
-    func recordRowDeletionUpdatesHasChanges() async {
+    func recordRowDeletionUpdatesHasChanges() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -281,7 +281,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("Delete removes any prior update changes for that row")
-    func deleteRemovesPriorUpdates() async {
+    func deleteRemovesPriorUpdates() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -308,7 +308,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("Deleted row tracked in changes with type delete")
-    func deletedRowTracked() async {
+    func deletedRowTracked() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -326,7 +326,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("Batch deletion records all rows")
-    func batchDeletionRecordsAllRows() async {
+    func batchDeletionRecordsAllRows() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -351,7 +351,7 @@ struct DataChangeManagerTests {
     // MARK: - clearChanges Tests
 
     @Test("clearChanges removes all changes")
-    func clearChangesRemovesAll() async {
+    func clearChangesRemovesAll() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -377,7 +377,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("clearChanges makes hasChanges false")
-    func clearChangesUpdatesHasChanges() async {
+    func clearChangesUpdatesHasChanges() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -403,7 +403,7 @@ struct DataChangeManagerTests {
     // MARK: - Undo/Redo Tests
 
     @Test("After recording a change, canUndo is true")
-    func canUndoAfterChange() async {
+    func canUndoAfterChange() {
         let manager = makeManagerWithUndo()
         manager.configureForTable(
             tableName: "users",
@@ -424,7 +424,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("After undo, the change is reversed")
-    func undoReversesChange() async {
+    func undoReversesChange() {
         let manager = makeManagerWithUndo()
         manager.configureForTable(
             tableName: "users",
@@ -449,7 +449,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("canRedo after undo")
-    func canRedoAfterUndo() async {
+    func canRedoAfterUndo() {
         let manager = makeManagerWithUndo()
         manager.configureForTable(
             tableName: "users",
@@ -472,7 +472,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("New change clears redo stack")
-    func newChangeClearsRedo() async {
+    func newChangeClearsRedo() {
         let manager = makeManagerWithUndo()
         manager.configureForTable(
             tableName: "users",
@@ -504,7 +504,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("Initial state has canUndo false and canRedo false")
-    func initialUndoRedoState() async {
+    func initialUndoRedoState() {
         let manager = DataChangeManager()
 
         #expect(!manager.canUndo)
@@ -514,7 +514,7 @@ struct DataChangeManagerTests {
     // MARK: - Reload Version Tests
 
     @Test("reloadVersion increments on change")
-    func reloadVersionIncrementsOnChange() async {
+    func reloadVersionIncrementsOnChange() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -537,7 +537,7 @@ struct DataChangeManagerTests {
     }
 
     @Test("reloadVersion increments on clearChanges")
-    func reloadVersionIncrementsOnClear() async {
+    func reloadVersionIncrementsOnClear() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",

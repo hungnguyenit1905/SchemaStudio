@@ -55,12 +55,16 @@ extension MainContentCoordinator {
                     try await driver.fetchColumns(table: tableName, schema: scope.schema)
                 }
                 guard !columns.isEmpty else {
-                    columnScopeLog.error("loadSchemaColumns: 0 columns for table=\(tableName, privacy: .public); cannot scope")
+                    columnScopeLog
+                        .error("loadSchemaColumns: 0 columns for table=\(tableName, privacy: .public); cannot scope")
                     return nil
                 }
                 return (columns.map(\.name), columns.filter(\.isPrimaryKey).map(\.name))
             } catch {
-                columnScopeLog.error("loadSchemaColumns: fetchColumns failed for table=\(tableName, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                columnScopeLog
+                    .error(
+                        "loadSchemaColumns: fetchColumns failed for table=\(tableName, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                    )
                 return nil
             }
         }
@@ -68,7 +72,8 @@ extension MainContentCoordinator {
 
     func columnsForVisibilityPicker(for tab: QueryTab, resultColumns: [String]) -> [String] {
         guard tab.tabType == .table, let tableName = tab.tableContext.tableName else { return resultColumns }
-        if let schema = schemaColumns.cached(schemaColumnsKey(tableName, scope: scope(for: tab))), !schema.columns.isEmpty {
+        if let schema = schemaColumns.cached(schemaColumnsKey(tableName, scope: scope(for: tab))),
+           !schema.columns.isEmpty {
             return schema.columns
         }
         let missingHidden = tab.columnLayout.hiddenColumns.subtracting(resultColumns)

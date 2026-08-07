@@ -7,9 +7,9 @@
 //  the whole buffer so behaviour is well-defined for unit tests.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineScrollTests: XCTestCase {
@@ -20,7 +20,9 @@ final class VimEngineScrollTests: XCTestCase {
         super.setUp()
         // 30-line buffer so we can exercise half-page / full-page motions.
         var lines: [String] = []
-        for i in 0..<30 { lines.append("line\(i)") }
+        for i in 0 ..< 30 {
+            lines.append("line\(i)")
+        }
         buffer = VimTextBufferMock(text: lines.joined(separator: "\n") + "\n")
         engine = VimEngine(buffer: buffer)
     }
@@ -32,7 +34,9 @@ final class VimEngineScrollTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func ctrl(_ char: Character) -> Bool {

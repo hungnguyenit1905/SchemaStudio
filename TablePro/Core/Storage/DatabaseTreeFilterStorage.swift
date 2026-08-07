@@ -16,8 +16,7 @@ final class DatabaseTreeFilterStorage {
 
     func selectedDatabases(connectionId: UUID) -> Set<String> {
         guard let data = defaults.data(forKey: databasesKey(connectionId: connectionId)),
-              let names = try? JSONDecoder().decode([String].self, from: data)
-        else { return [] }
+              let names = try? JSONDecoder().decode([String].self, from: data) else { return [] }
         return Set(names)
     }
 
@@ -36,6 +35,8 @@ final class DatabaseTreeFilterStorage {
     }
 
     func removeFilters(for connectionIds: Set<UUID>) {
-        for id in connectionIds { removeFilter(for: id) }
+        for id in connectionIds {
+            removeFilter(for: id)
+        }
     }
 }

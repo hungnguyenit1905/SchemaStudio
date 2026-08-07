@@ -62,9 +62,13 @@ struct MainContentCoordinatorLazyLoadTests {
         columns: [String] = ["id", "name"],
         rowCount: Int = 3
     ) {
-        let rows = (0..<rowCount).map { i in columns.map { "\($0)_\(i)" as String? } }
+        let rows = (0 ..< rowCount).map { i in columns.map { "\($0)_\(i)" as String? } }
         let columnTypes: [ColumnType] = Array(repeating: .text(rawType: nil), count: columns.count)
-        let tableRows = TableRows.from(queryRows: rows.map { row in row.map(PluginCellValue.fromOptional) }, columns: columns, columnTypes: columnTypes)
+        let tableRows = TableRows.from(
+            queryRows: rows.map { row in row.map(PluginCellValue.fromOptional) },
+            columns: columns,
+            columnTypes: columnTypes
+        )
         coordinator.setActiveTableRows(tableRows, for: tabId)
     }
 
@@ -230,7 +234,7 @@ struct MainContentCoordinatorLazyLoadTests {
         }
         tabManager.tabs[idx].execution.lastExecutedAt = Date()
 
-        for _ in 0..<5 {
+        for _ in 0 ..< 5 {
             coordinator.lazyLoadCurrentTabIfNeeded()
         }
         #expect(coordinator.tabSessionRegistry.tableRows(for: tabId).rows.count == 4)

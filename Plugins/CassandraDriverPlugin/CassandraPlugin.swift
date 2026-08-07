@@ -165,7 +165,9 @@ internal final class CassandraPluginDriver: PluginDatabaseDriver, @unchecked Sen
             }
             guard config.ssl.mode != .disabled else {
                 throw AWSAuthError.missingConfiguration(
-                    String(localized: "Amazon Keyspaces IAM authentication requires TLS. Enable SSL in the connection's SSL settings.")
+                    String(
+                        localized: "Amazon Keyspaces IAM authentication requires TLS. Enable SSL in the connection's SSL settings."
+                    )
                 )
             }
             awsRegion = region
@@ -204,7 +206,9 @@ internal final class CassandraPluginDriver: PluginDatabaseDriver, @unchecked Sen
         )
         guard caps.hasSystemSchemaKeyspace else {
             throw CassandraPluginError.connectionFailed(String(
-                format: String(localized: "Cassandra %@ is not supported. TablePro requires Cassandra 3.0 or later (the system_schema keyspace was introduced in 3.0)."),
+                format: String(
+                    localized: "Cassandra %@ is not supported. TablePro requires Cassandra 3.0 or later (the system_schema keyspace was introduced in 3.0)."
+                ),
                 serverVersion ?? "<unknown>"
             ))
         }
@@ -498,7 +502,7 @@ internal final class CassandraPluginDriver: PluginDatabaseDriver, @unchecked Sen
     func fetchDatabases() async throws -> [String] {
         let query = "SELECT keyspace_name FROM system_schema.keyspaces"
         let result = try await execute(query: query)
-        let systemKeyspaces: Set<String> = [
+        let systemKeyspaces: Set = [
             "system", "system_schema", "system_auth",
             "system_distributed", "system_traces", "system_virtual_schema",
         ]

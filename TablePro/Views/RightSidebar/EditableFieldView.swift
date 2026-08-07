@@ -1,5 +1,5 @@
 //
-//  FieldDetailView.swift
+//  EditableFieldView.swift
 //  TablePro
 //
 //  Thin orchestrator for field detail display in the right sidebar.
@@ -54,7 +54,7 @@ internal struct FieldDetailView: View {
                     resolvedEditor(for: kind)
                 }
                 .overlay(alignment: .topTrailing) {
-                    if showsFieldMenu && isHovered {
+                    if showsFieldMenu, isHovered {
                         FieldMenuView(
                             value: context.value.wrappedValue,
                             columnType: context.columnType,

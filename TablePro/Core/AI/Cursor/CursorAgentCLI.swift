@@ -47,7 +47,7 @@ struct CursorAgentCLI: Sendable {
 
     func run(_ arguments: [String]) async throws -> (code: Int32, output: String) {
         do {
-            return try await Self.process.run(try Self.makeLaunch(arguments))
+            return try await Self.process.run(Self.makeLaunch(arguments))
         } catch {
             throw Self.translate(error)
         }
@@ -55,7 +55,7 @@ struct CursorAgentCLI: Sendable {
 
     func stream(_ arguments: [String]) -> AsyncThrowingStream<String, Error> {
         do {
-            return Self.process.streamLines(try Self.makeLaunch(arguments))
+            return try Self.process.streamLines(Self.makeLaunch(arguments))
         } catch {
             let translated = Self.translate(error)
             return AsyncThrowingStream { $0.finish(throwing: translated) }

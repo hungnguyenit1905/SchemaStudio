@@ -51,8 +51,7 @@ enum SidebarSyncAction: Equatable {
     ) -> SidebarSyncAction {
         guard !newTables.isEmpty, selectedTables.isEmpty,
               let tabTableName = currentTabTableName,
-              newTables.contains(where: { $0.name == tabTableName })
-        else {
+              newTables.contains(where: { $0.name == tabTableName }) else {
             return .noSync
         }
         return .select(tableName: tabTableName)

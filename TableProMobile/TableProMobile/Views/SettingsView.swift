@@ -7,7 +7,8 @@ struct SettingsView: View {
 
     @AppStorage("com.TablePro.settings.shareAnalytics") private var shareAnalytics = true
     @AppStorage(AppLockState.lockEnabledKey) private var lockEnabled = false
-    @AppStorage(AppLockState.lockTimeoutKey) private var lockTimeoutSeconds = AppLockState.AutoLockTimeout.fiveMinutes.rawValue
+    @AppStorage(AppLockState.lockTimeoutKey) private var lockTimeoutSeconds = AppLockState.AutoLockTimeout.fiveMinutes
+        .rawValue
     @AppStorage(AppPreferences.cloudSyncEnabledKey) private var cloudSyncEnabled = true
     @AppStorage(AppPreferences.defaultPageSizeKey) private var defaultPageSize = 100
     @AppStorage(AppPreferences.defaultSafeModeKey) private var defaultSafeModeRaw = SafeModeLevel.off.rawValue
@@ -52,8 +53,7 @@ struct SettingsView: View {
         .navigationTitle(String(localized: "Settings"))
     }
 
-    @ViewBuilder
-    private var biometricSection: some View {
+    @ViewBuilder private var biometricSection: some View {
         let availability = auth.availability
         if availability != .unavailable {
             Section {
@@ -69,7 +69,9 @@ struct SettingsView: View {
             } header: {
                 Text("Security")
             } footer: {
-                Text("Locks TablePro when reopened after the selected idle time. Cold launches always require authentication.")
+                Text(
+                    "Locks TablePro when reopened after the selected idle time. Cold launches always require authentication."
+                )
             }
         }
     }
@@ -97,7 +99,9 @@ struct SettingsView: View {
         } header: {
             Text("Sync")
         } footer: {
-            Text("When off, connections, groups, and tags stay on this device only. Existing iCloud data is not deleted.")
+            Text(
+                "When off, connections, groups, and tags stay on this device only. Existing iCloud data is not deleted."
+            )
         }
     }
 
@@ -123,15 +127,18 @@ struct SettingsView: View {
                 }
                 Button(String(localized: "Cancel"), role: .cancel) {}
             } message: {
-                Text("TablePro will re-download every connection, group, and tag from your iCloud account. Local data on this device is not deleted.")
+                Text(
+                    "TablePro will re-download every connection, group, and tag from your iCloud account. Local data on this device is not deleted."
+                )
             }
         } footer: {
-            Text("If items appear on another device but not here, refresh forces a full re-download from iCloud. This may take a moment on slow networks.")
+            Text(
+                "If items appear on another device but not here, refresh forces a full re-download from iCloud. This may take a moment on slow networks."
+            )
         }
     }
 
-    @ViewBuilder
-    private var syncStatusLabel: some View {
+    @ViewBuilder private var syncStatusLabel: some View {
         switch appState.syncCoordinator.status {
         case .syncing:
             HStack(spacing: 6) {

@@ -29,8 +29,7 @@ extension MainContentCoordinator {
 
         let saveStart = Date()
         if let oldId = oldTabId,
-           let oldIndex = tabManager.tabs.firstIndex(where: { $0.id == oldId })
-        {
+           let oldIndex = tabManager.tabs.firstIndex(where: { $0.id == oldId }) {
             if changeManager.hasChanges {
                 let savedState = changeManager.saveState()
                 tabManager.mutate(at: oldIndex) { $0.pendingChanges = savedState }
@@ -108,8 +107,7 @@ extension MainContentCoordinator {
                   !tab.pendingChanges.hasChanges,
                   let rows = tabSessionRegistry.existingTableRows(for: tab.id),
                   !tabSessionRegistry.isEvicted(tab.id),
-                  !rows.rows.isEmpty
-            else { return nil }
+                  !rows.rows.isEmpty else { return nil }
             return (tab, rows)
         }
 

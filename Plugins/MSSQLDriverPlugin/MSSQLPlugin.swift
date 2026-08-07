@@ -46,7 +46,7 @@ private extension MSSQLPluginError {
             self = .queryFailed(String(localized: "Query was cancelled"))
         case .tlsHandshakeFailed(_, let serverMessage):
             self = .connectionFailed(String(format: String(localized: "TLS: %@"), serverMessage))
-        case let .kerberosAuthFailed(kind, serverMessage):
+        case .kerberosAuthFailed(let kind, let serverMessage):
             self = .connectionFailed(MSSQLKerberosMessage.describe(kind: kind, serverMessage: serverMessage))
         case .connectionTimedOut:
             self = .connectionFailed(coreError.localizedDescription)
@@ -76,7 +76,7 @@ final class MSSQLPlugin: NSObject, TableProPlugin, DriverPlugin {
     static let databaseTypeId = "SQL Server"
     static let databaseDisplayName = "SQL Server"
     static let iconName = "mssql-icon"
-    static let defaultPort = 1433
+    static let defaultPort = 1_433
     static let additionalConnectionFields: [ConnectionField] = [
         ConnectionField(
             id: MSSQLConnectionOptions.AdditionalFieldKey.authMethod,
@@ -293,9 +293,9 @@ final class MSSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             try await conn.connect()
         } catch let error as MSSQLCoreError {
             switch error {
-            case let .tlsHandshakeFailed(kind, serverMessage):
+            case .tlsHandshakeFailed(let kind, let serverMessage):
                 throw kind.sslHandshakeError(serverMessage: serverMessage)
-            case let .kerberosAuthFailed(kind, serverMessage):
+            case .kerberosAuthFailed(let kind, let serverMessage):
                 throw MSSQLPluginError.connectionFailed(
                     MSSQLKerberosMessage.describe(kind: kind, serverMessage: serverMessage)
                 )
@@ -310,7 +310,8 @@ final class MSSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
            !serverSchema.isEmpty {
             _currentSchema = serverSchema
         } else {
-            Self.logger.warning("SELECT SCHEMA_NAME() returned no value; keeping \(self._currentSchema, privacy: .public)")
+            Self.logger
+                .warning("SELECT SCHEMA_NAME() returned no value; keeping \(self._currentSchema, privacy: .public)")
         }
 
         let formSchema = config.additionalFields["mssqlSchema"]
@@ -514,8 +515,7 @@ final class MSSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         var conditions: [String] = []
         for whereColumn in whereColumns {
             guard let columnIndex = columns.firstIndex(of: whereColumn),
-                  columnIndex < originalRow.count
-            else { continue }
+                  columnIndex < originalRow.count else { continue }
             let col = "[\(whereColumn.replacingOccurrences(of: "]", with: "]]"))]"
             let value = originalRow[columnIndex]
             if value.isNull {
@@ -549,8 +549,7 @@ final class MSSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         for whereColumn in whereColumns {
             guard let columnIndex = columns.firstIndex(of: whereColumn),
-                  columnIndex < originalRow.count
-            else { continue }
+                  columnIndex < originalRow.count else { continue }
             let col = "[\(whereColumn.replacingOccurrences(of: "]", with: "]]"))]"
             let value = originalRow[columnIndex]
             if value.isNull {
@@ -649,10 +648,10 @@ final class MSSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
         let objectName = "[\(esc)].[\(escapedTable)]"
         let sql = """
-            SELECT SUM(p.rows)
-            FROM sys.partitions p
-            WHERE p.object_id = OBJECT_ID(N'\(objectName)') AND p.index_id IN (0, 1)
-            """
+        SELECT SUM(p.rows)
+        FROM sys.partitions p
+        WHERE p.object_id = OBJECT_ID(N'\(objectName)') AND p.index_id IN (0, 1)
+        """
         let result = try await execute(query: sql)
         if let row = result.rows.first, let cell = row.first, let str = cell.asText {
             return Int(str)
@@ -768,7 +767,6 @@ final class MSSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         )
     }
 
-
     // MARK: - Private Helpers
 
     /// Convert `?` placeholders to `@p1, @p2, ...` and build sp_executesql components.
@@ -789,24 +787,24 @@ final class MSSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             let char = chars[i]
 
             // Handle doubled quotes (T-SQL escape: '' inside strings, "" inside identifiers)
-            if char == "'" && inSingleQuote && i + 1 < length && chars[i + 1] == "'" {
+            if char == "'", inSingleQuote, i + 1 < length, chars[i + 1] == "'" {
                 converted.append("''")
                 i += 2
                 continue
             }
-            if char == "\"" && inDoubleQuote && i + 1 < length && chars[i + 1] == "\"" {
+            if char == "\"", inDoubleQuote, i + 1 < length, chars[i + 1] == "\"" {
                 converted.append("\"\"")
                 i += 2
                 continue
             }
 
-            if char == "'" && !inDoubleQuote {
+            if char == "'", !inDoubleQuote {
                 inSingleQuote.toggle()
-            } else if char == "\"" && !inSingleQuote {
+            } else if char == "\"", !inSingleQuote {
                 inDoubleQuote.toggle()
             }
 
-            if char == "?" && !inSingleQuote && !inDoubleQuote && paramIndex < parameters.count {
+            if char == "?", !inSingleQuote, !inDoubleQuote, paramIndex < parameters.count {
                 paramIndex += 1
                 converted.append("@p\(paramIndex)")
             } else {
@@ -819,8 +817,8 @@ final class MSSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         guard count > 0 else {
             return (converted, "", "")
         }
-        let decls = (1...count).map { "@p\($0) NVARCHAR(MAX)" }.joined(separator: ", ")
-        let assigns = (1...count).map { i -> String in
+        let decls = (1 ... count).map { "@p\($0) NVARCHAR(MAX)" }.joined(separator: ", ")
+        let assigns = (1 ... count).map { i -> String in
             if let value = parameters[i - 1] {
                 return "@p\(i) = N'\(escapeNString(value))'"
             }
@@ -843,7 +841,6 @@ final class MSSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func effectiveSchemaEscaped(_ schema: String?) -> String {
         MSSQLSchemaQueries.escape(effectiveSchema(schema))
     }
-
 }
 
 // MARK: - Kerberos
@@ -860,22 +857,35 @@ enum MSSQLKerberosMessage {
         switch kind {
         case .noCredential:
             summary = String(localized: "No Kerberos ticket was found.")
-            suggestion = String(localized: "Run kinit user@REALM.COM in Terminal, or enter a Kerberos principal and password, then reconnect.")
+            suggestion =
+                String(
+                    localized: "Run kinit user@REALM.COM in Terminal, or enter a Kerberos principal and password, then reconnect."
+                )
         case .principalUnknown:
             summary = String(localized: "The Kerberos principal is unknown to the domain.")
-            suggestion = String(localized: "Check the principal spelling and realm, for example user@REALM.COM with the realm in uppercase.")
+            suggestion =
+                String(
+                    localized: "Check the principal spelling and realm, for example user@REALM.COM with the realm in uppercase."
+                )
         case .wrongPassword:
             summary = String(localized: "The Kerberos password was rejected.")
             suggestion = String(localized: "Re-enter the domain password for this principal.")
         case .spnNotFound:
             summary = String(localized: "The SQL Server Kerberos service principal name is not registered.")
-            suggestion = String(localized: "Ask your administrator to register the SPN, for example MSSQLSvc/host.domain.com:1433, and connect by hostname rather than IP address.")
+            suggestion =
+                String(
+                    localized: "Ask your administrator to register the SPN, for example MSSQLSvc/host.domain.com:1433, and connect by hostname rather than IP address."
+                )
         case .clockSkew:
             summary = String(localized: "This Mac's clock is too far out of sync with the domain controller.")
-            suggestion = String(localized: "Turn on Set time automatically in System Settings > General > Date & Time, then reconnect.")
+            suggestion =
+                String(
+                    localized: "Turn on Set time automatically in System Settings > General > Date & Time, then reconnect."
+                )
         case .realmNotResolved:
             summary = String(localized: "The Kerberos realm could not be resolved.")
-            suggestion = String(localized: "Confirm this network resolves the domain, or add the realm to /etc/krb5.conf.")
+            suggestion =
+                String(localized: "Confirm this network resolves the domain, or add the realm to /etc/krb5.conf.")
         case .ticketExpired:
             summary = String(localized: "The Kerberos ticket has expired.")
             suggestion = String(localized: "Run kinit user@REALM.COM to renew it, then reconnect.")

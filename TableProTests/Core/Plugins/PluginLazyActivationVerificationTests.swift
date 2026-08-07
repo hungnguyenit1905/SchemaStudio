@@ -16,7 +16,10 @@ struct PluginLazyActivationVerificationTests {
         guard ProcessInfo.processInfo.environment["TABLEPRO_ALLOW_UNSIGNED_PLUGINS"] != "1" else { return }
 
         let fm = FileManager.default
-        let root = fm.temporaryDirectory.appendingPathComponent("LazyActivation-\(UUID().uuidString)", isDirectory: true)
+        let root = fm.temporaryDirectory.appendingPathComponent(
+            "LazyActivation-\(UUID().uuidString)",
+            isDirectory: true
+        )
         let userPluginsDir = root.appendingPathComponent("Plugins", isDirectory: true)
         let bundleURL = userPluginsDir.appendingPathComponent("Tampered.tableplugin", isDirectory: true)
         let contentsURL = bundleURL.appendingPathComponent("Contents", isDirectory: true)

@@ -219,7 +219,7 @@ struct MainContentCoordinatorRefreshTests {
             }
             tabManager.tabs[idx].execution.lastExecutedAt = Date()
 
-            for _ in 0..<4 {
+            for _ in 0 ..< 4 {
                 coordinator.currentRowCountTask = Task<Void, Never> {}
                 coordinator.handleRefresh(hasPendingTableOps: false, onDiscard: {})
                 coordinator.currentQueryTask?.cancel()

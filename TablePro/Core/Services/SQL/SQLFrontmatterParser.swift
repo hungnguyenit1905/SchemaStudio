@@ -75,7 +75,7 @@ internal enum SQLFrontmatter {
         guard rest.first == "@" else { return nil }
         rest = rest.dropFirst()
         guard let colonIndex = rest.firstIndex(of: ":") else { return nil }
-        let key = rest[rest.startIndex..<colonIndex]
+        let key = rest[rest.startIndex ..< colonIndex]
             .trimmingCharacters(in: .whitespaces)
             .lowercased()
         let value = rest[rest.index(after: colonIndex)...]

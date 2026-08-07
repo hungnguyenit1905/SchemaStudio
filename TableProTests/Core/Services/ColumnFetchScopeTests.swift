@@ -8,7 +8,8 @@ struct ColumnFetchScopeTests {
 
     @Test("No hidden columns means no scoping (SELECT *)")
     func noHiddenColumns() {
-        #expect(ColumnFetchScope.selectColumns(schemaColumns: columns, hiddenColumns: [], primaryKeyColumns: ["id"]) == nil)
+        #expect(ColumnFetchScope
+            .selectColumns(schemaColumns: columns, hiddenColumns: [], primaryKeyColumns: ["id"]) == nil)
     }
 
     @Test("Hidden column is dropped, order preserved")
@@ -33,17 +34,26 @@ struct ColumnFetchScopeTests {
 
     @Test("Empty schema means no scoping")
     func emptySchema() {
-        #expect(ColumnFetchScope.selectColumns(schemaColumns: [], hiddenColumns: ["payload"], primaryKeyColumns: []) == nil)
+        #expect(ColumnFetchScope
+            .selectColumns(schemaColumns: [], hiddenColumns: ["payload"], primaryKeyColumns: []) == nil)
     }
 
     @Test("Hiding everything with no primary key produces no scoping rather than empty SELECT")
     func hidingEverythingNoPrimaryKey() {
-        #expect(ColumnFetchScope.selectColumns(schemaColumns: columns, hiddenColumns: Set(columns), primaryKeyColumns: []) == nil)
+        #expect(ColumnFetchScope.selectColumns(
+            schemaColumns: columns,
+            hiddenColumns: Set(columns),
+            primaryKeyColumns: []
+        ) == nil)
     }
 
     @Test("Hiding columns not present in the schema is a no-op")
     func hiddenColumnsNotInSchema() {
-        #expect(ColumnFetchScope.selectColumns(schemaColumns: columns, hiddenColumns: ["ghost"], primaryKeyColumns: ["id"]) == nil)
+        #expect(ColumnFetchScope.selectColumns(
+            schemaColumns: columns,
+            hiddenColumns: ["ghost"],
+            primaryKeyColumns: ["id"]
+        ) == nil)
     }
 
     // MARK: - prunedHiddenColumns

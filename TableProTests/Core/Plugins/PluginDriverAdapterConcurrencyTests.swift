@@ -29,12 +29,12 @@ struct PluginDriverAdapterConcurrencyTests {
     }
 
     @Test("Concurrent executeUserQuery calls on one adapter all map column types correctly")
-    func concurrentUserQueriesMapColumnTypes() async throws {
+    func concurrentUserQueriesMapColumnTypes() async {
         let adapter = makeAdapter()
         let expected = expectedTypes()
 
         let results = await withTaskGroup(of: [ColumnType].self) { group in
-            for _ in 0..<64 {
+            for _ in 0 ..< 64 {
                 group.addTask {
                     let result = try? await adapter.executeUserQuery(
                         query: "SELECT * FROM t",
@@ -59,7 +59,7 @@ struct PluginDriverAdapterConcurrencyTests {
         let expected = expectedTypes()
 
         await withTaskGroup(of: Void.self) { group in
-            for index in 0..<64 {
+            for index in 0 ..< 64 {
                 group.addTask {
                     if index.isMultiple(of: 2) {
                         _ = try? await adapter.execute(query: "SELECT 1")
@@ -79,12 +79,12 @@ struct PluginDriverAdapterConcurrencyTests {
     }
 
     @Test("Reading status while connect and disconnect run concurrently stays a valid state")
-    func concurrentStatusReadsStayValid() async throws {
+    func concurrentStatusReadsStayValid() async {
         let adapter = makeAdapter()
         let valid: [ConnectionStatus] = [.disconnected, .connecting, .connected]
 
         await withTaskGroup(of: Void.self) { group in
-            for index in 0..<32 {
+            for index in 0 ..< 32 {
                 group.addTask {
                     if index.isMultiple(of: 2) {
                         try? await adapter.connect()

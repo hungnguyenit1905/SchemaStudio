@@ -34,7 +34,9 @@ internal struct ExternalConnectionTrustKey: Hashable, Codable, Sendable {
 
     internal var isLoopbackHost: Bool {
         var normalized = host
-        while normalized.hasSuffix(".") { normalized.removeLast() }
+        while normalized.hasSuffix(".") {
+            normalized.removeLast()
+        }
         if Self.loopbackHosts.contains(normalized) { return true }
         return Self.isLoopbackIPv4(normalized)
     }
@@ -45,8 +47,7 @@ internal struct ExternalConnectionTrustKey: Hashable, Codable, Sendable {
         for octet in octets {
             guard !octet.isEmpty,
                   octet.allSatisfy({ $0.isASCII && $0.isNumber }),
-                  let value = Int(octet), value <= 255
-            else { return false }
+                  let value = Int(octet), value <= 255 else { return false }
         }
         return Int(octets[0]) == 127
     }

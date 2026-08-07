@@ -75,8 +75,12 @@ struct PendingChanges: Equatable {
         )
 
         if let insertIdx = changeIndex[RowChangeKey(rowIndex: rowIndex, type: .insert)] {
-            updateInsertedCell(at: insertIdx, columnIndex: columnIndex,
-                               columnName: columnName, newValue: newValue)
+            updateInsertedCell(
+                at: insertIdx,
+                columnIndex: columnIndex,
+                columnName: columnName,
+                newValue: newValue
+            )
             return true
         }
 
@@ -163,7 +167,7 @@ struct PendingChanges: Equatable {
         }
         insertedRowIndices = newInserted
 
-        for i in 0..<changes.count {
+        for i in 0 ..< changes.count {
             let rowIndex = changes[i].rowIndex
             changes[i].rowIndex = rowIndex - Self.countLessThan(rowIndex, in: sortedRemoved)
         }
@@ -203,8 +207,12 @@ struct PendingChanges: Equatable {
         )
 
         if let insertIdx = changeIndex[RowChangeKey(rowIndex: rowIndex, type: .insert)] {
-            updateInsertedCell(at: insertIdx, columnIndex: columnIndex,
-                               columnName: columnName, newValue: newValue)
+            updateInsertedCell(
+                at: insertIdx,
+                columnIndex: columnIndex,
+                columnName: columnName,
+                newValue: newValue
+            )
             return
         }
 
@@ -241,8 +249,7 @@ struct PendingChanges: Equatable {
         previousValue: PluginCellValue
     ) {
         guard let updateIdx = changeIndex[RowChangeKey(rowIndex: rowIndex, type: .update)],
-              let cellIdx = changes[updateIdx].cellChanges.firstIndex(where: { $0.columnIndex == columnIndex })
-        else { return }
+              let cellIdx = changes[updateIdx].cellChanges.firstIndex(where: { $0.columnIndex == columnIndex }) else { return }
 
         let originalOldValue = changes[updateIdx].cellChanges[cellIdx].oldValue
         if previousValue == originalOldValue {
@@ -455,7 +462,7 @@ struct PendingChanges: Equatable {
     }
 
     private mutating func shiftRowIndicesUp(from insertionPoint: Int) {
-        for i in 0..<changes.count where changes[i].rowIndex >= insertionPoint {
+        for i in 0 ..< changes.count where changes[i].rowIndex >= insertionPoint {
             changes[i].rowIndex += 1
         }
         insertedRowIndices = Set(insertedRowIndices.map { $0 >= insertionPoint ? $0 + 1 : $0 })
@@ -477,7 +484,7 @@ struct PendingChanges: Equatable {
     }
 
     private mutating func shiftRowIndicesDown(at removedRow: Int) {
-        for i in 0..<changes.count where changes[i].rowIndex > removedRow {
+        for i in 0 ..< changes.count where changes[i].rowIndex > removedRow {
             changes[i].rowIndex -= 1
         }
         insertedRowIndices = Set(insertedRowIndices.map { $0 > removedRow ? $0 - 1 : $0 })

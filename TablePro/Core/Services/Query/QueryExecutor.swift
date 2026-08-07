@@ -75,10 +75,14 @@ final class QueryExecutor {
         rowCap: Int?
     ) async throws -> QueryFetchResult {
         let start = CFAbsoluteTimeGetCurrent()
-        queryExecutorLog.info("[executeUserQuery] sql=\(sql.prefix(100), privacy: .public) rowCap=\(rowCap?.description ?? "nil")")
+        queryExecutorLog
+            .info("[executeUserQuery] sql=\(sql.prefix(100), privacy: .public) rowCap=\(rowCap?.description ?? "nil")")
         let result = try await driver.executeUserQuery(query: sql, rowCap: rowCap, parameters: nil)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
-        queryExecutorLog.info("[executeUserQuery] rows=\(result.rows.count) truncated=\(result.isTruncated) driverTime=\(String(format: "%.3f", result.executionTime))s totalTime=\(String(format: "%.3f", elapsed))s")
+        queryExecutorLog
+            .info(
+                "[executeUserQuery] rows=\(result.rows.count) truncated=\(result.isTruncated) driverTime=\(String(format: "%.3f", result.executionTime))s totalTime=\(String(format: "%.3f", elapsed))s"
+            )
         return QueryFetchResult(
             columns: result.columns,
             columnTypes: result.columnTypes,
@@ -98,10 +102,16 @@ final class QueryExecutor {
         rowCap: Int?
     ) async throws -> QueryFetchResult {
         let start = CFAbsoluteTimeGetCurrent()
-        queryExecutorLog.info("[executeUserQueryParameterized] sql=\(sql.prefix(100), privacy: .public) rowCap=\(rowCap?.description ?? "nil") params=\(parameters.count)")
+        queryExecutorLog
+            .info(
+                "[executeUserQueryParameterized] sql=\(sql.prefix(100), privacy: .public) rowCap=\(rowCap?.description ?? "nil") params=\(parameters.count)"
+            )
         let result = try await driver.executeUserQuery(query: sql, rowCap: rowCap, parameters: parameters)
         let elapsed = CFAbsoluteTimeGetCurrent() - start
-        queryExecutorLog.info("[executeUserQueryParameterized] rows=\(result.rows.count) truncated=\(result.isTruncated) driverTime=\(String(format: "%.3f", result.executionTime))s totalTime=\(String(format: "%.3f", elapsed))s")
+        queryExecutorLog
+            .info(
+                "[executeUserQueryParameterized] rows=\(result.rows.count) truncated=\(result.isTruncated) driverTime=\(String(format: "%.3f", result.executionTime))s totalTime=\(String(format: "%.3f", elapsed))s"
+            )
         return QueryFetchResult(
             columns: result.columns,
             columnTypes: result.columnTypes,
@@ -213,8 +223,7 @@ final class QueryExecutor {
     static func resolveRowCap(sql: String, tabType: TabType, databaseType: DatabaseType) -> Int? {
         let dataGridSettings = AppSettingsManager.shared.dataGrid
         guard dataGridSettings.truncateQueryResults,
-              qualifiesForRowCap(sql: sql, tabType: tabType, databaseType: databaseType)
-        else {
+              qualifiesForRowCap(sql: sql, tabType: tabType, databaseType: databaseType) else {
             return nil
         }
         let cap = dataGridSettings.validatedQueryResultRowCap

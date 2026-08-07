@@ -55,7 +55,7 @@ actor CloudflareTunnelManager: TunnelManaging {
         let attempts = config.localPort != nil ? 1 : Self.portRetryCount
 
         var lastError: Error = CloudflareTunnelError.noAvailablePort
-        for _ in 0..<attempts {
+        for _ in 0 ..< attempts {
             let port = try config.localPort ?? allocateFreePort()
             let runner = runnerFactory()
             let arguments = [
@@ -83,7 +83,8 @@ actor CloudflareTunnelManager: TunnelManaging {
             }
 
             register(connectionId: connectionId, runner: runner, port: port, binaryPath: binaryPath)
-            Self.logger.info("Cloudflare tunnel ready for \(connectionId.uuidString, privacy: .public) on 127.0.0.1:\(port)")
+            Self.logger
+                .info("Cloudflare tunnel ready for \(connectionId.uuidString, privacy: .public) on 127.0.0.1:\(port)")
             return port
         }
 
@@ -199,7 +200,7 @@ actor CloudflareTunnelManager: TunnelManaging {
                 throw CloudflareTunnelError.browserAuthRequired(url: url)
             }
             if await monitor.streamEnded {
-                throw CloudflareTunnelError.startupFailed(stderrTail: await monitor.tail)
+                throw await CloudflareTunnelError.startupFailed(stderrTail: monitor.tail)
             }
             if await LoopbackPort.isReachable(host: "127.0.0.1", port: port) {
                 if let url = await monitor.browserAuthURL {
@@ -209,7 +210,7 @@ actor CloudflareTunnelManager: TunnelManaging {
             }
             try await Task.sleep(nanoseconds: Self.readinessPollInterval)
         }
-        throw CloudflareTunnelError.readinessTimeout(stderrTail: await monitor.tail)
+        throw await CloudflareTunnelError.readinessTimeout(stderrTail: monitor.tail)
     }
 
     // MARK: - Private: binary, environment, port
@@ -261,7 +262,10 @@ actor CloudflareTunnelManager: TunnelManaging {
             let data = try JSONEncoder().encode(records)
             UserDefaults.standard.set(data, forKey: Self.stalePidsDefaultsKey)
         } catch {
-            Self.logger.error("Failed to persist cloudflared PID records, leaked processes may survive to next launch: \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .error(
+                    "Failed to persist cloudflared PID records, leaked processes may survive to next launch: \(error.localizedDescription, privacy: .public)"
+                )
         }
     }
 

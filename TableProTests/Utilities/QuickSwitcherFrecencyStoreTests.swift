@@ -52,7 +52,7 @@ struct QuickSwitcherFrecencyStoreTests {
     func frequentBeatsSingle() {
         let (store, _, _) = makeStore()
         let now = Date()
-        for offset in 0..<5 {
+        for offset in 0 ..< 5 {
             store.recordAccess(itemId: "frequent", at: now.addingTimeInterval(TimeInterval(-offset * 3_600)))
         }
         store.recordAccess(itemId: "single", at: now)
@@ -64,7 +64,7 @@ struct QuickSwitcherFrecencyStoreTests {
     func scoreCapsAtOne() {
         let (store, _, _) = makeStore()
         let now = Date()
-        for offset in 0..<20 {
+        for offset in 0 ..< 20 {
             store.recordAccess(itemId: "hot", at: now.addingTimeInterval(TimeInterval(-offset)))
         }
         #expect((store.scores(now: now)["hot"] ?? 0) <= 1)
@@ -73,7 +73,7 @@ struct QuickSwitcherFrecencyStoreTests {
     @Test("Samples per item are capped at 10")
     func samplesCapPerItem() {
         let (store, defaults, connectionId) = makeStore()
-        for offset in 0..<15 {
+        for offset in 0 ..< 15 {
             store.recordAccess(itemId: "busy", at: Date().addingTimeInterval(TimeInterval(offset)))
         }
         let key = "QuickSwitcher.frecency.\(connectionId.uuidString)"
@@ -85,7 +85,7 @@ struct QuickSwitcherFrecencyStoreTests {
     func trackedItemsPruned() {
         let (store, _, _) = makeStore()
         let now = Date()
-        for index in 0..<120 {
+        for index in 0 ..< 120 {
             store.recordAccess(itemId: "item_\(index)", at: now.addingTimeInterval(TimeInterval(index)))
         }
         let scores = store.scores(now: now)

@@ -16,7 +16,7 @@ final class NewConnectionCommandUITests: XCTestCase {
         return app
     }
 
-    func testNewConnectionOpensTheChooserAfterTheWelcomeWindowIsClosed() throws {
+    func testNewConnectionOpensTheChooserAfterTheWelcomeWindowIsClosed() {
         let app = launchApp()
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10))
 

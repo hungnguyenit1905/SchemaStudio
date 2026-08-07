@@ -6,8 +6,8 @@
 //  Ensures windowing optimizations preserve correct clause detection.
 //
 
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("SQLContextAnalyzer Windowing")
@@ -75,7 +75,7 @@ struct SQLContextAnalyzerWindowingTests {
 
     @Test("Large INSERT with VALUES keyword near cursor detects values context")
     func largeQueryInsertIntoValuesAtEnd() {
-        let padding = String(repeating: "x", count: 4000)
+        let padding = String(repeating: "x", count: 4_000)
         let query = "INSERT INTO users (\(padding)) VALUES ('a', 'b'), "
         let context = analyzer.analyze(query: query, cursorPosition: query.count)
         #expect(context.clauseType == .values)
@@ -85,7 +85,7 @@ struct SQLContextAnalyzerWindowingTests {
 
     @Test("Large query with SELECT and many columns, cursor at end")
     func largeQuerySelectManyColumns() {
-        let columns = (1...600).map { "col\($0)" }.joined(separator: ", ")
+        let columns = (1 ... 600).map { "col\($0)" }.joined(separator: ", ")
         let query = "SELECT \(columns), "
         let context = analyzer.analyze(query: query, cursorPosition: query.count)
         #expect(context.clauseType == .select)
@@ -133,7 +133,7 @@ struct SQLContextAnalyzerWindowingTests {
 
     @Test("HAVING clause after large GROUP BY expression")
     func havingAfterLargeGroupBy() {
-        let columns = (1...500).map { "col\($0)" }.joined(separator: ", ")
+        let columns = (1 ... 500).map { "col\($0)" }.joined(separator: ", ")
         let query = "SELECT \(columns) FROM data GROUP BY \(columns) HAVING "
         let context = analyzer.analyze(query: query, cursorPosition: query.count)
         #expect(context.clauseType == .having)

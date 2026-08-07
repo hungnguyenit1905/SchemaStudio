@@ -75,14 +75,14 @@ enum NavicatCipher {
         var output = [UInt8]()
         output.reserveCapacity(bytes.count)
 
-        for blockIndex in 0..<fullBlocks {
+        for blockIndex in 0 ..< fullBlocks {
             let start = blockIndex * blockSize
-            let block = Array(bytes[start..<start + blockSize])
+            let block = Array(bytes[start ..< start + blockSize])
             guard let decrypted = blowfishECB(block, operation: kCCDecrypt) else { return nil }
-            for offset in 0..<blockSize {
+            for offset in 0 ..< blockSize {
                 output.append(decrypted[offset] ^ vector[offset])
             }
-            for offset in 0..<blockSize {
+            for offset in 0 ..< blockSize {
                 vector[offset] ^= block[offset]
             }
         }
@@ -91,7 +91,7 @@ enum NavicatCipher {
         if remainder > 0 {
             guard let keystream = blowfishECB(vector, operation: kCCEncrypt) else { return nil }
             let tailStart = fullBlocks * blockSize
-            for offset in 0..<remainder {
+            for offset in 0 ..< remainder {
                 output.append(bytes[tailStart + offset] ^ keystream[offset])
             }
         }
@@ -124,7 +124,11 @@ enum NavicatCipher {
         var hash = Data(count: Int(CC_SHA1_DIGEST_LENGTH))
         hash.withUnsafeMutableBytes { hashBytes in
             data.withUnsafeBytes { dataBytes in
-                _ = CC_SHA1(dataBytes.baseAddress, CC_LONG(data.count), hashBytes.bindMemory(to: UInt8.self).baseAddress)
+                _ = CC_SHA1(
+                    dataBytes.baseAddress,
+                    CC_LONG(data.count),
+                    hashBytes.bindMemory(to: UInt8.self).baseAddress
+                )
             }
         }
         return hash
@@ -138,7 +142,7 @@ private extension Data {
         var index = hex.startIndex
         while index < hex.endIndex {
             let next = hex.index(index, offsetBy: 2)
-            guard let byte = UInt8(hex[index..<next], radix: 16) else { return nil }
+            guard let byte = UInt8(hex[index ..< next], radix: 16) else { return nil }
             data.append(byte)
             index = next
         }

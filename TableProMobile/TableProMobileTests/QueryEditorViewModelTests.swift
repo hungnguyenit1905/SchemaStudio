@@ -1,13 +1,12 @@
 import Foundation
-import Testing
 import TableProDatabase
-import TableProModels
 @testable import TableProMobile
+import TableProModels
+import Testing
 
 @MainActor
 @Suite("QueryEditorViewModel")
 struct QueryEditorViewModelTests {
-
     private func makeColumns() -> [ColumnInfo] {
         [ColumnInfo(name: "id", typeName: "INT", isPrimaryKey: true, isNullable: false, ordinalPosition: 0)]
     }
@@ -15,7 +14,7 @@ struct QueryEditorViewModelTests {
     @Test("run caps a large result and keeps the first rows")
     func runCapsAndKeepsHead() async {
         let driver = MockDatabaseDriver()
-        let rows = (0..<10).map { ["\($0)"] }
+        let rows = (0 ..< 10).map { ["\($0)"] }
         driver.scriptedExecuteResults = [
             .success(QueryResult(columns: makeColumns(), rows: rows, rowsAffected: 0, executionTime: 0))
         ]

@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("SSH Config Parser")
@@ -638,9 +638,11 @@ struct SSHConfigParserTests {
         defer { try? FileManager.default.removeItem(at: tempDir) }
 
         try "Host alpha\n    HostName alpha.com".write(
-            to: configDir.appendingPathComponent("a.conf"), atomically: true, encoding: .utf8)
+            to: configDir.appendingPathComponent("a.conf"), atomically: true, encoding: .utf8
+        )
         try "Host beta\n    HostName beta.com".write(
-            to: configDir.appendingPathComponent("b.conf"), atomically: true, encoding: .utf8)
+            to: configDir.appendingPathComponent("b.conf"), atomically: true, encoding: .utf8
+        )
 
         let mainContent = "Include \(configDir.path(percentEncoded: false))/*"
         let mainFile = tempDir.appendingPathComponent("config")
@@ -663,9 +665,11 @@ struct SSHConfigParserTests {
         let fileB = tempDir.appendingPathComponent("b.conf")
 
         try "Include \(fileB.path(percentEncoded: false))\n\nHost from-a\n    HostName a.com".write(
-            to: fileA, atomically: true, encoding: .utf8)
+            to: fileA, atomically: true, encoding: .utf8
+        )
         try "Include \(fileA.path(percentEncoded: false))\n\nHost from-b\n    HostName b.com".write(
-            to: fileB, atomically: true, encoding: .utf8)
+            to: fileB, atomically: true, encoding: .utf8
+        )
 
         let result = SSHConfigParser.parse(path: fileA.path(percentEncoded: false))
         // Should include entries from both files without infinite loop

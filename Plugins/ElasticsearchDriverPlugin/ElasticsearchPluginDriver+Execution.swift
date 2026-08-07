@@ -59,10 +59,20 @@ extension ElasticsearchPluginDriver {
         Self.logger.debug("""
         executeSearch index=\(parsed.index, privacy: .public) from=\(parsed.from) size=\(parsed.size) \
         logic=\(parsed.logicMode, privacy: .public) \
-        filters=\(parsed.filters.map { "\($0.column) \($0.op) \($0.value)" }.joined(separator: " | "), privacy: .public) \
-        sorts=\(parsed.sorts.map { "\($0.column) \($0.ascending ? "asc" : "desc")" }.joined(separator: " | "), privacy: .public) \
+        filters=\(
+            parsed.filters.map { "\($0.column) \($0.op) \($0.value)" }.joined(separator: " | "),
+            privacy: .public
+        ) \
+        sorts=\(
+            parsed.sorts.map { "\($0.column) \($0.ascending ? "asc" : "desc")" }.joined(separator: " | "),
+            privacy: .public
+        ) \
         fieldInfoCount=\(fields.count) \
-        fields=\(fields.map { "\($0.key):\($0.value.type)\($0.value.hasKeywordSubfield ? "+kw" : "")" }.sorted().joined(separator: ","), privacy: .public)
+        fields=\(
+            fields.map { "\($0.key):\($0.value.type)\($0.value.hasKeywordSubfield ? "+kw" : "")" }.sorted()
+                .joined(separator: ","),
+            privacy: .public
+        )
         """)
 
         let hits = try await fetchHits(index: parsed.index, parsed: parsed, fields: fields, conn: conn)
@@ -81,7 +91,8 @@ extension ElasticsearchPluginDriver {
                 for: parsed, fields: fields, size: parsed.size, caseInsensitive: supportsCaseInsensitiveSearch
             )
             body["from"] = parsed.from
-            Self.logger.debug("POST /\(index, privacy: .public)/_search body=\(Self.jsonString(body), privacy: .public)")
+            Self.logger
+                .debug("POST /\(index, privacy: .public)/_search body=\(Self.jsonString(body), privacy: .public)")
             let response = try await conn.search(index: index, body: body)
             let hits = extractHits(response)
             Self.logger.debug("_search returned \(hits.count) hit(s) for index=\(index, privacy: .public)")
@@ -155,7 +166,7 @@ extension ElasticsearchPluginDriver {
         }
 
         let response = try await conn.request(method: request.method, path: request.path, body: request.body)
-        guard (200..<300).contains(response.statusCode) else {
+        guard (200 ..< 300).contains(response.statusCode) else {
             throw mapWriteError(response)
         }
 
@@ -183,7 +194,7 @@ extension ElasticsearchPluginDriver {
         }
 
         let response = try await conn.request(method: request.method, path: request.path, body: request.body)
-        guard (200..<300).contains(response.statusCode) else {
+        guard (200 ..< 300).contains(response.statusCode) else {
             throw mapWriteError(response)
         }
 
@@ -268,16 +279,14 @@ extension ElasticsearchPluginDriver {
     static func jsonString(_ object: [String: Any]) -> String {
         guard JSONSerialization.isValidJSONObject(object),
               let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]),
-              let string = String(data: data, encoding: .utf8)
-        else { return "<unserializable>" }
+              let string = String(data: data, encoding: .utf8) else { return "<unserializable>" }
         return string
     }
 
     private func extractHits(_ response: ElasticsearchResponse) -> [[String: Any]] {
         guard let json = response.json as? [String: Any],
               let hitsObject = json["hits"] as? [String: Any],
-              let hits = hitsObject["hits"] as? [[String: Any]]
-        else { return [] }
+              let hits = hitsObject["hits"] as? [[String: Any]] else { return [] }
         return hits
     }
 

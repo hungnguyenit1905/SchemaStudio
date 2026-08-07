@@ -56,8 +56,7 @@ struct ConnectionStatusView: View {
         .accessibilityLabel(connectionAccessibilityLabel)
     }
 
-    @ViewBuilder
-    private var chipSection: some View {
+    @ViewBuilder private var chipSection: some View {
         if !PluginManager.shared.supportsContainerSwitching(for: databaseType) {
             chipLabel
                 .help(staticChipTooltip)
@@ -99,7 +98,7 @@ struct ConnectionStatusView: View {
     }
 
     private var switchableChipTooltip: String {
-        let switchVerb: String = switch databaseGroupingStrategy {
+        let switchVerb = switch databaseGroupingStrategy {
         case .bySchema: String(localized: "switch schema")
         case .byDatabase, .flat, .hierarchicalSchema:
             String(format: String(localized: "switch %@"), chipKindLabel.lowercased())

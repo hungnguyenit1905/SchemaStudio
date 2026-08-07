@@ -78,7 +78,7 @@ extension DatabaseTreeOutlineCoordinator {
             let schemaKey = ConnectionSchemaKey(connectionId: connectionId, database: database, schema: schema)
             let wantSchema = searching
                 ? DatabaseTreeFilter.matches(searchText, schema)
-                    || schemaContentMatchesSearch(connectionId: connectionId, database: database, schema: schema)
+                || schemaContentMatchesSearch(connectionId: connectionId, database: database, schema: schema)
                 : windowState?.expandedTreeDatabaseSchemas.contains(schemaKey) ?? false
             setExpanded(schemaNode, wantSchema)
             if outlineView.isItemExpanded(schemaNode) {
@@ -200,8 +200,7 @@ extension DatabaseTreeOutlineCoordinator {
     private func loadExternalSchemaNames(connectionId: UUID, database: String) {
         guard let session = DatabaseManager.shared.session(for: connectionId),
               DatabaseManager.shared.browseDatabaseName(for: session.connection) == database,
-              let driver = DatabaseManager.shared.driver(for: connectionId)
-        else { return }
+              let driver = DatabaseManager.shared.driver(for: connectionId) else { return }
         Task {
             await ExternalSchemaTracker.shared.load(
                 connectionId: connectionId,

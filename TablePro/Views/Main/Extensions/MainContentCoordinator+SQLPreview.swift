@@ -63,9 +63,10 @@ extension MainContentCoordinator {
         let hasPendingTableOps = !pendingTruncates.isEmpty || !pendingDeletes.isEmpty
 
         // Check if any table operation needs FK disabled (must be outside transaction)
-        let needsDisableFK = PluginManager.shared.supportsForeignKeyDisable(for: dbType) && pendingTruncates.union(pendingDeletes).contains { tableName in
-            tableOperationOptions[tableName]?.ignoreForeignKeys == true
-        }
+        let needsDisableFK = PluginManager.shared.supportsForeignKeyDisable(for: dbType) && pendingTruncates
+            .union(pendingDeletes).contains { tableName in
+                tableOperationOptions[tableName]?.ignoreForeignKeys == true
+            }
 
         // FK disable must be FIRST, before any transaction begins
         if needsDisableFK {

@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Table Filter")
 struct TableFilterTests {
-
     @Test("Requires value returns false for isNull")
     func requiresValueIsNull() {
         #expect(FilterOperator.isNull.requiresValue == false)

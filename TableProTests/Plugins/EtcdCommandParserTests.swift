@@ -91,7 +91,8 @@ struct EtcdCommandParserGetTests {
 
     @Test("Get with all flags combined")
     func getWithAllFlags() throws {
-        let op = try EtcdCommandParser.parse("get /prefix/ --prefix --limit=100 --keys-only --order=ASCEND --sort-by=MOD")
+        let op = try EtcdCommandParser
+            .parse("get /prefix/ --prefix --limit=100 --keys-only --order=ASCEND --sort-by=MOD")
         guard case .get(let key, let prefix, let limit, let keysOnly, let sortOrder, let sortTarget) = op else {
             Issue.record("Expected .get")
             return
@@ -337,7 +338,7 @@ struct EtcdCommandParserLeaseTests {
             Issue.record("Expected .leaseRevoke, got \(op)")
             return
         }
-        #expect(leaseId == 12345)
+        #expect(leaseId == 12_345)
     }
 
     @Test("Lease revoke parses hex ID with 0x prefix")
@@ -347,7 +348,7 @@ struct EtcdCommandParserLeaseTests {
             Issue.record("Expected .leaseRevoke")
             return
         }
-        #expect(leaseId == 0x1234abcd)
+        #expect(leaseId == 0x1234_ABCD)
     }
 
     @Test("Lease revoke parses hex ID without prefix")
@@ -357,7 +358,7 @@ struct EtcdCommandParserLeaseTests {
             Issue.record("Expected .leaseRevoke")
             return
         }
-        #expect(leaseId == 0x1a2b3c)
+        #expect(leaseId == 0x1A2B3C)
     }
 
     @Test("Lease revoke missing ID throws")
@@ -374,7 +375,7 @@ struct EtcdCommandParserLeaseTests {
             Issue.record("Expected .leaseTimetolive, got \(op)")
             return
         }
-        #expect(leaseId == 12345)
+        #expect(leaseId == 12_345)
         #expect(keys == false)
     }
 
@@ -385,7 +386,7 @@ struct EtcdCommandParserLeaseTests {
             Issue.record("Expected .leaseTimetolive")
             return
         }
-        #expect(leaseId == 12345)
+        #expect(leaseId == 12_345)
         #expect(keys == true)
     }
 
@@ -859,25 +860,25 @@ struct EtcdCommandParserLeaseIdTests {
     @Test("Decimal lease ID")
     func decimalLeaseId() throws {
         let result = try EtcdCommandParser.parseLeaseId("12345")
-        #expect(result == 12345)
+        #expect(result == 12_345)
     }
 
     @Test("Hex lease ID with 0x prefix")
     func hexLeaseIdWithPrefix() throws {
         let result = try EtcdCommandParser.parseLeaseId("0x1234abcd")
-        #expect(result == 0x1234abcd)
+        #expect(result == 0x1234_ABCD)
     }
 
     @Test("Hex lease ID with 0X prefix")
     func hexLeaseIdWithUpperPrefix() throws {
         let result = try EtcdCommandParser.parseLeaseId("0X1234ABCD")
-        #expect(result == 0x1234abcd)
+        #expect(result == 0x1234_ABCD)
     }
 
     @Test("Hex lease ID without prefix (auto-detected)")
     func hexLeaseIdAutoDetected() throws {
         let result = try EtcdCommandParser.parseLeaseId("abcdef")
-        #expect(result == 0xabcdef)
+        #expect(result == 0xABCDEF)
     }
 
     @Test("Invalid lease ID throws")

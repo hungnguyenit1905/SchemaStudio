@@ -90,11 +90,11 @@ extension MongoDBConnection {
         defer { bson_destroy(filterBson) }
 
         var optsJson: [String: Any] = ["skip": skip, "limit": limit]
-        if let sort = sort, let data = sort.data(using: .utf8),
+        if let sort, let data = sort.data(using: .utf8),
            let obj = try? JSONSerialization.jsonObject(with: data) {
             optsJson["sort"] = obj
         }
-        if let projection = projection, let data = projection.data(using: .utf8),
+        if let projection, let data = projection.data(using: .utf8),
            let obj = try? JSONSerialization.jsonObject(with: data) {
             optsJson["projection"] = obj
         }

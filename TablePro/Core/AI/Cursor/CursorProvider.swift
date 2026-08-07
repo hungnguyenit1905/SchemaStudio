@@ -62,7 +62,7 @@ final class CursorProvider: ChatTransport {
     }
 
     func fetchAvailableModels() async throws -> [String] {
-        var request = URLRequest(url: try Self.url("/v1/models"))
+        var request = try URLRequest(url: Self.url("/v1/models"))
         request.timeoutInterval = AIProvider.modelListTimeout
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         let data: Data
@@ -76,8 +76,7 @@ final class CursorProvider: ChatTransport {
         guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200,
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let items = json["items"] as? [[String: Any]]
-        else {
+              let items = json["items"] as? [[String: Any]] else {
             throw AIProviderError.networkError("Failed to fetch models")
         }
         let fetched = items.compactMap { $0["id"] as? String }
@@ -86,7 +85,7 @@ final class CursorProvider: ChatTransport {
     }
 
     func testConnection() async throws -> Bool {
-        var request = URLRequest(url: try Self.url("/v1/models"))
+        var request = try URLRequest(url: Self.url("/v1/models"))
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else { return false }
@@ -104,7 +103,7 @@ final class CursorProvider: ChatTransport {
         turns: [ChatTurnWire],
         options: ChatTransportOptions
     ) async throws -> (agentID: String, runID: String) {
-        var request = URLRequest(url: try Self.url("/v1/agents"))
+        var request = try URLRequest(url: Self.url("/v1/agents"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
@@ -115,7 +114,7 @@ final class CursorProvider: ChatTransport {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AIProviderError.networkError("Invalid response")
         }
-        guard (200..<300).contains(httpResponse.statusCode) else {
+        guard (200 ..< 300).contains(httpResponse.statusCode) else {
             throw AIProviderError.mapHTTPError(
                 statusCode: httpResponse.statusCode,
                 body: String(data: data, encoding: .utf8) ?? ""
@@ -125,15 +124,14 @@ final class CursorProvider: ChatTransport {
               let agent = json["agent"] as? [String: Any],
               let agentID = agent["id"] as? String,
               let run = json["run"] as? [String: Any],
-              let runID = run["id"] as? String
-        else {
+              let runID = run["id"] as? String else {
             throw AIProviderError.networkError("Cursor did not return an agent run")
         }
         return (agentID, runID)
     }
 
     private func streamRequest(run: (agentID: String, runID: String)) throws -> URLRequest {
-        var request = URLRequest(url: try Self.url("/v1/agents/\(run.agentID)/runs/\(run.runID)/stream"))
+        var request = try URLRequest(url: Self.url("/v1/agents/\(run.agentID)/runs/\(run.runID)/stream"))
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         return request

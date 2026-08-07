@@ -66,8 +66,7 @@ extension ChatToolSpec {
     /// Returns the cleaned schema and whether the original was nullable.
     private static func stripNullableType(_ schema: JsonValue) -> (JsonValue, Bool) {
         guard case .object(var fields) = schema,
-              case .array(let typeMembers) = fields["type"]
-        else {
+              case .array(let typeMembers) = fields["type"] else {
             return (schema, false)
         }
 

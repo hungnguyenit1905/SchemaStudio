@@ -80,7 +80,10 @@ public actor MCPExchangeResponder {
             do {
                 body = try JSONEncoder().encode(fallback)
             } catch {
-                Self.logger.error("Encode internal_error envelope failed: \(error.localizedDescription, privacy: .public); using static fallback")
+                Self.logger
+                    .error(
+                        "Encode internal_error envelope failed: \(error.localizedDescription, privacy: .public); using static fallback"
+                    )
                 body = Self.staticInternalErrorEnvelope
             }
         }
@@ -101,7 +104,10 @@ public actor MCPExchangeResponder {
         do {
             data = try JSONEncoder().encode(envelope)
         } catch {
-            Self.logger.error("Encode error envelope failed: \(error.localizedDescription, privacy: .public); using static fallback")
+            Self.logger
+                .error(
+                    "Encode error envelope failed: \(error.localizedDescription, privacy: .public); using static fallback"
+                )
             data = Self.staticInternalErrorEnvelope
         }
         await sink.writeJson(data, status: error.httpStatus, sessionId: nil, extraHeaders: error.extraHeaders)
@@ -158,7 +164,10 @@ public actor MCPExchangeResponder {
         do {
             data = try JSONEncoder().encode(envelope)
         } catch {
-            Self.logger.error("Encode reject envelope failed: \(error.localizedDescription, privacy: .public); using static fallback")
+            Self.logger
+                .error(
+                    "Encode reject envelope failed: \(error.localizedDescription, privacy: .public); using static fallback"
+                )
             data = Self.staticInternalErrorEnvelope
         }
         await sink.writeJson(data, status: error.httpStatus, sessionId: nil, extraHeaders: error.extraHeaders)

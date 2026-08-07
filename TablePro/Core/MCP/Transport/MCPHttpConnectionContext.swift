@@ -59,18 +59,19 @@ actor HttpConnectionContext {
         onClosed: @escaping @Sendable () async -> Void
     ) {
         if cancelled || requestComplete { return }
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 65_536) { [weak self] content, _, isComplete, error in
-            guard let self else { return }
-            Task {
-                await self.handleReceive(
-                    content: content,
-                    isComplete: isComplete,
-                    error: error,
-                    onData: onData,
-                    onClosed: onClosed
-                )
+        connection
+            .receive(minimumIncompleteLength: 1, maximumLength: 65_536) { [weak self] content, _, isComplete, error in
+                guard let self else { return }
+                Task {
+                    await self.handleReceive(
+                        content: content,
+                        isComplete: isComplete,
+                        error: error,
+                        onData: onData,
+                        onClosed: onClosed
+                    )
+                }
             }
-        }
     }
 
     private func handleReceive(
@@ -187,7 +188,7 @@ actor HttpConnectionContext {
 
     func writeOptions204() async {
         if cancelled { return }
-        var headers: [(String, String)] = [("Connection", "close")]
+        var headers = [("Connection", "close")]
         headers.append(contentsOf: self.corsHeaders())
         let head = HttpResponseHead(status: .noContent, headers: HttpHeaders(headers))
         let payload = HttpResponseEncoder.encode(head, body: nil)
@@ -196,7 +197,7 @@ actor HttpConnectionContext {
 
     func writeNoContent() async {
         if cancelled { return }
-        var headers: [(String, String)] = [("Connection", "close")]
+        var headers = [("Connection", "close")]
         headers.append(contentsOf: self.corsHeaders())
         let head = HttpResponseHead(status: .noContent, headers: HttpHeaders(headers))
         let payload = HttpResponseEncoder.encode(head, body: nil)
@@ -205,7 +206,7 @@ actor HttpConnectionContext {
 
     func writeAccepted() async {
         if cancelled { return }
-        var headers: [(String, String)] = [("Connection", "close")]
+        var headers = [("Connection", "close")]
         headers.append(contentsOf: self.corsHeaders())
         let head = HttpResponseHead(status: .accepted, headers: HttpHeaders(headers))
         let payload = HttpResponseEncoder.encode(head, body: nil)

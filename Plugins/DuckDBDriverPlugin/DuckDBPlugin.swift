@@ -34,7 +34,10 @@ final class DuckDBPlugin: NSObject, TableProPlugin, DriverPlugin {
             defaultValue: "local",
             fieldType: .dropdown(options: [
                 ConnectionField.DropdownOption(value: "local", label: String(localized: "Local File")),
-                ConnectionField.DropdownOption(value: "remote", label: String(localized: "Remote (Quack, experimental)"))
+                ConnectionField.DropdownOption(
+                    value: "remote",
+                    label: String(localized: "Remote (Quack, experimental)")
+                )
             ]),
             section: .authentication
         ),
@@ -88,7 +91,17 @@ final class DuckDBPlugin: NSObject, TableProPlugin, DriverPlugin {
     static let systemDatabaseNames: [String] = ["information_schema", "pg_catalog"]
     static let databaseGroupingStrategy: GroupingStrategy = .flat
     static let columnTypesByCategory: [String: [String]] = [
-        "Integer": ["TINYINT", "SMALLINT", "INTEGER", "BIGINT", "HUGEINT", "UTINYINT", "USMALLINT", "UINTEGER", "UBIGINT"],
+        "Integer": [
+            "TINYINT",
+            "SMALLINT",
+            "INTEGER",
+            "BIGINT",
+            "HUGEINT",
+            "UTINYINT",
+            "USMALLINT",
+            "UINTEGER",
+            "UBIGINT"
+        ],
         "Float": ["FLOAT", "DOUBLE", "DECIMAL", "NUMERIC"],
         "String": ["VARCHAR", "TEXT", "CHAR", "BPCHAR"],
         "Date": ["DATE", "TIME", "TIMESTAMP", "TIMESTAMPTZ", "TIMESTAMP_S", "TIMESTAMP_MS", "TIMESTAMP_NS", "INTERVAL"],
@@ -174,6 +187,7 @@ final class DuckDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         defer { stateLock.unlock() }
         return _currentSchema
     }
+
     var serverVersion: String? { String(cString: duckdb_library_version()) }
     var supportsSchemas: Bool { true }
     var supportsTransactions: Bool { true }
@@ -611,7 +625,10 @@ final class DuckDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         // Try native DDL from duckdb_tables() first (preserves complex types like LIST, STRUCT, MAP)
         let nativeQuery = "SELECT sql FROM duckdb_tables() WHERE schema_name = $1 AND table_name = $2"
-        let nativeResult = try await executeParameterized(query: nativeQuery, parameters: [.text(schemaName), .text(table)])
+        let nativeResult = try await executeParameterized(
+            query: nativeQuery,
+            parameters: [.text(schemaName), .text(table)]
+        )
 
         if let firstRow = nativeResult.rows.first, let sql = firstRow[0].asText {
             var ddl = sql.hasSuffix(";") ? sql : sql + ";"
@@ -717,7 +734,7 @@ final class DuckDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func fetchSchemas() async throws -> [String] {
         let query = "SELECT schema_name FROM information_schema.schemata ORDER BY schema_name"
         if let remoteAlias {
-            let schemas = (try? await execute(query: query))?.rows.compactMap { $0[safe: 0]?.asText } ?? []
+            let schemas = await (try? execute(query: query))?.rows.compactMap { $0[safe: 0]?.asText } ?? []
             return schemas.isEmpty ? ["main"] : schemas
         }
         let result = try await execute(query: query)
@@ -875,7 +892,7 @@ final class DuckDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         if let defaultValue = col.defaultValue {
             def += " DEFAULT \(duckdbDefaultValue(defaultValue))"
         }
-        if inlinePK && col.isPrimaryKey {
+        if inlinePK, col.isPrimaryKey {
             def += " PRIMARY KEY"
         }
         return def
@@ -922,12 +939,19 @@ final class DuckDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         return "ALTER TABLE \(qt) ADD COLUMN \(colDef)"
     }
 
-    func generateModifyColumnSQL(table: String, oldColumn: PluginColumnDefinition, newColumn: PluginColumnDefinition) -> String? {
+    func generateModifyColumnSQL(
+        table: String,
+        oldColumn: PluginColumnDefinition,
+        newColumn: PluginColumnDefinition
+    ) -> String? {
         let qt = qualifiedTableName(table)
         var stmts: [String] = []
 
         if oldColumn.name != newColumn.name {
-            stmts.append("ALTER TABLE \(qt) RENAME COLUMN \(quoteIdentifier(oldColumn.name)) TO \(quoteIdentifier(newColumn.name))")
+            stmts
+                .append(
+                    "ALTER TABLE \(qt) RENAME COLUMN \(quoteIdentifier(oldColumn.name)) TO \(quoteIdentifier(newColumn.name))"
+                )
         }
 
         let colName = quoteIdentifier(newColumn.name)
@@ -943,7 +967,8 @@ final class DuckDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         if oldColumn.defaultValue != newColumn.defaultValue {
             if let defaultValue = newColumn.defaultValue {
-                stmts.append("ALTER TABLE \(qt) ALTER COLUMN \(colName) SET DEFAULT \(duckdbDefaultValue(defaultValue))")
+                stmts
+                    .append("ALTER TABLE \(qt) ALTER COLUMN \(colName) SET DEFAULT \(duckdbDefaultValue(defaultValue))")
             } else {
                 stmts.append("ALTER TABLE \(qt) ALTER COLUMN \(colName) DROP DEFAULT")
             }
@@ -972,7 +997,12 @@ final class DuckDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         "ALTER TABLE \(qualifiedTableName(table)) DROP CONSTRAINT \(quoteIdentifier(constraintName))"
     }
 
-    func generateModifyPrimaryKeySQL(table: String, oldColumns: [String], newColumns: [String], constraintName: String?) -> [String]? {
+    func generateModifyPrimaryKeySQL(
+        table: String,
+        oldColumns: [String],
+        newColumns: [String],
+        constraintName: String?
+    ) -> [String]? {
         let qt = qualifiedTableName(table)
         var stmts: [String] = []
         if !oldColumns.isEmpty {

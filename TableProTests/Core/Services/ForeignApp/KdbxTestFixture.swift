@@ -28,7 +28,7 @@ enum KdbxTestFixture {
         let streamStartBytes = randomBytes(32)
 
         let digest = sha512(protectedStreamKey)
-        var cipher = ChaCha20Cipher(key: Array(digest[0..<32]), nonce: Array(digest[32..<44]))
+        var cipher = ChaCha20Cipher(key: Array(digest[0 ..< 32]), nonce: Array(digest[32 ..< 44]))
         let protectedPassword = Data(cipher.process(Array(password.utf8))).base64EncodedString()
 
         let xml = """
@@ -68,7 +68,7 @@ enum KdbxTestFixture {
         appendField(&header, 8, protectedStreamKey)
         appendField(&header, 9, streamStartBytes)
         appendField(&header, 10, le32(3))
-        appendField(&header, 0, [0x0d, 0x0a, 0x0d, 0x0a])
+        appendField(&header, 0, [0x0D, 0x0A, 0x0D, 0x0A])
 
         return Data(header + ciphertext)
     }
@@ -103,7 +103,7 @@ enum KdbxTestFixture {
 
         var current = input
         var next = [UInt8](repeating: 0, count: 32)
-        for _ in 0..<rounds {
+        for _ in 0 ..< rounds {
             var moved = 0
             CCCryptorUpdate(cryptor, current, 32, &next, 32, &moved)
             swap(&current, &next)
@@ -157,33 +157,33 @@ enum KdbxTestFixture {
     }
 
     static func le16(_ value: UInt16) -> [UInt8] {
-        [UInt8(value & 0xff), UInt8((value >> 8) & 0xff)]
+        [UInt8(value & 0xFF), UInt8((value >> 8) & 0xFF)]
     }
 
     static func le32(_ value: UInt32) -> [UInt8] {
-        (0..<4).map { UInt8((value >> (8 * $0)) & 0xff) }
+        (0 ..< 4).map { UInt8((value >> (8 * $0)) & 0xFF) }
     }
 
     static func le64(_ value: UInt64) -> [UInt8] {
-        (0..<8).map { UInt8((value >> (8 * UInt64($0))) & 0xff) }
+        (0 ..< 8).map { UInt8((value >> (8 * UInt64($0))) & 0xFF) }
     }
 
     static func beBytes(_ value: UInt32) -> [UInt8] {
         [
-            UInt8((value >> 24) & 0xff),
-            UInt8((value >> 16) & 0xff),
-            UInt8((value >> 8) & 0xff),
-            UInt8(value & 0xff)
+            UInt8((value >> 24) & 0xFF),
+            UInt8((value >> 16) & 0xFF),
+            UInt8((value >> 8) & 0xFF),
+            UInt8(value & 0xFF)
         ]
     }
 
     // MARK: - GZIP
 
     private static func gzip(_ data: [UInt8]) -> [UInt8] {
-        var output: [UInt8] = [0x1f, 0x8b, 0x08, 0x00, 0, 0, 0, 0, 0x00, 0xff]
+        var output: [UInt8] = [0x1F, 0x8B, 0x08, 0x00, 0, 0, 0, 0, 0x00, 0xFF]
         output += rawDeflate(data)
         output += le32(crc32(data))
-        output += le32(UInt32(data.count & 0xffff_ffff))
+        output += le32(UInt32(data.count & 0xFFFF_FFFF))
         return output
     }
 
@@ -192,7 +192,13 @@ enum KdbxTestFixture {
         let destination = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
         defer { destination.deallocate() }
 
-        var stream = compression_stream(dst_ptr: destination, dst_size: bufferSize, src_ptr: destination, src_size: 0, state: nil)
+        var stream = compression_stream(
+            dst_ptr: destination,
+            dst_size: bufferSize,
+            src_ptr: destination,
+            src_size: 0,
+            state: nil
+        )
         guard compression_stream_init(&stream, COMPRESSION_STREAM_ENCODE, COMPRESSION_ZLIB) == COMPRESSION_STATUS_OK else {
             return input
         }
@@ -215,7 +221,10 @@ enum KdbxTestFixture {
                         stream.dst_size = bufferSize
                     }
                 case COMPRESSION_STATUS_END:
-                    output.append(contentsOf: UnsafeBufferPointer(start: destination, count: bufferSize - stream.dst_size))
+                    output.append(contentsOf: UnsafeBufferPointer(
+                        start: destination,
+                        count: bufferSize - stream.dst_size
+                    ))
                     return output
                 default:
                     return input
@@ -225,13 +234,13 @@ enum KdbxTestFixture {
     }
 
     private static func crc32(_ data: [UInt8]) -> UInt32 {
-        var crc: UInt32 = 0xffff_ffff
+        var crc: UInt32 = 0xFFFF_FFFF
         for byte in data {
             crc ^= UInt32(byte)
-            for _ in 0..<8 {
-                crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xedb8_8320 : crc >> 1
+            for _ in 0 ..< 8 {
+                crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB8_8320 : crc >> 1
             }
         }
-        return crc ^ 0xffff_ffff
+        return crc ^ 0xFFFF_FFFF
     }
 }

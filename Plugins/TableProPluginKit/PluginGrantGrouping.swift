@@ -86,7 +86,7 @@ public enum PluginGrantGrouping {
     }
 
     private static func targetScope(for scope: PluginPrivilegeScope) -> PluginPrivilegeScope {
-        guard case let .column(database, schema, table, _) = scope else { return scope }
+        guard case .column(let database, let schema, let table, _) = scope else { return scope }
         return .table(database: database, schema: schema, table: table)
     }
 }

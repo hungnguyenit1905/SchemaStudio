@@ -108,8 +108,7 @@ final class RegistryClient {
 
     private func loadCachedManifest() {
         guard let data = try? Data(contentsOf: manifestCacheURL),
-              let cached = try? JSONDecoder().decode(RegistryManifest.self, from: data)
-        else { return }
+              let cached = try? JSONDecoder().decode(RegistryManifest.self, from: data) else { return }
         manifest = cached
         lastFetchDate = defaults.object(forKey: Self.lastFetchKey) as? Date
     }
@@ -160,7 +159,7 @@ final class RegistryClient {
             }
 
             switch httpResponse.statusCode {
-            case 200...299:
+            case 200 ... 299:
                 let decoded = try JSONDecoder().decode(RegistryManifest.self, from: data)
 
                 if decoded.schemaVersion > Self.supportedSchemaVersion {

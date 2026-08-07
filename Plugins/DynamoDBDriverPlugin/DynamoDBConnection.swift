@@ -35,7 +35,11 @@ extension DynamoDBAttributeValue: Codable {
             self = .number(value)
         } else if let value = try container.decodeIfPresent(String.self, forKey: .b) {
             guard let data = Data(base64Encoded: value) else {
-                throw DecodingError.dataCorruptedError(forKey: .b, in: container, debugDescription: "Invalid base64 string")
+                throw DecodingError.dataCorruptedError(
+                    forKey: .b,
+                    in: container,
+                    debugDescription: "Invalid base64 string"
+                )
             }
             self = .binary(data)
         } else if let value = try container.decodeIfPresent(Bool.self, forKey: .bool) {
@@ -266,7 +270,7 @@ internal final class DynamoDBConnection: @unchecked Sendable {
 
         if let customEndpoint = config.additionalFields["awsEndpointUrl"], !customEndpoint.isEmpty {
             if customEndpoint.lowercased().hasPrefix("http://") {
-                let loopbackHosts: Set<String> = ["localhost", "127.0.0.1", "::1"]
+                let loopbackHosts: Set = ["localhost", "127.0.0.1", "::1"]
                 let isLoopback = URL(string: customEndpoint).flatMap(\.host).map {
                     loopbackHosts.contains($0.lowercased())
                 } ?? false
@@ -345,13 +349,13 @@ internal final class DynamoDBConnection: @unchecked Sendable {
         select: String? = nil
     ) async throws -> ScanResponse {
         var body: [String: Any] = ["TableName": tableName]
-        if let limit = limit {
+        if let limit {
             body["Limit"] = limit
         }
         if let startKey = exclusiveStartKey {
             body["ExclusiveStartKey"] = try encodedAttributeMap(startKey)
         }
-        if let select = select {
+        if let select {
             body["Select"] = select
         }
         return try await request(target: "DynamoDB_20120810.Scan", body: body)
@@ -366,19 +370,19 @@ internal final class DynamoDBConnection: @unchecked Sendable {
         scanIndexForward: Bool = true,
         select: String? = nil
     ) async throws -> QueryResponse {
-        var body: [String: Any] = [
+        var body: [String: Any] = try [
             "TableName": tableName,
             "KeyConditionExpression": keyConditionExpression,
-            "ExpressionAttributeValues": try encodedAttributeMap(expressionAttributeValues)
+            "ExpressionAttributeValues": encodedAttributeMap(expressionAttributeValues)
         ]
-        if let limit = limit {
+        if let limit {
             body["Limit"] = limit
         }
         if let startKey = exclusiveStartKey {
             body["ExclusiveStartKey"] = try encodedAttributeMap(startKey)
         }
         body["ScanIndexForward"] = scanIndexForward
-        if let select = select {
+        if let select {
             body["Select"] = select
         }
         return try await request(target: "DynamoDB_20120810.Query", body: body)
@@ -391,13 +395,13 @@ internal final class DynamoDBConnection: @unchecked Sendable {
         nextToken: String? = nil
     ) async throws -> ExecuteStatementResponse {
         var body: [String: Any] = ["Statement": statement]
-        if let parameters = parameters, !parameters.isEmpty {
+        if let parameters, !parameters.isEmpty {
             body["Parameters"] = parameters
         }
-        if let limit = limit {
+        if let limit {
             body["Limit"] = limit
         }
-        if let nextToken = nextToken {
+        if let nextToken {
             body["NextToken"] = nextToken
         }
         return try await request(target: "DynamoDB_20120810.ExecuteStatement", body: body)
@@ -465,20 +469,20 @@ internal final class DynamoDBConnection: @unchecked Sendable {
                 let errorType = errorResponse.__type ?? "UnknownError"
                 if errorType.contains("UnrecognizedClientException") ||
                     errorType.contains("InvalidSignatureException") ||
-                    errorType.contains("AccessDeniedException")
-                {
+                    errorType.contains("AccessDeniedException") {
                     throw DynamoDBError.authFailed(errorResponse.errorMessage)
                 }
                 throw DynamoDBError.serverError("[\(errorType)] \(errorResponse.errorMessage)")
             }
-            throw DynamoDBError.serverError("HTTP \(httpResponse.statusCode): Response body redacted (length: \(data.count))")
+            throw DynamoDBError
+                .serverError("HTTP \(httpResponse.statusCode): Response body redacted (length: \(data.count))")
         }
 
         do {
-            let decoded = try JSONDecoder().decode(T.self, from: data)
-            return decoded
+            return try JSONDecoder().decode(T.self, from: data)
         } catch {
-            Self.logger.error("Decode failed for \(target): responseLength=\(data.count), error=\(error.localizedDescription)")
+            Self.logger
+                .error("Decode failed for \(target): responseLength=\(data.count), error=\(error.localizedDescription)")
             throw DynamoDBError.invalidResponse("Failed to decode response: \(error.localizedDescription)")
         }
     }
@@ -556,8 +560,7 @@ internal final class DynamoDBConnection: @unchecked Sendable {
         let kDate = hmacSHA256(key: Data("AWS4\(secretKey)".utf8), data: Data(dateStamp.utf8))
         let kRegion = hmacSHA256(key: kDate, data: Data(region.utf8))
         let kService = hmacSHA256(key: kRegion, data: Data(service.utf8))
-        let kSigning = hmacSHA256(key: kService, data: Data("aws4_request".utf8))
-        return kSigning
+        return hmacSHA256(key: kService, data: Data("aws4_request".utf8))
     }
 
     private func hmacSHA256(key: Data, data: Data) -> Data {

@@ -146,7 +146,9 @@ internal enum SampleDatabaseLauncher {
     ) async {
         let confirmed = await AlertHelper.confirmDestructive(
             title: String(localized: "Reset Sample Database?"),
-            message: String(localized: "This discards your edits to the Chinook sample and restores the original copy."),
+            message: String(
+                localized: "This discards your edits to the Chinook sample and restores the original copy."
+            ),
             confirmButton: String(localized: "Reset Sample"),
             window: NSApp.keyWindow
         )

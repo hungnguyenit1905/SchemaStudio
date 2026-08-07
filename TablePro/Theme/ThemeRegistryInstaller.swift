@@ -15,7 +15,10 @@ import os
 internal final class ThemeRegistryInstaller {
     static let shared = ThemeRegistryInstaller()
 
-    @ObservationIgnored private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ThemeRegistryInstaller")
+    @ObservationIgnored private static let logger = Logger(
+        subsystem: "com.SchemaStudio",
+        category: "ThemeRegistryInstaller"
+    )
 
     private init() {}
 
@@ -282,8 +285,8 @@ internal final class ThemeRegistryInstaller {
         ) else { return [] }
 
         for case let fileURL as URL in enumerator {
-            if fileURL.pathExtension.lowercased() == "json" &&
-                fileURL.lastPathComponent != "registry-meta.json" {
+            if fileURL.pathExtension.lowercased() == "json",
+               fileURL.lastPathComponent != "registry-meta.json" {
                 results.append(fileURL)
             }
         }

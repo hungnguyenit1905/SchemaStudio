@@ -6,10 +6,10 @@
 //
 
 import Foundation
-import TableProPluginKit
-import SwiftUI
-import Testing
 @testable import SchemaStudio
+import SwiftUI
+import TableProPluginKit
+import Testing
 
 private final class SidebarMockClipboard: ClipboardProvider {
     var lastWrittenText: String?
@@ -76,7 +76,6 @@ private func makeSUT(
 
 @Suite("SidebarViewModel")
 struct SidebarViewModelTests {
-
     // MARK: - Batch Toggle Truncate
 
     @Test("batchToggleTruncate shows dialog for new tables")

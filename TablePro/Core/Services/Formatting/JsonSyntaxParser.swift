@@ -67,7 +67,8 @@ internal enum JsonSyntaxParser {
         return String(output)
     }
 
-    private static func decodeUnicodeEscape(_ scalars: [Unicode.Scalar], at index: inout Int, end: Int) -> Unicode.Scalar? {
+    private static func decodeUnicodeEscape(_ scalars: [Unicode.Scalar], at index: inout Int, end: Int) -> Unicode
+        .Scalar? {
         guard let high = hexValue(scalars, uAt: index, end: end) else { return nil }
         index += 4
 
@@ -85,7 +86,7 @@ internal enum JsonSyntaxParser {
     private static func hexValue(_ scalars: [Unicode.Scalar], uAt index: Int, end: Int) -> Int? {
         guard index + 4 < end else { return nil }
         var value = 0
-        for offset in 1...4 {
+        for offset in 1 ... 4 {
             guard let digit = hexDigit(scalars[index + offset]) else { return nil }
             value = value * 16 + digit
         }
@@ -227,7 +228,9 @@ internal enum JsonSyntaxParser {
 
         mutating func consumeDigits() -> Bool {
             guard index < scalars.count, isDigit(scalars[index]) else { return false }
-            while index < scalars.count, isDigit(scalars[index]) { index += 1 }
+            while index < scalars.count, isDigit(scalars[index]) {
+                index += 1
+            }
             return true
         }
 
@@ -254,7 +257,7 @@ internal enum JsonSyntaxParser {
 
         func substring(from start: Int, to end: Int) -> String {
             var view = String.UnicodeScalarView()
-            view.append(contentsOf: scalars[start..<end])
+            view.append(contentsOf: scalars[start ..< end])
             return String(view)
         }
     }

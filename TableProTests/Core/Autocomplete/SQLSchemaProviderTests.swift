@@ -208,7 +208,7 @@ struct SQLSchemaProviderTests {
     func lruEvictionOnExceedingMax() async {
         let driver = MockDatabaseDriver()
         var allTables: [TableInfo] = []
-        for i in 0..<52 {
+        for i in 0 ..< 52 {
             let name = "table_\(i)"
             allTables.append(TestFixtures.makeTableInfo(name: name))
             driver.columnsToReturn[name] = [
@@ -220,7 +220,7 @@ struct SQLSchemaProviderTests {
         let provider = SQLSchemaProvider()
         await provider.loadSchema(using: driver, connection: TestFixtures.makeConnection())
 
-        for i in 0..<52 {
+        for i in 0 ..< 52 {
             _ = await provider.getColumns(for: "table_\(i)")
         }
 
@@ -247,7 +247,7 @@ struct SQLSchemaProviderTests {
                 TestFixtures.makeColumnInfo(name: "\(name)_col", isPrimaryKey: false)
             ]
         }
-        for i in 0..<49 {
+        for i in 0 ..< 49 {
             let name = "fill_\(i)"
             driver.columnsToReturn[name] = [
                 TestFixtures.makeColumnInfo(name: "col", isPrimaryKey: false)
@@ -255,7 +255,7 @@ struct SQLSchemaProviderTests {
         }
 
         var allTables = tableNames.map { TestFixtures.makeTableInfo(name: $0) }
-        allTables += (0..<49).map { TestFixtures.makeTableInfo(name: "fill_\($0)") }
+        allTables += (0 ..< 49).map { TestFixtures.makeTableInfo(name: "fill_\($0)") }
         driver.tablesToReturn = allTables
 
         let provider = SQLSchemaProvider()
@@ -272,7 +272,7 @@ struct SQLSchemaProviderTests {
         #expect(driver.fetchColumnsCallCount == 3)
 
         // Fill cache with 49 more tables (total becomes 52, evicting 2 oldest: b then c)
-        for i in 0..<49 {
+        for i in 0 ..< 49 {
             _ = await provider.getColumns(for: "fill_\(i)")
         }
 
@@ -427,9 +427,9 @@ struct SQLSchemaProviderTests {
 
         #expect(await provider.isKnownSchema("dbt_marts"))
         #expect(await provider.isKnownSchema("DBT_MARTS"))
-        #expect(!(await provider.isKnownSchema("unknown")))
+        #expect(await !(provider.isKnownSchema("unknown")))
         #expect(await provider.isKnownDatabase("analytics_prod"))
-        #expect(!(await provider.isKnownDatabase("dbt_marts")))
+        #expect(await !(provider.isKnownDatabase("dbt_marts")))
     }
 
     @Test("namespaceCompletionItems lists databases and schemas")

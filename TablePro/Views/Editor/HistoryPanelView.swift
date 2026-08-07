@@ -14,6 +14,7 @@ struct HistoryPanelView: View {
     private static let dateFilterKey = "HistoryPanel.dateFilter"
 
     let connectionId: UUID
+
     // MARK: - State
 
     @State private var selectedEntryID: UUID?
@@ -94,7 +95,11 @@ private extension HistoryPanelView {
                     .frame(width: 120)
                 }
 
-                NativeSearchField(text: $searchText, placeholder: String(localized: "Search queries..."), controlSize: .small)
+                NativeSearchField(
+                    text: $searchText,
+                    placeholder: String(localized: "Search queries..."),
+                    controlSize: .small
+                )
             }
             .padding(12)
 
@@ -211,8 +216,7 @@ private extension HistoryPanelView {
 // MARK: - Query Preview (Right Pane)
 
 private extension HistoryPanelView {
-    @ViewBuilder
-    var queryPreview: some View {
+    @ViewBuilder var queryPreview: some View {
         if let entry = selectedEntry {
             VStack(spacing: 0) {
                 HighlightedSQLTextView(

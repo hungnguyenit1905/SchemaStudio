@@ -6,9 +6,9 @@
 //  the repeat command (.), and the line undo (U).
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineUndoRepeatTests: XCTestCase {
@@ -28,7 +28,9 @@ final class VimEngineUndoRepeatTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {
@@ -75,8 +77,11 @@ final class VimEngineUndoRepeatTests: XCTestCase {
         keys("x") // delete 'h'
         keys("x") // delete 'e'
         key("U", shift: true)
-        XCTAssertEqual(buffer.undoCallCount, 2,
-            "U should restore the original line — implemented via repeated undo")
+        XCTAssertEqual(
+            buffer.undoCallCount,
+            2,
+            "U should restore the original line — implemented via repeated undo"
+        )
     }
 
     // MARK: - . (Repeat Last Change)
@@ -87,8 +92,11 @@ final class VimEngineUndoRepeatTests: XCTestCase {
         keys("dw") // delete "hello "
         XCTAssertEqual(buffer.text, "world\nsecond line\nthird line\n")
         keys(".")
-        XCTAssertEqual(buffer.text, "\nsecond line\nthird line\n",
-            ". should repeat the last change (delete word)")
+        XCTAssertEqual(
+            buffer.text,
+            "\nsecond line\nthird line\n",
+            ". should repeat the last change (delete word)"
+        )
     }
 
     func testDotRepeatsXDelete() {
@@ -96,8 +104,11 @@ final class VimEngineUndoRepeatTests: XCTestCase {
         keys("x")
         XCTAssertEqual(buffer.text, "ello world\nsecond line\nthird line\n")
         keys(".")
-        XCTAssertEqual(buffer.text, "llo world\nsecond line\nthird line\n",
-            ". should repeat the last delete")
+        XCTAssertEqual(
+            buffer.text,
+            "llo world\nsecond line\nthird line\n",
+            ". should repeat the last delete"
+        )
     }
 
     func testDotRepeatsWithExplicitCount() {
@@ -107,8 +118,11 @@ final class VimEngineUndoRepeatTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("dw") // delete "a "
         keys("3.") // delete 3 more words
-        XCTAssertEqual(buffer.text, "e f\n",
-            "3. should repeat the last change three times")
+        XCTAssertEqual(
+            buffer.text,
+            "e f\n",
+            "3. should repeat the last change three times"
+        )
     }
 
     func testDotDoesNotRepeatMotions() {

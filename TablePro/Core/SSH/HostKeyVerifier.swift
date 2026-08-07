@@ -92,13 +92,13 @@ internal enum HostKeyVerifier {
         let title = String(localized: "Unknown SSH Host")
         let message = String(
             format: String(localized: """
-                The authenticity of host '%@' can't be established.
+            The authenticity of host '%@' can't be established.
 
-                %@ key fingerprint is:
-                %@
+            %@ key fingerprint is:
+            %@
 
-                Are you sure you want to continue connecting?
-                """),
+            Are you sure you want to continue connecting?
+            """),
             hostDisplay,
             keyType,
             fingerprint
@@ -132,13 +132,13 @@ internal enum HostKeyVerifier {
         let title = String(localized: "SSH Host Key Changed")
         let message = String(
             format: String(localized: """
-                WARNING: The host key for '%@' has changed!
+            WARNING: The host key for '%@' has changed!
 
-                This could mean someone is doing something malicious, or the server was reinstalled.
+            This could mean someone is doing something malicious, or the server was reinstalled.
 
-                Previous fingerprint: %@
-                Current fingerprint: %@
-                """),
+            Previous fingerprint: %@
+            Current fingerprint: %@
+            """),
             hostDisplay,
             expected,
             actual

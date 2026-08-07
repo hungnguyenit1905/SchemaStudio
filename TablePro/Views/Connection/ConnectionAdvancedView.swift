@@ -47,9 +47,11 @@ struct ConnectionAdvancedView: View {
             } header: {
                 Text(String(localized: "Startup Commands"))
             } footer: {
-                Text("SQL commands to run after connecting, e.g. SET time_zone = 'Asia/Ho_Chi_Minh'. One per line or separated by semicolons.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "SQL commands to run after connecting, e.g. SET time_zone = 'Asia/Ho_Chi_Minh'. One per line or separated by semicolons."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             Section {
@@ -86,11 +88,21 @@ struct ConnectionAdvancedView: View {
             } footer: {
                 VStack(alignment: .leading, spacing: 4) {
                     if AppSettingsManager.shared.ai.enabled {
-                        // swiftlint:disable:next line_length
-                        Text(String(localized: "AI Policy controls in-app AI agents. External Clients controls Raycast, Cursor, Claude Desktop, and other MCP clients. Effective scope is the minimum of the requesting token's scope and the External Clients level."))
+                        // swiftlint:disable line_length
+                        Text(
+                            String(
+                                localized: "AI Policy controls in-app AI agents. External Clients controls Raycast, Cursor, Claude Desktop, and other MCP clients. Effective scope is the minimum of the requesting token's scope and the External Clients level."
+                            )
+                        )
+                        // swiftlint:enable line_length
                     } else {
-                        // swiftlint:disable:next line_length
-                        Text(String(localized: "Controls how external clients (Raycast, Cursor, Claude Desktop) access this connection. Tokens cannot exceed this level even with full-access scope."))
+                        // swiftlint:disable line_length
+                        Text(
+                            String(
+                                localized: "Controls how external clients (Raycast, Cursor, Claude Desktop) access this connection. Tokens cannot exceed this level even with full-access scope."
+                            )
+                        )
+                        // swiftlint:enable line_length
                     }
                 }
                 .font(.caption)

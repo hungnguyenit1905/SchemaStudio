@@ -6,13 +6,12 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
 import TableProPluginKit
+import Testing
 
 @Suite("ClickHouse Dialect")
 struct ClickHouseDialectTests {
-
     @Test("SQLDialectDescriptor with ClickHouse-style config")
     func testClickHouseDialectDescriptor() {
         let descriptor = SQLDialectDescriptor(

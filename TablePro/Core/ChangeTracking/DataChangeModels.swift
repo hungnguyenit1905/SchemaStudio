@@ -64,13 +64,13 @@ struct RowChangeKey: Hashable {
 
 enum UndoAction {
     case cellEdit(
-            rowIndex: Int,
-            columnIndex: Int,
-            columnName: String,
-            previousValue: PluginCellValue,
-            newValue: PluginCellValue,
-            originalRow: [PluginCellValue]?
-         )
+        rowIndex: Int,
+        columnIndex: Int,
+        columnName: String,
+        previousValue: PluginCellValue,
+        newValue: PluginCellValue,
+        originalRow: [PluginCellValue]?
+    )
     case rowInsertion(rowIndex: Int)
     case rowDeletion(rowIndex: Int, originalRow: [PluginCellValue])
     case batchRowDeletion(rows: [(rowIndex: Int, originalRow: [PluginCellValue])])

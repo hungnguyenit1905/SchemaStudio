@@ -171,7 +171,7 @@ struct TabRoutingTests {
 
         // Both windows belong to the same connection, which is exactly the case
         // where picking out of the instance-keyed registry would be arbitrary.
-        let repeated = (0..<20).map { _ in
+        let repeated = (0 ..< 20).map { _ in
             SidebarCoordinatorResolver.choice(
                 target: target, keyWindowConnectionId: target, hostConnectionId: target
             )

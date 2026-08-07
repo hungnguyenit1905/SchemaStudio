@@ -16,6 +16,7 @@ public final class CSVInspectorPlugin: NSObject, TableProPlugin, DocumentInspect
             "public.tab-separated-values-text"
         ]
     }
+
     public static var supportedFileExtensions: [String] { ["csv", "tsv"] }
     public static var canEdit: Bool { true }
     public static var iconName: String { "tablecells" }

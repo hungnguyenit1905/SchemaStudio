@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("GeminiProvider stream parser")
@@ -120,7 +120,7 @@ struct GeminiProviderParserTests {
 
     @Test("encodeArgsToJSONString returns {} on invalid input")
     func argsFallback() {
-        let invalid: Any = NSObject()  // not JSON-serializable
+        let invalid: Any = NSObject() // not JSON-serializable
         #expect(GeminiProvider.encodeArgsToJSONString(invalid) == "{}")
     }
 

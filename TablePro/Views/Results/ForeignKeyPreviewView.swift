@@ -90,8 +90,7 @@ struct ForeignKeyPreviewView: View {
 
     // MARK: - Content
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         if cellValue == nil {
             Text("NULL — no referenced row")
                 .foregroundStyle(.secondary)

@@ -20,8 +20,7 @@ enum PgpassReader {
     static func filePermissionsAreValid() -> Bool {
         let path = NSHomeDirectory() + "/.pgpass"
         guard let attrs = try? FileManager.default.attributesOfItem(atPath: path),
-              let posixPerms = attrs[.posixPermissions] as? Int
-        else {
+              let posixPerms = attrs[.posixPermissions] as? Int else {
             return false
         }
         return posixPerms == 0o600
@@ -51,11 +50,10 @@ enum PgpassReader {
             let fields = parseFields(from: trimmed)
             guard fields.count == 5 else { continue }
 
-            if matches(fields[0], value: host)
-                && matches(fields[1], value: String(port))
-                && matches(fields[2], value: database)
-                && matches(fields[3], value: username)
-            {
+            if matches(fields[0], value: host),
+               matches(fields[1], value: String(port)),
+               matches(fields[2], value: database),
+               matches(fields[3], value: username) {
                 return fields[4]
             }
         }

@@ -19,7 +19,7 @@ extension VimEngine {
         let lineRange = buffer.lineRange(forOffset: pos)
         let lineEnd = lineRange.location + lineRange.length
         let contentEnd: Int
-        if lineEnd > lineRange.location && lineEnd <= buffer.length && buffer.character(at: lineEnd - 1) == 0x0A {
+        if lineEnd > lineRange.location, lineEnd <= buffer.length, buffer.character(at: lineEnd - 1) == 0x0A {
             contentEnd = lineEnd - 1
         } else {
             contentEnd = lineEnd
@@ -100,7 +100,7 @@ extension VimEngine {
         let lineEnd = lineRange.location + lineRange.length
         while target < lineEnd {
             let ch = buffer.character(at: target)
-            if ch != 0x20 && ch != 0x09 && ch != 0x0A { break }
+            if ch != 0x20, ch != 0x09, ch != 0x0A { break }
             target += 1
         }
         if target >= lineEnd || buffer.character(at: target) == 0x0A {
@@ -118,10 +118,10 @@ extension VimEngine {
     func wordForward(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
         let isOperator = pendingOperator != nil
-        for i in 0..<count {
+        for i in 0 ..< count {
             let prev = pos
             let next = buffer.wordBoundary(forward: true, from: pos)
-            if isOperator && i == count - 1 {
+            if isOperator, i == count - 1 {
                 let prevLineRange = buffer.lineRange(forOffset: prev)
                 let nextLineRange = buffer.lineRange(forOffset: min(next, buffer.length))
                 if prevLineRange.location != nextLineRange.location {
@@ -148,7 +148,7 @@ extension VimEngine {
             && lineEnd <= buffer.length
             && buffer.character(at: lineEnd - 1) == 0x0A
         let contentEnd = endsInNewline ? lineEnd - 1 : lineEnd
-        if pos >= contentEnd && contentEnd > lineRange.location {
+        if pos >= contentEnd, contentEnd > lineRange.location {
             pos = contentEnd - 1
         }
         return pos
@@ -156,7 +156,7 @@ extension VimEngine {
 
     func wordBackward(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
-        for _ in 0..<count {
+        for _ in 0 ..< count {
             pos = buffer.wordBoundary(forward: false, from: pos)
         }
         buffer.setSelectedRange(NSRange(location: pos, length: 0))
@@ -164,7 +164,7 @@ extension VimEngine {
 
     func wordEndMotion(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
-        for _ in 0..<count {
+        for _ in 0 ..< count {
             pos = buffer.wordEnd(from: pos)
         }
         buffer.setSelectedRange(NSRange(location: pos, length: 0))
@@ -173,32 +173,42 @@ extension VimEngine {
     func bigWordForward(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
         let isOperator = pendingOperator != nil
-        for _ in 0..<count { pos = buffer.bigWordBoundary(forward: true, from: pos) }
+        for _ in 0 ..< count {
+            pos = buffer.bigWordBoundary(forward: true, from: pos)
+        }
         if !isOperator { pos = clampToContentPosition(pos, in: buffer) }
         buffer.setSelectedRange(NSRange(location: pos, length: 0))
     }
 
     func bigWordBackward(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
-        for _ in 0..<count { pos = buffer.bigWordBoundary(forward: false, from: pos) }
+        for _ in 0 ..< count {
+            pos = buffer.bigWordBoundary(forward: false, from: pos)
+        }
         buffer.setSelectedRange(NSRange(location: pos, length: 0))
     }
 
     func bigWordEndMotion(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
-        for _ in 0..<count { pos = buffer.bigWordEnd(from: pos) }
+        for _ in 0 ..< count {
+            pos = buffer.bigWordEnd(from: pos)
+        }
         buffer.setSelectedRange(NSRange(location: pos, length: 0))
     }
 
     func wordEndBackwardMotion(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
-        for _ in 0..<count { pos = buffer.wordEndBackward(from: pos) }
+        for _ in 0 ..< count {
+            pos = buffer.wordEndBackward(from: pos)
+        }
         buffer.setSelectedRange(NSRange(location: pos, length: 0))
     }
 
     func bigWordEndBackwardMotion(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
-        for _ in 0..<count { pos = buffer.bigWordEndBackward(from: pos) }
+        for _ in 0 ..< count {
+            pos = buffer.bigWordEndBackward(from: pos)
+        }
         buffer.setSelectedRange(NSRange(location: pos, length: 0))
     }
 
@@ -249,7 +259,7 @@ extension VimEngine {
         if request.forward {
             let initial = request.till ? pos + 2 : pos + 1
             var scanStart = min(initial, contentEnd)
-            for _ in 0..<count {
+            for _ in 0 ..< count {
                 resolved = nil
                 var idx = scanStart
                 while idx < contentEnd {
@@ -265,7 +275,7 @@ extension VimEngine {
         } else {
             let initial = request.till ? pos - 2 : pos - 1
             var scanStart = initial
-            for _ in 0..<count {
+            for _ in 0 ..< count {
                 resolved = nil
                 var idx = scanStart
                 while idx >= lineRange.location {
@@ -292,7 +302,7 @@ extension VimEngine {
 
     func sentenceForward(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
-        for _ in 0..<count {
+        for _ in 0 ..< count {
             pos = nextSentenceStart(after: pos, in: buffer)
         }
         buffer.setSelectedRange(NSRange(location: pos, length: 0))
@@ -300,7 +310,7 @@ extension VimEngine {
 
     func sentenceBackward(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
-        for _ in 0..<count {
+        for _ in 0 ..< count {
             pos = previousSentenceStart(before: pos, in: buffer)
         }
         buffer.setSelectedRange(NSRange(location: pos, length: 0))
@@ -313,7 +323,7 @@ extension VimEngine {
             let nextCh = buffer.character(at: i + 1)
             let endsSentence = ch == 0x2E || ch == 0x21 || ch == 0x3F
             let followedByBoundary = nextCh == 0x20 || nextCh == 0x09 || nextCh == 0x0A
-            if endsSentence && followedByBoundary {
+            if endsSentence, followedByBoundary {
                 var j = i + 1
                 while j < buffer.length {
                     let cj = buffer.character(at: j)
@@ -334,7 +344,7 @@ extension VimEngine {
                 let nextCh = buffer.character(at: i + 1)
                 let endsSentence = ch == 0x2E || ch == 0x21 || ch == 0x3F
                 let followedByBoundary = nextCh == 0x20 || nextCh == 0x09 || nextCh == 0x0A
-                if endsSentence && followedByBoundary {
+                if endsSentence, followedByBoundary {
                     var j = i + 1
                     while j < buffer.length {
                         let cj = buffer.character(at: j)
@@ -350,7 +360,7 @@ extension VimEngine {
 
     func paragraphForward(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
-        for _ in 0..<count {
+        for _ in 0 ..< count {
             pos = nextParagraphBoundary(after: pos, in: buffer)
         }
         buffer.setSelectedRange(NSRange(location: pos, length: 0))
@@ -358,7 +368,7 @@ extension VimEngine {
 
     func paragraphBackward(_ count: Int, in buffer: VimTextBuffer) {
         var pos = buffer.selectedRange().location
-        for _ in 0..<count {
+        for _ in 0 ..< count {
             pos = previousParagraphBoundary(before: pos, in: buffer)
         }
         buffer.setSelectedRange(NSRange(location: pos, length: 0))
@@ -395,7 +405,7 @@ extension VimEngine {
         var line = originLine + 1
         while line < buffer.lineCount {
             let off = buffer.offset(forLine: line, column: 0)
-            if off < buffer.length && buffer.character(at: off) == 0x7B {
+            if off < buffer.length, buffer.character(at: off) == 0x7B {
                 buffer.setSelectedRange(NSRange(location: off, length: 0))
                 return
             }
@@ -410,7 +420,7 @@ extension VimEngine {
         var line = originLine - 1
         while line >= 0 {
             let off = buffer.offset(forLine: line, column: 0)
-            if off < buffer.length && buffer.character(at: off) == 0x7B {
+            if off < buffer.length, buffer.character(at: off) == 0x7B {
                 buffer.setSelectedRange(NSRange(location: off, length: 0))
                 return
             }

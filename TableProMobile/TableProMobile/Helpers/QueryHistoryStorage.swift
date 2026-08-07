@@ -28,7 +28,7 @@ struct QueryHistoryStorage {
 
     func save(_ item: QueryHistoryItem) {
         var items = loadAll()
-        if items.last?.query == item.query && items.last?.connectionId == item.connectionId {
+        if items.last?.query == item.query, items.last?.connectionId == item.connectionId {
             return
         }
         items.append(item)

@@ -192,7 +192,7 @@ enum MCPAuditLogger {
             """
         )
 
-        var detailParts: [String] = ["tool=\(toolName)"]
+        var detailParts = ["tool=\(toolName)"]
         if let errorMessage {
             detailParts.append("error=\(truncate(errorMessage, to: 256))")
         }
@@ -223,7 +223,7 @@ enum MCPAuditLogger {
             """
         )
 
-        var detailParts: [String] = ["uri=\(uri)"]
+        var detailParts = ["uri=\(uri)"]
         if let errorMessage {
             detailParts.append("error=\(truncate(errorMessage, to: 256))")
         }

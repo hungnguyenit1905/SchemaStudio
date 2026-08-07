@@ -14,8 +14,7 @@ extension MainContentView {
 
     func loadTableMetadataIfNeeded() async {
         guard let tableName = currentTab?.tableContext.tableName,
-            coordinator.tableMetadata?.tableName != tableName
-        else { return }
+              coordinator.tableMetadata?.tableName != tableName else { return }
         await coordinator.loadTableMetadata(tableName: tableName)
     }
 
@@ -26,7 +25,7 @@ extension MainContentView {
             if let trigger = coordinator.pendingLoadTrigger {
                 let hasPendingEdits =
                     changeManager.hasChanges
-                    || (tabManager.selectedTab?.pendingChanges.hasChanges ?? false)
+                        || (tabManager.selectedTab?.pendingChanges.hasChanges ?? false)
                 if !hasPendingEdits {
                     coordinator.pendingLoadTrigger = nil
                     consumePendingLoad(trigger: trigger)
@@ -89,8 +88,7 @@ extension MainContentView {
     private func cachedQueryResultsSummary() -> String? {
         guard let tab = currentTab else { return nil }
         if let cache = queryResultsSummaryCache,
-            cache.tabId == tab.id, cache.version == tab.schemaVersion
-        {
+           cache.tabId == tab.id, cache.version == tab.schemaVersion {
             return cache.summary
         }
         let summary = buildQueryResultsSummary()

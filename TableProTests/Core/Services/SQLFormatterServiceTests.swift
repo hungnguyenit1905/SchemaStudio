@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("SQL Formatter Service")
@@ -116,7 +116,10 @@ struct SQLFormatterServiceTests {
 
     @Test("Multiple JOINs")
     func multipleJoins() throws {
-        let result = try format("select * from users u inner join roles r on u.role_id = r.id left join teams t on u.team_id = t.id")
+        let result =
+            try format(
+                "select * from users u inner join roles r on u.role_id = r.id left join teams t on u.team_id = t.id"
+            )
         #expect(result == """
         SELECT *
         FROM users u
@@ -160,7 +163,10 @@ struct SQLFormatterServiceTests {
 
     @Test("CASE WHEN THEN ELSE END")
     func caseExpression() throws {
-        let result = try format("select id, case when status = 'active' then 'yes' when status = 'inactive' then 'no' else 'unknown' end as label from users")
+        let result =
+            try format(
+                "select id, case when status = 'active' then 'yes' when status = 'inactive' then 'no' else 'unknown' end as label from users"
+            )
         #expect(result == """
         SELECT id,
                CASE
@@ -176,7 +182,8 @@ struct SQLFormatterServiceTests {
 
     @Test("WITH / CTE")
     func cte() throws {
-        let result = try format("with active_users as (select * from users where active = true) select * from active_users")
+        let result =
+            try format("with active_users as (select * from users where active = true) select * from active_users")
         #expect(result == """
         WITH active_users AS (
           SELECT *
@@ -244,7 +251,8 @@ struct SQLFormatterServiceTests {
 
     @Test("CREATE TABLE with columns")
     func createTable() throws {
-        let result = try format("create table users (id int primary key, name varchar(255) not null, email varchar(255))")
+        let result =
+            try format("create table users (id int primary key, name varchar(255) not null, email varchar(255))")
         #expect(result == """
         CREATE TABLE users (
           id int PRIMARY KEY,
@@ -365,7 +373,7 @@ struct SQLFormatterServiceTests {
     @Test("Invalid cursor position throws")
     func invalidCursorThrows() {
         #expect(throws: SQLFormatterError.self) {
-            try formatter.format("select 1", dialect: .mysql, cursorOffset: 1000)
+            try formatter.format("select 1", dialect: .mysql, cursorOffset: 1_000)
         }
     }
 
@@ -431,7 +439,10 @@ struct SQLFormatterServiceTests {
 
     @Test("Window function OVER(PARTITION BY...ORDER BY) stays inline")
     func windowFunction() throws {
-        let result = try format("select *, row_number() over (partition by department order by salary desc) as rank from employees")
+        let result =
+            try format(
+                "select *, row_number() over (partition by department order by salary desc) as rank from employees"
+            )
         #expect(result == """
         SELECT *,
                row_number() OVER(PARTITION BY department ORDER BY salary DESC) AS rank
@@ -441,7 +452,10 @@ struct SQLFormatterServiceTests {
 
     @Test("Window frame ROWS BETWEEN stays inline")
     func windowFrameInline() throws {
-        let result = try format("select sum(x) over (order by id rows between unbounded preceding and current row) as running from t")
+        let result =
+            try format(
+                "select sum(x) over (order by id rows between unbounded preceding and current row) as running from t"
+            )
         let lines = result.split(separator: "\n", omittingEmptySubsequences: false)
         #expect(lines.count == 2)
         #expect(lines[0].contains("ROWS BETWEEN"))

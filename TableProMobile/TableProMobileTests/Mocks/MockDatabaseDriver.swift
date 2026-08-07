@@ -20,7 +20,7 @@ final class MockDatabaseDriver: DatabaseDriver, @unchecked Sendable {
     private(set) var didRollbackTransaction = false
 
     var supportsSchemas: Bool = false
-    var currentSchema: String? = nil
+    var currentSchema: String?
     var supportsTransactions: Bool = true
     var serverVersion: String? = "Mock 1.0"
 

@@ -27,6 +27,7 @@ final class ConnectionCoordinator {
             UserDefaults.standard.set(selectedTab.rawValue, forKey: "lastTab.\(connection.id.uuidString)")
         }
     }
+
     var pendingQuery: String?
     var tablesPath = NavigationPath()
     var showingEditSheet = false
@@ -49,13 +50,13 @@ final class ConnectionCoordinator {
 
     var supportsDatabaseSwitching: Bool {
         connection.type == .mysql || connection.type == .mariadb ||
-        connection.type == .postgresql || connection.type == .redshift ||
-        connection.type == .mssql
+            connection.type == .postgresql || connection.type == .redshift ||
+            connection.type == .mssql
     }
 
     var supportsSchemas: Bool {
         connection.type == .postgresql || connection.type == .redshift ||
-        connection.type == .mssql || connection.type == .duckdb
+            connection.type == .mssql || connection.type == .duckdb
     }
 
     init(connection: DatabaseConnection, appState: AppState) {
@@ -203,7 +204,10 @@ final class ConnectionCoordinator {
             UserDefaults.standard.set(database, forKey: "lastDB.\(connection.id.uuidString)")
             await loadSchemas()
         } catch {
-            Self.logger.error("Failed to switch to database \(database, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .error(
+                    "Failed to switch to database \(database, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
             await appState.sshProvider.setPendingConnectionId(connection.id)
             do {
                 let fallbackSession = try await appState.connectionManager.connect(connection)
@@ -292,7 +296,8 @@ final class ConnectionCoordinator {
         do {
             databases = try await session.driver.fetchDatabases()
             if !activeDatabase.isEmpty, databases.contains(activeDatabase) {
-                let sessionDB = appState.connectionManager.session(for: connection.id)?.activeDatabase ?? connection.database
+                let sessionDB = appState.connectionManager.session(for: connection.id)?.activeDatabase ?? connection
+                    .database
                 if activeDatabase != sessionDB {
                     let target = activeDatabase
                     activeDatabase = sessionDB

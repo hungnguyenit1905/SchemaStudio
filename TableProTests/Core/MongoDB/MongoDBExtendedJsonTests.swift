@@ -8,13 +8,12 @@
 #if canImport(CLibMongoc)
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("MongoDB Extended JSON Unwrapping")
 struct MongoDBExtendedJsonTests {
-
     // MARK: - $oid
 
     @Test("$oid returns string value")
@@ -39,7 +38,7 @@ struct MongoDBExtendedJsonTests {
     func numberLongReturnsInt64() {
         let input: [String: Any] = ["$numberLong": "9999999999"]
         let result = MongoDBConnection.unwrapExtendedJson(input)
-        #expect(result as? Int64 == Int64(9999999999))
+        #expect(result as? Int64 == Int64(9_999_999_999))
     }
 
     // MARK: - $numberDouble
@@ -67,7 +66,7 @@ struct MongoDBExtendedJsonTests {
         let input: [String: Any] = ["$date": ["$numberLong": "1609459200000"]]
         let result = MongoDBConnection.unwrapExtendedJson(input)
         if let date = result as? Date {
-            let expected = Date(timeIntervalSince1970: 1609459200)
+            let expected = Date(timeIntervalSince1970: 1_609_459_200)
             #expect(abs(date.timeIntervalSince1970 - expected.timeIntervalSince1970) < 1)
         } else {
             Issue.record("Expected Date but got \(type(of: result))")
@@ -79,7 +78,7 @@ struct MongoDBExtendedJsonTests {
         let input: [String: Any] = ["$date": "2021-01-01T00:00:00.000Z"]
         let result = MongoDBConnection.unwrapExtendedJson(input)
         if let date = result as? Date {
-            let expected = Date(timeIntervalSince1970: 1609459200)
+            let expected = Date(timeIntervalSince1970: 1_609_459_200)
             #expect(abs(date.timeIntervalSince1970 - expected.timeIntervalSince1970) < 1)
         } else {
             Issue.record("Expected Date but got \(type(of: result))")

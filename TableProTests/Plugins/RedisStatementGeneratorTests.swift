@@ -6,12 +6,11 @@
 //
 
 import Foundation
-import Testing
 import TableProPluginKit
+import Testing
 
 @Suite("Redis Statement Generator")
 struct RedisStatementGeneratorTests {
-
     // MARK: - INSERT
 
     @Test("Basic insert generates SET command")

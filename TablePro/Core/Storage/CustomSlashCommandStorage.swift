@@ -89,12 +89,13 @@ final class CustomSlashCommandStorage {
                 syncTracker.markDirty(.settings, id: Self.syncCategory)
             }
         } catch {
-            Self.logger.warning("Failed to persist custom slash commands: \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .warning("Failed to persist custom slash commands: \(error.localizedDescription, privacy: .public)")
         }
     }
 
     private static func load(from defaults: UserDefaults) -> [CustomSlashCommand] {
-        guard let data = defaults.data(forKey: Self.defaultsKey) else { return [] }
+        guard let data = defaults.data(forKey: defaultsKey) else { return [] }
         do {
             return try JSONDecoder().decode([CustomSlashCommand].self, from: data)
         } catch {

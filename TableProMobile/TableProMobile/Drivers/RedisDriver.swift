@@ -16,7 +16,7 @@ final class RedisDriver: DatabaseDriver, @unchecked Sendable {
     var currentSchema: String? { nil }
     var supportsTransactions: Bool { false }
 
-    // Set once during connect() before the driver is shared — safe for concurrent reads
+    /// Set once during connect() before the driver is shared — safe for concurrent reads
     nonisolated(unsafe) private(set) var serverVersion: String?
 
     init(host: String, port: Int, password: String?, database: Int = 0, ssl: DriverSSLConfiguration = .disabled) {
@@ -145,7 +145,7 @@ final class RedisDriver: DatabaseDriver, @unchecked Sendable {
                 count = n
             }
         }
-        return (0..<count).map { "db\($0)" }
+        return (0 ..< count).map { "db\($0)" }
     }
 
     func switchDatabase(to name: String) async throws {
@@ -360,7 +360,7 @@ private actor RedisActor {
         // Close existing connection if reconnecting
         close()
 
-        guard let portI32 = Int32(exactly: port), (1...65_535).contains(port) else {
+        guard let portI32 = Int32(exactly: port), (1 ... 65_535).contains(port) else {
             throw RedisError.connectionFailed(
                 "Port \(port) is out of range. Use a value between 1 and 65535."
             )
@@ -500,7 +500,7 @@ private actor RedisActor {
                 return .array([])
             }
             var items: [RedisReplyValue] = []
-            for i in 0..<count {
+            for i in 0 ..< count {
                 if let element = elements[i] {
                     items.append(parseReply(element))
                 } else {

@@ -64,7 +64,10 @@ public actor MCPHttpServerTransport {
             throw MCPHttpServerError.alreadyStarted
         }
 
-        Self.logger.info("Starting MCP HTTP server: bind=\(String(describing: self.configuration.bindAddress)) port=\(self.configuration.port) tls=\(self.configuration.tls != nil)")
+        Self.logger
+            .info(
+                "Starting MCP HTTP server: bind=\(String(describing: self.configuration.bindAddress)) port=\(self.configuration.port) tls=\(self.configuration.tls != nil)"
+            )
 
         if configuration.bindAddress == .anyInterface, configuration.tls == nil {
             Self.logger.error("Remote access requested without TLS, refusing to start")
@@ -371,7 +374,7 @@ public actor MCPHttpServerTransport {
         await context.cancel()
     }
 
-    fileprivate func attachSseWriter(
+    private func attachSseWriter(
         connectionId: UUID,
         sessionId: MCPSessionId,
         context: HttpConnectionContext

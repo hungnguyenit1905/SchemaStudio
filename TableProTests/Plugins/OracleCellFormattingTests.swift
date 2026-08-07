@@ -114,7 +114,7 @@ struct OracleCellFormattingTests {
 
     @Test("Hex encode produces lowercase concatenated bytes")
     func hexEncodeBasic() {
-        let bytes: [UInt8] = [0x00, 0xff, 0xab, 0x10]
+        let bytes: [UInt8] = [0x00, 0xFF, 0xAB, 0x10]
         #expect(OracleCellFormatting.hexEncode(bytes) == "00ffab10")
     }
 
@@ -125,7 +125,7 @@ struct OracleCellFormattingTests {
 
     @Test("Hex encode truncates beyond 4 KB and reports total size")
     func hexEncodeTruncates() {
-        let bytes = [UInt8](repeating: 0xab, count: 5_000)
+        let bytes = [UInt8](repeating: 0xAB, count: 5_000)
         let result = OracleCellFormatting.hexEncode(bytes)
         #expect(result.hasSuffix("… (5000 bytes)"))
         let hexPart = result.replacingOccurrences(of: "… (5000 bytes)", with: "")

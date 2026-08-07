@@ -9,8 +9,8 @@ public struct CSVDialect: Equatable, Sendable {
         public var bytes: [UInt8] {
             switch self {
             case .crlf: return [0x0D, 0x0A]
-            case .lf:   return [0x0A]
-            case .cr:   return [0x0D]
+            case .lf: return [0x0A]
+            case .cr: return [0x0D]
             }
         }
     }

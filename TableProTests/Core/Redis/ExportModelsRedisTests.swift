@@ -1,10 +1,9 @@
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Export format filtering for Redis")
 struct ExportModelsRedisTests {
-
     @Test("ExportTableItem supports optionValues for generic per-table options")
     func tableItemOptionValues() {
         let item = ExportTableItem(name: "keys", type: .table, isSelected: true, optionValues: [true, false])

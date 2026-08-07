@@ -85,7 +85,6 @@ private struct ResultTab: View {
 
     @State private var isHovering = false
 
-    @ViewBuilder
     var body: some View {
         if let onClose {
             annotatedPill.accessibilityAction(named: Text(closeTitle), onClose)
@@ -122,8 +121,7 @@ private struct ResultTab: View {
         .accessibilityIdentifier("result-tab")
     }
 
-    @ViewBuilder
-    private var closeControl: some View {
+    @ViewBuilder private var closeControl: some View {
         if let onClose {
             Button(action: onClose) {
                 Image(systemName: "xmark")

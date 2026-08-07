@@ -15,12 +15,12 @@ extension MSSQLPluginDriver {
         let resolved = effectiveSchema(schema)
         let esc = MSSQLSchemaQueries.escape(resolved)
         let sql = """
-            SELECT t.TABLE_NAME, t.TABLE_TYPE
-            FROM INFORMATION_SCHEMA.TABLES t
-            WHERE t.TABLE_SCHEMA = '\(esc)'
-              AND t.TABLE_TYPE IN ('BASE TABLE', 'VIEW')
-            ORDER BY t.TABLE_NAME
-            """
+        SELECT t.TABLE_NAME, t.TABLE_TYPE
+        FROM INFORMATION_SCHEMA.TABLES t
+        WHERE t.TABLE_SCHEMA = '\(esc)'
+          AND t.TABLE_TYPE IN ('BASE TABLE', 'VIEW')
+        ORDER BY t.TABLE_NAME
+        """
         let result = try await execute(query: sql)
         return result.rows.compactMap { row -> PluginTableInfo? in
             guard let name = row[safe: 0]?.asText else { return nil }
@@ -34,31 +34,31 @@ extension MSSQLPluginDriver {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
         let esc = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT
-                c.COLUMN_NAME,
-                c.DATA_TYPE,
-                c.CHARACTER_MAXIMUM_LENGTH,
-                c.NUMERIC_PRECISION,
-                c.NUMERIC_SCALE,
-                c.IS_NULLABLE,
-                c.COLUMN_DEFAULT,
-                COLUMNPROPERTY(OBJECT_ID(c.TABLE_SCHEMA + '.' + c.TABLE_NAME), c.COLUMN_NAME, 'IsIdentity') AS IS_IDENTITY,
-                CASE WHEN pk.COLUMN_NAME IS NOT NULL THEN 1 ELSE 0 END AS IS_PK
-            FROM INFORMATION_SCHEMA.COLUMNS c
-            LEFT JOIN (
-                SELECT kcu.COLUMN_NAME
-                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-                JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
-                    ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
-                    AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
-                WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
-                    AND tc.TABLE_SCHEMA = '\(esc)'
-                    AND tc.TABLE_NAME = '\(escapedTable)'
-            ) pk ON c.COLUMN_NAME = pk.COLUMN_NAME
-            WHERE c.TABLE_NAME = '\(escapedTable)'
-              AND c.TABLE_SCHEMA = '\(esc)'
-            ORDER BY c.ORDINAL_POSITION
-            """
+        SELECT
+            c.COLUMN_NAME,
+            c.DATA_TYPE,
+            c.CHARACTER_MAXIMUM_LENGTH,
+            c.NUMERIC_PRECISION,
+            c.NUMERIC_SCALE,
+            c.IS_NULLABLE,
+            c.COLUMN_DEFAULT,
+            COLUMNPROPERTY(OBJECT_ID(c.TABLE_SCHEMA + '.' + c.TABLE_NAME), c.COLUMN_NAME, 'IsIdentity') AS IS_IDENTITY,
+            CASE WHEN pk.COLUMN_NAME IS NOT NULL THEN 1 ELSE 0 END AS IS_PK
+        FROM INFORMATION_SCHEMA.COLUMNS c
+        LEFT JOIN (
+            SELECT kcu.COLUMN_NAME
+            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+            JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+                ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+                AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+            WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+                AND tc.TABLE_SCHEMA = '\(esc)'
+                AND tc.TABLE_NAME = '\(escapedTable)'
+        ) pk ON c.COLUMN_NAME = pk.COLUMN_NAME
+        WHERE c.TABLE_NAME = '\(escapedTable)'
+          AND c.TABLE_SCHEMA = '\(esc)'
+        ORDER BY c.ORDINAL_POSITION
+        """
         let result = try await execute(query: sql)
         var identityColumns: Set<String> = []
         let columns: [PluginColumnInfo] = result.rows.compactMap { row -> PluginColumnInfo? in
@@ -77,7 +77,7 @@ extension MSSQLPluginDriver {
             }
 
             let baseType = (dataType ?? "nvarchar").lowercased()
-            let fixedSizeTypes: Set<String> = [
+            let fixedSizeTypes: Set = [
                 "int", "bigint", "smallint", "tinyint", "bit",
                 "money", "smallmoney", "float", "real",
                 "datetime", "datetime2", "smalldatetime", "date", "time",
@@ -114,7 +114,7 @@ extension MSSQLPluginDriver {
     /// Snapshot of IDENTITY columns observed by the most recent `fetchColumns` for the table.
     /// Returns an empty set when `fetchColumns` hasn't run for this table yet, so callers
     /// fall through to including every typed value (matching pre-cache behavior).
-    internal func cachedIdentityColumns(for table: String) -> Set<String> {
+    func cachedIdentityColumns(for table: String) -> Set<String> {
         identityCacheLock.lock()
         defer { identityCacheLock.unlock() }
         return identityColumnsByTable[table] ?? []
@@ -122,7 +122,7 @@ extension MSSQLPluginDriver {
 
     /// Test seam: pre-populate the cache so generateMssqlInsert can be exercised
     /// without going through a live `fetchColumns` round-trip.
-    internal func setIdentityColumnsForTesting(_ columns: Set<String>, table: String) {
+    func setIdentityColumnsForTesting(_ columns: Set<String>, table: String) {
         identityCacheLock.lock()
         identityColumnsByTable[table] = columns
         identityCacheLock.unlock()
@@ -133,16 +133,16 @@ extension MSSQLPluginDriver {
         let bracketedTable = table.replacingOccurrences(of: "]", with: "]]")
         let bracketedFull = "[\(esc)].[\(bracketedTable)]"
         let sql = """
-            SELECT i.name, i.is_unique, i.is_primary_key, c.name AS column_name
-            FROM sys.indexes i
-            JOIN sys.index_columns ic
-                ON i.object_id = ic.object_id AND i.index_id = ic.index_id
-            JOIN sys.columns c
-                ON ic.object_id = c.object_id AND ic.column_id = c.column_id
-            WHERE i.object_id = OBJECT_ID('\(bracketedFull)')
-              AND i.name IS NOT NULL
-            ORDER BY i.index_id, ic.key_ordinal
-            """
+        SELECT i.name, i.is_unique, i.is_primary_key, c.name AS column_name
+        FROM sys.indexes i
+        JOIN sys.index_columns ic
+            ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+        JOIN sys.columns c
+            ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+        WHERE i.object_id = OBJECT_ID('\(bracketedFull)')
+          AND i.name IS NOT NULL
+        ORDER BY i.index_id, ic.key_ordinal
+        """
         let result = try await execute(query: sql)
         var indexMap: [String: (unique: Bool, primary: Bool, columns: [String])] = [:]
         for row in result.rows {
@@ -186,14 +186,14 @@ extension MSSQLPluginDriver {
         let bracketedTable = table.replacingOccurrences(of: "]", with: "]]")
         let bracketedFull = "[\(esc)].[\(bracketedTable)]"
         let sql = """
-            SELECT t.name, t.is_disabled, t.is_instead_of_trigger,
-                   OBJECT_DEFINITION(t.object_id) AS definition,
-                   te.type_desc AS event
-            FROM sys.triggers t
-            JOIN sys.trigger_events te ON t.object_id = te.object_id
-            WHERE t.parent_id = OBJECT_ID('\(bracketedFull)')
-            ORDER BY t.name, te.type_desc
-            """
+        SELECT t.name, t.is_disabled, t.is_instead_of_trigger,
+               OBJECT_DEFINITION(t.object_id) AS definition,
+               te.type_desc AS event
+        FROM sys.triggers t
+        JOIN sys.trigger_events te ON t.object_id = te.object_id
+        WHERE t.parent_id = OBJECT_ID('\(bracketedFull)')
+        ORDER BY t.name, te.type_desc
+        """
         let result = try await execute(query: sql)
 
         var order: [String] = []
@@ -261,30 +261,30 @@ extension MSSQLPluginDriver {
     func fetchAllColumns(schema: String?) async throws -> [String: [PluginColumnInfo]] {
         let esc = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT
-                c.TABLE_NAME,
-                c.COLUMN_NAME,
-                c.DATA_TYPE,
-                c.CHARACTER_MAXIMUM_LENGTH,
-                c.NUMERIC_PRECISION,
-                c.NUMERIC_SCALE,
-                c.IS_NULLABLE,
-                c.COLUMN_DEFAULT,
-                COLUMNPROPERTY(OBJECT_ID(c.TABLE_SCHEMA + '.' + c.TABLE_NAME), c.COLUMN_NAME, 'IsIdentity') AS IS_IDENTITY,
-                CASE WHEN pk.COLUMN_NAME IS NOT NULL THEN 1 ELSE 0 END AS IS_PK
-            FROM INFORMATION_SCHEMA.COLUMNS c
-            LEFT JOIN (
-                SELECT kcu.TABLE_NAME, kcu.COLUMN_NAME
-                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-                JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
-                    ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
-                    AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
-                WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
-                    AND tc.TABLE_SCHEMA = '\(esc)'
-            ) pk ON c.TABLE_NAME = pk.TABLE_NAME AND c.COLUMN_NAME = pk.COLUMN_NAME
-            WHERE c.TABLE_SCHEMA = '\(esc)'
-            ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION
-            """
+        SELECT
+            c.TABLE_NAME,
+            c.COLUMN_NAME,
+            c.DATA_TYPE,
+            c.CHARACTER_MAXIMUM_LENGTH,
+            c.NUMERIC_PRECISION,
+            c.NUMERIC_SCALE,
+            c.IS_NULLABLE,
+            c.COLUMN_DEFAULT,
+            COLUMNPROPERTY(OBJECT_ID(c.TABLE_SCHEMA + '.' + c.TABLE_NAME), c.COLUMN_NAME, 'IsIdentity') AS IS_IDENTITY,
+            CASE WHEN pk.COLUMN_NAME IS NOT NULL THEN 1 ELSE 0 END AS IS_PK
+        FROM INFORMATION_SCHEMA.COLUMNS c
+        LEFT JOIN (
+            SELECT kcu.TABLE_NAME, kcu.COLUMN_NAME
+            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+            JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+                ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+                AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+            WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+                AND tc.TABLE_SCHEMA = '\(esc)'
+        ) pk ON c.TABLE_NAME = pk.TABLE_NAME AND c.COLUMN_NAME = pk.COLUMN_NAME
+        WHERE c.TABLE_SCHEMA = '\(esc)'
+        ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION
+        """
         let result = try await execute(query: sql)
         var columnsByTable: [String: [PluginColumnInfo]] = [:]
         for row in result.rows {
@@ -300,7 +300,7 @@ extension MSSQLPluginDriver {
             let isPk = (row[safe: 9]?.asText) == "1"
 
             let baseType = (dataType ?? "nvarchar").lowercased()
-            let fixedSizeTypes: Set<String> = [
+            let fixedSizeTypes: Set = [
                 "int", "bigint", "smallint", "tinyint", "bit",
                 "money", "smallmoney", "float", "real",
                 "datetime", "datetime2", "smalldatetime", "date", "time",
@@ -335,26 +335,26 @@ extension MSSQLPluginDriver {
     func fetchAllForeignKeys(schema: String?) async throws -> [String: [PluginForeignKeyInfo]] {
         let esc = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT
-                tp.name AS table_name,
-                fk.name AS constraint_name,
-                cp.name AS column_name,
-                tr.name AS ref_table,
-                cr.name AS ref_column,
-                sr.name AS ref_schema
-            FROM sys.foreign_keys fk
-            JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
-            JOIN sys.tables tp ON fkc.parent_object_id = tp.object_id
-            JOIN sys.schemas s ON tp.schema_id = s.schema_id
-            JOIN sys.columns cp
-                ON fkc.parent_object_id = cp.object_id AND fkc.parent_column_id = cp.column_id
-            JOIN sys.tables tr ON fkc.referenced_object_id = tr.object_id
-            JOIN sys.schemas sr ON tr.schema_id = sr.schema_id
-            JOIN sys.columns cr
-                ON fkc.referenced_object_id = cr.object_id AND fkc.referenced_column_id = cr.column_id
-            WHERE s.name = '\(esc)'
-            ORDER BY tp.name, fk.name
-            """
+        SELECT
+            tp.name AS table_name,
+            fk.name AS constraint_name,
+            cp.name AS column_name,
+            tr.name AS ref_table,
+            cr.name AS ref_column,
+            sr.name AS ref_schema
+        FROM sys.foreign_keys fk
+        JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+        JOIN sys.tables tp ON fkc.parent_object_id = tp.object_id
+        JOIN sys.schemas s ON tp.schema_id = s.schema_id
+        JOIN sys.columns cp
+            ON fkc.parent_object_id = cp.object_id AND fkc.parent_column_id = cp.column_id
+        JOIN sys.tables tr ON fkc.referenced_object_id = tr.object_id
+        JOIN sys.schemas sr ON tr.schema_id = sr.schema_id
+        JOIN sys.columns cr
+            ON fkc.referenced_object_id = cr.object_id AND fkc.referenced_column_id = cr.column_id
+        WHERE s.name = '\(esc)'
+        ORDER BY tp.name, fk.name
+        """
         let result = try await execute(query: sql)
         var fksByTable: [String: [PluginForeignKeyInfo]] = [:]
         for row in result.rows {
@@ -377,13 +377,13 @@ extension MSSQLPluginDriver {
 
     func fetchAllDatabaseMetadata() async throws -> [PluginDatabaseMetadata] {
         let sql = """
-            SELECT d.name,
-                   SUM(mf.size) * 8 * 1024 AS size_bytes
-            FROM sys.databases d
-            LEFT JOIN sys.master_files mf ON d.database_id = mf.database_id
-            GROUP BY d.name
-            ORDER BY d.name
-            """
+        SELECT d.name,
+               SUM(mf.size) * 8 * 1024 AS size_bytes
+        FROM sys.databases d
+        LEFT JOIN sys.master_files mf ON d.database_id = mf.database_id
+        GROUP BY d.name
+        ORDER BY d.name
+        """
         do {
             let result = try await execute(query: sql)
             var metadata = result.rows.compactMap { row -> PluginDatabaseMetadata? in
@@ -418,7 +418,7 @@ extension MSSQLPluginDriver {
             var result: [PluginDatabaseMetadata] = []
             for db in dbs {
                 do {
-                    result.append(try await fetchDatabaseMetadata(db))
+                    try await result.append(fetchDatabaseMetadata(db))
                 } catch {
                     result.append(PluginDatabaseMetadata(name: db))
                 }
@@ -473,20 +473,20 @@ extension MSSQLPluginDriver {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
         let esc = effectiveSchemaEscaped(schema)
         let sql = """
-            SELECT
-                SUM(p.rows) AS row_count,
-                8 * SUM(a.used_pages) AS size_kb,
-                ep.value AS comment
-            FROM sys.tables t
-            JOIN sys.schemas s ON t.schema_id = s.schema_id
-            JOIN sys.partitions p
-                ON t.object_id = p.object_id AND p.index_id IN (0, 1)
-            JOIN sys.allocation_units a ON p.partition_id = a.container_id
-            LEFT JOIN sys.extended_properties ep
-                ON ep.major_id = t.object_id AND ep.minor_id = 0 AND ep.name = 'MS_Description'
-            WHERE t.name = '\(escapedTable)' AND s.name = '\(esc)'
-            GROUP BY ep.value
-            """
+        SELECT
+            SUM(p.rows) AS row_count,
+            8 * SUM(a.used_pages) AS size_kb,
+            ep.value AS comment
+        FROM sys.tables t
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        JOIN sys.partitions p
+            ON t.object_id = p.object_id AND p.index_id IN (0, 1)
+        JOIN sys.allocation_units a ON p.partition_id = a.container_id
+        LEFT JOIN sys.extended_properties ep
+            ON ep.major_id = t.object_id AND ep.minor_id = 0 AND ep.name = 'MS_Description'
+        WHERE t.name = '\(escapedTable)' AND s.name = '\(esc)'
+        GROUP BY ep.value
+        """
         let result = try await execute(query: sql)
         if let row = result.rows.first {
             let rowCount = (row[safe: 0]?.asText).flatMap { Int64($0) }
@@ -511,15 +511,15 @@ extension MSSQLPluginDriver {
 
     func fetchSchemas() async throws -> [String] {
         let sql = """
-            SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA
-            WHERE SCHEMA_NAME NOT IN (
-                'information_schema','sys','db_owner','db_accessadmin',
-                'db_securityadmin','db_ddladmin','db_backupoperator',
-                'db_datareader','db_datawriter','db_denydatareader',
-                'db_denydatawriter','guest'
-            )
-            ORDER BY SCHEMA_NAME
-            """
+        SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA
+        WHERE SCHEMA_NAME NOT IN (
+            'information_schema','sys','db_owner','db_accessadmin',
+            'db_securityadmin','db_ddladmin','db_backupoperator',
+            'db_datareader','db_datawriter','db_denydatareader',
+            'db_denydatawriter','guest'
+        )
+        ORDER BY SCHEMA_NAME
+        """
         let result = try await execute(query: sql)
         return result.rows.compactMap { $0.first?.asText }
     }
@@ -537,11 +537,11 @@ extension MSSQLPluginDriver {
 
     func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
         let sql = """
-            SELECT
-                SUM(size) * 8.0 / 1024 AS size_mb,
-                (SELECT COUNT(*) FROM sys.tables) AS table_count
-            FROM sys.database_files
-            """
+        SELECT
+            SUM(size) * 8.0 / 1024 AS size_mb,
+            (SELECT COUNT(*) FROM sys.tables) AS table_count
+        FROM sys.database_files
+        """
         let result = try await execute(query: sql)
         if let row = result.rows.first {
             let sizeMb = (row[safe: 0]?.asText).flatMap { Double($0) } ?? 0
@@ -589,5 +589,4 @@ extension MSSQLPluginDriver {
         ORDER BY t.name
         """
     }
-
 }

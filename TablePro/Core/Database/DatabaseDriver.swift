@@ -290,8 +290,11 @@ extension DatabaseDriver {
     }
 
     func dropDatabase(name: String) async throws {
-        throw NSError(domain: "DatabaseDriver", code: -1,
-                      userInfo: [NSLocalizedDescriptionKey: "Drop database is not supported by this driver"])
+        throw NSError(
+            domain: "DatabaseDriver",
+            code: -1,
+            userInfo: [NSLocalizedDescriptionKey: "Drop database is not supported by this driver"]
+        )
     }
 
     func createDatabaseFormSpec() async throws -> CreateDatabaseFormSpec? { nil }
@@ -400,7 +403,10 @@ extension DatabaseDriver {
         []
     }
 
-    func fetchAllDependentTypes(forTables tables: [String]) async throws -> [String: [(name: String, labels: [String])]] {
+    func fetchAllDependentTypes(forTables tables: [String]) async throws -> [String: [(
+        name: String,
+        labels: [String]
+    )]] {
         var result: [String: [(name: String, labels: [String])]] = [:]
         for table in tables {
             let types = try await fetchDependentTypes(forTable: table)
@@ -409,7 +415,10 @@ extension DatabaseDriver {
         return result
     }
 
-    func fetchAllDependentSequences(forTables tables: [String]) async throws -> [String: [(name: String, ddl: String)]] {
+    func fetchAllDependentSequences(forTables tables: [String]) async throws -> [String: [(
+        name: String,
+        ddl: String
+    )]] {
         var result: [String: [(name: String, ddl: String)]] = [:]
         for table in tables {
             let seqs = try await fetchDependentSequences(forTable: table)
@@ -419,7 +428,11 @@ extension DatabaseDriver {
     }
 
     func fetchApproximateRowCount(table: String) async throws -> Int? { nil }
-    func fetchFilteredRowCount(table: String, filters: [TableFilter], logicMode: FilterLogicMode) async throws -> Int? { nil }
+    func fetchFilteredRowCount(
+        table: String,
+        filters: [TableFilter],
+        logicMode: FilterLogicMode
+    ) async throws -> Int? { nil }
     func fetchExactRowCount(table: String, filters: [TableFilter], logicMode: FilterLogicMode) async throws -> Int? {
         try await fetchFilteredRowCount(table: table, filters: filters, logicMode: logicMode)
     }
@@ -442,8 +455,7 @@ extension DatabaseDriver {
 
     var supportsTransactions: Bool { true }
 
-    func cancelQuery() throws {
-    }
+    func cancelQuery() throws {}
 
     /// Default timeout implementation — delegates to each plugin's PluginDatabaseDriver.
     /// The PluginDriverAdapter bridges this call to the plugin.
@@ -498,11 +510,11 @@ enum DatabaseDriverFactory {
             additionalFields["enableCleartextPlugin"] = "true"
         }
         additionalFields["queryTimeoutSeconds"] = String(AppSettingsManager.shared.general.queryTimeoutSeconds)
-        let config = DriverConnectionConfig(
+        let config = try await DriverConnectionConfig(
             host: connection.host,
             port: connection.port,
             username: connection.username,
-            password: try await resolvePassword(for: connection, fields: additionalFields, override: passwordOverride),
+            password: resolvePassword(for: connection, fields: additionalFields, override: passwordOverride),
             database: connection.database,
             ssl: ssl,
             additionalFields: additionalFields
@@ -524,12 +536,16 @@ enum DatabaseDriverFactory {
             }
             guard connection.sslConfig.mode != .disabled else {
                 throw AWSAuthError.missingConfiguration(
-                    String(localized: "ElastiCache IAM authentication requires TLS. Enable SSL in the connection's SSL settings.")
+                    String(
+                        localized: "ElastiCache IAM authentication requires TLS. Enable SSL in the connection's SSL settings."
+                    )
                 )
             }
             guard let replicationGroupId = fields["awsReplicationGroupId"].flatMap({ $0.isEmpty ? nil : $0 }) else {
                 throw AWSAuthError.missingConfiguration(
-                    String(localized: "Enter the ElastiCache cache name (replication group ID) to use IAM authentication.")
+                    String(
+                        localized: "Enter the ElastiCache cache name (replication group ID) to use IAM authentication."
+                    )
                 )
             }
             return ElastiCacheAuthTokenGenerator.generateToken(

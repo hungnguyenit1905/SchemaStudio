@@ -4,12 +4,11 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("PluginManager staging directory cleanup", .serialized)
 struct PluginManagerStagingCleanupTests {
-
     private func makeTempPluginsDir() throws -> URL {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("StagingTests-\(UUID().uuidString)/Plugins", isDirectory: true)

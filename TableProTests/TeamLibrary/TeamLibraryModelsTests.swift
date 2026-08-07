@@ -50,12 +50,15 @@ struct TeamLibraryModelsTests {
         let request = TeamLibraryPublishRequest(
             licenseKey: "AAAAA-BBBBB-CCCCC-DDDDD-EEEEE",
             machineId: String(repeating: "a", count: 64),
-            connections: [TeamLibraryConnectionPayload(sourceConnectionId: "11111111-1111-1111-1111-111111111111", payload: exportable)],
+            connections: [TeamLibraryConnectionPayload(
+                sourceConnectionId: "11111111-1111-1111-1111-111111111111",
+                payload: exportable
+            )],
             queryFolders: [],
             queries: []
         )
 
-        let string = String(decoding: try JSONEncoder().encode(request), as: UTF8.self)
+        let string = try String(decoding: JSONEncoder().encode(request), as: UTF8.self)
 
         #expect(string.contains("\"license_key\""))
         #expect(string.contains("\"machine_id\""))

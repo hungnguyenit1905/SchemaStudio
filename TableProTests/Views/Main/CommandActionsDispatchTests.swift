@@ -7,8 +7,8 @@
 //
 
 import Foundation
-import SwiftUI
 @testable import SchemaStudio
+import SwiftUI
 import TableProPluginKit
 import Testing
 
@@ -19,9 +19,18 @@ private final class CommandActionsClipboard: ClipboardProvider {
 
     func readText() -> String? { text }
     func readGridRows() -> GridRowsClipboardPayload? { nil }
-    func writeText(_ text: String) { self.text = text; hasGridRowsValue = false }
-    func writeCsv(_ csv: String) { text = csv; hasGridRowsValue = false }
-    func writeRows(tsv: String, html: String?, gridRows: GridRowsClipboardPayload) { text = tsv; hasGridRowsValue = true }
+    func writeText(_ text: String) { self.text = text
+        hasGridRowsValue = false
+    }
+
+    func writeCsv(_ csv: String) { text = csv
+        hasGridRowsValue = false
+    }
+
+    func writeRows(tsv: String, html: String?, gridRows: GridRowsClipboardPayload) { text = tsv
+        hasGridRowsValue = true
+    }
+
     var hasText: Bool { text != nil }
     var hasGridRows: Bool { hasGridRowsValue }
 }
@@ -261,7 +270,7 @@ struct CommandActionsDispatchTests {
         )
         tableViewCoordinator.selectionController.update(
             .single(
-                GridRect(rows: 0...1, columns: 0...0),
+                GridRect(rows: 0 ... 1, columns: 0 ... 0),
                 anchor: GridCoord(row: 0, column: 0),
                 active: GridCoord(row: 1, column: 0)
             )

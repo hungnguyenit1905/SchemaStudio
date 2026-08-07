@@ -19,14 +19,14 @@ struct ChaCha20Cipher: KdbxInnerStreamCipher {
     init(key: [UInt8], nonce: [UInt8]) {
         var initial = [UInt32](repeating: 0, count: 16)
         initial[0] = 0x6170_7865
-        initial[1] = 0x3320_646e
-        initial[2] = 0x7962_2d32
-        initial[3] = 0x6b20_6574
-        for index in 0..<8 {
+        initial[1] = 0x3320_646E
+        initial[2] = 0x7962_2D32
+        initial[3] = 0x6B20_6574
+        for index in 0 ..< 8 {
             initial[4 + index] = Self.load32(key, index * 4)
         }
         initial[12] = 0
-        for index in 0..<3 {
+        for index in 0 ..< 3 {
             initial[13 + index] = Self.load32(nonce, index * 4)
         }
         state = initial
@@ -34,7 +34,7 @@ struct ChaCha20Cipher: KdbxInnerStreamCipher {
 
     mutating func process(_ data: [UInt8]) -> [UInt8] {
         var output = [UInt8](repeating: 0, count: data.count)
-        for index in 0..<data.count {
+        for index in 0 ..< data.count {
             if offset >= keyStream.count {
                 keyStream = nextBlock()
                 offset = 0
@@ -47,7 +47,7 @@ struct ChaCha20Cipher: KdbxInnerStreamCipher {
 
     private mutating func nextBlock() -> [UInt8] {
         var working = state
-        for _ in 0..<10 {
+        for _ in 0 ..< 10 {
             Self.quarterRound(&working, 0, 4, 8, 12)
             Self.quarterRound(&working, 1, 5, 9, 13)
             Self.quarterRound(&working, 2, 6, 10, 14)
@@ -58,7 +58,7 @@ struct ChaCha20Cipher: KdbxInnerStreamCipher {
             Self.quarterRound(&working, 3, 4, 9, 14)
         }
         var block = [UInt8](repeating: 0, count: 64)
-        for index in 0..<16 {
+        for index in 0 ..< 16 {
             Self.store32(working[index] &+ state[index], &block, index * 4)
         }
         state[12] = state[12] &+ 1
@@ -66,10 +66,18 @@ struct ChaCha20Cipher: KdbxInnerStreamCipher {
     }
 
     private static func quarterRound(_ s: inout [UInt32], _ a: Int, _ b: Int, _ c: Int, _ d: Int) {
-        s[a] = s[a] &+ s[b]; s[d] ^= s[a]; s[d] = rotl(s[d], 16)
-        s[c] = s[c] &+ s[d]; s[b] ^= s[c]; s[b] = rotl(s[b], 12)
-        s[a] = s[a] &+ s[b]; s[d] ^= s[a]; s[d] = rotl(s[d], 8)
-        s[c] = s[c] &+ s[d]; s[b] ^= s[c]; s[b] = rotl(s[b], 7)
+        s[a] = s[a] &+ s[b]
+        s[d] ^= s[a]
+        s[d] = rotl(s[d], 16)
+        s[c] = s[c] &+ s[d]
+        s[b] ^= s[c]
+        s[b] = rotl(s[b], 12)
+        s[a] = s[a] &+ s[b]
+        s[d] ^= s[a]
+        s[d] = rotl(s[d], 8)
+        s[c] = s[c] &+ s[d]
+        s[b] ^= s[c]
+        s[b] = rotl(s[b], 7)
     }
 
     private static func rotl(_ value: UInt32, _ count: UInt32) -> UInt32 {
@@ -84,17 +92,17 @@ struct ChaCha20Cipher: KdbxInnerStreamCipher {
     }
 
     private static func store32(_ value: UInt32, _ bytes: inout [UInt8], _ index: Int) {
-        bytes[index] = UInt8(value & 0xff)
-        bytes[index + 1] = UInt8((value >> 8) & 0xff)
-        bytes[index + 2] = UInt8((value >> 16) & 0xff)
-        bytes[index + 3] = UInt8((value >> 24) & 0xff)
+        bytes[index] = UInt8(value & 0xFF)
+        bytes[index + 1] = UInt8((value >> 8) & 0xFF)
+        bytes[index + 2] = UInt8((value >> 16) & 0xFF)
+        bytes[index + 3] = UInt8((value >> 24) & 0xFF)
     }
 }
 
 /// Salsa20 with the fixed KeePass nonce 0xE830094B97205D2A and key = SHA-256 of
 /// the protected-stream key. Used by KDBX files written before the ChaCha20 default.
 struct Salsa20Cipher: KdbxInnerStreamCipher {
-    static let keePassNonce: [UInt8] = [0xe8, 0x30, 0x09, 0x4b, 0x97, 0x20, 0x5d, 0x2a]
+    static let keePassNonce: [UInt8] = [0xE8, 0x30, 0x09, 0x4B, 0x97, 0x20, 0x5D, 0x2A]
 
     private var state: [UInt32]
     private var keyStream: [UInt8] = []
@@ -103,10 +111,10 @@ struct Salsa20Cipher: KdbxInnerStreamCipher {
     init(key: [UInt8], nonce: [UInt8]) {
         var initial = [UInt32](repeating: 0, count: 16)
         initial[0] = 0x6170_7865
-        initial[5] = 0x3320_646e
-        initial[10] = 0x7962_2d32
-        initial[15] = 0x6b20_6574
-        for index in 0..<4 {
+        initial[5] = 0x3320_646E
+        initial[10] = 0x7962_2D32
+        initial[15] = 0x6B20_6574
+        for index in 0 ..< 4 {
             initial[1 + index] = Self.load32(key, index * 4)
             initial[11 + index] = Self.load32(key, 16 + index * 4)
         }
@@ -119,7 +127,7 @@ struct Salsa20Cipher: KdbxInnerStreamCipher {
 
     mutating func process(_ data: [UInt8]) -> [UInt8] {
         var output = [UInt8](repeating: 0, count: data.count)
-        for index in 0..<data.count {
+        for index in 0 ..< data.count {
             if offset >= keyStream.count {
                 keyStream = nextBlock()
                 offset = 0
@@ -132,7 +140,7 @@ struct Salsa20Cipher: KdbxInnerStreamCipher {
 
     private mutating func nextBlock() -> [UInt8] {
         var working = state
-        for _ in 0..<10 {
+        for _ in 0 ..< 10 {
             Self.quarterRound(&working, 0, 4, 8, 12)
             Self.quarterRound(&working, 5, 9, 13, 1)
             Self.quarterRound(&working, 10, 14, 2, 6)
@@ -143,7 +151,7 @@ struct Salsa20Cipher: KdbxInnerStreamCipher {
             Self.quarterRound(&working, 15, 12, 13, 14)
         }
         var block = [UInt8](repeating: 0, count: 64)
-        for index in 0..<16 {
+        for index in 0 ..< 16 {
             Self.store32(working[index] &+ state[index], &block, index * 4)
         }
         state[8] = state[8] &+ 1
@@ -172,9 +180,9 @@ struct Salsa20Cipher: KdbxInnerStreamCipher {
     }
 
     private static func store32(_ value: UInt32, _ bytes: inout [UInt8], _ index: Int) {
-        bytes[index] = UInt8(value & 0xff)
-        bytes[index + 1] = UInt8((value >> 8) & 0xff)
-        bytes[index + 2] = UInt8((value >> 16) & 0xff)
-        bytes[index + 3] = UInt8((value >> 24) & 0xff)
+        bytes[index] = UInt8(value & 0xFF)
+        bytes[index + 1] = UInt8((value >> 8) & 0xFF)
+        bytes[index + 2] = UInt8((value >> 16) & 0xFF)
+        bytes[index + 3] = UInt8((value >> 24) & 0xFF)
     }
 }

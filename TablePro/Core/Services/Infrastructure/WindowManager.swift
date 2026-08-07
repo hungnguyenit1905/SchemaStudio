@@ -17,8 +17,7 @@ internal enum TabGroupPolicy: Equatable {
     case shared
     case perConnection
 
-    @MainActor
-    internal static var fromSettings: TabGroupPolicy {
+    @MainActor internal static var fromSettings: TabGroupPolicy {
         AppSettingsManager.shared.tabs.groupAllConnectionTabs ? .shared : .perConnection
     }
 }

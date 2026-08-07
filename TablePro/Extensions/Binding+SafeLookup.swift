@@ -6,8 +6,7 @@
 import SwiftUI
 
 extension Binding where Value: MutableCollection & RandomAccessCollection,
-    Value.Element: Identifiable
-{
+    Value.Element: Identifiable {
     func element(_ item: Value.Element) -> Binding<Value.Element> {
         Binding<Value.Element>(
             get: {

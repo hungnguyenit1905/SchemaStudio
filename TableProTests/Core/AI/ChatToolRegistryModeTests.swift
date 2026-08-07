@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("ChatToolRegistry mode gating")
@@ -88,7 +88,8 @@ struct ChatToolRegistryModeTests {
         #expect(registry.tool(named: "execute_query", in: .ask) == nil)
         #expect(registry.tool(named: "execute_query", in: .edit)?.name == "execute_query")
         #expect(registry.tool(named: "confirm_destructive_operation", in: .edit) == nil)
-        #expect(registry.tool(named: "confirm_destructive_operation", in: .agent)?.name == "confirm_destructive_operation")
+        #expect(registry.tool(named: "confirm_destructive_operation", in: .agent)?
+            .name == "confirm_destructive_operation")
         #expect(registry.tool(named: "list_tables", in: .ask)?.name == "list_tables")
     }
 

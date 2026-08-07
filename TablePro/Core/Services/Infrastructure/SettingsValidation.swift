@@ -24,7 +24,12 @@ enum SettingsValidationError: LocalizedError {
         case .stringEmpty(let field):
             return String(format: String(localized: "%@ cannot be empty"), field)
         case .intOutOfRange(let field, let min, let max):
-            return String(format: String(localized: "%@ must be between %@ and %@"), field, min.formatted(), max.formatted())
+            return String(
+                format: String(localized: "%@ must be between %@ and %@"),
+                field,
+                min.formatted(),
+                max.formatted()
+            )
         case .intNegative(let field):
             return String(format: String(localized: "%@ cannot be negative"), field)
         }
@@ -46,7 +51,7 @@ extension String {
     func validated(maxLength: Int, allowEmpty: Bool = false) -> Result<String, SettingsValidationError> {
         let cleaned = self.sanitized
 
-        if !allowEmpty && cleaned.isEmpty {
+        if !allowEmpty, cleaned.isEmpty {
             return .failure(.stringEmpty(field: "String"))
         }
 
@@ -92,10 +97,10 @@ extension Int {
 enum SettingsValidationRules {
     static let nullDisplayMaxLength = 20
 
-    static let defaultPageSizeRange = 10...100_000
-    static let queryResultRowCapRange: ClosedRange<Int> = 100...500_000
+    static let defaultPageSizeRange = 10 ... 100_000
+    static let queryResultRowCapRange: ClosedRange<Int> = 100 ... 500_000
     static let minNonNegative = 0
 
-    static let mcpRowLimitRange: ClosedRange<Int> = 1...500_000
-    static let mcpQueryTimeoutRange: ClosedRange<Int> = 1...300
+    static let mcpRowLimitRange: ClosedRange<Int> = 1 ... 500_000
+    static let mcpQueryTimeoutRange: ClosedRange<Int> = 1 ... 300
 }

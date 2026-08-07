@@ -30,7 +30,10 @@ internal struct LinkedFavoriteRowView: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.caption)
                     .foregroundStyle(.yellow)
-                    .help(String(format: String(localized: "Non-UTF-8 file (%@). Saving may change the encoding."), favorite.encodingName))
+                    .help(String(
+                        format: String(localized: "Non-UTF-8 file (%@). Saving may change the encoding."),
+                        favorite.encodingName
+                    ))
                     .accessibilityHidden(true)
             }
 

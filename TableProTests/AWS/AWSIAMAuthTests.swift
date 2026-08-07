@@ -20,14 +20,16 @@ struct AWSSigV4Tests {
     @Test("SHA-256 matches NIST vectors")
     func sha256Vectors() {
         #expect(AWSSigV4.sha256Hex(Data()) == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
-        #expect(AWSSigV4.sha256Hex(Data("abc".utf8)) == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        #expect(AWSSigV4
+            .sha256Hex(Data("abc".utf8)) == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
     }
 
     @Test("HMAC-SHA256 matches RFC 4231 test case 1")
     func hmacVector() {
-        let key = Data(repeating: 0x0b, count: 20)
+        let key = Data(repeating: 0x0B, count: 20)
         let data = Data("Hi There".utf8)
-        #expect(AWSSigV4.hmacHex(key: key, data: data) == "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7")
+        #expect(AWSSigV4
+            .hmacHex(key: key, data: data) == "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7")
     }
 
     @Test("URI encoding percent-encodes reserved characters")

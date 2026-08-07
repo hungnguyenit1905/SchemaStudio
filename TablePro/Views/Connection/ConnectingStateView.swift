@@ -51,8 +51,7 @@ struct ConnectingStateView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    @ViewBuilder
-    private var iconView: some View {
+    @ViewBuilder private var iconView: some View {
         if iconIsSymbol {
             Image(systemName: connection.type.iconName)
                 .symbolRenderingMode(.hierarchical)

@@ -5,9 +5,9 @@
 //  Specification tests for f / F / t / T character search motions and ; / , repetition.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineFindCharTests: XCTestCase {
@@ -29,7 +29,9 @@ final class VimEngineFindCharTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {
@@ -179,10 +181,10 @@ final class VimEngineFindCharTests: XCTestCase {
 
     func testSemicolonRepeatsForwardFind() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
-        keys("fo")     // → 4
-        keys(";")      // → 7
+        keys("fo") // → 4
+        keys(";") // → 7
         XCTAssertEqual(pos, 7)
-        keys(";")      // → 13 (in 'foo')
+        keys(";") // → 13 (in 'foo')
         XCTAssertEqual(pos, 13)
     }
 
@@ -215,9 +217,9 @@ final class VimEngineFindCharTests: XCTestCase {
 
     func testCommaReversesForwardFind() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
-        keys("fo")  // forward → 4
-        keys("fo")  // → 7
-        keys(",")   // reverse → 4
+        keys("fo") // forward → 4
+        keys("fo") // → 7
+        keys(",") // reverse → 4
         XCTAssertEqual(pos, 4)
     }
 
@@ -247,16 +249,22 @@ final class VimEngineFindCharTests: XCTestCase {
         // dfo from 0 should delete "hello" (inclusive of 'o' at offset 4)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("dfo")
-        XCTAssertEqual(buffer.text, " world foo bar\nsecond line\n",
-            "dfo should delete from cursor through and including the matched 'o'")
+        XCTAssertEqual(
+            buffer.text,
+            " world foo bar\nsecond line\n",
+            "dfo should delete from cursor through and including the matched 'o'"
+        )
     }
 
     func testDeleteTillCharacter() {
         // dto from 0 should delete "hell" (up to but not including 'o' at offset 4)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("dto")
-        XCTAssertEqual(buffer.text, "o world foo bar\nsecond line\n",
-            "dto should delete up to (but not including) the matched 'o'")
+        XCTAssertEqual(
+            buffer.text,
+            "o world foo bar\nsecond line\n",
+            "dto should delete up to (but not including) the matched 'o'"
+        )
     }
 
     func testChangeUntilCharacter() {

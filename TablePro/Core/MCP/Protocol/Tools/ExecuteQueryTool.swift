@@ -19,11 +19,19 @@ public struct ExecuteQueryTool: MCPToolImplementation {
             ]),
             "max_rows": .object([
                 "type": .string("integer"),
-                "description": .string(String(localized: "Maximum rows to return. Defaults to the server's configured default row limit and is capped at its maximum row limit."))
+                "description": .string(
+                    String(
+                        localized: "Maximum rows to return. Defaults to the server's configured default row limit and is capped at its maximum row limit."
+                    )
+                )
             ]),
             "timeout_seconds": .object([
                 "type": .string("integer"),
-                "description": .string(String(localized: "Query timeout in seconds (max 300). Defaults to the server's configured query timeout."))
+                "description": .string(
+                    String(
+                        localized: "Query timeout in seconds (max 300). Defaults to the server's configured query timeout."
+                    )
+                )
             ]),
             "database": .object([
                 "type": .string("string"),

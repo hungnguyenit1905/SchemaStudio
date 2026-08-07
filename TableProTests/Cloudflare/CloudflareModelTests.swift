@@ -14,7 +14,7 @@ struct CloudflareModelTests {
     func configurationRoundTrip() throws {
         let config = CloudflareConfiguration(
             accessHostname: "db.example.com",
-            localPort: 6543,
+            localPort: 6_543,
             authMethod: .serviceToken,
             exposeToLAN: true,
             binaryPath: "/opt/homebrew/bin/cloudflared"
@@ -48,9 +48,12 @@ struct CloudflareModelTests {
         let connection = DatabaseConnection(
             name: "CF",
             host: "db.internal",
-            port: 5432,
+            port: 5_432,
             type: .postgresql,
-            cloudflareTunnelMode: .inline(CloudflareConfiguration(accessHostname: "db.example.com", authMethod: .browserSSO))
+            cloudflareTunnelMode: .inline(CloudflareConfiguration(
+                accessHostname: "db.example.com",
+                authMethod: .browserSSO
+            ))
         )
 
         let data = try JSONEncoder().encode(connection)
@@ -74,7 +77,7 @@ struct CloudflareModelTests {
 
     @Test("CloudflaredPidRecord round-trips for the stale-PID sweep")
     func pidRecordRoundTrip() throws {
-        let records = [CloudflaredPidRecord(pid: 4242, binaryPath: "/opt/homebrew/bin/cloudflared")]
+        let records = [CloudflaredPidRecord(pid: 4_242, binaryPath: "/opt/homebrew/bin/cloudflared")]
         let data = try JSONEncoder().encode(records)
         let decoded = try JSONDecoder().decode([CloudflaredPidRecord].self, from: data)
         #expect(decoded == records)

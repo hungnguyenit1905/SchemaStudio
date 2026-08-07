@@ -57,7 +57,7 @@ extension MSSQLPluginDriver {
         if let defaultValue = col.defaultValue {
             def += " DEFAULT \(mssqlDefaultValue(defaultValue))"
         }
-        if inlinePK && col.isPrimaryKey {
+        if inlinePK, col.isPrimaryKey {
             def += " PRIMARY KEY"
         }
         return def
@@ -107,7 +107,11 @@ extension MSSQLPluginDriver {
         "ALTER TABLE \(mssqlQualifiedTable(table)) ADD \(mssqlColumnDefinition(column, inlinePK: false))"
     }
 
-    func generateModifyColumnSQL(table: String, oldColumn: PluginColumnDefinition, newColumn: PluginColumnDefinition) -> String? {
+    func generateModifyColumnSQL(
+        table: String,
+        oldColumn: PluginColumnDefinition,
+        newColumn: PluginColumnDefinition
+    ) -> String? {
         let qt = mssqlQualifiedTable(table)
         var stmts: [String] = []
         let needsTypeChange = oldColumn.dataType != newColumn.dataType || oldColumn.isNullable != newColumn.isNullable
@@ -125,13 +129,13 @@ extension MSSQLPluginDriver {
         if (defaultChanged || needsTypeChange) && oldColumn.defaultValue != nil {
             let objectId = escapeStringLiteral("\(_currentSchema).\(table)")
             stmts.append("""
-                DECLARE @dfName NVARCHAR(256); \
-                SELECT @dfName = dc.name FROM sys.default_constraints dc \
-                JOIN sys.columns c ON dc.parent_column_id = c.column_id AND dc.parent_object_id = c.object_id \
-                WHERE c.name = '\(escapeStringLiteral(newColumn.name))' \
-                AND dc.parent_object_id = OBJECT_ID('\(objectId)'); \
-                IF @dfName IS NOT NULL EXEC('ALTER TABLE \(qt) DROP CONSTRAINT [' + @dfName + ']')
-                """)
+            DECLARE @dfName NVARCHAR(256); \
+            SELECT @dfName = dc.name FROM sys.default_constraints dc \
+            JOIN sys.columns c ON dc.parent_column_id = c.column_id AND dc.parent_object_id = c.object_id \
+            WHERE c.name = '\(escapeStringLiteral(newColumn.name))' \
+            AND dc.parent_object_id = OBJECT_ID('\(objectId)'); \
+            IF @dfName IS NOT NULL EXEC('ALTER TABLE \(qt) DROP CONSTRAINT [' + @dfName + ']')
+            """)
         }
 
         if needsTypeChange {
@@ -166,7 +170,12 @@ extension MSSQLPluginDriver {
         "ALTER TABLE \(mssqlQualifiedTable(table)) DROP CONSTRAINT \(quoteIdentifier(constraintName))"
     }
 
-    func generateModifyPrimaryKeySQL(table: String, oldColumns: [String], newColumns: [String], constraintName: String?) -> [String]? {
+    func generateModifyPrimaryKeySQL(
+        table: String,
+        oldColumns: [String],
+        newColumns: [String],
+        constraintName: String?
+    ) -> [String]? {
         let qt = mssqlQualifiedTable(table)
         var stmts: [String] = []
         if !oldColumns.isEmpty {
@@ -180,5 +189,4 @@ extension MSSQLPluginDriver {
         }
         return stmts.isEmpty ? nil : stmts
     }
-
 }

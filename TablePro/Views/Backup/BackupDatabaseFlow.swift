@@ -113,7 +113,10 @@ struct BackupDatabaseFlow: View {
         savePanel.allowedContentTypes = [UTType(filenameExtension: "dump") ?? .data]
         savePanel.nameFieldStringValue = Self.defaultFilename(database: database)
         savePanel.title = String(localized: "Save Dump")
-        savePanel.message = String(format: String(localized: "Choose where to save the dump of \u{201C}%@\u{201D}."), database)
+        savePanel.message = String(
+            format: String(localized: "Choose where to save the dump of \u{201C}%@\u{201D}."),
+            database
+        )
 
         let window = NSApp.keyWindow
         let response: NSApplication.ModalResponse

@@ -26,12 +26,12 @@ extension MySQLPluginDriver: PluginProcedureFunctionSupport {
     private func fetchRoutines(routineType: String) async throws -> [PluginRoutineInfo] {
         let typeLiteral = escapeStringLiteral(routineType)
         let query = """
-            SELECT routine_name, data_type
-            FROM information_schema.routines
-            WHERE routine_schema = DATABASE()
-              AND routine_type = '\(typeLiteral)'
-            ORDER BY routine_name
-            """
+        SELECT routine_name, data_type
+        FROM information_schema.routines
+        WHERE routine_schema = DATABASE()
+          AND routine_type = '\(typeLiteral)'
+        ORDER BY routine_name
+        """
         let result = try await execute(query: query)
         return result.rows.compactMap { row -> PluginRoutineInfo? in
             guard let name = row[safe: 0]?.asText else { return nil }

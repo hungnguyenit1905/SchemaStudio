@@ -516,7 +516,7 @@ struct RedisCommandParser {
             }
             let dir1 = args[2].text.uppercased()
             let dir2 = args[3].text.uppercased()
-            guard (dir1 == "LEFT" || dir1 == "RIGHT") && (dir2 == "LEFT" || dir2 == "RIGHT") else {
+            guard dir1 == "LEFT" || dir1 == "RIGHT", dir2 == "LEFT" || dir2 == "RIGHT" else {
                 throw RedisParseError.invalidArgument("LMOVE directions must be LEFT or RIGHT")
             }
             return .command(args: tokens)
@@ -631,7 +631,7 @@ struct RedisCommandParser {
             let start = args[1].text
             let stop = args[2].text
             // Parse optional trailing flags: BYSCORE, BYLEX, REV, WITHSCORES, LIMIT offset count
-            let knownFlags: Set<String> = ["BYSCORE", "BYLEX", "REV", "WITHSCORES", "LIMIT"]
+            let knownFlags: Set = ["BYSCORE", "BYLEX", "REV", "WITHSCORES", "LIMIT"]
             var flags: [String] = []
             var i = 3
             while i < args.count {
@@ -656,7 +656,7 @@ struct RedisCommandParser {
                 throw RedisParseError.missingArgument("ZADD requires key followed by score member pairs")
             }
             // Skip known flags after key: NX, XX, GT, LT, CH, INCR (case-insensitive)
-            let zaddFlags: Set<String> = ["NX", "XX", "GT", "LT", "CH", "INCR"]
+            let zaddFlags: Set = ["NX", "XX", "GT", "LT", "CH", "INCR"]
             var collectedFlags: [String] = []
             var i = 1
             while i < args.count, zaddFlags.contains(args[i].text.uppercased()) {

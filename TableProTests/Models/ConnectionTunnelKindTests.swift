@@ -49,7 +49,7 @@ struct ConnectionTunnelKindTests {
 
     @Test("every combination of two or more enabled tunnels is a conflict")
     func allCombinations() {
-        for mask in 0..<16 {
+        for mask in 0 ..< 16 {
             let ssh = mask & 1 != 0
             let cloudflare = mask & 2 != 0
             let cloudSQLProxy = mask & 4 != 0

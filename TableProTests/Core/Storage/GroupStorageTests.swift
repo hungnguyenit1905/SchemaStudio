@@ -3,10 +3,10 @@
 //  TableProTests
 //
 
-import TableProPluginKit
 @testable import SchemaStudio
-import XCTest
+import TableProPluginKit
 import TableProSyncTransport
+import XCTest
 
 @MainActor
 final class GroupStorageTests: XCTestCase {

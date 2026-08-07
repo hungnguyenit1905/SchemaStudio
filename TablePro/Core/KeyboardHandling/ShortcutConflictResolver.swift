@@ -18,7 +18,11 @@ enum ShortcutConflict: Equatable {
 
 @MainActor
 enum ShortcutConflictResolver {
-    static func resolve(_ key: BoundKey, for action: ShortcutAction, in settings: KeyboardSettings) -> ShortcutConflict {
+    static func resolve(
+        _ key: BoundKey,
+        for action: ShortcutAction,
+        in settings: KeyboardSettings
+    ) -> ShortcutConflict {
         guard !key.isCleared else { return .none }
 
         if SystemHotkeyChecker.shared.isReserved(key) {

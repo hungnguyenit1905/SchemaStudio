@@ -1,5 +1,5 @@
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("IntegrationStatusIndicator")

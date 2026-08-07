@@ -4,6 +4,7 @@
 //
 
 import Foundation
+
 /// SSH authentication method
 enum SSHAuthMethod: String, CaseIterable, Identifiable, Codable {
     case password = "Password"
@@ -137,8 +138,18 @@ struct SSHConfiguration: Codable, Hashable {
 
 extension SSHConfiguration {
     enum CodingKeys: String, CodingKey {
-        case enabled, host, port, username, authMethod, privateKeyPath, agentSocketPath, jumpHosts
-        case totpMode, totpAlgorithm, totpDigits, totpPeriod
+        case enabled
+        case host
+        case port
+        case username
+        case authMethod
+        case privateKeyPath
+        case agentSocketPath
+        case jumpHosts
+        case totpMode
+        case totpAlgorithm
+        case totpDigits
+        case totpPeriod
     }
 
     init(from decoder: Decoder) throws {

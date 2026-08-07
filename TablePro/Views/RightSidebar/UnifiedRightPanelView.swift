@@ -44,7 +44,7 @@ struct UnifiedRightPanelView: View {
             Divider()
             switch state.activeTab {
             case .details: detailsView
-            case .aiChat:  aiChatView
+            case .aiChat: aiChatView
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

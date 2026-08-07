@@ -4,7 +4,7 @@ import TableProPluginKit
 enum MongoDBSSLMapping {
     static func uriParameters(for ssl: SSLConfiguration) -> [String] {
         guard ssl.isEnabled else { return [] }
-        var params: [String] = ["tls=true"]
+        var params = ["tls=true"]
         switch ssl.mode {
         case .preferred, .required:
             params.append("tlsAllowInvalidCertificates=true")

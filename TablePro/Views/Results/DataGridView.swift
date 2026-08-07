@@ -211,7 +211,8 @@ struct DataGridView: NSViewRepresentable {
         contentChanged: Bool,
         columnComments: [String: String]
     ) {
-        if let rowNumCol = tableView.tableColumns.first(where: { $0.identifier == ColumnIdentitySchema.rowNumberIdentifier }) {
+        if let rowNumCol = tableView.tableColumns
+            .first(where: { $0.identifier == ColumnIdentitySchema.rowNumberIdentifier }) {
             let shouldHide = !configuration.showRowNumbers
             if rowNumCol.isHidden != shouldHide {
                 rowNumCol.isHidden = shouldHide
@@ -440,7 +441,6 @@ struct DataGridView: NSViewRepresentable {
         return coordinator
     }
 }
-
 
 // MARK: - Preview
 

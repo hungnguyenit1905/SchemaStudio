@@ -33,6 +33,7 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
         defer { lock.unlock() }
         return _serverVersion
     }
+
     var supportsSchemas: Bool { false }
     var supportsTransactions: Bool { false }
     var currentSchema: String? { nil }
@@ -239,12 +240,12 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
 
     func fetchTables(schema: String?) async throws -> [PluginTableInfo] {
         let query = """
-            SELECT name, type FROM sqlite_master
-            WHERE type IN ('table', 'view')
-            AND name NOT LIKE 'sqlite_%'
-            AND name NOT GLOB '_cf_*'
-            ORDER BY name
-            """
+        SELECT name, type FROM sqlite_master
+        WHERE type IN ('table', 'view')
+        AND name NOT LIKE 'sqlite_%'
+        AND name NOT GLOB '_cf_*'
+        ORDER BY name
+        """
         let result = try await execute(query: query)
         return result.rows.compactMap { row in
             guard let name = row[safe: 0]?.asText else { return nil }
@@ -282,11 +283,11 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
 
     func fetchAllColumns(schema: String?) async throws -> [String: [PluginColumnInfo]] {
         let query = """
-            SELECT m.name AS tbl, p.cid, p.name, p.type, p."notnull", p.dflt_value, p.pk
-            FROM sqlite_master m, pragma_table_info(m.name) p
-            WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%' AND m.name NOT GLOB '_cf_*'
-            ORDER BY m.name, p.cid
-            """
+        SELECT m.name AS tbl, p.cid, p.name, p.type, p."notnull", p.dflt_value, p.pk
+        FROM sqlite_master m, pragma_table_info(m.name) p
+        WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%' AND m.name NOT GLOB '_cf_*'
+        ORDER BY m.name, p.cid
+        """
         let result = try await execute(query: query)
 
         var allColumns: [String: [PluginColumnInfo]] = [:]
@@ -319,13 +320,13 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
 
     func fetchAllForeignKeys(schema: String?) async throws -> [String: [PluginForeignKeyInfo]] {
         let query = """
-            SELECT m.name AS table_name, p.id, p."table" AS referenced_table,
-                   p."from" AS column_name, p."to" AS referenced_column,
-                   p.on_update, p.on_delete
-            FROM sqlite_master m, pragma_foreign_key_list(m.name) p
-            WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%' AND m.name NOT GLOB '_cf_*'
-            ORDER BY m.name, p.id, p.seq
-            """
+        SELECT m.name AS table_name, p.id, p."table" AS referenced_table,
+               p."from" AS column_name, p."to" AS referenced_column,
+               p.on_update, p.on_delete
+        FROM sqlite_master m, pragma_foreign_key_list(m.name) p
+        WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%' AND m.name NOT GLOB '_cf_*'
+        ORDER BY m.name, p.id, p.seq
+        """
         let result = try await execute(query: query)
 
         var allForeignKeys: [String: [PluginForeignKeyInfo]] = [:]
@@ -361,11 +362,11 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
     func fetchIndexes(table: String, schema: String?) async throws -> [PluginIndexInfo] {
         let safeTable = escapeStringLiteral(table)
         let query = """
-            SELECT il.name, il."unique", il.origin, ii.name AS col_name
-            FROM pragma_index_list('\(safeTable)') il
-            LEFT JOIN pragma_index_info(il.name) ii ON 1=1
-            ORDER BY il.seq, ii.seqno
-            """
+        SELECT il.name, il."unique", il.origin, ii.name AS col_name
+        FROM pragma_index_list('\(safeTable)') il
+        LEFT JOIN pragma_index_info(il.name) ii ON 1=1
+        ORDER BY il.seq, ii.seqno
+        """
         let result = try await execute(query: query)
 
         var indexMap: [(name: String, isUnique: Bool, isPrimary: Bool, columns: [String])] = []
@@ -436,11 +437,11 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
     func fetchTriggers(table: String, schema: String?) async throws -> [PluginTriggerInfo] {
         let safeTable = escapeStringLiteral(table)
         let query = """
-            SELECT name, sql FROM sqlite_master
-            WHERE type = 'trigger' AND tbl_name = '\(safeTable)'
-                AND name NOT GLOB '_cf_*'
-            ORDER BY name
-            """
+        SELECT name, sql FROM sqlite_master
+        WHERE type = 'trigger' AND tbl_name = '\(safeTable)'
+            AND name NOT GLOB '_cf_*'
+        ORDER BY name
+        """
         let result = try await execute(query: query)
 
         return result.rows.compactMap { row -> PluginTriggerInfo? in
@@ -471,9 +472,9 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
     func fetchTableDDL(table: String, schema: String?) async throws -> String {
         let safeTable = escapeStringLiteral(table)
         let query = """
-            SELECT sql FROM sqlite_master
-            WHERE type = 'table' AND name = '\(safeTable)'
-            """
+        SELECT sql FROM sqlite_master
+        WHERE type = 'table' AND name = '\(safeTable)'
+        """
         let result = try await execute(query: query)
 
         guard let firstRow = result.rows.first,
@@ -488,9 +489,9 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
     func fetchViewDefinition(view: String, schema: String?) async throws -> String {
         let safeView = escapeStringLiteral(view)
         let query = """
-            SELECT sql FROM sqlite_master
-            WHERE type = 'view' AND name = '\(safeView)'
-            """
+        SELECT sql FROM sqlite_master
+        WHERE type = 'view' AND name = '\(safeView)'
+        """
         let result = try await execute(query: query)
 
         guard let firstRow = result.rows.first,
@@ -581,7 +582,7 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
         var uuid = databaseNameToUuid[database]
         lock.unlock()
 
-        if uuid == nil && isUuid(database) {
+        if uuid == nil, isUuid(database) {
             uuid = database
         }
 
@@ -723,11 +724,9 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
             parts.append(d1ForeignKeyDefinition(fk))
         }
 
-        let sql = "CREATE TABLE \(tableName) (\n  " +
+        return "CREATE TABLE \(tableName) (\n  " +
             parts.joined(separator: ",\n  ") +
             "\n);"
-
-        return sql
     }
 
     func generateAddColumnSQL(table: String, column: PluginColumnDefinition) -> String? {
@@ -772,7 +771,7 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
 
     private func d1ColumnDefinition(_ col: PluginColumnDefinition, inlinePK: Bool) -> String {
         var def = "\(quoteIdentifier(col.name)) \(col.dataType)"
-        if inlinePK && col.isPrimaryKey {
+        if inlinePK, col.isPrimaryKey {
             def += " PRIMARY KEY"
             if col.autoIncrement {
                 def += " AUTOINCREMENT"
@@ -873,10 +872,10 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
             } else if char == ")" {
                 depth -= 1
                 result.append(char)
-            } else if char == "," && depth == 1 {
+            } else if char == ",", depth == 1 {
                 result.append(",\n  ")
                 charIndex += 1
-                while charIndex < chars.count && chars[charIndex].isWhitespace {
+                while charIndex < chars.count, chars[charIndex].isWhitespace {
                     charIndex += 1
                 }
                 charIndex -= 1

@@ -21,7 +21,7 @@ struct SlowQueryListView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
 
-            if queries.isEmpty && error == nil {
+            if queries.isEmpty, error == nil {
                 Text(String(localized: "No slow queries"))
                     .foregroundStyle(.secondary)
                     .font(.caption)

@@ -4,12 +4,11 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("PluginInstaller staged-update bookkeeping", .serialized)
 struct PluginInstallerCoalescingTests {
-
     @Test("hasStagedUpdate returns false for unknown pluginId")
     func unknownStagedUpdate() async {
         let installer = PluginInstaller.shared

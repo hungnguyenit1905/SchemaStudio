@@ -20,7 +20,7 @@ enum RoutineRowLogic {
     static func iconName(for kind: RoutineInfo.Kind) -> String {
         switch kind {
         case .procedure: return "curlybraces.square"
-        case .function:  return "function"
+        case .function: return "function"
         }
     }
 

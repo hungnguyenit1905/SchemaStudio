@@ -26,10 +26,28 @@ struct StructureGridDelegateInspectorTests {
         manager.loadSchema(
             tableName: "users",
             columns: [
-                ColumnInfo(name: "id", dataType: "INT", isNullable: false, isPrimaryKey: true,
-                           defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil),
-                ColumnInfo(name: "email", dataType: "VARCHAR(255)", isNullable: true, isPrimaryKey: false,
-                           defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil)
+                ColumnInfo(
+                    name: "id",
+                    dataType: "INT",
+                    isNullable: false,
+                    isPrimaryKey: true,
+                    defaultValue: nil,
+                    extra: nil,
+                    charset: nil,
+                    collation: nil,
+                    comment: nil
+                ),
+                ColumnInfo(
+                    name: "email",
+                    dataType: "VARCHAR(255)",
+                    isNullable: true,
+                    isPrimaryKey: false,
+                    defaultValue: nil,
+                    extra: nil,
+                    charset: nil,
+                    collation: nil,
+                    comment: nil
+                )
             ],
             indexes: [],
             foreignKeys: [],
@@ -79,9 +97,9 @@ struct StructureGridDelegateInspectorTests {
         let manager = loadedManager()
         let delegate = makeDelegate(manager: manager, filterText: "email")
 
-        delegate.commitInspectorField(
+        try delegate.commitInspectorField(
             displayRow: 0,
-            fieldIndex: try fieldIndex(delegate, .name),
+            fieldIndex: fieldIndex(delegate, .name),
             value: "user_email"
         )
 
@@ -94,9 +112,9 @@ struct StructureGridDelegateInspectorTests {
         let manager = loadedManager()
         let delegate = makeDelegate(manager: manager)
 
-        delegate.commitInspectorField(
+        try delegate.commitInspectorField(
             displayRow: 1,
-            fieldIndex: try fieldIndex(delegate, .type),
+            fieldIndex: fieldIndex(delegate, .type),
             value: "TEXT"
         )
 
@@ -109,9 +127,9 @@ struct StructureGridDelegateInspectorTests {
         let manager = loadedManager()
         let delegate = makeDelegate(manager: manager)
 
-        delegate.commitInspectorField(
+        try delegate.commitInspectorField(
             displayRow: 1,
-            fieldIndex: try fieldIndex(delegate, .nullable),
+            fieldIndex: fieldIndex(delegate, .nullable),
             value: "NO"
         )
 

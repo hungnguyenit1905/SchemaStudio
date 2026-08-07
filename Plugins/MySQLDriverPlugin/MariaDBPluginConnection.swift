@@ -40,11 +40,14 @@ struct MariaDBPluginError: Error {
     let sqlState: String?
 
     static let notConnected = MariaDBPluginError(
-        code: 0, message: String(localized: "Not connected to database"), sqlState: nil)
+        code: 0, message: String(localized: "Not connected to database"), sqlState: nil
+    )
     static let connectionFailed = MariaDBPluginError(
-        code: 0, message: String(localized: "Failed to establish connection"), sqlState: nil)
+        code: 0, message: String(localized: "Failed to establish connection"), sqlState: nil
+    )
     static let initFailed = MariaDBPluginError(
-        code: 0, message: String(localized: "Failed to initialize MySQL client"), sqlState: nil)
+        code: 0, message: String(localized: "Failed to initialize MySQL client"), sqlState: nil
+    )
 }
 
 // MARK: - Query Result
@@ -210,7 +213,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
         let handle = mysql
         let cleanupQueue = queue
         mysql = nil
-        if let handle = handle {
+        if let handle {
             cleanupQueue.async {
                 mysql_close(handle)
             }
@@ -225,12 +228,19 @@ final class MariaDBPluginConnection: @unchecked Sendable {
             let handle: UnsafeMutablePointer<MYSQL>
             do {
                 handle = try self.attemptConnect(enforceSSL: mode != .disabled)
-            } catch let error as MariaDBPluginError where mode == .preferred && MariaDBSSLClassifier.sslOnlyErrorCodes.contains(error.code) {
-                logger.notice("MySQL SSL handshake failed (code \(error.code)); falling back to plaintext for .preferred mode")
+            } catch let error as MariaDBPluginError
+                where mode == .preferred && MariaDBSSLClassifier.sslOnlyErrorCodes.contains(error.code) {
+                logger
+                    .notice(
+                        "MySQL SSL handshake failed (code \(error.code)); falling back to plaintext for .preferred mode"
+                    )
                 do {
                     handle = try self.attemptConnect(enforceSSL: false)
                 } catch let fallbackError as MariaDBPluginError {
-                    if let sslError = MariaDBSSLClassifier.classifySSLError(code: fallbackError.code, message: fallbackError.message) {
+                    if let sslError = MariaDBSSLClassifier.classifySSLError(
+                        code: fallbackError.code,
+                        message: fallbackError.message
+                    ) {
                         throw sslError
                     }
                     throw fallbackError
@@ -369,7 +379,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
 
         _cachedServerVersion = nil
 
-        if let handle = handle {
+        if let handle {
             queue.async {
                 mysql_close(handle)
             }
@@ -381,7 +391,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
     func cancelCurrentQuery() {
         guard cancellationGate.cancel() != nil else { return }
 
-        guard let mysql = mysql else { return }
+        guard let mysql else { return }
         killQueryOnServer(threadId: mysql_thread_id(mysql))
     }
 
@@ -389,7 +399,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
         guard threadId > 0 else { return }
 
         let killConn = mysql_init(nil)
-        guard let killConn = killConn else { return }
+        guard let killConn else { return }
 
         var killTimeout: UInt32 = 5
         mysql_options(killConn, MYSQL_OPT_CONNECT_TIMEOUT, &killTimeout)
@@ -493,7 +503,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
         columnMeta.reserveCapacity(numFields)
 
         if let fields = mysql_fetch_fields(resultPtr) {
-            for i in 0..<numFields {
+            for i in 0 ..< numFields {
                 let field = fields[i]
                 let columnName = field.name.map { String(cString: $0) } ?? "column_\(i)"
                 columns.append(columnName)
@@ -537,7 +547,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
             var row: [PluginCellValue] = []
             row.reserveCapacity(numFields)
 
-            for i in 0..<numFields {
+            for i in 0 ..< numFields {
                 if let fieldPtr = rowPtr[i] {
                     let length = Int(clamping: lengths?[i] ?? 0)
                     let bufferPtr = UnsafeRawBufferPointer(start: fieldPtr, count: length)
@@ -688,7 +698,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
             }
         }
 
-        for i in 0..<numFields {
+        for i in 0 ..< numFields {
             let bufferSize = 65_536
             let buffer = UnsafeMutableRawPointer.allocate(byteCount: bufferSize, alignment: 1)
             resultBuffers.append(buffer)
@@ -727,7 +737,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
 
             // Re-fetch truncated columns with correctly sized buffers
             if fetchStatus == MYSQL_DATA_TRUNCATED {
-                for i in 0..<numFields {
+                for i in 0 ..< numFields {
                     let actualLength = Int(resultBinds[i].length?.pointee ?? 0)
                     if actualLength > Int(resultBinds[i].buffer_length) {
                         let newBuffer = UnsafeMutableRawPointer.allocate(
@@ -745,7 +755,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
             }
 
             var row: [PluginCellValue] = []
-            for i in 0..<numFields {
+            for i in 0 ..< numFields {
                 if resultBinds[i].is_null?.pointee == 1 {
                     row.append(.null)
                 } else {
@@ -851,7 +861,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
         let numFields = Int(mysql_num_fields(metadata))
 
         if let fields = mysql_fetch_fields(metadata) {
-            for i in 0..<numFields {
+            for i in 0 ..< numFields {
                 let field = fields[i]
                 let columnName = field.name.map { String(cString: $0) } ?? "column_\(i)"
                 columns.append(columnName)
@@ -955,7 +965,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
                 columnIsBinary.reserveCapacity(numFields)
 
                 if let fields = mysql_fetch_fields(resultPtr) {
-                    for i in 0..<numFields {
+                    for i in 0 ..< numFields {
                         let field = fields[i]
                         if let namePtr = field.name {
                             columns.append(String(cString: namePtr))
@@ -1002,7 +1012,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
                     var row: [PluginCellValue] = []
                     row.reserveCapacity(numFields)
 
-                    for i in 0..<numFields {
+                    for i in 0 ..< numFields {
                         if let fieldPtr = rowPtr[i] {
                             let length = Int(clamping: lengths?[i] ?? 0)
                             let bufferPtr = UnsafeRawBufferPointer(start: fieldPtr, count: length)
@@ -1061,7 +1071,7 @@ final class MariaDBPluginConnection: @unchecked Sendable {
     // MARK: - Private Helpers
 
     private func getError() -> MariaDBPluginError {
-        guard let mysql = mysql else {
+        guard let mysql else {
             return MariaDBPluginError.notConnected
         }
 

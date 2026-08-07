@@ -4,12 +4,11 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("Project Config File Matcher")
 struct ProjectConfigFileMatcherTests {
-
     @Test("Real dotenv files are classified with their tier")
     func testDotenvTiers() {
         #expect(ProjectConfigFileMatcher.classify(relativePath: ".env")?.tier == .nearCertain)
@@ -53,7 +52,8 @@ struct ProjectConfigFileMatcherTests {
             relativePath: "src/main/resources/application.properties"
         )?.kind == .springProperties)
         #expect(ProjectConfigFileMatcher.classify(relativePath: "application-dev.yml")?.kind == .springYaml)
-        #expect(ProjectConfigFileMatcher.classify(relativePath: "appsettings.Development.json")?.kind == .appSettingsJson)
+        #expect(ProjectConfigFileMatcher.classify(relativePath: "appsettings.Development.json")?
+            .kind == .appSettingsJson)
         #expect(ProjectConfigFileMatcher.classify(relativePath: "docker-compose.yml")?.kind == .dockerCompose)
         #expect(ProjectConfigFileMatcher.classify(relativePath: "compose.yaml")?.kind == .dockerCompose)
     }

@@ -83,9 +83,9 @@ struct SqlWalkthroughStep: Identifiable, Codable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = UUID()
         title = try container.decode(String.self, forKey: .title)
-        why = (try container.decodeIfPresent(String.self, forKey: .why)) ?? ""
-        importance = (try container.decodeIfPresent(SqlWalkthroughImportance.self, forKey: .importance)) ?? .normal
-        changeType = (try container.decodeIfPresent(SqlWalkthroughChangeType.self, forKey: .changeType)) ?? .explanation
+        why = try (container.decodeIfPresent(String.self, forKey: .why)) ?? ""
+        importance = try (container.decodeIfPresent(SqlWalkthroughImportance.self, forKey: .importance)) ?? .normal
+        changeType = try (container.decodeIfPresent(SqlWalkthroughChangeType.self, forKey: .changeType)) ?? .explanation
         anchor = try container.decodeIfPresent(SqlWalkthroughAnchor.self, forKey: .anchor)
     }
 
@@ -126,7 +126,7 @@ struct SqlWalkthroughEnvelope: Codable, Equatable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         afterSQL = try container.decodeIfPresent(String.self, forKey: .afterSQL)
-        steps = (try container.decodeIfPresent([SqlWalkthroughStep].self, forKey: .steps)) ?? []
+        steps = try (container.decodeIfPresent([SqlWalkthroughStep].self, forKey: .steps)) ?? []
     }
 }
 
@@ -151,7 +151,7 @@ struct SqlWalkthroughBlock: Codable, Equatable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         beforeSQL = try container.decode(String.self, forKey: .beforeSQL)
         envelope = try container.decode(SqlWalkthroughEnvelope.self, forKey: .envelope)
-        diffStyle = (try container.decodeIfPresent(SqlWalkthroughDiffStyle.self, forKey: .diffStyle)) ?? .unified
+        diffStyle = try (container.decodeIfPresent(SqlWalkthroughDiffStyle.self, forKey: .diffStyle)) ?? .unified
     }
 
     var hasDiff: Bool {

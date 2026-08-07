@@ -37,7 +37,8 @@ extension MainContentCoordinator {
 
     func openLinkedFavorite(_ favorite: LinkedSQLFavorite) {
         guard let loaded = FileTextLoader.load(favorite.fileURL) else { return }
-        let mtime = (try? FileManager.default.attributesOfItem(atPath: favorite.fileURL.path)[.modificationDate]) as? Date
+        let mtime = (try? FileManager.default
+            .attributesOfItem(atPath: favorite.fileURL.path)[.modificationDate]) as? Date
 
         if let existing = WindowLifecycleMonitor.shared.window(forSourceFile: favorite.fileURL) {
             let stillHasTab = MainContentCoordinator.coordinator(forWindow: existing)?

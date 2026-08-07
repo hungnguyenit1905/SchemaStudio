@@ -176,9 +176,9 @@ struct BeancountPluginDriverTests {
             defer { driver.disconnect() }
 
             let result = try await driver.execute(query: """
-                SELECT account, amount, commodity, cost_number, cost_currency
-                FROM postings ORDER BY account
-                """)
+            SELECT account, amount, commodity, cost_number, cost_currency
+            FROM postings ORDER BY account
+            """)
             let byAccount = Dictionary(
                 uniqueKeysWithValues: result.rows.compactMap { row -> (String, [PluginCellValue])? in
                     guard let account = row[0].asText else { return nil }
@@ -227,9 +227,9 @@ struct BeancountPluginDriverTests {
             defer { driver.disconnect() }
 
             let result = try await driver.execute(query: """
-                SELECT account, amount, commodity
-                FROM balances ORDER BY account, commodity
-                """)
+            SELECT account, amount, commodity
+            FROM balances ORDER BY account, commodity
+            """)
             #expect(result.rows.map { $0.map(\.asText) } == [
                 ["Assets:Cash", "7.00", "USD"],
                 ["Expenses:Food", "3.00", "USD"],
@@ -264,9 +264,9 @@ struct BeancountPluginDriverTests {
             defer { driver.disconnect() }
 
             let result = try await driver.execute(query: """
-                SELECT date, account, amount, commodity
-                FROM balance_assertions
-                """)
+            SELECT date, account, amount, commodity
+            FROM balance_assertions
+            """)
             #expect(result.rows.map { $0.map(\.asText) } == [
                 ["2024-01-31", "Assets:Cash", "10.00", "USD"]
             ])
@@ -342,9 +342,9 @@ struct BeancountPluginDriverTests {
             defer { driver.disconnect() }
 
             let balances = try await driver.execute(query: """
-                SELECT account, amount, commodity
-                FROM balances ORDER BY account, commodity
-                """)
+            SELECT account, amount, commodity
+            FROM balances ORDER BY account, commodity
+            """)
             #expect(balances.rows.map { $0.map(\.asText) } == [
                 ["Assets:Cash", "7.00", "USD"],
                 ["Expenses:Food", "3.00", "USD"],
@@ -352,9 +352,9 @@ struct BeancountPluginDriverTests {
             ])
 
             let assertions = try await driver.execute(query: """
-                SELECT date, account, amount, commodity
-                FROM balance_assertions
-                """)
+            SELECT date, account, amount, commodity
+            FROM balance_assertions
+            """)
             #expect(assertions.rows.map { $0.map(\.asText) } == [
                 ["2024-01-31", "Assets:Cash", "7.00", "USD"]
             ])

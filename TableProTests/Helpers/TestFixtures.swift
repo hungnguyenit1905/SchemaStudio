@@ -6,9 +6,9 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 enum TestFixtures {
     // MARK: - Database Types
@@ -224,7 +224,7 @@ enum TestFixtures {
     }
 
     static func makeRows(count: Int, columns: [String] = ["id", "name", "email"]) -> [[String?]] {
-        (0..<count).map { i in
+        (0 ..< count).map { i in
             columns.map { col in "\(col)_\(i)" as String? }
         }
     }

@@ -1,11 +1,10 @@
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("URL Sanitization")
 struct URLSanitizationTests {
-
     @Test("URL with password replaces password with ***")
     func urlWithPassword() {
         let url = URL(string: "mysql://admin:secret123@localhost:3306/mydb")!

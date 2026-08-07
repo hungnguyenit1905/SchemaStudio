@@ -118,9 +118,10 @@ extension MainContentCoordinator {
     func editViewDefinition(_ viewName: String) {
         Task {
             do {
-                let definition = try await DatabaseManager.shared.withBrowseMetadataDriver(connectionId: self.connection.id) { driver in
-                    try await driver.fetchViewDefinition(view: viewName)
-                }
+                let definition = try await DatabaseManager.shared
+                    .withBrowseMetadataDriver(connectionId: self.connection.id) { driver in
+                        try await driver.fetchViewDefinition(view: viewName)
+                    }
 
                 let payload = EditorTabPayload(
                     connectionId: connection.id,
@@ -162,7 +163,10 @@ extension MainContentCoordinator {
         guard PluginManager.shared.supportsImport(for: connection.type) else {
             AlertHelper.showErrorSheet(
                 title: String(localized: "Import Not Supported"),
-                message: String(format: String(localized: "Import is not supported for %@ connections."), connection.type.rawValue),
+                message: String(
+                    format: String(localized: "Import is not supported for %@ connections."),
+                    connection.type.rawValue
+                ),
                 window: nil
             )
             return

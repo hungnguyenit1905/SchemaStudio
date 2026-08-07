@@ -23,7 +23,13 @@ extension StatusBarSnapshot {
         if tabType == .table, let total, total > 0 {
             let formattedTotal = total.formatted(.number.grouping(.automatic))
             let prefix = pagination.isApproximateRowCount ? "~" : ""
-            return String(format: String(localized: "%d-%d of %@%@ rows"), pagination.rangeStart, pagination.rangeEnd, prefix, formattedTotal)
+            return String(
+                format: String(localized: "%d-%d of %@%@ rows"),
+                pagination.rangeStart,
+                pagination.rangeEnd,
+                prefix,
+                formattedTotal
+            )
         }
         if tabType == .table, isPagedWithUnknownTotal {
             let rangeEnd = pagination.currentOffset + loadedCount

@@ -76,7 +76,7 @@ internal struct LinkedFavoriteMetadataDialog: View {
             TextField(String(localized: "Name"), text: $name)
                 .focused($nameFocused)
             TextField(String(localized: "Description"), text: $fileDescription, axis: .vertical)
-                .lineLimit(2...4)
+                .lineLimit(2 ... 4)
         }
     }
 
@@ -154,7 +154,12 @@ internal struct LinkedFavoriteMetadataDialog: View {
                 dismiss()
             } catch LinkedSQLFavoriteWriter.WriteError.encodingMismatch(let encoding) {
                 isSaving = false
-                saveError = String(format: String(localized: "File encoding (%@) cannot represent these characters. Convert the file to UTF-8 to save."), encoding.displayName)
+                saveError = String(
+                    format: String(
+                        localized: "File encoding (%@) cannot represent these characters. Convert the file to UTF-8 to save."
+                    ),
+                    encoding.displayName
+                )
             } catch LinkedSQLFavoriteWriter.WriteError.readFailed {
                 isSaving = false
                 saveError = String(localized: "Could not read the file. It may have been deleted or moved.")

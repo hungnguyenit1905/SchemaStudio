@@ -137,7 +137,7 @@ struct CloudSQLProxyManagerTests {
 
         try await manager.closeTunnel(connectionId: id)
         #expect(fake.stopCallCount >= 1)
-        #expect(!(await manager.hasTunnel(connectionId: id)))
+        #expect(await !(manager.hasTunnel(connectionId: id)))
     }
 
     @Test("createTunnel fails when the proxy exits during startup")
@@ -162,7 +162,10 @@ struct CloudSQLProxyManagerTests {
     @Test("missing binary throws binaryNotFound")
     func missingBinary() async {
         let manager = CloudSQLProxyManager(runnerFactory: { FakeCloudSQLProxyRunner(behavior: .ready) })
-        let badConfig = CloudSQLProxyConfiguration(instanceConnectionName: "p:r:i", binaryPath: "/nonexistent/cloud-sql-proxy")
+        let badConfig = CloudSQLProxyConfiguration(
+            instanceConnectionName: "p:r:i",
+            binaryPath: "/nonexistent/cloud-sql-proxy"
+        )
 
         await #expect(throws: CloudSQLProxyError.binaryNotFound) {
             _ = try await manager.createTunnel(connectionId: UUID(), config: badConfig)

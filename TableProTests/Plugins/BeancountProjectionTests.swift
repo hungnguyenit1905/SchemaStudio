@@ -21,9 +21,9 @@ struct BeancountProjectionTests {
         ])
 
         let postings = try await driver.execute(query: """
-            SELECT transaction_id, account, amount, commodity, cost_number, cost_currency
-            FROM postings ORDER BY id
-            """)
+        SELECT transaction_id, account, amount, commodity, cost_number, cost_currency
+        FROM postings ORDER BY id
+        """)
         #expect(postings.rows.map { $0.map(\.asText) } == [
             ["1", "Expenses:Food", "4.00", "USD", nil, nil],
             ["1", "Assets:Cash", "-4.00", "USD", nil, nil],
@@ -37,14 +37,16 @@ struct BeancountProjectionTests {
         let driver = try Self.makeDriver()
         defer { driver.disconnect() }
 
-        let balances = try await driver.execute(query: "SELECT account, amount, commodity FROM balances ORDER BY account")
+        let balances = try await driver
+            .execute(query: "SELECT account, amount, commodity FROM balances ORDER BY account")
         #expect(balances.rows.map { $0.map(\.asText) } == [
             ["Assets:Cash", "-1004.00", "USD"],
             ["Assets:Stock", "10", "HOOL"],
             ["Expenses:Food", "4.00", "USD"]
         ])
 
-        let assertions = try await driver.execute(query: "SELECT date, account, amount, commodity FROM balance_assertions")
+        let assertions = try await driver
+            .execute(query: "SELECT date, account, amount, commodity FROM balance_assertions")
         #expect(assertions.rows.map { $0.map(\.asText) } == [["2024-01-31", "Assets:Cash", "-1004.00", "USD"]])
 
         let accounts = try await driver.execute(query: "SELECT name, currencies FROM accounts ORDER BY name")
@@ -92,7 +94,14 @@ struct BeancountProjectionTests {
                 id: 2, payee: "Broker", narration: "Buy stock", account: "Assets:Stock",
                 number: "10", currency: "HOOL", costNumber: "100.00", costCurrency: "USD"
             ),
-            row(id: 2, payee: "Broker", narration: "Buy stock", account: "Assets:Cash", number: "-1000.00", currency: "USD")
+            row(
+                id: 2,
+                payee: "Broker",
+                narration: "Buy stock",
+                account: "Assets:Cash",
+                number: "-1000.00",
+                currency: "USD"
+            )
         ],
         accounts: [
             ["account": "Assets:Cash", "open": "2024-01-01", "currencies": ["USD"]],

@@ -49,7 +49,10 @@ final class QueryEditorViewModel {
         case .rowCap:
             return String(format: String(localized: "Showing the first %d rows. Add LIMIT to fetch more."), shown)
         case .memoryPressure:
-            return String(format: String(localized: "Stopped at %d rows to stay within memory limits. Add LIMIT to fetch fewer."), shown)
+            return String(
+                format: String(localized: "Stopped at %d rows to stay within memory limits. Add LIMIT to fetch fewer."),
+                shown
+            )
         case .cancelled:
             return String(format: String(localized: "Stopped. Showing %d rows."), shown)
         case .driverLimit:

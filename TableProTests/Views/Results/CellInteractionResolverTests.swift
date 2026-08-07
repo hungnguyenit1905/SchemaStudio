@@ -49,7 +49,11 @@ struct CellInteractionResolverReadOnlyTests {
 
     @Test("read-only JSON column shows its value inline; the chevron opens the JSON viewer")
     func readOnlyJsonColumnShowsInline() {
-        let context = ContextFactory.make(value: #"{"k":1}"#, columnType: .json(rawType: "JSON"), isTableEditable: false)
+        let context = ContextFactory.make(
+            value: #"{"k":1}"#,
+            columnType: .json(rawType: "JSON"),
+            isTableEditable: false
+        )
         #expect(resolver.resolve(context) == .viewInline(value: #"{"k":1}"#))
     }
 

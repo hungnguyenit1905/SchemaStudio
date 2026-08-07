@@ -187,17 +187,15 @@ struct FilterSQLGenerator {
                 : "\(column) IN (\(list))"
         }()
 
-        let nullClause: String? = hasNull ? {
-            negated ? "\(column) IS NOT NULL" : "\(column) IS NULL"
-        }() : nil
+        let nullClause: String? = hasNull ? negated ? "\(column) IS NOT NULL" : "\(column) IS NULL" : nil
 
         switch (inClause, nullClause) {
-        case let (inC?, nullC?):
+        case (let inC?, let nullC?):
             let joiner = negated ? " AND " : " OR "
             return "(\(inC)\(joiner)\(nullC))"
-        case let (inC?, nil):
+        case (let inC?, nil):
             return inC
-        case let (nil, nullC?):
+        case (nil, let nullC?):
             return nullC
         case (nil, nil):
             return nil

@@ -43,7 +43,7 @@ struct RowDisplayCacheTests {
     @Test("Count limit evicts oldest entries first (FIFO)")
     func countLimitEvictsFIFO() {
         let cache = RowDisplayCache(countLimit: 3, costLimit: 1_000_000)
-        for index in 1...3 {
+        for index in 1 ... 3 {
             cache.setBox(makeBox(["row\(index)"]), forID: .existing(index), cost: 4)
         }
         #expect(cache.box(forID: .existing(1)) != nil)
@@ -90,11 +90,11 @@ struct RowDisplayCacheTests {
     @Test("removeAll empties the cache and resets state")
     func removeAllResetsState() {
         let cache = RowDisplayCache()
-        for index in 1...10 {
+        for index in 1 ... 10 {
             cache.setBox(makeBox(["x"]), forID: .existing(index), cost: 1)
         }
         cache.removeAll()
-        for index in 1...10 {
+        for index in 1 ... 10 {
             #expect(cache.box(forID: .existing(index)) == nil)
         }
 

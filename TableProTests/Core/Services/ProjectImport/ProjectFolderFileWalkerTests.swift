@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("Project Folder File Walker")
 struct ProjectFolderFileWalkerTests {
@@ -75,7 +75,7 @@ struct ProjectFolderFileWalkerTests {
 
     @Test("Files over the size cap are skipped")
     func testFileSizeCap() throws {
-        let oversized = String(repeating: "A", count: ProjectFolderFileWalker.maxFileSize + 1024)
+        let oversized = String(repeating: "A", count: ProjectFolderFileWalker.maxFileSize + 1_024)
         try write(oversized, to: ".env")
         #expect(walk().isEmpty)
     }

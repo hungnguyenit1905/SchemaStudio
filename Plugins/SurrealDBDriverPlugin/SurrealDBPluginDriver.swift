@@ -50,7 +50,11 @@ final class SurrealDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         do {
             try await client.probeVersion()
             try await client.authenticate()
-            _ = try await client.query("RETURN 1;", namespace: currentScope().namespace, database: currentScope().database)
+            _ = try await client.query(
+                "RETURN 1;",
+                namespace: currentScope().namespace,
+                database: currentScope().database
+            )
         } catch {
             client.stop()
             throw error
@@ -131,7 +135,7 @@ final class SurrealDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func learnKinds(from value: SurrealValue) {
         let rows: [SurrealValue]
         switch value {
-        case let .array(items):
+        case .array(let items):
             rows = items
         case .object:
             rows = [value]
@@ -142,7 +146,7 @@ final class SurrealDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         var learned: [String: [String: SurrealFieldKind]] = [:]
         for row in rows {
             guard let pairs = row.objectPairs,
-                  case let .recordId(record)? = row[SurrealInfoParser.recordIdColumn] else { continue }
+                  case .recordId(let record)? = row[SurrealInfoParser.recordIdColumn] else { continue }
             for pair in pairs where !SurrealInfoParser.isReservedColumn(pair.key) {
                 guard learned[record.table]?[pair.key] == nil,
                       let kind = SurrealFieldKind.infer(from: pair.value) else { continue }
@@ -211,7 +215,7 @@ final class SurrealDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     }
 
     private static func rowsAffected(_ value: SurrealValue) -> Int {
-        guard case let .array(items) = value else { return 0 }
+        guard case .array(let items) = value else { return 0 }
         return items.count
     }
 

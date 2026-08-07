@@ -31,6 +31,7 @@ private final class PartitionUnawareDriver: PluginDatabaseDriver {
     func fetchTableMetadata(table: String, schema: String?) async throws -> PluginTableMetadata {
         PluginTableMetadata(tableName: table)
     }
+
     func fetchDatabases() async throws -> [String] { [] }
     func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
         PluginDatabaseMetadata(name: database)

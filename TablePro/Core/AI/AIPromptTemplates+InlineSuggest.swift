@@ -13,19 +13,19 @@ extension AIPromptTemplates {
     /// - Returns: The system prompt string for the AI provider
     static func inlineSuggestSystemPrompt(schemaContext: String? = nil) -> String {
         var prompt = """
-            You are an SQL autocomplete engine. Given the SQL text before the cursor, \
-            return ONLY the completion text that should appear after the cursor. \
-            Rules: \
-            - Return raw SQL only, no markdown, no backticks, no explanation. \
-            - Do NOT repeat any text that already exists before the cursor. \
-            - Keep completions concise (1-2 lines preferred). \
-            - If no meaningful completion exists, return an empty string. \
-            - Match the SQL dialect and style of the existing query. \
-            - The completion must continue EXACTLY from the cursor position — \
-            if the cursor is mid-word (e.g., "SE[CURSOR]"), \
-            complete the word without adding spaces (e.g., "LECT * FROM ..."). \
-            - Only include a leading space when the cursor is after a complete token followed by no space.
-            """
+        You are an SQL autocomplete engine. Given the SQL text before the cursor, \
+        return ONLY the completion text that should appear after the cursor. \
+        Rules: \
+        - Return raw SQL only, no markdown, no backticks, no explanation. \
+        - Do NOT repeat any text that already exists before the cursor. \
+        - Keep completions concise (1-2 lines preferred). \
+        - If no meaningful completion exists, return an empty string. \
+        - Match the SQL dialect and style of the existing query. \
+        - The completion must continue EXACTLY from the cursor position — \
+        if the cursor is mid-word (e.g., "SE[CURSOR]"), \
+        complete the word without adding spaces (e.g., "LECT * FROM ..."). \
+        - Only include a leading space when the cursor is after a complete token followed by no space.
+        """
 
         if let schema = schemaContext, !schema.isEmpty {
             prompt += "\n\n" + schema

@@ -22,8 +22,7 @@ enum MSSQLKerberosRealmResolver {
         guard !trimmed.isEmpty else { return nil }
         let canonicalHost = canonicalHostname(trimmed)
         guard let realm = realm(forHost: canonicalHost),
-              MSSQLKerberosRealm.isConfigured(realm, forHost: canonicalHost)
-        else { return nil }
+              MSSQLKerberosRealm.isConfigured(realm, forHost: canonicalHost) else { return nil }
         return (host: canonicalHost, realm: realm)
     }
 

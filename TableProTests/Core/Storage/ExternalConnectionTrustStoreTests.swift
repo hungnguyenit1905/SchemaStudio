@@ -93,7 +93,7 @@ struct ExternalConnectionTrustStoreTests {
             scopeName: ""
         )
         let poisoned = [TrustedExternalConnection(key: remote, trustedAt: Date())]
-        defaults.set(try JSONEncoder().encode(poisoned), forKey: "com.SchemaStudio.externalConnectionTrust.entries")
+        try defaults.set(JSONEncoder().encode(poisoned), forKey: "com.SchemaStudio.externalConnectionTrust.entries")
 
         let store = ExternalConnectionTrustStore(defaults: defaults)
 

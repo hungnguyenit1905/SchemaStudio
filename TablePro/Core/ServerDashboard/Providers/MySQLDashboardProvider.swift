@@ -11,11 +11,11 @@ struct MySQLDashboardProvider: ServerDashboardQueryProvider {
 
     func fetchSessions(execute: (String) async throws -> QueryResult) async throws -> [DashboardSession] {
         let sql = """
-            SELECT ID, USER, DB, COMMAND, TIME, STATE, LEFT(INFO, 1000) AS INFO
-            FROM information_schema.PROCESSLIST
-            WHERE ID <> CONNECTION_ID()
-            ORDER BY TIME DESC
-            """
+        SELECT ID, USER, DB, COMMAND, TIME, STATE, LEFT(INFO, 1000) AS INFO
+        FROM information_schema.PROCESSLIST
+        WHERE ID <> CONNECTION_ID()
+        ORDER BY TIME DESC
+        """
         let result = try await execute(sql)
         let col = columnIndex(from: result.columns)
         return result.rows.map { row in
@@ -128,11 +128,11 @@ struct MySQLDashboardProvider: ServerDashboardQueryProvider {
 
     func fetchSlowQueries(execute: (String) async throws -> QueryResult) async throws -> [DashboardSlowQuery] {
         let sql = """
-            SELECT ID, USER, DB, TIME, LEFT(INFO, 1000) AS INFO
-            FROM information_schema.PROCESSLIST
-            WHERE COMMAND <> 'Sleep' AND TIME > 1 AND ID <> CONNECTION_ID()
-            ORDER BY TIME DESC
-            """
+        SELECT ID, USER, DB, TIME, LEFT(INFO, 1000) AS INFO
+        FROM information_schema.PROCESSLIST
+        WHERE COMMAND <> 'Sleep' AND TIME > 1 AND ID <> CONNECTION_ID()
+        ORDER BY TIME DESC
+        """
         let result = try await execute(sql)
         let col = columnIndex(from: result.columns)
         return result.rows.map { row in

@@ -33,9 +33,16 @@ enum PluginError: LocalizedError {
         case .checksumMismatch:
             return String(localized: "Plugin checksum does not match expected value")
         case .incompatibleVersion(let required, let current):
-            return String(format: String(localized: "Plugin requires PluginKit version %d, but app provides version %d"), required, current)
+            return String(
+                format: String(localized: "Plugin requires PluginKit version %d, but app provides version %d"),
+                required,
+                current
+            )
         case .pluginOutdated(let pluginVersion, let requiredVersion):
-            let format = String(localized: "Plugin was built for PluginKit version %d; this release of SchemaStudio needs version %d.")
+            let format =
+                String(
+                    localized: "Plugin was built for PluginKit version %d; this release of SchemaStudio needs version %d."
+                )
             return String(format: format, pluginVersion, requiredVersion)
         case .cannotUninstallBuiltIn:
             return String(localized: "Built-in plugins cannot be uninstalled")
@@ -48,13 +55,25 @@ enum PluginError: LocalizedError {
         case .installFailed(let reason):
             return String(format: String(localized: "Plugin installation failed: %@"), reason)
         case .pluginConflict(let existingName):
-            return String(format: String(localized: "A built-in plugin \"%@\" already provides this bundle ID"), existingName)
+            return String(
+                format: String(localized: "A built-in plugin \"%@\" already provides this bundle ID"),
+                existingName
+            )
         case .appVersionTooOld(let minimumRequired, let currentApp):
-            return String(format: String(localized: "Plugin requires app version %@ or later, but current version is %@"), minimumRequired, currentApp)
+            return String(
+                format: String(localized: "Plugin requires app version %@ or later, but current version is %@"),
+                minimumRequired,
+                currentApp
+            )
         case .downloadFailed(let reason):
             return String(format: String(localized: "Plugin download failed: %@"), reason)
         case .pluginNotInstalled(let databaseType):
-            return String(format: String(localized: "The %@ plugin is not installed. You can download it from the plugin marketplace."), databaseType)
+            return String(
+                format: String(
+                    localized: "The %@ plugin is not installed. You can download it from the plugin marketplace."
+                ),
+                databaseType
+            )
         case .pluginUpdateUnavailable(let reason):
             return reason
         case .incompatibleWithCurrentApp(let minimumRequired):

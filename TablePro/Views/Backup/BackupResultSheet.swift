@@ -56,8 +56,7 @@ struct BackupResultSheet: View {
         .background(Color(nsColor: .windowBackgroundColor))
     }
 
-    @ViewBuilder
-    private var detailView: some View {
+    @ViewBuilder private var detailView: some View {
         switch outcome {
         case .failure(let message):
             ScrollView {
@@ -89,8 +88,7 @@ struct BackupResultSheet: View {
         }
     }
 
-    @ViewBuilder
-    private var icon: some View {
+    @ViewBuilder private var icon: some View {
         switch outcome {
         case .backupSuccess, .restoreSuccess:
             Image(systemName: "checkmark.circle.fill")
@@ -150,7 +148,9 @@ struct BackupResultSheet: View {
             switch kind {
             case .backup: return nil
             case .restore:
-                return String(localized: "The target database may be in a partial state. Review the database and clean up as needed.")
+                return String(
+                    localized: "The target database may be in a partial state. Review the database and clean up as needed."
+                )
             }
         }
     }
@@ -184,7 +184,9 @@ struct BackupResultSheet: View {
 #Preview("Restore Failure") {
     BackupResultSheet(
         kind: .restore,
-        outcome: .failure(message: "pg_restore: error: could not connect to database \"missing\": FATAL: database does not exist"),
+        outcome: .failure(
+            message: "pg_restore: error: could not connect to database \"missing\": FATAL: database does not exist"
+        ),
         onClose: {},
         onShowInFinder: nil
     )

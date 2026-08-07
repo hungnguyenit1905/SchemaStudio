@@ -121,7 +121,7 @@ internal final class BigQueryOAuthServer: @unchecked Sendable {
     }
 
     private func readRequest(from connection: NWConnection) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { [weak self] content, _, _, error in
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 8_192) { [weak self] content, _, _, error in
             guard let self, let data = content, error == nil else {
                 self?.resumeWithError(BigQueryError.authFailed("Failed to read OAuth callback"))
                 return
@@ -151,16 +151,14 @@ internal final class BigQueryOAuthServer: @unchecked Sendable {
         // HTTP request: GET /?code=AUTH_CODE&scope=... HTTP/1.1
         guard let firstLine = request.components(separatedBy: "\r\n").first,
               let pathPart = firstLine.components(separatedBy: " ").dropFirst().first,
-              let components = URLComponents(string: "http://localhost\(pathPart)")
-        else { return nil }
+              let components = URLComponents(string: "http://localhost\(pathPart)") else { return nil }
         return components.queryItems?.first(where: { $0.name == "code" })?.value
     }
 
     private func extractParam(named name: String, from request: String) -> String? {
         guard let firstLine = request.components(separatedBy: "\r\n").first,
               let pathPart = firstLine.components(separatedBy: " ").dropFirst().first,
-              let components = URLComponents(string: "http://localhost\(pathPart)")
-        else { return nil }
+              let components = URLComponents(string: "http://localhost\(pathPart)") else { return nil }
         return components.queryItems?.first(where: { $0.name == name })?.value
     }
 
@@ -174,11 +172,11 @@ internal final class BigQueryOAuthServer: @unchecked Sendable {
 
     private func sendSuccessResponse(to connection: NWConnection) {
         let html = """
-            <html><body style="font-family:system-ui;text-align:center;padding:60px;">
-            <h2>Authorization Successful</h2>
-            <p>You can close this tab and return to TablePro.</p>
-            </body></html>
-            """
+        <html><body style="font-family:system-ui;text-align:center;padding:60px;">
+        <h2>Authorization Successful</h2>
+        <p>You can close this tab and return to TablePro.</p>
+        </body></html>
+        """
         let response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n\(html)"
         connection.send(content: Data(response.utf8), completion: .contentProcessed { _ in
             connection.cancel()
@@ -188,12 +186,12 @@ internal final class BigQueryOAuthServer: @unchecked Sendable {
     private func sendErrorResponse(to connection: NWConnection, error: String) {
         let escaped = htmlEscape(error)
         let html = """
-            <html><body style="font-family:system-ui;text-align:center;padding:60px;">
-            <h2>Authorization Failed</h2>
-            <p>\(escaped)</p>
-            <p>Please close this tab and try again in TablePro.</p>
-            </body></html>
-            """
+        <html><body style="font-family:system-ui;text-align:center;padding:60px;">
+        <h2>Authorization Failed</h2>
+        <p>\(escaped)</p>
+        <p>Please close this tab and try again in TablePro.</p>
+        </body></html>
+        """
         let response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n\(html)"
         connection.send(content: Data(response.utf8), completion: .contentProcessed { _ in
             connection.cancel()

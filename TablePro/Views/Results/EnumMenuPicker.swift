@@ -49,8 +49,10 @@ enum EnumMenuPicker {
             driftItem.target = ItemTarget.shared
             driftItem.action = #selector(ItemTarget.invoke(_:))
             driftItem.representedObject = ItemPayload(value: current, onCommit: onCommit)
-            driftItem.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill",
-                                      accessibilityDescription: nil)
+            driftItem.image = NSImage(
+                systemSymbolName: "exclamationmark.triangle.fill",
+                accessibilityDescription: nil
+            )
             driftItem.toolTip = String(localized: "Value is not in the declared enum.")
             driftItem.state = .on
             menu.addItem(driftItem)
@@ -107,8 +109,10 @@ enum EnumMenuPicker {
             driftItem.action = #selector(SetSelectionCoordinator.toggle(_:))
             driftItem.representedObject = current
             driftItem.state = .on
-            driftItem.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill",
-                                      accessibilityDescription: nil)
+            driftItem.image = NSImage(
+                systemSymbolName: "exclamationmark.triangle.fill",
+                accessibilityDescription: nil
+            )
             driftItem.toolTip = String(localized: "Value is not in the declared set.")
             menu.addItem(driftItem)
         }
@@ -129,7 +133,8 @@ private struct ItemPayload {
 private final class ItemTarget: NSObject {
     static let shared = ItemTarget()
 
-    @objc func invoke(_ sender: NSMenuItem) {
+    @objc
+    func invoke(_ sender: NSMenuItem) {
         guard let payload = sender.representedObject as? ItemPayload else { return }
         payload.onCommit(payload.value)
     }
@@ -150,7 +155,8 @@ private final class SetSelectionCoordinator: NSObject, NSMenuDelegate {
         self.onCommit = onCommit
     }
 
-    @objc func toggle(_ sender: NSMenuItem) {
+    @objc
+    func toggle(_ sender: NSMenuItem) {
         guard let value = sender.representedObject as? String else { return }
         if selection.contains(value) {
             selection.remove(value)

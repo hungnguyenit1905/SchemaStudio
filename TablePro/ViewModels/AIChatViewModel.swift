@@ -147,8 +147,7 @@ final class AIChatViewModel {
         let configID = selectedProviderId ?? settings.activeProviderID
         guard let configID,
               let config = settings.providers.first(where: { $0.id == configID }),
-              let descriptor = AIProviderRegistry.shared.descriptor(for: config.type.rawValue)
-        else { return false }
+              let descriptor = AIProviderRegistry.shared.descriptor(for: config.type.rawValue) else { return false }
         return descriptor.supportsImages
     }
 
@@ -210,8 +209,7 @@ final class AIChatViewModel {
 
     func regenerate() {
         guard !isStreaming,
-              let lastAssistantIndex = messages.lastIndex(where: { $0.role == .assistant })
-        else { return }
+              let lastAssistantIndex = messages.lastIndex(where: { $0.role == .assistant }) else { return }
 
         AIProviderFactory.copilotDeleteLastTurn()
         messages.remove(at: lastAssistantIndex)

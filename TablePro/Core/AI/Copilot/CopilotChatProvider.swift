@@ -207,7 +207,8 @@ final class CopilotChatProvider: ChatTransport {
             let envelope = try JSONDecoder().decode(InvokeClientToolEnvelope.self, from: data)
             params = envelope.params
         } catch {
-            Self.logger.error("Failed to decode invokeClientTool params: \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .error("Failed to decode invokeClientTool params: \(error.localizedDescription, privacy: .public)")
             if let raw = String(data: data, encoding: .utf8) {
                 Self.logger.error("Raw invokeClientTool payload: \(raw, privacy: .public)")
             }
@@ -275,8 +276,7 @@ final class CopilotChatProvider: ChatTransport {
                   let params = json["params"] as? [String: Any],
                   let token = params["token"] as? String,
                   let value = params["value"] as? [String: Any],
-                  let kind = value["kind"] as? String
-            else { return }
+                  let kind = value["kind"] as? String else { return }
 
             let continuation = handlers.withLock { $0[token] }
             guard let continuation else { return }

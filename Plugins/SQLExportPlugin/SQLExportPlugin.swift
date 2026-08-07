@@ -98,15 +98,19 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
 
             try writeDropPhase(sortedTables: sortedTables, dataSource: dataSource, to: fileHandle)
             try await writeDependentTypesAndSequences(
-                tables: tables, dataSource: dataSource, to: fileHandle)
+                tables: tables, dataSource: dataSource, to: fileHandle
+            )
             try await writeCreatePhase(
-                sortedTables: sortedTables, dataSource: dataSource, to: fileHandle, progress: progress)
+                sortedTables: sortedTables, dataSource: dataSource, to: fileHandle, progress: progress
+            )
             try await writeDataPhase(
                 sortedTables: sortedTables, columnsByTable: columnsByTable,
-                dataSource: dataSource, to: fileHandle, progress: progress)
+                dataSource: dataSource, to: fileHandle, progress: progress
+            )
             try writeFinalizationPhase(
                 sortedTables: sortedTables, fkMap: fkMap, columnsByTable: columnsByTable,
-                dataSource: dataSource, to: fileHandle)
+                dataSource: dataSource, to: fileHandle
+            )
 
             try fileHandle.close()
             try PluginExportUtilities.commitAtomicWrite(from: tempURL, to: actualDestination)
@@ -161,7 +165,8 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
         } catch {
             Self.logger.warning("Failed to fetch foreign keys: \(error.localizedDescription)")
             metadataWarnings.append(
-                "Could not fetch foreign keys; FK constraints may be missing from the export.")
+                "Could not fetch foreign keys; FK constraints may be missing from the export."
+            )
             return [:]
         }
     }
@@ -175,7 +180,8 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
         } catch {
             Self.logger.warning("Failed to fetch columns: \(error.localizedDescription)")
             metadataWarnings.append(
-                "Could not fetch column metadata; identity columns and generated columns may not round-trip correctly.")
+                "Could not fetch column metadata; identity columns and generated columns may not round-trip correctly."
+            )
             return [:]
         }
     }
@@ -187,7 +193,9 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
         let nameSet = Set(tables.map { $0.name })
         var indegree: [String: Int] = [:]
         var children: [String: Set<String>] = [:]
-        for table in tables { indegree[table.name] = 0 }
+        for table in tables {
+            indegree[table.name] = 0
+        }
 
         for table in tables {
             let fks = fkMap[table.name] ?? []
@@ -261,7 +269,8 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
         for table in structureTables {
             do {
                 let sequences = try await dataSource.fetchDependentSequences(
-                    table: table.name, databaseName: table.databaseName)
+                    table: table.name, databaseName: table.databaseName
+                )
                 for seq in sequences where !emittedSequenceNames.contains(seq.name) {
                     emittedSequenceNames.insert(seq.name)
                     let quotedName = "\"\(seq.name.replacingOccurrences(of: "\"", with: "\"\""))\""
@@ -274,13 +283,18 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
 
             do {
                 let enumTypes = try await dataSource.fetchDependentTypes(
-                    table: table.name, databaseName: table.databaseName)
+                    table: table.name, databaseName: table.databaseName
+                )
                 for enumType in enumTypes where !emittedTypeNames.contains(enumType.name) {
                     emittedTypeNames.insert(enumType.name)
                     let quotedName = "\"\(enumType.name.replacingOccurrences(of: "\"", with: "\"\""))\""
                     try fileHandle.write(contentsOf: "DROP TYPE IF EXISTS \(quotedName) CASCADE;\n".toUTF8Data())
                     let quotedLabels = enumType.labels.map { "'\(dataSource.escapeStringLiteral($0))'" }
-                    try fileHandle.write(contentsOf: "CREATE TYPE \(quotedName) AS ENUM (\(quotedLabels.joined(separator: ", ")));\n\n".toUTF8Data())
+                    try fileHandle
+                        .write(
+                            contentsOf: "CREATE TYPE \(quotedName) AS ENUM (\(quotedLabels.joined(separator: ", ")));\n\n"
+                                .toUTF8Data()
+                        )
                 }
             } catch {
                 Self.logger.warning("Failed to fetch dependent types for table \(table.name): \(error)")
@@ -298,12 +312,15 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
             try progress.checkCancellation()
             progress.setCurrentTable(table.qualifiedName, index: index + 1)
             let sanitizedName = PluginExportUtilities.sanitizeForSQLComment(table.name)
-            try fileHandle.write(contentsOf: "-- --------------------------------------------------------\n".toUTF8Data())
+            try fileHandle
+                .write(contentsOf: "-- --------------------------------------------------------\n".toUTF8Data())
             try fileHandle.write(contentsOf: "-- Table: \(sanitizedName)\n".toUTF8Data())
-            try fileHandle.write(contentsOf: "-- --------------------------------------------------------\n\n".toUTF8Data())
+            try fileHandle
+                .write(contentsOf: "-- --------------------------------------------------------\n\n".toUTF8Data())
             do {
                 let ddl = try await dataSource.fetchTableDDL(
-                    table: table.name, databaseName: table.databaseName)
+                    table: table.name, databaseName: table.databaseName
+                )
                 try fileHandle.write(contentsOf: ddl.toUTF8Data())
                 if !ddl.hasSuffix(";") {
                     try fileHandle.write(contentsOf: ";".toUTF8Data())
@@ -313,7 +330,8 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
                 ddlFailures.append(sanitizedName)
                 let ddlWarning = "Warning: failed to fetch DDL for table \(sanitizedName): \(error)"
                 Self.logger.warning("Failed to fetch DDL for table \(sanitizedName): \(error)")
-                try fileHandle.write(contentsOf: "-- \(PluginExportUtilities.sanitizeForSQLComment(ddlWarning))\n\n".toUTF8Data())
+                try fileHandle
+                    .write(contentsOf: "-- \(PluginExportUtilities.sanitizeForSQLComment(ddlWarning))\n\n".toUTF8Data())
             }
         }
     }
@@ -332,7 +350,8 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
                 columnInfo: columnsByTable[table.name] ?? [],
                 dataSource: dataSource,
                 to: fileHandle,
-                progress: progress)
+                progress: progress
+            )
         }
     }
 
@@ -358,7 +377,8 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
             let columns = columnsByTable[table.name] ?? []
             for column in columns where column.isIdentity {
                 let setval = renderIdentitySetval(
-                    table: table, columnName: column.name, dataSource: dataSource)
+                    table: table, columnName: column.name, dataSource: dataSource
+                )
                 try fileHandle.write(contentsOf: "\(setval)\n".toUTF8Data())
                 emittedAnything = true
             }
@@ -375,7 +395,8 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
         dataSource: any PluginExportDataSource
     ) -> String {
         let tableRef = qualifiedRef(
-            schema: table.databaseName, table: table.name, dataSource: dataSource)
+            schema: table.databaseName, table: table.name, dataSource: dataSource
+        )
         let columnRef = dataSource.quoteIdentifier(columnName)
         let tableLiteral = dataSource.escapeStringLiteral(tableRef)
         let columnLiteral = dataSource.escapeStringLiteral(columnName)
@@ -415,13 +436,16 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
         dataSource: any PluginExportDataSource
     ) -> String {
         let tableRef = qualifiedRef(
-            schema: table.databaseName, table: table.name, dataSource: dataSource)
+            schema: table.databaseName, table: table.name, dataSource: dataSource
+        )
         let constraintName = dataSource.quoteIdentifier(group[0].name)
         let cols = group.map { dataSource.quoteIdentifier($0.column) }.joined(separator: ", ")
         let refCols = group.map { dataSource.quoteIdentifier($0.referencedColumn) }.joined(separator: ", ")
-        let refSchema = (group[0].referencedSchema?.isEmpty == false ? group[0].referencedSchema : nil) ?? table.databaseName
+        let refSchema = (group[0].referencedSchema?.isEmpty == false ? group[0].referencedSchema : nil) ?? table
+            .databaseName
         let refTable = qualifiedRef(
-            schema: refSchema, table: group[0].referencedTable, dataSource: dataSource)
+            schema: refSchema, table: group[0].referencedTable, dataSource: dataSource
+        )
         let onDelete = group[0].onDelete.uppercased()
         let onUpdate = group[0].onUpdate.uppercased()
         var alter = "ALTER TABLE \(tableRef) ADD CONSTRAINT \(constraintName) FOREIGN KEY (\(cols)) REFERENCES \(refTable) (\(refCols))"
@@ -550,7 +574,7 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
                     let hex = data.map { String(format: "%02X", $0) }.joined()
                     return "X'\(hex)'"
                 case .text(let val):
-                    if numericIndices.contains(colIndex) && PluginNumericLiteral.isValid(val) {
+                    if numericIndices.contains(colIndex), PluginNumericLiteral.isValid(val) {
                         return val
                     }
                     let escaped = dataSource.escapeStringLiteral(val)

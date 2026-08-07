@@ -41,7 +41,12 @@ enum RowParseError: LocalizedError {
         case .noValidRows:
             return String(localized: "No valid rows found in clipboard data.")
         case .columnCountMismatch(let expected, let actual, let line):
-            return String(format: String(localized: "Column count mismatch on line %d: expected %d columns, found %d."), line, expected, actual)
+            return String(
+                format: String(localized: "Column count mismatch on line %d: expected %d columns, found %d."),
+                line,
+                expected,
+                actual
+            )
         case .invalidFormat(let reason):
             return String(format: String(localized: "Invalid data format: %@"), reason)
         }

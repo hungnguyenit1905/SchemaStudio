@@ -124,7 +124,8 @@ extension PluginManager {
             )
             updateRejectedReason(url: rejected.url, reason: incompatibleBuildReason(for: registryPlugin))
             if case .noCompatibleBinary = error, case .awaitingCompatibleBuild = action {
-                Self.logger.warning("Reconciliation: no compatible build published yet for '\(rejected.name)', will retry")
+                Self.logger
+                    .warning("Reconciliation: no compatible build published yet for '\(rejected.name)', will retry")
                 return .transient(id: lookupId)
             }
             reconciliationAttempts[lookupId] = ReconciliationConfig.maxAttempts
@@ -177,9 +178,13 @@ extension PluginManager {
             .filter { $0.architecture == .current }
             .compactMap(\.pluginKitVersion)
         if availableKits.contains(where: { $0 > Self.currentPluginKitVersion }) {
-            return String(localized: "A newer version of SchemaStudio is required for this plugin. Update SchemaStudio to keep using it.")
+            return String(
+                localized: "A newer version of SchemaStudio is required for this plugin. Update SchemaStudio to keep using it."
+            )
         }
-        return String(localized: "No compatible build is available yet. This plugin will update automatically once one is published.")
+        return String(
+            localized: "No compatible build is available yet. This plugin will update automatically once one is published."
+        )
     }
 
     private func missingFromRegistryReason() -> String {
@@ -187,7 +192,9 @@ extension PluginManager {
     }
 
     private func registryUnreachableReason() -> String {
-        String(localized: "SchemaStudio couldn't reach the plugin registry to update this plugin. Check your connection and reopen SchemaStudio.")
+        String(
+            localized: "SchemaStudio couldn't reach the plugin registry to update this plugin. Check your connection and reopen SchemaStudio."
+        )
     }
 
     private func temporaryFailureReason() -> String {

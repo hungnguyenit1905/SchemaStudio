@@ -12,7 +12,7 @@ public enum SurrealStatementGenerator {
     static let autoIdMarker = "__DEFAULT__"
 
     static func isAutoDefault(_ value: PluginCellValue) -> Bool {
-        guard case let .text(text) = value else { return false }
+        guard case .text(let text) = value else { return false }
         return text.trimmingCharacters(in: .whitespaces) == autoIdMarker
     }
 
@@ -96,7 +96,7 @@ public enum SurrealStatementGenerator {
             let cell = values[index]
 
             if column == SurrealInfoParser.recordIdColumn {
-                guard case let .text(text) = cell else { continue }
+                guard case .text(let text) = cell else { continue }
                 let trimmed = text.trimmingCharacters(in: .whitespaces)
                 guard !trimmed.isEmpty, trimmed != Self.autoIdMarker else { continue }
                 guard let record = SurrealQL.parseRecordId(text, fallbackTable: table) else { continue }
@@ -139,7 +139,7 @@ public enum SurrealStatementGenerator {
         guard let originalRow,
               let index = columns.firstIndex(of: SurrealInfoParser.recordIdColumn),
               index < originalRow.count,
-              case let .text(text) = originalRow[index] else { return nil }
+              case .text(let text) = originalRow[index] else { return nil }
         return SurrealQL.parseRecordId(text, fallbackTable: table)
     }
 }

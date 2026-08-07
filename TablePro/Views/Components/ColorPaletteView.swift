@@ -11,7 +11,8 @@ struct ColorPaletteView: View {
     var size: Size
 
     enum Size {
-        case compact, regular
+        case compact
+        case regular
 
         var dotSize: CGFloat { self == .compact ? 16 : 20 }
         var frameSize: CGFloat { self == .compact ? 20 : 28 }

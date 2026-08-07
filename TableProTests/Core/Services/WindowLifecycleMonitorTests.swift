@@ -5,9 +5,9 @@
 
 import AppKit
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("WindowLifecycleMonitor")
 @MainActor

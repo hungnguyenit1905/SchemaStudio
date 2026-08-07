@@ -38,6 +38,7 @@ final class SchemaService {
         let connectionId: UUID
         let schema: String
     }
+
     @ObservationIgnored private var loadGenerations: [UUID: Int] = [:]
     @ObservationIgnored private var nextLoadGeneration = 0
     @ObservationIgnored private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SchemaService")
@@ -433,7 +434,7 @@ final class SchemaService {
         } catch is CancellationError {
             return nil
         } catch {
-            Self.logger.warning(
+            logger.warning(
                 "[schema] fetchSchemas failed connId=\(connectionId, privacy: .public) error=\(error.localizedDescription, privacy: .public)"
             )
             return nil

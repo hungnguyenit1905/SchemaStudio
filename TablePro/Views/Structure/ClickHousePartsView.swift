@@ -152,7 +152,9 @@ struct ClickHousePartsView: View {
             let confirmed = await AlertHelper.confirmDestructive(
                 title: String(localized: "Detach Partition?"),
                 message: String(
-                    format: String(localized: "This will detach partition '%@'. Data will be preserved but inaccessible until re-attached."),
+                    format: String(
+                        localized: "This will detach partition '%@'. Data will be preserved but inaccessible until re-attached."
+                    ),
                     partitionValue
                 ),
                 confirmButton: String(localized: "Detach"),
@@ -174,8 +176,7 @@ struct ClickHousePartsView: View {
 
     private func selectedPartitionValue() -> String? {
         guard let selectedId = selection.first,
-              let part = parts.first(where: { $0.id == selectedId })
-        else { return nil }
+              let part = parts.first(where: { $0.id == selectedId }) else { return nil }
         return part.partition
     }
 
@@ -193,12 +194,12 @@ struct ClickHousePartsView: View {
 
         do {
             let sql = """
-                SELECT partition, name, rows, bytes_on_disk,
-                       toString(modification_time) AS mod_time, active
-                FROM system.parts
-                WHERE database = currentDatabase() AND table = '\(driver.escapeStringLiteral(tableName))'
-                ORDER BY partition, name
-                """
+            SELECT partition, name, rows, bytes_on_disk,
+                   toString(modification_time) AS mod_time, active
+            FROM system.parts
+            WHERE database = currentDatabase() AND table = '\(driver.escapeStringLiteral(tableName))'
+            ORDER BY partition, name
+            """
             let result = try await driver.execute(query: sql)
             parts = result.rows.compactMap { row -> ClickHousePartInfo? in
                 guard let name = row[safe: 1]?.asText else { return nil }
@@ -232,11 +233,11 @@ struct ClickHousePartsView: View {
 
     private func formatBytes(_ bytes: UInt64) -> String {
         switch bytes {
-        case 0..<1_024:
+        case 0 ..< 1_024:
             return "\(bytes) B"
-        case 1_024..<1_048_576:
+        case 1_024 ..< 1_048_576:
             return String(format: "%.0f KB", Double(bytes) / 1_024)
-        case 1_048_576..<1_073_741_824:
+        case 1_048_576 ..< 1_073_741_824:
             return String(format: "%.1f MB", Double(bytes) / 1_048_576)
         default:
             return String(format: "%.2f GB", Double(bytes) / 1_073_741_824)

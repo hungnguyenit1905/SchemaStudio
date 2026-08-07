@@ -61,7 +61,10 @@ struct RedisPluginError: Error {
     let message: String
 
     static let notConnected = RedisPluginError(code: 0, message: String(localized: "Not connected to Redis"))
-    static let connectionFailed = RedisPluginError(code: 0, message: String(localized: "Failed to establish connection"))
+    static let connectionFailed = RedisPluginError(
+        code: 0,
+        message: String(localized: "Failed to establish connection")
+    )
     static let hiredisUnavailable = RedisPluginError(
         code: 0,
         message: String(localized: "Redis support requires hiredis. Run scripts/build-hiredis.sh first.")
@@ -217,10 +220,10 @@ final class RedisPluginConnection: @unchecked Sendable {
         let cleanupQueue = queue
         if handle != nil || ssl != nil {
             cleanupQueue.async {
-                if let handle = handle {
+                if let handle {
                     redisFree(handle)
                 }
-                if let ssl = ssl {
+                if let ssl {
                     redisFreeSSLContext(ssl)
                 }
             }

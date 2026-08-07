@@ -40,7 +40,6 @@ struct AIChatWalkthroughBlockView: View {
         }
     }
 
-    @ViewBuilder
     private func content(for walkthrough: SqlWalkthroughBlock) -> some View {
         GroupBox {
             VStack(alignment: .leading, spacing: 8) {
@@ -94,7 +93,6 @@ struct AIChatWalkthroughBlockView: View {
         }
     }
 
-    @ViewBuilder
     private func diffSection(
         for walkthrough: SqlWalkthroughBlock,
         presentation: SqlWalkthroughPresentation
@@ -132,7 +130,7 @@ struct AIChatWalkthroughBlockView: View {
     }
 
     private func unifiedRow(_ line: DiffUnifiedLine) -> some View {
-        let marker: String = switch line.kind {
+        let marker = switch line.kind {
         case .added: "+"
         case .removed: "-"
         case .context: " "
@@ -142,7 +140,7 @@ struct AIChatWalkthroughBlockView: View {
         case .removed: .red.opacity(0.16)
         case .context: nil
         }
-        let statusLabel: String = switch line.kind {
+        let statusLabel = switch line.kind {
         case .added: String(localized: "Added")
         case .removed: String(localized: "Removed")
         case .context: String(localized: "Unchanged")
@@ -323,7 +321,6 @@ struct AIChatWalkthroughBlockView: View {
             .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 
-    @ViewBuilder
     private func followUpControls(for step: SqlWalkthroughStep, index: Int) -> some View {
         Button {
             followUpText = ""
@@ -346,7 +343,7 @@ struct AIChatWalkthroughBlockView: View {
                 .foregroundStyle(.secondary)
             TextField(String(localized: "Ask about this change…"), text: $followUpText, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
-                .lineLimit(1...4)
+                .lineLimit(1 ... 4)
                 .frame(width: 240)
                 .onSubmit { submitFollowUp(for: step, index: index) }
             HStack {
@@ -373,7 +370,9 @@ struct AIChatWalkthroughBlockView: View {
             Button(String(localized: "Apply")) { actions?.loadQueryIntoEditor(afterSQL) }
             Button(String(localized: "Cancel"), role: .cancel) {}
         } message: {
-            Text("This puts the AI-generated SQL into the query editor, replacing what is there. Nothing runs until you execute it.")
+            Text(
+                "This puts the AI-generated SQL into the query editor, replacing what is there. Nothing runs until you execute it."
+            )
         }
     }
 
@@ -398,7 +397,11 @@ struct AIChatWalkthroughBlockView: View {
     }
 
     private func splitRowBackground(base: Color?, side: SqlWalkthroughAnchor.Side, lineNumber: Int?) -> Color {
-        if let anchor = activeAnchor, let lineNumber, splitLineMatches(side: side, lineNumber: lineNumber, anchor: anchor) {
+        if let anchor = activeAnchor, let lineNumber, splitLineMatches(
+            side: side,
+            lineNumber: lineNumber,
+            anchor: anchor
+        ) {
             return .yellow.opacity(0.28)
         }
         return base ?? .clear
@@ -426,7 +429,11 @@ struct AIChatWalkthroughBlockView: View {
         }
     }
 
-    private func splitLineMatches(side: SqlWalkthroughAnchor.Side, lineNumber: Int, anchor: SqlWalkthroughAnchor) -> Bool {
+    private func splitLineMatches(
+        side: SqlWalkthroughAnchor.Side,
+        lineNumber: Int,
+        anchor: SqlWalkthroughAnchor
+    ) -> Bool {
         let sideMatches = anchor.side == .both || anchor.side == side
         guard sideMatches else { return false }
         return lineNumber >= anchor.startLine && lineNumber <= anchor.endLine
@@ -477,7 +484,11 @@ struct AIChatWalkthroughBlockView: View {
         Binding(
             get: { activeFollowUpStepID == id },
             set: { isShown in
-                if isShown { activeFollowUpStepID = id } else if activeFollowUpStepID == id { activeFollowUpStepID = nil }
+                if isShown {
+                    activeFollowUpStepID = id
+                } else if activeFollowUpStepID == id {
+                    activeFollowUpStepID = nil
+                }
             }
         )
     }

@@ -20,6 +20,7 @@ struct ExportSuccessView: View {
         self.onOpenFolder = onOpenFolder
         self.onClose = onClose
     }
+
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: "checkmark.circle.fill")

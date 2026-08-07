@@ -7,13 +7,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("TableSelectionAction")
 struct TableSelectionChangeTests {
-
     // MARK: - Single click (exactly one table added)
 
     @Test("Single click adds one table — navigate to it")

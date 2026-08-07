@@ -1,6 +1,6 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("ToolsListHandler")
@@ -10,7 +10,7 @@ struct ToolsListHandlerTests {
         let response = try await runToolsList()
         let names = response["tools"]?.arrayValue?.compactMap { $0["name"]?.stringValue } ?? []
 
-        let expected: Set<String> = [
+        let expected: Set = [
             "list_connections",
             "get_connection_status",
             "list_databases",
@@ -94,7 +94,7 @@ struct ToolsListHandlerTests {
         let response = try await runToolsList()
         let tools = response["tools"]?.arrayValue ?? []
 
-        let readOnlyExpected: Set<String> = [
+        let readOnlyExpected: Set = [
             "list_connections",
             "get_connection_status",
             "list_databases",

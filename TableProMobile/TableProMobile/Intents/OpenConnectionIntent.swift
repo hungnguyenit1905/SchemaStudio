@@ -7,8 +7,7 @@ struct OpenConnectionIntent: AppIntent {
     static var description = IntentDescription("Opens a database connection in TablePro")
     static var openAppWhenRun = true
 
-    @Parameter(title: "Connection")
-    var connection: ConnectionEntity
+    @Parameter(title: "Connection") var connection: ConnectionEntity
 
     @MainActor
     func perform() async throws -> some IntentResult {

@@ -159,11 +159,14 @@ struct ErbValueResolver {
         guard let quoteEnd = remainder.range(of: #"['"]"#, options: .regularExpression) else {
             return nil
         }
-        return String(remainder[remainder.startIndex..<quoteEnd.lowerBound])
+        return String(remainder[remainder.startIndex ..< quoteEnd.lowerBound])
     }
 
     private func fallbackValue(in value: String) -> String? {
-        guard let range = value.range(of: #"ENV\.fetch\s*\(\s*['"][^'"]+['"]\s*,\s*['"]([^'"]*)['"]"#, options: .regularExpression) else {
+        guard let range = value.range(
+            of: #"ENV\.fetch\s*\(\s*['"][^'"]+['"]\s*,\s*['"]([^'"]*)['"]"#,
+            options: .regularExpression
+        ) else {
             return nil
         }
         let matched = String(value[range])
@@ -178,6 +181,6 @@ struct ErbValueResolver {
         guard let quoteEnd = remainder.range(of: #"['"]"#, options: .regularExpression) else {
             return nil
         }
-        return String(remainder[remainder.startIndex..<quoteEnd.lowerBound])
+        return String(remainder[remainder.startIndex ..< quoteEnd.lowerBound])
     }
 }

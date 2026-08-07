@@ -24,14 +24,17 @@ public extension PluginImportDataSink {
     func insertRow(_ values: [String: PluginCellValue]) async throws {
         throw PluginImportError.importFailed("Row-based import is not supported by this connection")
     }
+
     func insertRows(_ rows: [[String: PluginCellValue]]) async throws {
         for row in rows {
             try await insertRow(row)
         }
     }
+
     func deleteAllRowsFromTargetTable() async throws {
         throw PluginImportError.importFailed("Clearing the target table is not supported by this connection")
     }
+
     func disableForeignKeyChecks() async throws {}
     func enableForeignKeyChecks() async throws {}
 }

@@ -59,8 +59,7 @@ extension DatabaseManager {
         }
 
         if let script = resolvedConnection.preConnectScript,
-           !script.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        {
+           !script.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             do {
                 try await PreConnectHookRunner.run(script: script)
             } catch {
@@ -186,14 +185,14 @@ extension DatabaseManager {
         }
     }
 
-    internal func resolvedConnectionDefinition(for connection: DatabaseConnection) -> DatabaseConnection {
+    func resolvedConnectionDefinition(for connection: DatabaseConnection) -> DatabaseConnection {
         guard let stored = connectionStorage.loadConnection(id: connection.id) else { return connection }
         var resolved = connection
         resolved.safeModeLevel = stored.safeModeLevel
         return resolved
     }
 
-    internal func finalizeConnectionFailure(for connectionId: UUID, cancelled: Bool) {
+    func finalizeConnectionFailure(for connectionId: UUID, cancelled: Bool) {
         guard !cancelled else { return }
         removeSessionEntry(for: connectionId)
         if lastActiveSessionId == connectionId {
@@ -220,7 +219,10 @@ extension DatabaseManager {
                         try await adapter.switchDatabase(to: savedDb)
                         activeSessions[connection.id]?.browseDatabase = savedDb
                     } catch {
-                        Self.logger.warning("Failed to restore saved database '\(savedDb, privacy: .public)' for \(connection.id): \(error.localizedDescription, privacy: .public)")
+                        Self.logger
+                            .warning(
+                                "Failed to restore saved database '\(savedDb, privacy: .public)' for \(connection.id): \(error.localizedDescription, privacy: .public)"
+                            )
                     }
                 }
             case .selectDatabaseFromConnectionField(let fieldId):
@@ -252,7 +254,10 @@ extension DatabaseManager {
                         try await schemaDriver.switchSchema(to: savedSchema)
                         activeSessions[connection.id]?.browseSchema = savedSchema
                     } catch {
-                        Self.logger.warning("Failed to restore saved schema '\(savedSchema, privacy: .public)': \(error.localizedDescription, privacy: .public)")
+                        Self.logger
+                            .warning(
+                                "Failed to restore saved schema '\(savedSchema, privacy: .public)': \(error.localizedDescription, privacy: .public)"
+                            )
                     }
                 }
             }
@@ -358,7 +363,8 @@ extension DatabaseManager {
             do {
                 try await tunnelManager.closeTunnel(connectionId: session.connection.id)
             } catch {
-                Self.logger.warning("Tunnel cleanup failed for \(session.connection.name): \(error.localizedDescription)")
+                Self.logger
+                    .warning("Tunnel cleanup failed for \(session.connection.name): \(error.localizedDescription)")
             }
             lifecycleLogger.info(
                 "[close] disconnectSession tunnel close done connId=\(sessionId, privacy: .public) elapsedMs=\(Int(Date().timeIntervalSince(tunnelStart) * 1_000))"
@@ -415,7 +421,7 @@ extension DatabaseManager {
         }
     }
 
-    // Skips the write-back when no observable fields changed, avoiding spurious connectionStatusVersion bumps.
+    /// Skips the write-back when no observable fields changed, avoiding spurious connectionStatusVersion bumps.
     func updateSession(_ sessionId: UUID, update: (inout ConnectionSession) -> Void) {
         guard var session = activeSessions[sessionId] else { return }
         let before = session
@@ -452,7 +458,7 @@ extension DatabaseManager {
         _ = connectionStorage.updateSafeModeLevel(level, for: connectionId)
     }
 
-    internal func setSession(_ session: ConnectionSession, for connectionId: UUID) {
+    func setSession(_ session: ConnectionSession, for connectionId: UUID) {
         activeSessions[connectionId] = session
         connectionStatusVersions[connectionId, default: 0] &+= 1
         AppEvents.shared.connectionStatusChanged.send(
@@ -460,7 +466,7 @@ extension DatabaseManager {
         )
     }
 
-    internal func removeSessionEntry(for connectionId: UUID) {
+    func removeSessionEntry(for connectionId: UUID) {
         activeSessions.removeValue(forKey: connectionId)
         connectionStatusVersions.removeValue(forKey: connectionId)
         AppEvents.shared.connectionStatusChanged.send(
@@ -469,11 +475,11 @@ extension DatabaseManager {
     }
 
     #if DEBUG
-    internal func injectSession(_ session: ConnectionSession, for connectionId: UUID) {
+    func injectSession(_ session: ConnectionSession, for connectionId: UUID) {
         setSession(session, for: connectionId)
     }
 
-    internal func removeSession(for connectionId: UUID) {
+    func removeSession(for connectionId: UUID) {
         removeSessionEntry(for: connectionId)
     }
     #endif

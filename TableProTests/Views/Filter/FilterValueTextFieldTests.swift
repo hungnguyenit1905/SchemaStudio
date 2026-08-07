@@ -124,8 +124,10 @@ struct FilterValueTextFieldTests {
     func testKeyOutcome_navigationAndAccept() {
         #expect(FilterValueTextField.suggestionKeyOutcome(for: .downArrow, submitsOnAccept: false) == .moveSelection(1))
         #expect(FilterValueTextField.suggestionKeyOutcome(for: .upArrow, submitsOnAccept: false) == .moveSelection(-1))
-        #expect(FilterValueTextField.suggestionKeyOutcome(for: .return, submitsOnAccept: true) == .accept(submitting: true))
-        #expect(FilterValueTextField.suggestionKeyOutcome(for: .tab, submitsOnAccept: true) == .accept(submitting: false))
+        #expect(FilterValueTextField
+            .suggestionKeyOutcome(for: .return, submitsOnAccept: true) == .accept(submitting: true))
+        #expect(FilterValueTextField
+            .suggestionKeyOutcome(for: .tab, submitsOnAccept: true) == .accept(submitting: false))
     }
 
     @Test("Unhandled keys pass through unchanged")

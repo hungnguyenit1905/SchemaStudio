@@ -218,8 +218,7 @@ struct CreateTableView: View {
 
     // MARK: - Tab Content
 
-    @ViewBuilder
-    private var tabContent: some View {
+    @ViewBuilder private var tabContent: some View {
         switch selectedTab {
         case .columns, .indexes, .foreignKeys:
             structureGrid
@@ -349,7 +348,8 @@ struct CreateTableView: View {
             ifNotExists: tableOptions.ifNotExists
         )
 
-        let pluginDriver = (DatabaseManager.shared.driver(for: connection.id) as? PluginDriverAdapter)?.schemaPluginDriver
+        let pluginDriver = (DatabaseManager.shared.driver(for: connection.id) as? PluginDriverAdapter)?
+            .schemaPluginDriver
         return pluginDriver?.generateCreateTableSQL(definition: definition)
     }
 

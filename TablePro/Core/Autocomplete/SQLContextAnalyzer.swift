@@ -20,35 +20,35 @@ private func compileRegex(_ pattern: String, options: NSRegularExpression.Option
 
 /// Type of SQL clause the cursor is in
 enum SQLClauseType {
-    case select         // In SELECT list
-    case from           // After FROM
-    case join           // After JOIN
-    case on             // After ON (join condition)
-    case where_         // After WHERE
-    case and            // After AND/OR
-    case groupBy        // After GROUP BY
-    case orderBy        // After ORDER BY
-    case having         // After HAVING
-    case set            // After SET (UPDATE)
-    case into           // After INTO (INSERT)
-    case values         // After VALUES
-    case insertColumns  // Column list in INSERT
-    case functionArg    // Inside function parentheses
+    case select // In SELECT list
+    case from // After FROM
+    case join // After JOIN
+    case on // After ON (join condition)
+    case where_ // After WHERE
+    case and // After AND/OR
+    case groupBy // After GROUP BY
+    case orderBy // After ORDER BY
+    case having // After HAVING
+    case set // After SET (UPDATE)
+    case into // After INTO (INSERT)
+    case values // After VALUES
+    case insertColumns // Column list in INSERT
+    case functionArg // Inside function parentheses
     case caseExpression // Inside CASE WHEN expression
-    case inList         // Inside IN (...) list
-    case limit          // After LIMIT/OFFSET
-    case alterTable       // After ALTER TABLE tablename
+    case inList // Inside IN (...) list
+    case limit // After LIMIT/OFFSET
+    case alterTable // After ALTER TABLE tablename
     case alterTableColumn // After DROP/MODIFY/CHANGE/RENAME COLUMN
-    case createTable      // Inside CREATE TABLE definition
-    case columnDef        // Typing column data type
-    case returning        // After RETURNING (PostgreSQL)
-    case union            // After UNION/INTERSECT/EXCEPT
-    case using            // After USING (JOIN ... USING)
-    case window           // After OVER/PARTITION BY/window clause
-    case dropObject       // After DROP TABLE/INDEX/VIEW
-    case createIndex      // After CREATE INDEX
-    case createView       // After CREATE VIEW
-    case unknown          // Unknown or start of query
+    case createTable // Inside CREATE TABLE definition
+    case columnDef // Typing column data type
+    case returning // After RETURNING (PostgreSQL)
+    case union // After UNION/INTERSECT/EXCEPT
+    case using // After USING (JOIN ... USING)
+    case window // After OVER/PARTITION BY/window clause
+    case dropObject // After DROP TABLE/INDEX/VIEW
+    case createIndex // After CREATE INDEX
+    case createView // After CREATE VIEW
+    case unknown // Unknown or start of query
 }
 
 /// Represents a table reference with optional alias
@@ -80,18 +80,18 @@ internal struct TableReference: Hashable, Sendable {
 /// Result of context analysis
 struct SQLContext {
     let clauseType: SQLClauseType
-    let prefix: String              // Current word being typed
-    let prefixRange: Range<Int>     // Range of prefix in original text
-    let dotPrefix: String?          // Table/alias before dot (e.g., "u" in "u.name")
-    let tableReferences: [TableReference]  // All tables in scope
-    let isInsideString: Bool        // Inside a string literal
-    let isInsideComment: Bool       // Inside a comment
+    let prefix: String // Current word being typed
+    let prefixRange: Range<Int> // Range of prefix in original text
+    let dotPrefix: String? // Table/alias before dot (e.g., "u" in "u.name")
+    let tableReferences: [TableReference] // All tables in scope
+    let isInsideString: Bool // Inside a string literal
+    let isInsideComment: Bool // Inside a comment
 
-    let cteNames: [String]          // Common Table Expression names in scope
-    let nestingLevel: Int           // Subquery nesting level (0 = main query)
-    let currentFunction: String?    // If inside function args, the function name
-    let isAfterComma: Bool          // True if immediately after a comma
-    let expectsObjectName: Bool     // Cursor is in the table-operand slot of FROM/JOIN/INTO
+    let cteNames: [String] // Common Table Expression names in scope
+    let nestingLevel: Int // Subquery nesting level (0 = main query)
+    let currentFunction: String? // If inside function args, the function name
+    let isAfterComma: Bool // True if immediately after a comma
+    let expectsObjectName: Bool // Cursor is in the table-operand slot of FROM/JOIN/INTO
 
     init(
         clauseType: SQLClauseType,
@@ -171,21 +171,26 @@ final class SQLContextAnalyzer {
     private static let structuralClauseRegexes: [(regex: NSRegularExpression, clause: SQLClauseType)] = {
         let patterns: [(String, SQLClauseType)] = [
             // DDL patterns (most specific first)
-            ("\\bADD\\s+(?:COLUMN\\s+)?[`\"']?\\w+[`\"']?\\s+\\w+.*?\\b(?:AFTER|BEFORE)(?:\\s+\\w*)?$",
-             .alterTableColumn),
+            (
+                "\\bADD\\s+(?:COLUMN\\s+)?[`\"']?\\w+[`\"']?\\s+\\w+.*?\\b(?:AFTER|BEFORE)(?:\\s+\\w*)?$",
+                .alterTableColumn
+            ),
             ("\\b(?:AFTER|BEFORE)(?:\\s+\\w*)?$", .alterTableColumn),
             ("\\bFIRST\\s*$", .alterTable),
             ("\\bALTER\\s+TABLE\\s+[`\"']?\\w+[`\"']?\\s+ADD\\s+CONSTRAINT\\s+\\w*$", .alterTable),
             ("\\bALTER\\s+TABLE\\s+[`\"']?\\w+[`\"']?\\s+ADD\\s+\\w*$", .alterTable),
             (
                 "\\b(?:ADD|MODIFY|CHANGE)\\s+(?:COLUMN\\s+)?[`\"']?\\w+[`\"']?\\s+\\w+(?:\\([^)]*\\))?" +
-                "(?:\\s+(?:NOT\\s+)?NULL|\\s+DEFAULT(?:\\s+[^\\s]+)?|\\s+AUTO_INCREMENT" +
-                "|\\s+UNSIGNED|\\s+COMMENT(?:\\s+'[^']*')?)*\\s*$",
+                    "(?:\\s+(?:NOT\\s+)?NULL|\\s+DEFAULT(?:\\s+[^\\s]+)?|\\s+AUTO_INCREMENT" +
+                    "|\\s+UNSIGNED|\\s+COMMENT(?:\\s+'[^']*')?)*\\s*$",
                 .columnDef
             ),
             ("\\b(?:ADD|MODIFY|CHANGE)\\s+COLUMN\\s+\\w+\\s*$", .columnDef),
-            ("\\bALTER\\s+TABLE\\s+[`\"']?\\w+[`\"']?\\s+(?:DROP|MODIFY|CHANGE|RENAME)" +
-             "\\s+(?:COLUMN\\s+)?[`\"']?\\w*[`\"']?\\s*$", .alterTableColumn),
+            (
+                "\\bALTER\\s+TABLE\\s+[`\"']?\\w+[`\"']?\\s+(?:DROP|MODIFY|CHANGE|RENAME)" +
+                    "\\s+(?:COLUMN\\s+)?[`\"']?\\w*[`\"']?\\s*$",
+                .alterTableColumn
+            ),
             ("\\bALTER\\s+TABLE\\s+[`\"']?\\w+[`\"']?\\s+\\w*$", .alterTable),
             ("\\bCREATE\\s+TABLE\\s+[^(]*\\([^)]*$", .createTable),
             ("\\bCREATE\\s+(?:TEMPORARY\\s+)?TABLE\\s+[^;]*\\([^)]*\\)\\s*\\w*$", .createTable),
@@ -193,8 +198,10 @@ final class SQLContextAnalyzer {
             ("\\bDROP\\s+(?:TABLE|VIEW|INDEX)\\s+(?:IF\\s+EXISTS\\s+)?\\w*$", .dropObject),
             ("\\bCREATE\\s+(?:UNIQUE\\s+)?INDEX\\s+\\w+\\s+ON\\s+\\w+\\s*\\([^)]*$", .createIndex),
             ("\\bCREATE\\s+(?:UNIQUE\\s+)?INDEX\\s+\\w*$", .createIndex),
-            ("\\bCREATE\\s+(?:OR\\s+REPLACE\\s+)?(?:MATERIALIZED\\s+)?VIEW\\s+\\w+\\s+AS\\s+[^;]*$",
-             .createView),
+            (
+                "\\bCREATE\\s+(?:OR\\s+REPLACE\\s+)?(?:MATERIALIZED\\s+)?VIEW\\s+\\w+\\s+AS\\s+[^;]*$",
+                .createView
+            ),
             ("\\bCREATE\\s+(?:OR\\s+REPLACE\\s+)?(?:MATERIALIZED\\s+)?VIEW\\s+\\w*$", .createView),
             ("\\bUSING\\s*\\([^)]*$", .using),
             ("\\bOVER\\s*\\([^)]*$", .window),
@@ -247,9 +254,9 @@ final class SQLContextAnalyzer {
     /// above could not, so every listed table is in scope for column completion.
     private static let fromListRegex = compileRegex(
         "(?i)\\bFROM\\s+([\\s\\S]+?)" +
-        "(?=\\b(?:WHERE|GROUP|ORDER|HAVING|LIMIT|OFFSET|JOIN|INNER|LEFT|RIGHT" +
-        "|FULL|CROSS|NATURAL|ON|USING|UNION|INTERSECT|EXCEPT|RETURNING|SET" +
-        "|WINDOW|FETCH|FOR)\\b|[;()]|$)"
+            "(?=\\b(?:WHERE|GROUP|ORDER|HAVING|LIMIT|OFFSET|JOIN|INNER|LEFT|RIGHT" +
+            "|FULL|CROSS|NATURAL|ON|USING|UNION|INTERSECT|EXCEPT|RETURNING|SET" +
+            "|WINDOW|FETCH|FOR)\\b|[;()]|$)"
     )
 
     private static let derivedTableParser = DerivedTableParser()
@@ -284,7 +291,7 @@ final class SQLContextAnalyzer {
             return SQLContext(
                 clauseType: .unknown,
                 prefix: "",
-                prefixRange: safePosition..<safePosition,
+                prefixRange: safePosition ..< safePosition,
                 dotPrefix: nil,
                 tableReferences: [],
                 isInsideString: true,
@@ -296,7 +303,7 @@ final class SQLContextAnalyzer {
             return SQLContext(
                 clauseType: .unknown,
                 prefix: "",
-                prefixRange: safePosition..<safePosition,
+                prefixRange: safePosition ..< safePosition,
                 dotPrefix: nil,
                 tableReferences: [],
                 isInsideString: false,
@@ -355,7 +362,7 @@ final class SQLContextAnalyzer {
         return SQLContext(
             clauseType: resolution.clause,
             prefix: prefix,
-            prefixRange: (statementOffset + prefixStart)..<safePosition,
+            prefixRange: (statementOffset + prefixStart) ..< safePosition,
             dotPrefix: dotPrefix,
             tableReferences: tableReferences,
             isInsideString: false,
@@ -383,7 +390,7 @@ final class SQLContextAnalyzer {
         }
 
         Self.cteCommaRegex.enumerateMatches(in: query, range: nsRange) { match, _, _ in
-            if let match = match {
+            if let match {
                 let nameNSRange = match.range(at: 1)
                 if nameNSRange.location != NSNotFound {
                     cteNames.append((query as NSString).substring(with: nameNSRange))
@@ -405,9 +412,9 @@ final class SQLContextAnalyzer {
         var inString = false
         var prevChar: UInt16 = 0
 
-        for i in 0..<length {
+        for i in 0 ..< length {
             let ch = ns.character(at: i)
-            if ch == Self.singleQuote && prevChar != Self.backslash {
+            if ch == Self.singleQuote, prevChar != Self.backslash {
                 inString.toggle()
             }
 
@@ -431,12 +438,10 @@ final class SQLContextAnalyzer {
     ]
 
     /// Pre-compiled regex to detect a SQL statement keyword after opening paren
-    private static let subqueryDetectRegex: NSRegularExpression? = {
-        try? NSRegularExpression(
-            pattern: "^\\s*(?:SELECT|INSERT|UPDATE|DELETE)\\b",
-            options: .caseInsensitive
-        )
-    }()
+    private static let subqueryDetectRegex: NSRegularExpression? = try? NSRegularExpression(
+        pattern: "^\\s*(?:SELECT|INSERT|UPDATE|DELETE)\\b",
+        options: .caseInsensitive
+    )
 
     /// Extract text from the innermost subquery's opening parenthesis.
     /// Only extracts if the text after the paren starts with a SQL statement keyword
@@ -450,9 +455,9 @@ final class SQLContextAnalyzer {
         var inString = false
         var prevChar: UInt16 = 0
 
-        for i in 0..<length {
+        for i in 0 ..< length {
             let ch = ns.character(at: i)
-            if ch == Self.singleQuote && prevChar != Self.backslash {
+            if ch == Self.singleQuote, prevChar != Self.backslash {
                 inString.toggle()
             }
 
@@ -500,12 +505,12 @@ final class SQLContextAnalyzer {
         var parenStack: [(position: Int, precedingWord: String?)] = []
         var inString = false
         var prevChar: UInt16 = 0
-        var wordStart = -1        // -1 means "not in a word"
+        var wordStart = -1 // -1 means "not in a word"
         var lastWord: String?
 
-        for i in 0..<length {
+        for i in 0 ..< length {
             let ch = ns.character(at: i)
-            if ch == Self.singleQuote && prevChar != Self.backslash {
+            if ch == Self.singleQuote, prevChar != Self.backslash {
                 inString.toggle()
             }
 
@@ -542,14 +547,14 @@ final class SQLContextAnalyzer {
         if let lastParen = parenStack.last,
            let funcName = lastParen.precedingWord {
             let upperFunc = funcName.uppercased()
-            let sqlFunctions: Set<String> = [
+            let sqlFunctions: Set = [
                 "COUNT", "SUM", "AVG", "MIN", "MAX", "COALESCE", "IFNULL",
                 "CONCAT", "SUBSTRING", "UPPER", "LOWER", "NOW", "DATE",
                 "CAST", "CONVERT", "ROUND", "ABS", "LENGTH", "TRIM",
                 "GROUP_CONCAT", "DATE_FORMAT", "YEAR", "MONTH", "DAY"
             ]
 
-            let subqueryKeywords: Set<String> = [
+            let subqueryKeywords: Set = [
                 "SELECT", "FROM", "WHERE", "IN", "EXISTS", "NOT"
             ]
 
@@ -592,11 +597,11 @@ final class SQLContextAnalyzer {
         var inDoubleQuote = false
         var prevChar: UInt16 = 0
 
-        for i in 0..<length {
+        for i in 0 ..< length {
             let ch = ns.character(at: i)
-            if ch == Self.singleQuote && prevChar != Self.backslash && !inDoubleQuote {
+            if ch == Self.singleQuote, prevChar != Self.backslash, !inDoubleQuote {
                 inSingleQuote.toggle()
-            } else if ch == Self.doubleQuote && prevChar != Self.backslash && !inSingleQuote {
+            } else if ch == Self.doubleQuote, prevChar != Self.backslash, !inSingleQuote {
                 inDoubleQuote.toggle()
             }
             prevChar = ch
@@ -614,7 +619,7 @@ final class SQLContextAnalyzer {
 
         // Single-pass state machine scanning for block/line comments (SVC-14)
         var blockDepth = 0
-        var lastBlockEnd = -1  // position after the last */ that closed depth to 0
+        var lastBlockEnd = -1 // position after the last */ that closed depth to 0
         var idx = 0
 
         while idx < length {
@@ -622,7 +627,7 @@ final class SQLContextAnalyzer {
 
             if blockDepth > 0 {
                 // Inside a block comment — look for */
-                if ch == 0x2A /* * */ && idx + 1 < length && ns.character(at: idx + 1) == 0x2F /* / */ {
+                if ch == 0x2A /* * */, idx + 1 < length, ns.character(at: idx + 1) == 0x2F /* / */ {
                     blockDepth -= 1
                     if blockDepth == 0 {
                         lastBlockEnd = idx + 2
@@ -632,7 +637,7 @@ final class SQLContextAnalyzer {
                 }
             } else {
                 // Outside block comment
-                if ch == 0x2F /* / */ && idx + 1 < length && ns.character(at: idx + 1) == 0x2A /* * */ {
+                if ch == 0x2F /* / */, idx + 1 < length, ns.character(at: idx + 1) == 0x2A /* * */ {
                     blockDepth += 1
                     idx += 2
                     continue
@@ -732,7 +737,7 @@ final class SQLContextAnalyzer {
 
         for regex in Self.tableRefRegexes {
             regex.enumerateMatches(in: query, range: nsRange) { match, _, _ in
-                guard let match = match else { return }
+                guard let match else { return }
 
                 let tableNSRange = match.range(at: 1)
                 guard tableNSRange.location != NSNotFound else { return }
@@ -814,7 +819,7 @@ final class SQLContextAnalyzer {
         let nsQuery = query as NSString
         let nsRange = NSRange(location: 0, length: nsQuery.length)
         Self.fromListRegex.enumerateMatches(in: query, range: nsRange) { match, _, _ in
-            guard let match = match else { return }
+            guard let match else { return }
             let listRange = match.range(at: 1)
             guard listRange.location != NSNotFound else { return }
 
@@ -1069,7 +1074,7 @@ final class SQLContextAnalyzer {
             wordStart = -1
         }
 
-        for i in 0..<length {
+        for i in 0 ..< length {
             let ch = ns.character(at: i)
             // Token chars include quote marks, so a backtick- or double-quoted
             // identifier becomes one opaque word that never matches a keyword.

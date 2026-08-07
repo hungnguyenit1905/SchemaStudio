@@ -176,16 +176,14 @@ struct RowImportSheet: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var optionsForm: some View {
-        Group {
-            if let settable = currentPlugin as? any SettablePluginDiscoverable,
-               let optionsView = settable.settingsView() {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Options").font(.callout.weight(.semibold))
-                    optionsView
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+    @ViewBuilder private var optionsForm: some View {
+        if let settable = currentPlugin as? any SettablePluginDiscoverable,
+           let optionsView = settable.settingsView() {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Options").font(.callout.weight(.semibold))
+                optionsView
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -209,8 +207,7 @@ struct RowImportSheet: View {
 
     // MARK: - Content tables
 
-    @ViewBuilder
-    private var contentArea: some View {
+    @ViewBuilder private var contentArea: some View {
         switch destination {
         case .existingTable:
             if selectedTargetTable == nil {
@@ -401,14 +398,18 @@ struct RowImportSheet: View {
     private var allMappingsIncluded: Binding<Bool> {
         Binding(
             get: { !mappings.isEmpty && mappings.allSatisfy(\.include) },
-            set: { value in for index in mappings.indices { mappings[index].include = value } }
+            set: { value in for index in mappings.indices {
+                mappings[index].include = value
+            } }
         )
     }
 
     private var allColumnsIncluded: Binding<Bool> {
         Binding(
             get: { !newColumns.isEmpty && newColumns.allSatisfy(\.include) },
-            set: { value in for index in newColumns.indices { newColumns[index].include = value } }
+            set: { value in for index in newColumns.indices {
+                newColumns[index].include = value
+            } }
         )
     }
 
@@ -548,7 +549,9 @@ struct RowImportSheet: View {
             guard !name.isEmpty, let sql = buildCreateTableSQL(tableName: name) else {
                 importError = NSError(
                     domain: "RowImport", code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: String(localized: "Could not build the CREATE TABLE statement")]
+                    userInfo: [
+                        NSLocalizedDescriptionKey: String(localized: "Could not build the CREATE TABLE statement")
+                    ]
                 )
                 showErrorDialog = true
                 return
@@ -603,7 +606,8 @@ struct RowImportSheet: View {
             primaryKeyColumns: included.filter(\.isPrimaryKey).map(\.name)
         )
 
-        let pluginDriver = (DatabaseManager.shared.driver(for: connection.id) as? PluginDriverAdapter)?.schemaPluginDriver
+        let pluginDriver = (DatabaseManager.shared.driver(for: connection.id) as? PluginDriverAdapter)?
+            .schemaPluginDriver
         return pluginDriver?.generateCreateTableSQL(definition: definition)
     }
 

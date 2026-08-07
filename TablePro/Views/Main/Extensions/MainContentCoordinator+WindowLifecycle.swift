@@ -130,7 +130,7 @@ extension MainContentCoordinator {
             target = []
         }
         if windowSidebarState.selectedTables != target {
-            if target.isEmpty && liveTables.isEmpty { return }
+            if target.isEmpty, liveTables.isEmpty { return }
             windowSidebarState.selectedTables = target
         }
     }

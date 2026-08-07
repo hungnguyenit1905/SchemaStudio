@@ -105,7 +105,7 @@ struct DynamoDBItemFlattener {
     /// Reverse conversion: parse a display string back to a DynamoDBAttributeValue,
     /// using the type hint to determine the correct type.
     static func stringToAttributeValue(_ string: String?, typeHint: String) -> DynamoDBAttributeValue? {
-        guard let string = string else { return .null }
+        guard let string else { return .null }
 
         switch typeHint {
         case "S":
@@ -124,36 +124,31 @@ struct DynamoDBItemFlattener {
             return .null
         case "L":
             if let data = string.data(using: .utf8),
-               let array = try? JSONDecoder().decode([DynamoDBAttributeValue].self, from: data)
-            {
+               let array = try? JSONDecoder().decode([DynamoDBAttributeValue].self, from: data) {
                 return .list(array)
             }
             return .string(string)
         case "M":
             if let data = string.data(using: .utf8),
-               let map = try? JSONDecoder().decode([String: DynamoDBAttributeValue].self, from: data)
-            {
+               let map = try? JSONDecoder().decode([String: DynamoDBAttributeValue].self, from: data) {
                 return .map(map)
             }
             return .string(string)
         case "SS":
             if let data = string.data(using: .utf8),
-               let values = try? JSONSerialization.jsonObject(with: data) as? [String]
-            {
+               let values = try? JSONSerialization.jsonObject(with: data) as? [String] {
                 return .stringSet(values)
             }
             return .stringSet([string])
         case "NS":
             if let data = string.data(using: .utf8),
-               let values = try? JSONSerialization.jsonObject(with: data) as? [String]
-            {
+               let values = try? JSONSerialization.jsonObject(with: data) as? [String] {
                 return .numberSet(values)
             }
             return .numberSet([string])
         case "BS":
             if let data = string.data(using: .utf8),
-               let values = try? JSONSerialization.jsonObject(with: data) as? [String]
-            {
+               let values = try? JSONSerialization.jsonObject(with: data) as? [String] {
                 return .binarySet(values.compactMap { Data(base64Encoded: $0) })
             }
             return .string(string)

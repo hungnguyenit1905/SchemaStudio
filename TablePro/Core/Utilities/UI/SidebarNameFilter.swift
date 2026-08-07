@@ -33,7 +33,11 @@ internal enum SidebarNameFilter {
     static func ranked<Element>(_ items: [Element], query: String, name: (Element) -> String) -> [Element] {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return items }
-        let scored = items.enumerated().compactMap { index, element -> (element: Element, tier: SidebarNameMatchTier, index: Int)? in
+        let scored = items.enumerated().compactMap { index, element -> (
+            element: Element,
+            tier: SidebarNameMatchTier,
+            index: Int
+        )? in
             guard let tier = tier(query: trimmed, candidate: name(element)) else { return nil }
             return (element, tier, index)
         }

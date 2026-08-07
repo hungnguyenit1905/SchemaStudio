@@ -61,7 +61,7 @@ enum AppSettingsJsonExtractor {
             guard let equals = segment.firstIndex(of: "=") else {
                 continue
             }
-            let key = String(segment[segment.startIndex..<equals])
+            let key = String(segment[segment.startIndex ..< equals])
                 .trimmingCharacters(in: .whitespaces)
                 .lowercased()
             let value = String(segment[segment.index(after: equals)...]).trimmingCharacters(in: .whitespaces)
@@ -104,7 +104,7 @@ enum AppSettingsJsonExtractor {
         guard let index = value.firstIndex(of: separator) else {
             return (value, nil)
         }
-        let head = String(value[value.startIndex..<index])
+        let head = String(value[value.startIndex ..< index])
         let tail = String(value[value.index(after: index)...])
         guard let port = Int(tail) else {
             return (value, nil)

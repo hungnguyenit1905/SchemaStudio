@@ -36,7 +36,7 @@ final class MultiConnectionSidebarUITests: XCTestCase {
         app.descendants(matching: .any).matching(identifier: identifier).firstMatch
     }
 
-    func testSidebarListsTheConnectionAndOpensOneOfItsTables() throws {
+    func testSidebarListsTheConnectionAndOpensOneOfItsTables() {
         let app = launchApp()
         openSampleDatabase(in: app)
 
@@ -64,7 +64,7 @@ final class MultiConnectionSidebarUITests: XCTestCase {
 
     /// Collapsing is not disconnecting. The connection keeps its session and
     /// its tables come straight back, with no second connect.
-    func testCollapsingAConnectionKeepsItConnected() throws {
+    func testCollapsingAConnectionKeepsItConnected() {
         let app = launchApp()
         openSampleDatabase(in: app)
 

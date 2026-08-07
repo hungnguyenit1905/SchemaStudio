@@ -314,7 +314,12 @@ struct ExecutionGateTests {
         let gate = makeGate(level: .silent, confirm: confirm, auth: auth)
 
         let decision = await gate.authorize(
-            makeRequest(sql: "INSERT INTO t VALUES (1)", kind: .writeQuery, capabilities: [], caller: .mcpClient(label: nil))
+            makeRequest(
+                sql: "INSERT INTO t VALUES (1)",
+                kind: .writeQuery,
+                capabilities: [],
+                caller: .mcpClient(label: nil)
+            )
         )
 
         #expect(decision.deniedReason?.contains("Write") == true)

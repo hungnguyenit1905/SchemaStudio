@@ -63,7 +63,10 @@ struct BeekeeperStudioImporter: ForeignAppImporter {
         for row in rows {
             try Task.checkCancellation()
             guard let type = Self.mapDriver(row.connectionType) else {
-                Self.logger.warning("Skipping Beekeeper connection \(row.id) with unsupported driver \(row.connectionType ?? "<nil>", privacy: .public)")
+                Self.logger
+                    .warning(
+                        "Skipping Beekeeper connection \(row.id) with unsupported driver \(row.connectionType ?? "<nil>", privacy: .public)"
+                    )
                 continue
             }
             let groupName = row.connectionFolderId.flatMap { folderMap[$0] }

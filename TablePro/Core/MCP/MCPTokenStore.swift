@@ -294,7 +294,7 @@ actor MCPTokenStore {
             Self.logger.error("Failed to load MCP tokens: \(error.localizedDescription, privacy: .public)")
         }
 
-        let staleCount = tokens.filter({ $0.name == Self.stdioBridgeTokenName }).count
+        let staleCount = tokens.filter { $0.name == Self.stdioBridgeTokenName }.count
         if staleCount > 0 {
             tokens.removeAll { $0.name == Self.stdioBridgeTokenName }
             save()
@@ -358,7 +358,7 @@ actor MCPTokenStore {
         guard lhsBytes.count == rhsBytes.count else { return false }
 
         var result: UInt8 = 0
-        for i in 0..<lhsBytes.count {
+        for i in 0 ..< lhsBytes.count {
             result |= lhsBytes[i] ^ rhsBytes[i]
         }
         return result == 0

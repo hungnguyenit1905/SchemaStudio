@@ -56,14 +56,17 @@ enum ErrorClassifier {
                 category: .network,
                 title: String(localized: "Local Network Access Required"),
                 message: error.localizedDescription,
-                recovery: String(localized: "Open Settings > Privacy & Security > Local Network and turn TablePro on, then try again."),
+                recovery: String(
+                    localized: "Open Settings > Privacy & Security > Local Network and turn TablePro on, then try again."
+                ),
                 underlying: error
             )
         }
 
         let host = context.host ?? ""
         let mayUseLocalNetwork = context.sshEnabled || LocalNetworkPermission.isLocalNetworkHost(host)
-        let timedOut = message.contains("timeout") || message.contains("timed out") || message.contains("operation timed out") || message.contains("system error: 60")
+        let timedOut = message.contains("timeout") || message.contains("timed out") || message
+            .contains("operation timed out") || message.contains("system error: 60")
         if mayUseLocalNetwork && timedOut {
             return network(error, context: context)
         }
@@ -76,8 +79,7 @@ enum ErrorClassifier {
         if message.contains("authentication") || message.contains("password") ||
             message.contains("denied") || message.contains("credential") ||
             message.contains("permission") || message.contains("access denied") ||
-            message.contains("fe_sendauth")
-        {
+            message.contains("fe_sendauth") {
             return auth(error, context: context)
         }
 
@@ -85,8 +87,7 @@ enum ErrorClassifier {
         if message.contains("timeout") || message.contains("timed out") ||
             message.contains("connection refused") || message.contains("unreachable") ||
             message.contains("network") || message.contains("could not connect") ||
-            message.contains("no route") || message.contains("connection reset")
-        {
+            message.contains("no route") || message.contains("connection reset") {
             return network(error, context: context)
         }
 
@@ -94,15 +95,13 @@ enum ErrorClassifier {
         if message.contains("syntax") || message.contains("no such table") ||
             message.contains("does not exist") || message.contains("constraint") ||
             message.contains("duplicate") || message.contains("violation") ||
-            message.contains("unknown column")
-        {
+            message.contains("unknown column") {
             return query(error, context: context)
         }
 
         // Config errors
         if message.contains("not found") || message.contains("unsupported") ||
-            message.contains("invalid") || message.contains("no driver")
-        {
+            message.contains("invalid") || message.contains("no driver") {
             return config(error, context: context)
         }
 
@@ -155,12 +154,16 @@ enum ErrorClassifier {
         let lowered = msg.lowercased()
         let recovery: String
 
-        let isTimeout = lowered.contains("timeout") || lowered.contains("timed out") || lowered.contains("operation timed out") || lowered.contains("system error: 60")
+        let isTimeout = lowered.contains("timeout") || lowered.contains("timed out") || lowered
+            .contains("operation timed out") || lowered.contains("system error: 60")
         let host = context.host ?? ""
         let mayUseLocalNetwork = context.sshEnabled || LocalNetworkPermission.isLocalNetworkHost(host)
 
-        if isTimeout && mayUseLocalNetwork {
-            recovery = String(localized: "Local Network access may be blocked. Open Settings > Privacy & Security > Local Network and turn TablePro on.")
+        if isTimeout, mayUseLocalNetwork {
+            recovery =
+                String(
+                    localized: "Local Network access may be blocked. Open Settings > Privacy & Security > Local Network and turn TablePro on."
+                )
         } else if isTimeout {
             recovery = String(localized: "The server is not responding. Check the host and port.")
         } else if lowered.contains("refused") {

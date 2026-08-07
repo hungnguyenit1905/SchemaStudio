@@ -147,25 +147,26 @@ final class XAICallbackServer: @unchecked Sendable {
     }
 
     private func readRequest(from connection: NWConnection) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 16_384) { [weak self] content, _, isComplete, error in
-            guard let self else { return }
-            if error != nil {
-                connection.cancel()
-                return
-            }
-            guard let data = content, let request = String(data: data, encoding: .utf8),
-                  let query = Self.parseCallback(request) else {
-                if isComplete {
+        connection
+            .receive(minimumIncompleteLength: 1, maximumLength: 16_384) { [weak self] content, _, isComplete, error in
+                guard let self else { return }
+                if error != nil {
                     connection.cancel()
-                } else {
-                    self.readRequest(from: connection)
+                    return
                 }
-                return
+                guard let data = content, let request = String(data: data, encoding: .utf8),
+                      let query = Self.parseCallback(request) else {
+                    if isComplete {
+                        connection.cancel()
+                    } else {
+                        self.readRequest(from: connection)
+                    }
+                    return
+                }
+                let matches = query.state == self.expectedState
+                Self.send(html: matches ? Self.successPage : Self.failurePage, to: connection)
+                self.finishCode(matches ? .success(query.code) : .failure(ServerError.stateMismatch))
             }
-            let matches = query.state == self.expectedState
-            Self.send(html: matches ? Self.successPage : Self.failurePage, to: connection)
-            self.finishCode(matches ? .success(query.code) : .failure(ServerError.stateMismatch))
-        }
     }
 
     private func finishReady(_ result: Result<Void, Error>) {

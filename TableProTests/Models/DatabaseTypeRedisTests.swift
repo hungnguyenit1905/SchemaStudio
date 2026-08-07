@@ -1,6 +1,6 @@
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("DatabaseType Redis Properties")
 struct DatabaseTypeRedisTests {
@@ -35,7 +35,8 @@ struct DatabaseTypeRedisTests {
     }
 
     @Test("Theme color is derived from plugin brand color")
-    @MainActor func themeColor() {
+    @MainActor
+    func themeColor() {
         #expect(DatabaseType.redis.themeColor == PluginManager.shared.brandColor(for: .redis))
     }
 

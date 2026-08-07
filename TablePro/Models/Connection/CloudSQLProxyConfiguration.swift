@@ -35,7 +35,12 @@ struct CloudSQLProxyConfiguration: Codable, Hashable, Sendable {
 
 extension CloudSQLProxyConfiguration {
     private enum CodingKeys: String, CodingKey {
-        case instanceConnectionName, authMode, useIAMAuth, usePrivateIP, localPort, binaryPath
+        case instanceConnectionName
+        case authMode
+        case useIAMAuth
+        case usePrivateIP
+        case localPort
+        case binaryPath
     }
 
     init(from decoder: Decoder) throws {

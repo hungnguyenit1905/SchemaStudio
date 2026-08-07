@@ -3,14 +3,13 @@
 //  TableProTests
 //
 
+@testable import SchemaStudio
 import SwiftUI
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("SafeModeLevel")
 struct SafeModeLevelTests {
-
     // MARK: - Raw Values
 
     @Test("Raw values match expected strings")

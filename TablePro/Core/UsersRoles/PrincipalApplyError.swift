@@ -16,9 +16,9 @@ struct PrincipalApplyError: LocalizedError {
         return String(
             format: String(
                 localized: """
-                    %1$lld of %2$lld statements were applied. \
-                    This connection does not roll back user and role changes.
-                    """
+                %1$lld of %2$lld statements were applied. \
+                This connection does not roll back user and role changes.
+                """
             ),
             appliedCount,
             totalCount

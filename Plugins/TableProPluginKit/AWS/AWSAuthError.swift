@@ -33,7 +33,9 @@ public enum AWSAuthError: Error, LocalizedError, Equatable {
             return String(localized: "Cannot read ~/.aws/credentials.")
         case .profileIncomplete(let profile):
             return String(
-                format: String(localized: "Profile \"%@\" was not found, or has no access keys or credential_process, in ~/.aws/config or ~/.aws/credentials."),
+                format: String(
+                    localized: "Profile \"%@\" was not found, or has no access keys or credential_process, in ~/.aws/config or ~/.aws/credentials."
+                ),
                 profile
             )
         case .regionUnknown(let host):
@@ -43,7 +45,9 @@ public enum AWSAuthError: Error, LocalizedError, Equatable {
             )
         case .rdsEndpointUnresolved(let host):
             return String(
-                format: String(localized: "TablePro cannot sign an RDS token for \"%@\". Enter the RDS Endpoint (for example mydb.abc123.us-east-1.rds.amazonaws.com:5432) when you connect through a port forward or bastion."),
+                format: String(
+                    localized: "TablePro cannot sign an RDS token for \"%@\". Enter the RDS Endpoint (for example mydb.abc123.us-east-1.rds.amazonaws.com:5432) when you connect through a port forward or bastion."
+                ),
                 host
             )
         case .rdsEndpointInvalid(let value):
@@ -64,27 +68,37 @@ public enum AWSAuthError: Error, LocalizedError, Equatable {
         case .credentialProcessFailed(let profile, let status, let message):
             let detail = message.isEmpty ? "" : "\n\(message)"
             return String(
-                format: String(localized: "The credential_process command for profile \"%@\" exited with status %lld.%@"),
+                format: String(
+                    localized: "The credential_process command for profile \"%@\" exited with status %lld.%@"
+                ),
                 profile, status, detail
             )
         case .credentialProcessBadOutput(let profile):
             return String(
-                format: String(localized: "The credential_process command for profile \"%@\" did not return valid credentials JSON."),
+                format: String(
+                    localized: "The credential_process command for profile \"%@\" did not return valid credentials JSON."
+                ),
                 profile
             )
         case .credentialProcessUnsupportedVersion(let profile, let version):
             return String(
-                format: String(localized: "The credential_process command for profile \"%@\" returned unsupported Version %lld (expected 1)."),
+                format: String(
+                    localized: "The credential_process command for profile \"%@\" returned unsupported Version %lld (expected 1)."
+                ),
                 profile, version
             )
         case .credentialProcessUnsupportedOnPlatform(let profile):
             return String(
-                format: String(localized: "The credential_process command for profile \"%@\" is only supported on macOS."),
+                format: String(
+                    localized: "The credential_process command for profile \"%@\" is only supported on macOS."
+                ),
                 profile
             )
         case .assumeRoleMissingSource(let profile):
             return String(
-                format: String(localized: "Profile \"%@\" sets role_arn but has no source_profile or credential_source to provide base credentials."),
+                format: String(
+                    localized: "Profile \"%@\" sets role_arn but has no source_profile or credential_source to provide base credentials."
+                ),
                 profile
             )
         case .assumeRoleChainTooDeep(let profile):
@@ -99,12 +113,16 @@ public enum AWSAuthError: Error, LocalizedError, Equatable {
             )
         case .mfaUnsupported(let profile):
             return String(
-                format: String(localized: "Profile \"%@\" requires an MFA token code, which is not supported yet. Use a profile without mfa_serial."),
+                format: String(
+                    localized: "Profile \"%@\" requires an MFA token code, which is not supported yet. Use a profile without mfa_serial."
+                ),
                 profile
             )
         case .credentialSourceUnsupported(let profile, let source):
             return String(
-                format: String(localized: "Profile \"%@\" uses credential_source \"%@\", which is not supported on the desktop app."),
+                format: String(
+                    localized: "Profile \"%@\" uses credential_source \"%@\", which is not supported on the desktop app."
+                ),
                 profile, source
             )
         case .missingConfiguration(let message):

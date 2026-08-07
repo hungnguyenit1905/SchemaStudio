@@ -50,7 +50,17 @@ final class ElasticsearchPlugin: NSObject, TableProPlugin, DriverPlugin {
 
     static let columnTypesByCategory: [String: [String]] = [
         "Text": ["text", "keyword", "match_only_text", "search_as_you_type"],
-        "Numeric": ["long", "integer", "short", "byte", "double", "float", "half_float", "scaled_float", "unsigned_long"],
+        "Numeric": [
+            "long",
+            "integer",
+            "short",
+            "byte",
+            "double",
+            "float",
+            "half_float",
+            "scaled_float",
+            "unsigned_long"
+        ],
         "Boolean": ["boolean"],
         "Date": ["date", "date_nanos"],
         "Binary": ["binary"],
@@ -92,7 +102,10 @@ final class ElasticsearchPlugin: NSObject, TableProPlugin, DriverPlugin {
 
     static var statementCompletions: [CompletionEntry] {
         [
-            CompletionEntry(label: "GET /_search", insertText: "GET /_search\n{\n  \"query\": {\n    \"match_all\": {}\n  }\n}"),
+            CompletionEntry(
+                label: "GET /_search",
+                insertText: "GET /_search\n{\n  \"query\": {\n    \"match_all\": {}\n  }\n}"
+            ),
             CompletionEntry(label: "GET /_cat/indices", insertText: "GET /_cat/indices?format=json"),
             CompletionEntry(label: "GET /_cluster/health", insertText: "GET /_cluster/health"),
             CompletionEntry(label: "GET /_mapping", insertText: "GET /_mapping"),
@@ -101,9 +114,15 @@ final class ElasticsearchPlugin: NSObject, TableProPlugin, DriverPlugin {
             CompletionEntry(label: "term", insertText: "\"term\": { \"field\": \"value\" }"),
             CompletionEntry(label: "terms", insertText: "\"terms\": { \"field\": [\"a\", \"b\"] }"),
             CompletionEntry(label: "range", insertText: "\"range\": { \"field\": { \"gte\": 0, \"lte\": 100 } }"),
-            CompletionEntry(label: "bool", insertText: "\"bool\": {\n  \"must\": [],\n  \"filter\": [],\n  \"must_not\": [],\n  \"should\": []\n}"),
+            CompletionEntry(
+                label: "bool",
+                insertText: "\"bool\": {\n  \"must\": [],\n  \"filter\": [],\n  \"must_not\": [],\n  \"should\": []\n}"
+            ),
             CompletionEntry(label: "exists", insertText: "\"exists\": { \"field\": \"field\" }"),
-            CompletionEntry(label: "aggs", insertText: "\"aggs\": {\n  \"name\": {\n    \"terms\": { \"field\": \"field\" }\n  }\n}"),
+            CompletionEntry(
+                label: "aggs",
+                insertText: "\"aggs\": {\n  \"name\": {\n    \"terms\": { \"field\": \"field\" }\n  }\n}"
+            ),
         ]
     }
 

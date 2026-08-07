@@ -63,7 +63,7 @@ struct TableOperationDialog: View {
     }
 
     private var cascadeDisabled: Bool {
-        if operationType == .truncate && !cascadeSupported {
+        if operationType == .truncate, !cascadeSupported {
             return true
         }
         return !cascadeSupported
@@ -193,7 +193,7 @@ private let previewLogger = Logger(subsystem: "com.SchemaStudio", category: "Tab
         tableCount: 1,
         operationType: .drop,
         databaseType: .mysql
-    )        { options in
+    ) { options in
         previewLogger.debug("Options: \(String(describing: options), privacy: .public)")
     }
 }
@@ -205,7 +205,7 @@ private let previewLogger = Logger(subsystem: "com.SchemaStudio", category: "Tab
         tableCount: 1,
         operationType: .truncate,
         databaseType: .postgresql
-    )        { options in
+    ) { options in
         previewLogger.debug("Options: \(String(describing: options), privacy: .public)")
     }
 }
@@ -217,7 +217,7 @@ private let previewLogger = Logger(subsystem: "com.SchemaStudio", category: "Tab
         tableCount: 1,
         operationType: .drop,
         databaseType: .sqlite
-    )        { options in
+    ) { options in
         previewLogger.debug("Options: \(String(describing: options), privacy: .public)")
     }
 }

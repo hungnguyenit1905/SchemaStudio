@@ -96,7 +96,12 @@ internal final class ElasticsearchPluginDriver: PluginDatabaseDriver, @unchecked
         let columns = try await cachedMappingColumns(table)
 
         var result: [PluginColumnInfo] = [
-            PluginColumnInfo(name: ElasticsearchMappingFlattener.idColumn, dataType: "keyword", isNullable: false, isPrimaryKey: true),
+            PluginColumnInfo(
+                name: ElasticsearchMappingFlattener.idColumn,
+                dataType: "keyword",
+                isNullable: false,
+                isPrimaryKey: true
+            ),
             PluginColumnInfo(name: ElasticsearchMappingFlattener.indexColumn, dataType: "keyword"),
             PluginColumnInfo(name: ElasticsearchMappingFlattener.scoreColumn, dataType: "float"),
         ]
@@ -131,7 +136,7 @@ internal final class ElasticsearchPluginDriver: PluginDatabaseDriver, @unchecked
         logicMode: String
     ) async throws -> Int? {
         guard let conn = connection else { throw ElasticsearchError.notConnected }
-        let fields = ElasticsearchMappingFlattener.fieldInfo(from: try await cachedMappingColumns(table))
+        let fields = try await ElasticsearchMappingFlattener.fieldInfo(from: cachedMappingColumns(table))
         let specs = filters.map { ElasticsearchFilterSpec(column: $0.column, op: $0.op, value: $0.value) }
         let query = ElasticsearchQueryBuilder.queryClause(
             filters: specs, logicMode: logicMode, fields: fields, caseInsensitive: supportsCaseInsensitiveSearch
@@ -141,7 +146,7 @@ internal final class ElasticsearchPluginDriver: PluginDatabaseDriver, @unchecked
 
     func fetchTableDDL(table: String, schema: String?) async throws -> String {
         guard let conn = connection else { throw ElasticsearchError.notConnected }
-        return prettyJson(try await conn.mappingJSON(index: table))
+        return try await prettyJson(conn.mappingJSON(index: table))
     }
 
     func fetchViewDefinition(view: String, schema: String?) async throws -> String {
@@ -172,8 +177,14 @@ internal final class ElasticsearchPluginDriver: PluginDatabaseDriver, @unchecked
         Self.logger.debug("""
         buildBrowseQuery table=\(table, privacy: .public) limit=\(limit) offset=\(offset) \
         columns=[\(columns.joined(separator: ","), privacy: .public)] \
-        sortColumns=\(sortColumns.map { "[\($0.columnIndex)]=\($0.ascending ? "asc" : "desc")" }.joined(separator: " "), privacy: .public) \
-        resolvedSorts=\(sorts.map { "\($0.column) \($0.ascending ? "asc" : "desc")" }.joined(separator: " | "), privacy: .public)
+        sortColumns=\(
+            sortColumns.map { "[\($0.columnIndex)]=\($0.ascending ? "asc" : "desc")" }.joined(separator: " "),
+            privacy: .public
+        ) \
+        resolvedSorts=\(
+            sorts.map { "\($0.column) \($0.ascending ? "asc" : "desc")" }.joined(separator: " | "),
+            privacy: .public
+        )
         """)
         return ElasticsearchQueryBuilder().buildBrowseQuery(index: table, sorts: sorts, limit: limit, offset: offset)
     }
@@ -189,11 +200,20 @@ internal final class ElasticsearchPluginDriver: PluginDatabaseDriver, @unchecked
     ) -> String? {
         let sorts = sortSpecs(from: sortColumns, columns: columns)
         Self.logger.debug("""
-        buildFilteredQuery table=\(table, privacy: .public) logic=\(logicMode, privacy: .public) limit=\(limit) offset=\(offset) \
+        buildFilteredQuery table=\(table, privacy: .public) logic=\(
+            logicMode,
+            privacy: .public
+        ) limit=\(limit) offset=\(offset) \
         columns=[\(columns.joined(separator: ","), privacy: .public)] \
         filters=\(filters.map { "\($0.column) \($0.op) '\($0.value)'" }.joined(separator: " | "), privacy: .public) \
-        sortColumns=\(sortColumns.map { "[\($0.columnIndex)]=\($0.ascending ? "asc" : "desc")" }.joined(separator: " "), privacy: .public) \
-        resolvedSorts=\(sorts.map { "\($0.column) \($0.ascending ? "asc" : "desc")" }.joined(separator: " | "), privacy: .public)
+        sortColumns=\(
+            sortColumns.map { "[\($0.columnIndex)]=\($0.ascending ? "asc" : "desc")" }.joined(separator: " "),
+            privacy: .public
+        ) \
+        resolvedSorts=\(
+            sorts.map { "\($0.column) \($0.ascending ? "asc" : "desc")" }.joined(separator: " | "),
+            privacy: .public
+        )
         """)
         return ElasticsearchQueryBuilder().buildFilteredQuery(
             index: table, filters: filters, logicMode: logicMode, sorts: sorts, limit: limit, offset: offset
@@ -261,8 +281,7 @@ internal final class ElasticsearchPluginDriver: PluginDatabaseDriver, @unchecked
         guard let data = raw.data(using: .utf8),
               let object = try? JSONSerialization.jsonObject(with: data),
               let pretty = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys]),
-              let string = String(data: pretty, encoding: .utf8)
-        else { return raw }
+              let string = String(data: pretty, encoding: .utf8) else { return raw }
         return string
     }
 }

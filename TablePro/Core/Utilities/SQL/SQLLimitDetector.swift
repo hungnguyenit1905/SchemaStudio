@@ -123,7 +123,9 @@ enum SQLLimitDetector {
             if SqlDollarQuote.isIdentifierStart(ch),
                i == 0 || !SqlDollarQuote.isIdentifierContinuation(buffer.character(at: i - 1)) {
                 var end = i + 1
-                while end < length, SqlDollarQuote.isIdentifierPart(buffer.character(at: end)) { end += 1 }
+                while end < length, SqlDollarQuote.isIdentifierPart(buffer.character(at: end)) {
+                    end += 1
+                }
                 if parenDepth == 0, isLimitingKeyword(
                     in: buffer, start: i, end: end, autoLimitStyle: autoLimitStyle
                 ) {
@@ -156,8 +158,8 @@ enum SQLLimitDetector {
     private static func matchesKeyword(_ keyword: String, in buffer: NSString, start: Int, end: Int) -> Bool {
         let keywordBuffer = keyword as NSString
         guard end - start == keywordBuffer.length else { return false }
-        for offset in 0..<keywordBuffer.length
-        where uppercased(buffer.character(at: start + offset)) != keywordBuffer.character(at: offset) {
+        for offset in 0 ..< keywordBuffer.length
+            where uppercased(buffer.character(at: start + offset)) != keywordBuffer.character(at: offset) {
             return false
         }
         return true

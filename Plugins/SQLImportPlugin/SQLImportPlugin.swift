@@ -95,7 +95,8 @@ final class SQLImportPlugin: ImportFormatPlugin, SettablePlugin {
                             do {
                                 try await sink.enableForeignKeyChecks()
                             } catch {
-                                Self.logger.warning("Failed to re-enable foreign key checks: \(error.localizedDescription)")
+                                Self.logger
+                                    .warning("Failed to re-enable foreign key checks: \(error.localizedDescription)")
                             }
                         }
                         throw PluginImportError.statementFailed(

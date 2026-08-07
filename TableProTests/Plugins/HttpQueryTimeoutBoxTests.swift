@@ -42,7 +42,7 @@ struct HttpQueryTimeoutBoxTests {
     func concurrentAccess() async {
         let box = HttpQueryTimeoutBox()
         await withTaskGroup(of: Void.self) { group in
-            for index in 0..<32 {
+            for index in 0 ..< 32 {
                 group.addTask { box.set(serverTimeoutSeconds: 30 + index * 10) }
                 group.addTask { _ = box.requestTimeoutInterval }
             }

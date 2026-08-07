@@ -121,8 +121,7 @@ struct AIChatMessageView: View {
         }
     }
 
-    @ViewBuilder
-    private var toolLimitPauseRow: some View {
+    @ViewBuilder private var toolLimitPauseRow: some View {
         if let onContinue, let onAdjustToolLimit, let pausedToolCallCount {
             HStack(spacing: 8) {
                 Image(systemName: "pause.circle")
@@ -160,8 +159,7 @@ struct AIChatMessageView: View {
         .padding(.horizontal, 8)
     }
 
-    @ViewBuilder
-    private var messageContent: some View {
+    @ViewBuilder private var messageContent: some View {
         let visibleBlocks = message.blocks.filter { block in
             switch block.kind {
             case .text(let text):
@@ -226,7 +224,7 @@ struct ChatTypingIndicatorView: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            ForEach(0..<3, id: \.self) { index in
+            ForEach(0 ..< 3, id: \.self) { index in
                 Circle()
                     .fill(Color(nsColor: .tertiaryLabelColor))
                     .frame(width: 6, height: 6)

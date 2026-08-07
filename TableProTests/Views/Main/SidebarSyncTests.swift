@@ -7,13 +7,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("SidebarSyncAction")
 struct SidebarSyncTests {
-
     @Test("Tables load, selection empty, current tab has table name — sync")
     func syncsWhenTablesLoadAndSelectionEmpty() {
         let tables = [

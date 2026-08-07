@@ -6,8 +6,8 @@
 #if canImport(CLibMongoc)
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("MongoDBConnection.stripPort(fromSrvHost:)")

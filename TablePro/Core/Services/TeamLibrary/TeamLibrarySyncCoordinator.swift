@@ -30,7 +30,8 @@ final class TeamLibrarySyncCoordinator {
     init(
         apiClient: TeamLibraryAPIClient = LiveTeamLibraryAPIClient.shared,
         store: TeamLibraryStore = .shared,
-        isFeatureAvailable: @escaping @MainActor () -> Bool = { LicenseManager.shared.isFeatureAvailable(.teamLibrary) },
+        isFeatureAvailable: @escaping @MainActor ()
+            -> Bool = { LicenseManager.shared.isFeatureAvailable(.teamLibrary) },
         credentialsProvider: @escaping @MainActor () -> (key: String, machineId: String)? = {
             guard let key = LicenseManager.shared.license?.key else { return nil }
             return (key, LicenseStorage.shared.machineId)

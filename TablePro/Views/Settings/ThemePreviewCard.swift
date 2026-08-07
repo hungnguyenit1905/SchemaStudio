@@ -111,7 +111,7 @@ struct ThemePreviewCard: View {
                 let widths: [CGFloat] = size == .compact
                     ? [10, 14, 13, 9]
                     : [14, 18, 17, 12]
-                ForEach(0..<4, id: \.self) { i in
+                ForEach(0 ..< 4, id: \.self) { i in
                     RoundedRectangle(cornerRadius: 1)
                         .fill(i == 1
                             ? (theme.sidebar.selectedItem?.swiftUIColor
@@ -136,21 +136,51 @@ struct ThemePreviewCard: View {
 
             VStack(alignment: .leading, spacing: size == .compact ? 3 : 4) {
                 if size == .compact {
-                    codeLine(widths: [10, 16, 7],
-                             colors: [theme.editor.syntax.keyword, theme.editor.syntax.function, theme.editor.syntax.type])
-                    codeLine(widths: [7, 22],
-                             colors: [theme.editor.syntax.keyword, theme.editor.syntax.string])
-                    codeLine(widths: [13, 6, 9],
-                             colors: [theme.editor.syntax.type, theme.editor.syntax.operator, theme.editor.syntax.number])
+                    codeLine(
+                        widths: [10, 16, 7],
+                        colors: [
+                            theme.editor.syntax.keyword,
+                            theme.editor.syntax.function,
+                            theme.editor.syntax.type
+                        ]
+                    )
+                    codeLine(
+                        widths: [7, 22],
+                        colors: [theme.editor.syntax.keyword, theme.editor.syntax.string]
+                    )
+                    codeLine(
+                        widths: [13, 6, 9],
+                        colors: [
+                            theme.editor.syntax.type,
+                            theme.editor.syntax.operator,
+                            theme.editor.syntax.number
+                        ]
+                    )
                 } else {
-                    codeLine(widths: [14, 22, 10],
-                             colors: [theme.editor.syntax.keyword, theme.editor.syntax.function, theme.editor.syntax.type])
-                    codeLine(widths: [10, 30],
-                             colors: [theme.editor.syntax.keyword, theme.editor.syntax.string])
-                    codeLine(widths: [18, 8, 12],
-                             colors: [theme.editor.syntax.type, theme.editor.syntax.operator, theme.editor.syntax.number])
-                    codeLine(widths: [26],
-                             colors: [theme.editor.syntax.comment])
+                    codeLine(
+                        widths: [14, 22, 10],
+                        colors: [
+                            theme.editor.syntax.keyword,
+                            theme.editor.syntax.function,
+                            theme.editor.syntax.type
+                        ]
+                    )
+                    codeLine(
+                        widths: [10, 30],
+                        colors: [theme.editor.syntax.keyword, theme.editor.syntax.string]
+                    )
+                    codeLine(
+                        widths: [18, 8, 12],
+                        colors: [
+                            theme.editor.syntax.type,
+                            theme.editor.syntax.operator,
+                            theme.editor.syntax.number
+                        ]
+                    )
+                    codeLine(
+                        widths: [26],
+                        colors: [theme.editor.syntax.comment]
+                    )
                 }
             }
             .padding(.top, size == .compact ? 4 : 6)
@@ -170,9 +200,9 @@ struct ThemePreviewCard: View {
 
     private var dataGridArea: some View {
         VStack(spacing: 0) {
-            ForEach(0..<dataGridRowCount, id: \.self) { row in
+            ForEach(0 ..< dataGridRowCount, id: \.self) { row in
                 HStack(spacing: size == .compact ? 2 : 3) {
-                    ForEach(0..<3, id: \.self) { _ in
+                    ForEach(0 ..< 3, id: \.self) { _ in
                         RoundedRectangle(cornerRadius: 1)
                             .fill(theme.dataGrid.text.swiftUIColor.opacity(0.3))
                             .frame(height: codeLineHeight)

@@ -10,13 +10,13 @@ struct GridRectTests {
         let a = GridCoord(row: 5, column: 2)
         let b = GridCoord(row: 1, column: 7)
         let rect = GridRect.between(a, b)
-        #expect(rect.rows == 1...5)
-        #expect(rect.columns == 2...7)
+        #expect(rect.rows == 1 ... 5)
+        #expect(rect.columns == 2 ... 7)
     }
 
     @Test("contains is inclusive on both bounds")
     func containsInclusiveBounds() {
-        let rect = GridRect(rows: 2...4, columns: 1...3)
+        let rect = GridRect(rows: 2 ... 4, columns: 1 ... 3)
         #expect(rect.contains(GridCoord(row: 2, column: 1)))
         #expect(rect.contains(GridCoord(row: 4, column: 3)))
         #expect(!rect.contains(GridCoord(row: 1, column: 2)))
@@ -26,22 +26,22 @@ struct GridRectTests {
 
     @Test("clamped returns nil when rect lies entirely outside the limits")
     func clampedOutsideReturnsNil() {
-        let rect = GridRect(rows: 10...20, columns: 5...8)
+        let rect = GridRect(rows: 10 ... 20, columns: 5 ... 8)
         #expect(rect.clamped(rowLimit: 5, columnLimit: 10) == nil)
     }
 
     @Test("clamped reduces a partially outside rect to the visible window")
     func clampedPartialOverlap() {
-        let rect = GridRect(rows: 3...12, columns: -2...4)
+        let rect = GridRect(rows: 3 ... 12, columns: -2 ... 4)
         let clamped = rect.clamped(rowLimit: 8, columnLimit: 6)
-        #expect(clamped?.rows == 3...7)
-        #expect(clamped?.columns == 0...4)
+        #expect(clamped?.rows == 3 ... 7)
+        #expect(clamped?.columns == 0 ... 4)
     }
 }
 
 @Suite("GridSelection")
 struct GridSelectionTests {
-    private let rect = GridRect(rows: 0...2, columns: 0...1)
+    private let rect = GridRect(rows: 0 ... 2, columns: 0 ... 1)
     private let active = GridCoord(row: 0, column: 0)
 
     @Test("empty selection contains nothing and has no bounding rect")
@@ -66,19 +66,19 @@ struct GridSelectionTests {
     @Test("a cell-range spanning rows reports every covered row")
     func cellRangeAffectsEveryCoveredRow() {
         let selection = GridSelection.single(
-            GridRect(rows: 2...5, columns: 1...3),
+            GridRect(rows: 2 ... 5, columns: 1 ... 3),
             anchor: GridCoord(row: 2, column: 1),
             active: GridCoord(row: 5, column: 3)
         )
-        #expect(selection.affectedRows == IndexSet(integersIn: 2...5))
+        #expect(selection.affectedRows == IndexSet(integersIn: 2 ... 5))
     }
 
     @Test("multiple rectangles report union of affected rows and columns")
     func multipleRectanglesUnion() {
         let selection = GridSelection(
             rectangles: [
-                GridRect(rows: 0...0, columns: 0...0),
-                GridRect(rows: 5...6, columns: 3...4)
+                GridRect(rows: 0 ... 0, columns: 0 ... 0),
+                GridRect(rows: 5 ... 6, columns: 3 ... 4)
             ],
             activeCell: GridCoord(row: 5, column: 3),
             anchor: GridCoord(row: 5, column: 3)
@@ -91,21 +91,21 @@ struct GridSelectionTests {
     func boundingRectangleSpansDisjointRects() {
         let selection = GridSelection(
             rectangles: [
-                GridRect(rows: 1...1, columns: 0...0),
-                GridRect(rows: 7...8, columns: 5...6)
+                GridRect(rows: 1 ... 1, columns: 0 ... 0),
+                GridRect(rows: 7 ... 8, columns: 5 ... 6)
             ],
             activeCell: nil,
             anchor: nil
         )
-        #expect(selection.boundingRectangle == GridRect(rows: 1...8, columns: 0...6))
+        #expect(selection.boundingRectangle == GridRect(rows: 1 ... 8, columns: 0 ... 6))
     }
 
     @Test("columns(in:) reports only rects that include the row")
     func columnsInRowFiltersByRow() {
         let selection = GridSelection(
             rectangles: [
-                GridRect(rows: 0...2, columns: 1...2),
-                GridRect(rows: 5...6, columns: 4...4)
+                GridRect(rows: 0 ... 2, columns: 1 ... 2),
+                GridRect(rows: 5 ... 6, columns: 4 ... 4)
             ],
             activeCell: nil,
             anchor: nil
@@ -119,8 +119,8 @@ struct GridSelectionTests {
     func containsAnyRectangle() {
         let selection = GridSelection(
             rectangles: [
-                GridRect(rows: 0...0, columns: 0...0),
-                GridRect(rows: 5...6, columns: 3...4)
+                GridRect(rows: 0 ... 0, columns: 0 ... 0),
+                GridRect(rows: 5 ... 6, columns: 3 ... 4)
             ],
             activeCell: nil,
             anchor: nil
@@ -132,9 +132,9 @@ struct GridSelectionTests {
 
     @Test("union merges rectangles, taking the new active and anchor when present")
     func unionPrefersOtherActiveAndAnchor() {
-        let lhs = GridSelection.single(GridRect(rows: 0...0, columns: 0...0), anchor: active, active: active)
+        let lhs = GridSelection.single(GridRect(rows: 0 ... 0, columns: 0 ... 0), anchor: active, active: active)
         let other = GridCoord(row: 4, column: 4)
-        let rhs = GridSelection.single(GridRect(rows: 4...4, columns: 4...4), anchor: other, active: other)
+        let rhs = GridSelection.single(GridRect(rows: 4 ... 4, columns: 4 ... 4), anchor: other, active: other)
         let merged = lhs.union(rhs)
         #expect(merged.rectangles.count == 2)
         #expect(merged.activeCell == other)
@@ -177,7 +177,7 @@ struct GridSelectionControllerTests {
         _ = controller.beginDrag(at: origin, modifiers: [])
         controller.continueDrag(to: target)
         controller.endDrag(dragged: true, originalCoord: origin)
-        #expect(controller.selection.rectangles == [GridRect(rows: 1...4, columns: 1...3)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 1 ... 4, columns: 1 ... 3)])
         #expect(controller.selection.anchor == origin)
         #expect(controller.selection.activeCell == target)
     }
@@ -193,7 +193,7 @@ struct GridSelectionControllerTests {
 
         let shiftTarget = GridCoord(row: 5, column: 6)
         _ = controller.beginDrag(at: shiftTarget, modifiers: .shift)
-        #expect(controller.selection.rectangles == [GridRect(rows: 2...5, columns: 2...6)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 2 ... 5, columns: 2 ... 6)])
         #expect(controller.selection.anchor == origin)
         #expect(controller.selection.activeCell == shiftTarget)
     }
@@ -233,8 +233,8 @@ struct GridSelectionControllerTests {
         controller.endDrag(dragged: true, originalCoord: cmdOrigin)
 
         #expect(controller.selection.rectangles == [
-            GridRect(rows: 0...1, columns: 0...1),
-            GridRect(rows: 5...7, columns: 5...7)
+            GridRect(rows: 0 ... 1, columns: 0 ... 1),
+            GridRect(rows: 5 ... 7, columns: 5 ... 7)
         ])
         #expect(controller.selection.activeCell == cmdTarget)
     }
@@ -243,7 +243,7 @@ struct GridSelectionControllerTests {
     func selectAllSpansGrid() {
         let controller = GridSelectionController()
         controller.selectAll(totalRows: 4, totalColumns: 3)
-        #expect(controller.selection.rectangles == [GridRect(rows: 0...3, columns: 0...2)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 0 ... 3, columns: 0 ... 2)])
         #expect(controller.selection.activeCell == GridCoord(row: 0, column: 0))
     }
 
@@ -251,7 +251,7 @@ struct GridSelectionControllerTests {
     func selectColumnSpansAllRows() {
         let controller = GridSelectionController()
         controller.selectEntireColumn(2, totalRows: 5)
-        #expect(controller.selection.rectangles == [GridRect(rows: 0...4, columns: 2...2)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 0 ... 4, columns: 2 ... 2)])
         #expect(controller.selection.activeCell == GridCoord(row: 0, column: 2))
         #expect(controller.selection.anchor == GridCoord(row: 0, column: 2))
     }
@@ -260,7 +260,7 @@ struct GridSelectionControllerTests {
     func selectRowSpansAllColumns() {
         let controller = GridSelectionController()
         controller.selectEntireRow(3, totalColumns: 6)
-        #expect(controller.selection.rectangles == [GridRect(rows: 3...3, columns: 0...5)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 3 ... 3, columns: 0 ... 5)])
         #expect(controller.selection.activeCell == GridCoord(row: 3, column: 0))
     }
 
@@ -273,7 +273,7 @@ struct GridSelectionControllerTests {
         controller.endDrag(dragged: true, originalCoord: origin)
 
         controller.extendActiveCell(direction: .down, jumpToEdge: false, totalRows: 10, totalColumns: 10)
-        #expect(controller.selection.rectangles == [GridRect(rows: 2...4, columns: 2...3)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 2 ... 4, columns: 2 ... 3)])
         #expect(controller.selection.activeCell == GridCoord(row: 4, column: 3))
         #expect(controller.selection.anchor == origin)
     }
@@ -288,7 +288,7 @@ struct GridSelectionControllerTests {
 
         controller.extendActiveCell(direction: .right, jumpToEdge: true, totalRows: 10, totalColumns: 10)
         #expect(controller.selection.activeCell == GridCoord(row: 2, column: 9))
-        #expect(controller.selection.rectangles == [GridRect(rows: 2...2, columns: 2...9)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 2 ... 2, columns: 2 ... 9)])
     }
 
     @Test("extendActiveCell without a seed is a no-op when the selection is empty")
@@ -305,7 +305,7 @@ struct GridSelectionControllerTests {
 
         controller.extendActiveCell(from: focused, direction: .down, jumpToEdge: false, totalRows: 10, totalColumns: 10)
 
-        #expect(controller.selection.rectangles == [GridRect(rows: 3...4, columns: 4...4)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 3 ... 4, columns: 4 ... 4)])
         #expect(controller.selection.anchor == focused)
         #expect(controller.selection.activeCell == GridCoord(row: 4, column: 4))
     }
@@ -314,14 +314,20 @@ struct GridSelectionControllerTests {
     func extendActiveCellSeedsInEveryDirection() {
         let focused = GridCoord(row: 3, column: 3)
         let cases: [(GridSelectionController.Direction, GridRect, GridCoord)] = [
-            (.up, GridRect(rows: 2...3, columns: 3...3), GridCoord(row: 2, column: 3)),
-            (.down, GridRect(rows: 3...4, columns: 3...3), GridCoord(row: 4, column: 3)),
-            (.left, GridRect(rows: 3...3, columns: 2...3), GridCoord(row: 3, column: 2)),
-            (.right, GridRect(rows: 3...3, columns: 3...4), GridCoord(row: 3, column: 4))
+            (.up, GridRect(rows: 2 ... 3, columns: 3 ... 3), GridCoord(row: 2, column: 3)),
+            (.down, GridRect(rows: 3 ... 4, columns: 3 ... 3), GridCoord(row: 4, column: 3)),
+            (.left, GridRect(rows: 3 ... 3, columns: 2 ... 3), GridCoord(row: 3, column: 2)),
+            (.right, GridRect(rows: 3 ... 3, columns: 3 ... 4), GridCoord(row: 3, column: 4))
         ]
         for (direction, expectedRect, expectedActive) in cases {
             let controller = GridSelectionController()
-            controller.extendActiveCell(from: focused, direction: direction, jumpToEdge: false, totalRows: 10, totalColumns: 10)
+            controller.extendActiveCell(
+                from: focused,
+                direction: direction,
+                jumpToEdge: false,
+                totalRows: 10,
+                totalColumns: 10
+            )
             #expect(controller.selection.rectangles == [expectedRect])
             #expect(controller.selection.anchor == focused)
             #expect(controller.selection.activeCell == expectedActive)
@@ -335,10 +341,10 @@ struct GridSelectionControllerTests {
 
         controller.extendActiveCell(from: focused, direction: .down, jumpToEdge: false, totalRows: 10, totalColumns: 10)
         controller.extendActiveCell(direction: .down, jumpToEdge: false, totalRows: 10, totalColumns: 10)
-        #expect(controller.selection.rectangles == [GridRect(rows: 2...4, columns: 2...2)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 2 ... 4, columns: 2 ... 2)])
 
         controller.extendActiveCell(direction: .up, jumpToEdge: false, totalRows: 10, totalColumns: 10)
-        #expect(controller.selection.rectangles == [GridRect(rows: 2...3, columns: 2...2)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 2 ... 3, columns: 2 ... 2)])
         #expect(controller.selection.anchor == focused)
         #expect(controller.selection.activeCell == GridCoord(row: 3, column: 2))
     }
@@ -350,7 +356,7 @@ struct GridSelectionControllerTests {
 
         controller.extendActiveCell(from: focused, direction: .right, jumpToEdge: true, totalRows: 10, totalColumns: 10)
 
-        #expect(controller.selection.rectangles == [GridRect(rows: 2...2, columns: 2...9)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 2 ... 2, columns: 2 ... 9)])
         #expect(controller.selection.anchor == focused)
         #expect(controller.selection.activeCell == GridCoord(row: 2, column: 9))
     }
@@ -363,9 +369,15 @@ struct GridSelectionControllerTests {
         controller.continueDrag(to: origin)
         controller.endDrag(dragged: true, originalCoord: origin)
 
-        controller.extendActiveCell(from: GridCoord(row: 9, column: 9), direction: .down, jumpToEdge: false, totalRows: 10, totalColumns: 10)
+        controller.extendActiveCell(
+            from: GridCoord(row: 9, column: 9),
+            direction: .down,
+            jumpToEdge: false,
+            totalRows: 10,
+            totalColumns: 10
+        )
 
-        #expect(controller.selection.rectangles == [GridRect(rows: 2...3, columns: 2...2)])
+        #expect(controller.selection.rectangles == [GridRect(rows: 2 ... 3, columns: 2 ... 2)])
         #expect(controller.selection.anchor == origin)
     }
 

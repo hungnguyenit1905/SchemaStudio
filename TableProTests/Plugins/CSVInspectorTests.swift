@@ -93,7 +93,10 @@ struct CSVDialectDetectionTests {
 
 @Suite("CSVStreamingParser")
 struct CSVStreamingParserTests {
-    private func parse(_ source: String, dialect: CSVDialect = .csv) -> (data: Data, ranges: [Range<Int>], parser: CSVStreamingParser) {
+    private func parse(
+        _ source: String,
+        dialect: CSVDialect = .csv
+    ) -> (data: Data, ranges: [Range<Int>], parser: CSVStreamingParser) {
         let data = source.data(using: .utf8)!
         let parser = CSVStreamingParser(dialect: dialect)
         let ranges = data.withUnsafeBytes { raw -> [Range<Int>] in
@@ -187,10 +190,14 @@ struct CSVStreamingParserTests {
     func fieldMatchesParseRow() {
         let (data, ranges, parser) = parse("alpha,beta,gamma,delta\n")
         let full = row(data, parser, ranges[0])
-        for column in 0..<full.count {
+        for column in 0 ..< full.count {
             let single = data.withUnsafeBytes { raw -> String in
                 guard let base = raw.bindMemory(to: UInt8.self).baseAddress else { return "" }
-                return parser.field(UnsafeBufferPointer(start: base, count: raw.count), range: ranges[0], column: column)
+                return parser.field(
+                    UnsafeBufferPointer(start: base, count: raw.count),
+                    range: ranges[0],
+                    column: column
+                )
             }
             #expect(single == full[column])
         }
@@ -265,9 +272,9 @@ struct CSVRowStoreTests {
     func snapshotFieldMatchesCells() {
         let store = makeStore("a,b,c\nalpha,beta,gamma\nx,y,z\n")
         let snapshot = store.snapshot()
-        for row in 0..<snapshot.rowCount {
+        for row in 0 ..< snapshot.rowCount {
             let cells = snapshot.cells(at: row)
-            for column in 0..<cells.count {
+            for column in 0 ..< cells.count {
                 #expect(snapshot.field(at: row, column: column) == cells[column])
             }
         }

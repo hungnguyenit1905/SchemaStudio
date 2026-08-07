@@ -21,7 +21,9 @@ internal struct AlertOperationConfirming: OperationConfirming {
             return await AlertHelper.confirmCritical(
                 title: operationDescription,
                 message: String(
-                    format: String(localized: "This query may permanently modify or delete data and cannot be undone.\n\n%@"),
+                    format: String(
+                        localized: "This query may permanently modify or delete data and cannot be undone.\n\n%@"
+                    ),
                     preview
                 ),
                 confirmButton: String(localized: "Execute"),

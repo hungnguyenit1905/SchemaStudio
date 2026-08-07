@@ -6,17 +6,16 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 // MARK: - SQL Normalization
 
 func normalizeSQL(_ sql: String) -> String {
-    let normalized = sql
+    return sql
         .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
         .trimmingCharacters(in: .whitespaces)
-    return normalized
 }
 
 // MARK: - SQL Assertions

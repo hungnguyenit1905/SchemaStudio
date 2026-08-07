@@ -6,9 +6,9 @@
 //  command-line buffer accumulation/dispatch behavior.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineCommandLineTests: XCTestCase {
@@ -33,7 +33,9 @@ final class VimEngineCommandLineTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func enter() { _ = engine.process("\r", shift: false) }
@@ -63,8 +65,11 @@ final class VimEngineCommandLineTests: XCTestCase {
     func testQuestionMarkEntersReverseSearchMode() {
         keys("?")
         if case .commandLine(let cmdBuffer) = engine.mode {
-            XCTAssertEqual(cmdBuffer, "?",
-                "? should start a reverse-search command-line buffer")
+            XCTAssertEqual(
+                cmdBuffer,
+                "?",
+                "? should start a reverse-search command-line buffer"
+            )
         } else {
             XCTFail("Expected commandLine mode after '?'")
         }
@@ -114,8 +119,11 @@ final class VimEngineCommandLineTests: XCTestCase {
     func testBackspaceOnLonePromptExitsToNormal() {
         keys(":")
         backspace()
-        XCTAssertEqual(engine.mode, .normal,
-            "Backspace on the prompt alone should exit to normal mode")
+        XCTAssertEqual(
+            engine.mode,
+            .normal,
+            "Backspace on the prompt alone should exit to normal mode"
+        )
     }
 
     func testBackspaceOnSearchPromptExitsToNormal() {
@@ -138,8 +146,11 @@ final class VimEngineCommandLineTests: XCTestCase {
     func testEnterDispatchesColonCommand() {
         keys(":w")
         enter()
-        XCTAssertEqual(dispatchedCommand, "w",
-            "Enter should dispatch the buffer (without the ':' prefix)")
+        XCTAssertEqual(
+            dispatchedCommand,
+            "w",
+            "Enter should dispatch the buffer (without the ':' prefix)"
+        )
         XCTAssertEqual(engine.mode, .normal)
     }
 
@@ -154,8 +165,10 @@ final class VimEngineCommandLineTests: XCTestCase {
         // the pattern to onCommand. onCommand is reserved for `:`-style ex commands.
         keys("/hello")
         enter()
-        XCTAssertNil(dispatchedCommand,
-            "/pattern should be handled internally and not surface to onCommand")
+        XCTAssertNil(
+            dispatchedCommand,
+            "/pattern should be handled internally and not surface to onCommand"
+        )
     }
 
     func testEnterOnEmptyCommandDispatchesEmptyString() {
@@ -202,15 +215,21 @@ final class VimEngineCommandLineTests: XCTestCase {
         dispatchedCommand = nil
         keys(":q")
         enter()
-        XCTAssertEqual(dispatchedCommand, "q",
-            "Engine should be ready for a fresh command-line entry after dispatch")
+        XCTAssertEqual(
+            dispatchedCommand,
+            "q",
+            "Engine should be ready for a fresh command-line entry after dispatch"
+        )
     }
 
     // MARK: - Display Label
 
     func testDisplayLabelShowsBufferInCommandLineMode() {
         keys(":wq")
-        XCTAssertEqual(engine.mode.displayLabel, ":wq",
-            "displayLabel for commandLine should be the literal buffer text")
+        XCTAssertEqual(
+            engine.mode.displayLabel,
+            ":wq",
+            "displayLabel for commandLine should be the literal buffer text"
+        )
     }
 }

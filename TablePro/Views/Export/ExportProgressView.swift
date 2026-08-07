@@ -90,5 +90,5 @@ struct ExportProgressView: View {
         processedRows: 95_500,
         totalRows: 175_787,
         statusMessage: ""
-    )        {}
+    ) {}
 }

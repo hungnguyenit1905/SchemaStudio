@@ -75,8 +75,7 @@ internal struct PhpViewerView: View {
 
     // MARK: - Content
 
-    @ViewBuilder
-    private var viewerContent: some View {
+    @ViewBuilder private var viewerContent: some View {
         switch viewMode {
         case .tree:
             treeBody
@@ -85,8 +84,7 @@ internal struct PhpViewerView: View {
         }
     }
 
-    @ViewBuilder
-    private var treeBody: some View {
+    @ViewBuilder private var treeBody: some View {
         switch parseResult {
         case .idle, .parsing:
             ProgressView()

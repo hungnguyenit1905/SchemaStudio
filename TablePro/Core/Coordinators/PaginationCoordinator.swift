@@ -56,7 +56,9 @@ final class PaginationCoordinator {
         confirmLargeFetch(
             messageText: String(localized: "Show All Rows"),
             informativeText: String(
-                format: String(localized: "This will load all %@ rows on a single page. Large result sets use significant memory. Continue?"),
+                format: String(
+                    localized: "This will load all %@ rows on a single page. Large result sets use significant memory. Continue?"
+                ),
                 total.formatted()
             ),
             confirmTitle: String(localized: "Show All")
@@ -235,11 +237,16 @@ final class PaginationCoordinator {
         if let total = totalEstimate {
             let remaining = max(0, total - loadedCount)
             message = String(
-                format: String(localized: "This will fetch approximately %@ more rows. Large result sets use significant memory. Continue?"),
+                format: String(
+                    localized: "This will fetch approximately %@ more rows. Large result sets use significant memory. Continue?"
+                ),
                 remaining.formatted()
             )
         } else {
-            message = String(localized: "This will fetch all remaining rows. Large result sets use significant memory. Continue?")
+            message =
+                String(
+                    localized: "This will fetch all remaining rows. Large result sets use significant memory. Continue?"
+                )
         }
 
         confirmLargeFetch(
@@ -316,7 +323,10 @@ final class PaginationCoordinator {
                     parent.currentQueryTask = nil
 
                     let totalTime = CFAbsoluteTimeGetCurrent() - start
-                    progressLog.info("[fetchAll] DONE rows=\(result.rows.count) fetchTime=\(String(format: "%.3f", fetchTime))s totalTime=\(String(format: "%.3f", totalTime))s")
+                    progressLog
+                        .info(
+                            "[fetchAll] DONE rows=\(result.rows.count) fetchTime=\(String(format: "%.3f", fetchTime))s totalTime=\(String(format: "%.3f", totalTime))s"
+                        )
                 }
             } catch {
                 await MainActor.run { [weak self] in
@@ -332,7 +342,8 @@ final class PaginationCoordinator {
                     if !isStale {
                         parent.currentQueryTask = nil
                     }
-                    MainContentCoordinator.logger.error("Fetch all failed: \(error.localizedDescription, privacy: .public)")
+                    MainContentCoordinator.logger
+                        .error("Fetch all failed: \(error.localizedDescription, privacy: .public)")
                 }
             }
         }

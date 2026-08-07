@@ -20,7 +20,7 @@ struct BsonDocumentFlattener {
 
         // Ensure _id is always first if present
         for doc in documents {
-            if doc["_id"] != nil && !seen.contains("_id") {
+            if doc["_id"] != nil, !seen.contains("_id") {
                 seen.insert("_id")
                 ordered.append("_id")
                 break
@@ -65,7 +65,7 @@ struct BsonDocumentFlattener {
 
     /// Serialize a single value to its display string representation
     static func stringValue(for value: Any?) -> String? {
-        guard let value = value else { return nil }
+        guard let value else { return nil }
 
         if value is NSNull { return nil }
 

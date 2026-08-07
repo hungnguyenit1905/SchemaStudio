@@ -86,7 +86,10 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                 let dbs = try await conn.listDatabases()
                 currentDb = dbs.first { !Self.systemDatabases.contains($0) } ?? dbs.first ?? ""
             } catch {
-                Self.logger.warning("listDatabases failed during connect, continuing without default database: \(error.localizedDescription, privacy: .public)")
+                Self.logger
+                    .warning(
+                        "listDatabases failed during connect, continuing without default database: \(error.localizedDescription, privacy: .public)"
+                    )
             }
         }
 
@@ -219,7 +222,7 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             filter: "{}", sort: nil, projection: nil, skip: 0, limit: 50
         ).docs
 
-        let enumMap = (try? await fetchJsonSchemaEnums(conn: conn, table: table)) ?? [:]
+        let enumMap = await (try? fetchJsonSchemaEnums(conn: conn, table: table)) ?? [:]
 
         if docs.isEmpty {
             return [
@@ -256,8 +259,7 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
               let options = collInfo["options"] as? [String: Any],
               let validator = options["validator"] as? [String: Any],
               let jsonSchema = validator["$jsonSchema"] as? [String: Any],
-              let properties = jsonSchema["properties"] as? [String: Any]
-        else { return [:] }
+              let properties = jsonSchema["properties"] as? [String: Any] else { return [:] }
 
         var map: [String: [String]] = [:]
         for (colName, spec) in properties {
@@ -287,7 +289,7 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         for batchStart in stride(from: 0, to: tables.count, by: concurrencyLimit) {
             let batchEnd = min(batchStart + concurrencyLimit, tables.count)
-            let batch = tables[batchStart..<batchEnd]
+            let batch = tables[batchStart ..< batchEnd]
 
             let batchResult = try await withThrowingTaskGroup(of: (String, [PluginColumnInfo])?.self) { group in
                 for table in batch {
@@ -392,7 +394,7 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         }
 
         let db = currentDb
-        var sections: [String] = ["// Collection: \(table)"]
+        var sections = ["// Collection: \(table)"]
 
         do {
             let result = try await conn.runCommand(
@@ -435,7 +437,8 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                     let keyJson = prettyJson(key)
                     var opts: [String] = []
                     if (indexDoc["unique"] as? Bool) == true { opts.append("\"unique\": true") }
-                    if let ttl = indexDoc["expireAfterSeconds"] as? Int { opts.append("\"expireAfterSeconds\": \(ttl)") }
+                    if let ttl = indexDoc["expireAfterSeconds"] as? Int { opts.append("\"expireAfterSeconds\": \(ttl)")
+                    }
                     if (indexDoc["sparse"] as? Bool) == true { opts.append("\"sparse\": true") }
                     opts.append("\"name\": \"\(name)\"")
 
@@ -542,7 +545,9 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                     isRequired: true
                 )
             ],
-            footnote: String(localized: "MongoDB stores a database only once it holds a collection, so a new database needs its first one.")
+            footnote: String(
+                localized: "MongoDB stores a database only once it holds a collection, so a new database needs its first one."
+            )
         )
     }
 
@@ -814,7 +819,12 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             )
 
         case .updateOne(let collection, let filter, let update):
-            let modified = try await conn.updateOne(database: db, collection: collection, filter: filter, update: update)
+            let modified = try await conn.updateOne(
+                database: db,
+                collection: collection,
+                filter: filter,
+                update: update
+            )
             return PluginQueryResult(
                 columns: ["modifiedCount"], columnTypeNames: ["Int64"],
                 rows: [[.text(String(modified))]], rowsAffected: Int(modified),
@@ -823,9 +833,9 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         case .updateMany(let collection, let filter, let update):
             let cmd = """
-                {"update": "\(escapeJsonString(collection))", \
-                "updates": [{"q": \(filter), "u": \(update), "multi": true}]}
-                """
+            {"update": "\(escapeJsonString(collection))", \
+            "updates": [{"q": \(filter), "u": \(update), "multi": true}]}
+            """
             let result = try await conn.runCommand(cmd, database: db)
             let modified = (result.first?["nModified"] as? Int64)
                 ?? (result.first?["nModified"] as? Int).map(Int64.init) ?? 0
@@ -837,9 +847,9 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         case .replaceOne(let collection, let filter, let replacement):
             let cmd = """
-                {"update": "\(escapeJsonString(collection))", \
-                "updates": [{"q": \(filter), "u": \(replacement), "multi": false}]}
-                """
+            {"update": "\(escapeJsonString(collection))", \
+            "updates": [{"q": \(filter), "u": \(replacement), "multi": false}]}
+            """
             let result = try await conn.runCommand(cmd, database: db)
             let modified = (result.first?["nModified"] as? Int64)
                 ?? (result.first?["nModified"] as? Int).map(Int64.init) ?? 0
@@ -859,9 +869,9 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         case .deleteMany(let collection, let filter):
             let cmd = """
-                {"delete": "\(escapeJsonString(collection))", \
-                "deletes": [{"q": \(filter), "limit": 0}]}
-                """
+            {"delete": "\(escapeJsonString(collection))", \
+            "deletes": [{"q": \(filter), "limit": 0}]}
+            """
             let result = try await conn.runCommand(cmd, database: db)
             let deleted = (result.first?["n"] as? Int64)
                 ?? (result.first?["n"] as? Int).map(Int64.init) ?? 0
@@ -892,17 +902,17 @@ final class MongoDBPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                 indexDoc += "}"
             }
             let cmd = """
-                {"createIndexes": "\(escapeJsonString(collection))", \
-                "indexes": [\(indexDoc)]}
-                """
+            {"createIndexes": "\(escapeJsonString(collection))", \
+            "indexes": [\(indexDoc)]}
+            """
             let result = try await conn.runCommand(cmd, database: db)
             return buildPluginResult(from: result, startTime: startTime)
 
         case .dropIndex(let collection, let indexName):
             let cmd = """
-                {"dropIndexes": "\(escapeJsonString(collection))", \
-                "index": "\(escapeJsonString(indexName))"}
-                """
+            {"dropIndexes": "\(escapeJsonString(collection))", \
+            "index": "\(escapeJsonString(indexName))"}
+            """
             let result = try await conn.runCommand(cmd, database: db)
             return buildPluginResult(from: result, startTime: startTime)
 

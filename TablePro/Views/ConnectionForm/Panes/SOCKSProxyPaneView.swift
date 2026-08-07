@@ -13,7 +13,9 @@ struct SOCKSProxyPaneView: View {
             Section {
                 Toggle(String(localized: "Enable SOCKS Proxy"), isOn: $coordinator.socksProxy.state.enabled)
             } footer: {
-                Text("Routes this connection through a SOCKS5 proxy. The database hostname is resolved by the proxy, so names that only resolve behind it still work.")
+                Text(
+                    "Routes this connection through a SOCKS5 proxy. The database hostname is resolved by the proxy, so names that only resolve behind it still work."
+                )
             }
 
             if coordinator.socksProxy.state.enabled {

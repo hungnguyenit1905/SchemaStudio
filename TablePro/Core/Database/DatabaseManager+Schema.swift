@@ -49,7 +49,7 @@ extension DatabaseManager {
         let combinedSQL = statements.map(\.sql).joined(separator: "\n")
         let schemaKind: OperationKind =
             QueryClassifier.classifyTier(combinedSQL, databaseType: databaseType) == .destructive
-            ? .destructiveQuery : .schemaMutation
+                ? .destructiveQuery : .schemaMutation
         let authorization = await ExecutionGateProvider.shared.authorize(
             OperationRequest(
                 connectionId: scope.connectionId,
@@ -117,12 +117,10 @@ extension DatabaseManager {
         // Only needed for PostgreSQL PK modifications
         guard databaseType == .postgresql || databaseType == .redshift
             || databaseType == .cockroachdb || databaseType == .duckdb else { return nil }
-        guard
-            changes.contains(where: {
-                if case .modifyPrimaryKey = $0 { return true }
-                return false
-            })
-        else {
+        guard changes.contains(where: {
+            if case .modifyPrimaryKey = $0 { return true }
+            return false
+        }) else {
             return nil
         }
 
@@ -135,15 +133,15 @@ extension DatabaseManager {
             schema = "public"
         }
         let query = """
-            SELECT con.conname
-            FROM pg_constraint con
-            JOIN pg_class rel ON rel.oid = con.conrelid
-            JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
-            WHERE rel.relname = '\(escapedTable)'
-              AND nsp.nspname = '\(schema)'
-              AND con.contype = 'p'
-            LIMIT 1
-            """
+        SELECT con.conname
+        FROM pg_constraint con
+        JOIN pg_class rel ON rel.oid = con.conrelid
+        JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
+        WHERE rel.relname = '\(escapedTable)'
+          AND nsp.nspname = '\(schema)'
+          AND con.contype = 'p'
+        LIMIT 1
+        """
 
         do {
             let result = try await driver.execute(query: query)

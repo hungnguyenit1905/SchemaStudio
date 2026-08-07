@@ -33,7 +33,7 @@ public enum PluginExportUtilities {
             case 0x0C: // form feed
                 utf8Result.append(0x5C)
                 utf8Result.append(0x66)
-            case 0x00...0x1F:
+            case 0x00 ... 0x1F:
                 let hex = String(format: "\\u%04X", byte)
                 utf8Result.append(contentsOf: hex.utf8)
             default:

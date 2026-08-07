@@ -15,20 +15,15 @@ final class PrivilegeTreeModel {
     private(set) var mode: Mode = .hierarchy
     private(set) var structureVersion = 0
 
-    @ObservationIgnored
-    private var databases: [String] = []
+    @ObservationIgnored private var databases: [String] = []
 
-    @ObservationIgnored
-    private var hasServerScope = false
+    @ObservationIgnored private var hasServerScope = false
 
-    @ObservationIgnored
-    private var restrictsBrowsing = false
+    @ObservationIgnored private var restrictsBrowsing = false
 
-    @ObservationIgnored
-    private var currentDatabase: String?
+    @ObservationIgnored private var currentDatabase: String?
 
-    @ObservationIgnored
-    private var loader: PrincipalListLoader?
+    @ObservationIgnored private var loader: PrincipalListLoader?
 
     func configure(
         databases: [String],

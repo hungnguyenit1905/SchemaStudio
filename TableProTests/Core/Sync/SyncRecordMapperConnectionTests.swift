@@ -11,7 +11,7 @@ struct SyncRecordMapperConnectionTests {
     private func makeFullyPopulatedConnection() -> DatabaseConnection {
         var connection = DatabaseConnection(name: "Production")
         connection.host = "db.example.com"
-        connection.port = 5432
+        connection.port = 5_432
         connection.database = "app"
         connection.username = "admin"
         connection.type = .postgresql
@@ -62,7 +62,7 @@ struct SyncRecordMapperConnectionTests {
 
         #expect(record["name"] as? String == "Production")
         #expect(record["host"] as? String == "db.example.com")
-        #expect(record["port"] as? Int64 == 5432)
+        #expect(record["port"] as? Int64 == 5_432)
         #expect(record["startupCommands"] as? String == "SET search_path TO public")
     }
 

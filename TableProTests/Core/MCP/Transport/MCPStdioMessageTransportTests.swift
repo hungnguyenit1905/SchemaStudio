@@ -44,7 +44,7 @@ final class MCPStdioMessageTransportTests: XCTestCase {
         let valid = JsonRpcMessage.notification(
             JsonRpcNotification(method: "notifications/initialized", params: nil)
         )
-        try stdinPipe.fileHandleForWriting.write(contentsOf: try JsonRpcCodec.encodeLine(valid))
+        try stdinPipe.fileHandleForWriting.write(contentsOf: JsonRpcCodec.encodeLine(valid))
 
         let received = try await firstInbound(transport: transport)
         XCTAssertEqual(received, valid)

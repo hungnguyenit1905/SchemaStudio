@@ -110,7 +110,7 @@ struct ChatComposerView: View {
             var lastError: Error?
             for provider in providers {
                 do {
-                    collected.append(try await ChatImageConverter.convert(itemProvider: provider))
+                    try await collected.append(ChatImageConverter.convert(itemProvider: provider))
                 } catch {
                     lastError = error
                 }

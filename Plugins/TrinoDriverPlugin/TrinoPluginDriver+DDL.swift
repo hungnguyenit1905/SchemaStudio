@@ -19,10 +19,18 @@ extension TrinoPluginDriver {
         let target = qualifiedName(table: table, schema: nil)
         var statements: [String] = []
         if oldColumn.name != newColumn.name {
-            statements.append(TrinoDDLSQL.renameColumn(qualifiedTable: target, from: oldColumn.name, to: newColumn.name))
+            statements.append(TrinoDDLSQL.renameColumn(
+                qualifiedTable: target,
+                from: oldColumn.name,
+                to: newColumn.name
+            ))
         }
         if oldColumn.dataType != newColumn.dataType {
-            statements.append(TrinoDDLSQL.setColumnType(qualifiedTable: target, name: newColumn.name, type: newColumn.dataType))
+            statements.append(TrinoDDLSQL.setColumnType(
+                qualifiedTable: target,
+                name: newColumn.name,
+                type: newColumn.dataType
+            ))
         }
         if oldColumn.comment != newColumn.comment {
             statements.append(TrinoDDLSQL.setColumnComment(

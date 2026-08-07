@@ -39,7 +39,11 @@ struct DatabaseTreeVisibilityTests {
 
     @Test("Selecting a database that no longer exists yields an empty result")
     func staleSelectionEmpty() {
-        let visible = DatabaseTreeVisibility.visible(databases: databases, selected: ["dropped_db"], activeDatabase: nil)
+        let visible = DatabaseTreeVisibility.visible(
+            databases: databases,
+            selected: ["dropped_db"],
+            activeDatabase: nil
+        )
         #expect(visible.isEmpty)
     }
 

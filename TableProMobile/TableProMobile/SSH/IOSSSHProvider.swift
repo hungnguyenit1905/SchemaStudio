@@ -31,14 +31,17 @@ final class IOSSSHProvider: SSHProvider, @unchecked Sendable {
 
         if let connId {
             sshPassword = try? secureStore.retrieve(
-                forKey: "com.TablePro.sshpassword.\(connId.uuidString)")
+                forKey: "com.TablePro.sshpassword.\(connId.uuidString)"
+            )
             keyPassphrase = try? secureStore.retrieve(
-                forKey: "com.TablePro.keypassphrase.\(connId.uuidString)")
+                forKey: "com.TablePro.keypassphrase.\(connId.uuidString)"
+            )
 
             // Restore key content from Keychain if not in config
             if resolvedConfig.privateKeyData == nil || resolvedConfig.privateKeyData?.isEmpty == true {
                 resolvedConfig.privateKeyData = try? secureStore.retrieve(
-                    forKey: "com.TablePro.sshkeydata.\(connId.uuidString)")
+                    forKey: "com.TablePro.sshkeydata.\(connId.uuidString)"
+                )
             }
         } else {
             sshPassword = nil

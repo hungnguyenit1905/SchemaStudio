@@ -159,7 +159,8 @@ struct ClickHouseResponseClassifierTests {
 
     @Test("A malformed summary header reports zero without throwing")
     func malformedSummaryReportsZero() {
-        #expect(ClickHouseResponseClassifier.affectedRowsFromSummary(headers: ["X-ClickHouse-Summary": "not json"]) == 0)
+        #expect(ClickHouseResponseClassifier
+            .affectedRowsFromSummary(headers: ["X-ClickHouse-Summary": "not json"]) == 0)
         #expect(ClickHouseResponseClassifier.affectedRowsFromSummary(headers: [:]) == 0)
     }
 

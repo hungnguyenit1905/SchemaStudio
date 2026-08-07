@@ -41,7 +41,6 @@ struct PluginRejectedBannerModifier: ViewModifier {
         }
     }
 
-    @ViewBuilder
     private func banner(for plugin: RejectedPlugin) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "exclamationmark.triangle.fill")
@@ -95,7 +94,6 @@ struct PluginRejectedBannerModifier: ViewModifier {
         }
     }
 
-    @ViewBuilder
     private func updateButton(registryPlugin: RegistryPlugin) -> some View {
         Button(String(localized: "Update Plugin")) {
             triggerUpdate(registryPlugin)

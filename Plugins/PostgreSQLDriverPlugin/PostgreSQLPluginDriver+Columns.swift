@@ -52,23 +52,23 @@ extension PostgreSQLPluginDriver {
         let identity = caps.hasIdentityColumns ? "a.attidentity" : "NULL::text"
         let generated = caps.hasGeneratedColumns ? "a.attgenerated" : "NULL::text"
         let attributeJoin = (caps.hasIdentityColumns || caps.hasGeneratedColumns) ? """
-            LEFT JOIN pg_catalog.pg_attribute a
-                ON a.attrelid = st.relid
-                AND a.attname = c.column_name
-                AND NOT a.attisdropped
-            """ : ""
+        LEFT JOIN pg_catalog.pg_attribute a
+            ON a.attrelid = st.relid
+            AND a.attname = c.column_name
+            AND NOT a.attisdropped
+        """ : ""
         return (identity, generated, attributeJoin)
     }
 
-    fileprivate func fetchEnumLabelMap(schema: String) async throws -> [String: [String]] {
+    private func fetchEnumLabelMap(schema: String) async throws -> [String: [String]] {
         let query = """
-            SELECT t.typname, e.enumlabel
-            FROM pg_catalog.pg_type t
-            JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-            JOIN pg_catalog.pg_enum e ON e.enumtypid = t.oid
-            WHERE n.nspname = '\(schema)'
-            ORDER BY t.typname, e.enumsortorder
-            """
+        SELECT t.typname, e.enumlabel
+        FROM pg_catalog.pg_type t
+        JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+        JOIN pg_catalog.pg_enum e ON e.enumtypid = t.oid
+        WHERE n.nspname = '\(schema)'
+        ORDER BY t.typname, e.enumsortorder
+        """
         let result = try await execute(query: query)
         var map: [String: [String]] = [:]
         for row in result.rows {
@@ -79,7 +79,7 @@ extension PostgreSQLPluginDriver {
         return map
     }
 
-    fileprivate func mapPgColumnRow(
+    private func mapPgColumnRow(
         _ row: [PluginCellValue],
         tableNameOffset: Int,
         enumLabelsByType: [String: [String]]
@@ -97,8 +97,7 @@ extension PostgreSQLPluginDriver {
 
         guard row.count > typeIdx,
               let name = row[nameIdx].asText,
-              let rawDataType = row[typeIdx].asText
-        else { return nil }
+              let rawDataType = row[typeIdx].asText else { return nil }
 
         let udtName = row.count > udtIdx ? row[udtIdx].asText : nil
         let allowedValues: [String]?
@@ -144,7 +143,7 @@ extension PostgreSQLPluginDriver {
         )
     }
 
-    fileprivate func pgIdentityKind(_ attidentity: String?) -> IdentityKind? {
+    private func pgIdentityKind(_ attidentity: String?) -> IdentityKind? {
         switch attidentity {
         case "a": return .always
         case "d": return .byDefault

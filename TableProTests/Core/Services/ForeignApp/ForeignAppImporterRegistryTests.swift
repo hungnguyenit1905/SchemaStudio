@@ -111,6 +111,9 @@ struct ForeignAppImporterRegistryTests {
     func testRequiresKeychainConfirmation() {
         #expect(ImportFromAppSheet.requiresKeychainConfirmation(includePasswords: true, importer: TablePlusImporter()))
         #expect(!ImportFromAppSheet.requiresKeychainConfirmation(includePasswords: true, importer: DBeaverImporter()))
-        #expect(!ImportFromAppSheet.requiresKeychainConfirmation(includePasswords: false, importer: TablePlusImporter()))
+        #expect(!ImportFromAppSheet.requiresKeychainConfirmation(
+            includePasswords: false,
+            importer: TablePlusImporter()
+        ))
     }
 }

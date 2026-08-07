@@ -63,10 +63,10 @@ struct WelcomeActionsPanel: View {
             Spacer()
 
             SyncStatusIndicator(onActivateLicense: onActivateLicense)
-            .font(.caption)
-            .foregroundStyle(.tertiary)
-            .padding(.horizontal, 12)
-            .padding(.bottom, 20)
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -77,8 +77,7 @@ struct WelcomeActionsPanel: View {
             .font(.callout)
     }
 
-    @ViewBuilder
-    private var licenseLine: some View {
+    @ViewBuilder private var licenseLine: some View {
         if LicenseManager.shared.status.isValid {
             Label(String(localized: "Pro"), systemImage: "checkmark.seal.fill")
                 .font(.subheadline.weight(.medium))

@@ -92,7 +92,7 @@ extension AIChatViewModel {
         let columns = columnsByTable[name] ?? []
         guard !columns.isEmpty else { return nil }
         let foreignKeys = foreignKeysByTable[name] ?? []
-        var lines: [String] = ["## Table \(name)"]
+        var lines = ["## Table \(name)"]
         for column in columns {
             lines.append("- \(column.name): \(column.dataType)")
         }

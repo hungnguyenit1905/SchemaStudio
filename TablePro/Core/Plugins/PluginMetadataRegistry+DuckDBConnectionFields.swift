@@ -15,7 +15,10 @@ extension PluginMetadataRegistry {
                 defaultValue: "local",
                 fieldType: .dropdown(options: [
                     ConnectionField.DropdownOption(value: "local", label: String(localized: "Local File")),
-                    ConnectionField.DropdownOption(value: "remote", label: String(localized: "Remote (Quack, experimental)"))
+                    ConnectionField.DropdownOption(
+                        value: "remote",
+                        label: String(localized: "Remote (Quack, experimental)")
+                    )
                 ]),
                 section: .authentication
             ),

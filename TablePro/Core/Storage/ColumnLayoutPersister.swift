@@ -55,7 +55,11 @@ final class FileColumnLayoutPersister: ColumnLayoutPersisting {
         guard !layout.columnWidths.isEmpty else { return }
 
         var entries = loadEntries(for: key.connectionId)
-        var entry = entries[key.storageKey] ?? PersistedColumnLayout(columnWidths: [:], columnOrder: nil, hiddenColumns: nil)
+        var entry = entries[key.storageKey] ?? PersistedColumnLayout(
+            columnWidths: [:],
+            columnOrder: nil,
+            hiddenColumns: nil
+        )
         entry.columnWidths = layout.columnWidths
         entry.columnOrder = layout.columnOrder
         entries[key.storageKey] = entry
@@ -87,7 +91,11 @@ final class FileColumnLayoutPersister: ColumnLayoutPersisting {
         removeLegacyHidden(for: key)
 
         var entries = loadEntries(for: key.connectionId)
-        var entry = entries[key.storageKey] ?? PersistedColumnLayout(columnWidths: [:], columnOrder: nil, hiddenColumns: nil)
+        var entry = entries[key.storageKey] ?? PersistedColumnLayout(
+            columnWidths: [:],
+            columnOrder: nil,
+            hiddenColumns: nil
+        )
         entry.hiddenColumns = hidden.isEmpty ? nil : Array(hidden)
 
         if entry.columnWidths.isEmpty, entry.columnOrder == nil, entry.hiddenColumns == nil {

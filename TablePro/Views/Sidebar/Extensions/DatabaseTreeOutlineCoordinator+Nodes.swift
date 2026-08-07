@@ -199,7 +199,9 @@ extension DatabaseTreeOutlineCoordinator {
                 schemas,
                 systemSchemas: context.systemSchemas,
                 searchText: searchText,
-                contentMatches: { schemaContentMatchesSearch(connectionId: connectionId, database: database, schema: $0) }
+                contentMatches: {
+                    schemaContentMatchesSearch(connectionId: connectionId, database: database, schema: $0)
+                }
             )
             if visible.isEmpty { return [statusNode(parentId: parentId, status: .empty)] }
             return visible.map {

@@ -15,7 +15,7 @@ final class SurrealDBPlugin: NSObject, TableProPlugin, DriverPlugin {
     static let databaseTypeId = "SurrealDB"
     static let databaseDisplayName = "SurrealDB"
     static let iconName = "surrealdb-icon"
-    static let defaultPort = 8000
+    static let defaultPort = 8_000
 
     static let connectionMode: ConnectionMode = .network
     static let isDownloadable = true

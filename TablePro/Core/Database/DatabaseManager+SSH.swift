@@ -18,7 +18,7 @@ extension DatabaseManager {
     ///   - connection: The original database connection configuration.
     ///   - sshPasswordOverride: Optional SSH password to use instead of the stored one (for test connections).
     /// - Returns: A connection suitable for the database driver (SSH disabled, pointing at tunnel if applicable).
-    internal func buildEffectiveConnection(
+    func buildEffectiveConnection(
         for connection: DatabaseConnection,
         sshPasswordOverride: String? = nil
     ) async throws -> DatabaseConnection {

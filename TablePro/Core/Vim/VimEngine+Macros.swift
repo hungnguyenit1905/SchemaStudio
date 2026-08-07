@@ -21,7 +21,9 @@ extension VimEngine {
             lastInvokedMacro = target
             let count = max(1, pendingMacroCount)
             pendingMacroCount = 1
-            for _ in 0..<count { replayMacro(keys: keys) }
+            for _ in 0 ..< count {
+                replayMacro(keys: keys)
+            }
         }
     }
 

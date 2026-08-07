@@ -241,8 +241,8 @@ enum SSHConfigResolver {
             })
             // Plain Match blocks (no canonical/final) run only on the first pass;
             // Match canonical/final run only on the second pass.
-            if isSecondPassMatch && phase != .second { return false }
-            if !isSecondPassMatch && phase != .first { return false }
+            if isSecondPassMatch, phase != .second { return false }
+            if !isSecondPassMatch, phase != .first { return false }
 
             return matchConditionsHold(
                 conditions,

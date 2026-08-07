@@ -264,15 +264,15 @@ final class WelcomeViewModel {
         return await withTaskCancellationHandler {
             await withCheckedContinuation { continuation in
                 box.set(continuation)
-                withObservationTracking({
+                withObservationTracking {
                     _ = router.pendingRequest
                     _ = router.pendingImport
                     _ = router.pendingConnectionShare
                     _ = router.pendingError
                     _ = router.pendingPluginInstall
-                }, onChange: {
+                } onChange: {
                     box.resume(with: true)
-                })
+                }
             }
         } onCancel: {
             box.resume(with: false)
@@ -686,7 +686,8 @@ final class WelcomeViewModel {
 
         if !WindowManager.shared.hasOpenWindow(for: connection.id) {
             Self.logger.info(
-                "Connection failed after window was closed: \(error.localizedDescription, privacy: .public)")
+                "Connection failed after window was closed: \(error.localizedDescription, privacy: .public)"
+            )
             return
         }
 

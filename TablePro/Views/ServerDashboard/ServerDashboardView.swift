@@ -27,7 +27,11 @@ struct ServerDashboardView: View {
                 Task { await viewModel.executeKillSession() }
             }
         } message: {
-            Text(String(localized: "Are you sure you want to terminate this session? Any running queries will be aborted."))
+            Text(
+                String(
+                    localized: "Are you sure you want to terminate this session? Any running queries will be aborted."
+                )
+            )
         }
         .alert(String(localized: "Cancel Query"), isPresented: $viewModel.showCancelConfirmation) {
             Button(String(localized: "Keep Running"), role: .cancel) { viewModel.pendingCancelProcessId = nil }

@@ -15,7 +15,10 @@ extension MainContentView {
 
     func handleTabSelectionChange(from oldTabId: UUID?, to newTabId: UUID?) {
         guard !coordinator.isTearingDown else {
-            MainContentView.lifecycleLogger.debug("[switch] handleTabSelectionChange SKIPPED (tearingDown) connId=\(coordinator.connectionId, privacy: .public)")
+            MainContentView.lifecycleLogger
+                .debug(
+                    "[switch] handleTabSelectionChange SKIPPED (tearingDown) connId=\(coordinator.connectionId, privacy: .public)"
+                )
             return
         }
         let t0 = Date()
@@ -45,7 +48,10 @@ extension MainContentView {
 
     func handleStructureChange() {
         guard !coordinator.isTearingDown else {
-            MainContentView.lifecycleLogger.debug("[switch] handleStructureChange SKIPPED (tearingDown) tabCount=\(tabManager.tabs.count) connId=\(coordinator.connectionId, privacy: .public)")
+            MainContentView.lifecycleLogger
+                .debug(
+                    "[switch] handleStructureChange SKIPPED (tearingDown) tabCount=\(tabManager.tabs.count) connId=\(coordinator.connectionId, privacy: .public)"
+                )
             return
         }
         let t0 = Date()
@@ -70,14 +76,13 @@ extension MainContentView {
         // Skip during tab switch — handleTabChange already configures the change manager
         guard !coordinator.isHandlingTabSwitch else { return }
 
-        if let newColumns = newColumns {
+        if let newColumns {
             coordinator.pruneHiddenColumns(currentColumns: newColumns)
         }
 
-        guard let newColumns = newColumns, !newColumns.isEmpty,
-            let tab = tabManager.selectedTab,
-            !changeManager.hasChanges
-        else { return }
+        guard let newColumns, !newColumns.isEmpty,
+              let tab = tabManager.selectedTab,
+              !changeManager.hasChanges else { return }
 
         let columnsChanged = changeManager.columns != newColumns
         let tableChanged = changeManager.tableName != (tab.tableContext.tableName ?? "")
@@ -140,9 +145,8 @@ extension MainContentView {
         let liveTables = DatabaseManager.shared.session(for: connection.id)?.tables ?? []
         let target: Set<DatabaseTreeTableRef>
         if let context = tabManager.selectedTab?.tableContext,
-            let currentTableName = context.tableName,
-            let match = liveTables.first(where: { $0.name == currentTableName })
-        {
+           let currentTableName = context.tableName,
+           let match = liveTables.first(where: { $0.name == currentTableName }) {
             target = [DatabaseTreeTableRef(
                 connectionId: connection.id,
                 database: context.databaseName.isEmpty ? coordinator.browseDatabaseName : context.databaseName,
@@ -153,7 +157,7 @@ extension MainContentView {
             target = []
         }
         if coordinator.windowSidebarState.selectedTables != target {
-            if target.isEmpty && liveTables.isEmpty { return }
+            if target.isEmpty, liveTables.isEmpty { return }
             coordinator.windowSidebarState.selectedTables = target
         }
     }
@@ -174,8 +178,7 @@ extension MainContentView {
 
         let selectedIndices = coordinator.selectionState.indices
         guard let tab = coordinator.tabManager.selectedTab,
-            !selectedIndices.isEmpty
-        else {
+              !selectedIndices.isEmpty else {
             clearSidebarEditState()
             return
         }
@@ -285,8 +288,7 @@ extension MainContentView {
     /// grid edit does, with one undo step and one pending change.
     private func updateSchemaSidebarEditState() {
         guard let displayRow = coordinator.selectionState.indices.min(),
-            let row = selectedInspectorRow
-        else {
+              let row = selectedInspectorRow else {
             clearSidebarEditState()
             return
         }

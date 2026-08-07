@@ -107,7 +107,7 @@ public final class SurrealRPCClient: NSObject, @unchecked Sendable {
         request.httpBody = body
 
         let (data, response) = try await send(request)
-        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+        guard let http = response as? HTTPURLResponse, (200 ..< 300).contains(http.statusCode) else {
             throw SurrealDBError.authenticationFailed(Self.plainText(data))
         }
         guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -227,7 +227,8 @@ public final class SurrealRPCClient: NSObject, @unchecked Sendable {
                             return
                         }
                         guard let data, let response else {
-                            continuation.resume(throwing: SurrealDBError.decodingFailed(String(localized: "Empty response")))
+                            continuation
+                                .resume(throwing: SurrealDBError.decodingFailed(String(localized: "Empty response")))
                             return
                         }
                         continuation.resume(returning: (data, response))
@@ -258,7 +259,7 @@ public final class SurrealRPCClient: NSObject, @unchecked Sendable {
         }
 
         guard let envelope = try? SurrealCBOR.decode(data) else {
-            guard (200..<300).contains(status) else {
+            guard (200 ..< 300).contains(status) else {
                 throw SurrealDBError.requestFailed(status: status, message: Self.plainText(data))
             }
             throw SurrealDBError.decodingFailed(Self.plainText(data))
@@ -269,7 +270,7 @@ public final class SurrealRPCClient: NSObject, @unchecked Sendable {
             throw SurrealDBError.queryFailed(message: message, kind: error["kind"]?.stringValue)
         }
 
-        guard (200..<300).contains(status) else {
+        guard (200 ..< 300).contains(status) else {
             throw SurrealDBError.requestFailed(status: status, message: Self.plainText(data))
         }
 

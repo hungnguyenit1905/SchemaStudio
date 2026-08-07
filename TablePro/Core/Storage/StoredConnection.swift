@@ -40,7 +40,7 @@ struct StoredConnection: Codable {
 
     let aiPolicy: String?
 
-    // AI rules text included in the system prompt for this connection
+    /// AI rules text included in the system prompt for this connection
     let aiRules: String?
 
     let aiAlwaysAllowedTools: [String]?
@@ -57,10 +57,10 @@ struct StoredConnection: Codable {
 
     let startupCommands: String?
 
-    // Sort order for sync
+    /// Sort order for sync
     let sortOrder: Int
 
-    // Local-only (excluded from iCloud sync)
+    /// Local-only (excluded from iCloud sync)
     let localOnly: Bool
 
     let isSample: Bool
@@ -72,22 +72,22 @@ struct StoredConnection: Codable {
     let totpDigits: Int
     let totpPeriod: Int
 
-    // SSH tunnel mode (v2 JSON blob preserving jump hosts + profile links)
+    /// SSH tunnel mode (v2 JSON blob preserving jump hosts + profile links)
     let sshTunnelModeJson: Data?
 
-    // Cloudflare Access TCP tunnel mode (JSON blob)
+    /// Cloudflare Access TCP tunnel mode (JSON blob)
     let cloudflareTunnelModeJson: Data?
 
-    // Cloud SQL Auth Proxy mode (JSON blob)
+    /// Cloud SQL Auth Proxy mode (JSON blob)
     let cloudSQLProxyModeJson: Data?
 
-    // SOCKS proxy mode (JSON blob)
+    /// SOCKS proxy mode (JSON blob)
     let socksProxyModeJson: Data?
 
-    // Plugin-driven additional fields
+    /// Plugin-driven additional fields
     let additionalFields: [String: String]?
 
-    // Password source (file, env, or command) for connections provisioned outside the app
+    /// Password source (file, env, or command) for connections provisioned outside the app
     let passwordSource: PasswordSource?
 
     init(from connection: DatabaseConnection) {
@@ -178,20 +178,47 @@ struct StoredConnection: Codable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, host, port, database, username, type
-        case sshEnabled, sshHost, sshPort, sshUsername, sshAuthMethod, sshPrivateKeyPath
+        case id
+        case name
+        case host
+        case port
+        case database
+        case username
+        case type
+        case sshEnabled
+        case sshHost
+        case sshPort
+        case sshUsername
+        case sshAuthMethod
+        case sshPrivateKeyPath
         case sshAgentSocketPath
-        case totpMode, totpAlgorithm, totpDigits, totpPeriod
-        case sslMode, sslCaCertificatePath, sslClientCertificatePath, sslClientKeyPath
-        case color, tagId, tagIds, groupId, sshProfileId
+        case totpMode
+        case totpAlgorithm
+        case totpDigits
+        case totpPeriod
+        case sslMode
+        case sslCaCertificatePath
+        case sslClientCertificatePath
+        case sslClientKeyPath
+        case color
+        case tagId
+        case tagIds
+        case groupId
+        case sshProfileId
         case safeModeLevel
         case externalAccess
         case isReadOnly // Legacy key for migration reading only
         case aiPolicy
         case aiRules
         case aiAlwaysAllowedTools
-        case mongoAuthSource, mongoReadPreference, mongoWriteConcern, redisDatabase
-        case mssqlSchema, oracleServiceName, startupCommands, sortOrder
+        case mongoAuthSource
+        case mongoReadPreference
+        case mongoWriteConcern
+        case redisDatabase
+        case mssqlSchema
+        case oracleServiceName
+        case startupCommands
+        case sortOrder
         case sshTunnelModeJson
         case cloudflareTunnelModeJson
         case cloudSQLProxyModeJson
@@ -251,7 +278,7 @@ struct StoredConnection: Codable {
         try container.encodeIfPresent(passwordSource, forKey: .passwordSource)
     }
 
-    // Custom decoder to handle migration from old format
+    /// Custom decoder to handle migration from old format
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 

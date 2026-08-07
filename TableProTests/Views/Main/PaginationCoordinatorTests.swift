@@ -31,7 +31,7 @@ struct PaginationCoordinatorTests {
         tabManager.selectedTabId = tab.id
 
         let columns = ["id", "name"]
-        let rows = (0..<loadedRowCount).map { i in columns.map { "\($0)_\(i)" as String? } }
+        let rows = (0 ..< loadedRowCount).map { i in columns.map { "\($0)_\(i)" as String? } }
         let columnTypes: [ColumnType] = Array(repeating: .text(rawType: nil), count: columns.count)
         let tableRows = TableRows.from(
             queryRows: rows.map { row in row.map(PluginCellValue.fromOptional) },

@@ -199,8 +199,17 @@ final class SyncCoordinator {
             changeTracker.markDirty(.tableFavorite, id: FavoriteTablesStorage.syncId(for: entry))
         }
 
-        for category in ["general", "appearance", "editor", "dataGrid", "history", "tabs", "keyboard", "ai",
-                         CustomSlashCommandStorage.syncCategory] {
+        for category in [
+            "general",
+            "appearance",
+            "editor",
+            "dataGrid",
+            "history",
+            "tabs",
+            "keyboard",
+            "ai",
+            CustomSlashCommandStorage.syncCategory
+        ] {
             changeTracker.markDirty(.settings, id: category)
         }
 
@@ -579,7 +588,10 @@ final class SyncCoordinator {
     }
 
     @discardableResult
-    private func mergeLocalEdits(into remoteRecord: CKRecord, localConnection: DatabaseConnection) -> DatabaseConnection? {
+    private func mergeLocalEdits(
+        into remoteRecord: CKRecord,
+        localConnection: DatabaseConnection
+    ) -> DatabaseConnection? {
         guard let base = recordCache.record(for: remoteRecord.recordID) else { return nil }
 
         let localRecord = SyncRecordMapper.toCKRecord(localConnection, in: remoteRecord.recordID.zoneID)
@@ -603,7 +615,10 @@ final class SyncCoordinator {
         do {
             remoteConnection = try SyncRecordMapper.toConnection(record)
         } catch {
-            Self.logger.error("Skipping remote connection \(record.recordID.recordName, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .error(
+                    "Skipping remote connection \(record.recordID.recordName, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
             return false
         }
 
@@ -631,7 +646,10 @@ final class SyncCoordinator {
             connections.append(remoteConnection)
         }
         guard services.connectionStorage.saveConnections(connections) else {
-            Self.logger.error("Failed to apply remote connection update: persistence error for \(remoteConnection.id, privacy: .public)")
+            Self.logger
+                .error(
+                    "Failed to apply remote connection update: persistence error for \(remoteConnection.id, privacy: .public)"
+                )
             return false
         }
         return true
@@ -672,7 +690,10 @@ final class SyncCoordinator {
         do {
             remoteProfile = try SyncRecordMapper.toSSHProfile(record)
         } catch {
-            Self.logger.error("Skipping remote SSH profile \(record.recordID.recordName, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .error(
+                    "Skipping remote SSH profile \(record.recordID.recordName, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
             return
         }
         if tombstoneIds.contains(remoteProfile.id.uuidString) { return }
@@ -688,8 +709,7 @@ final class SyncCoordinator {
 
     private func applyRemoteSettings(_ record: CKRecord) {
         guard let category = SyncRecordMapper.settingsCategory(from: record),
-              let data = SyncRecordMapper.settingsData(from: record)
-        else { return }
+              let data = SyncRecordMapper.settingsData(from: record) else { return }
         do {
             try applySettingsData(data, for: category)
         } catch {
@@ -842,7 +862,7 @@ final class SyncCoordinator {
             case "keyboard": manager.keyboard = try decoder.decode(KeyboardSettings.self, from: data)
             case "ai": manager.ai = try decoder.decode(AISettings.self, from: data)
             case CustomSlashCommandStorage.syncCategory:
-                CustomSlashCommandStorage.shared.applyRemote(try decoder.decode([CustomSlashCommand].self, from: data))
+                try CustomSlashCommandStorage.shared.applyRemote(decoder.decode([CustomSlashCommand].self, from: data))
             case let category where category.hasPrefix(FileColumnLayoutPersister.syncCategoryPrefix):
                 FileColumnLayoutPersister.shared.applyRemote(
                     storageKey: String(category.dropFirst(FileColumnLayoutPersister.syncCategoryPrefix.count)),
@@ -931,7 +951,10 @@ final class SyncCoordinator {
         let dirtyFavoriteIds = changeTracker.dirtyRecords(for: .favorite)
         if !dirtyFavoriteIds.isEmpty {
             let favorites = await services.sqlFavoriteManager.fetchFavorites()
-            let favoritesById = Dictionary(favorites.map { ($0.id.uuidString, $0) }, uniquingKeysWith: { first, _ in first })
+            let favoritesById = Dictionary(
+                favorites.map { ($0.id.uuidString, $0) },
+                uniquingKeysWith: { first, _ in first }
+            )
             for id in dirtyFavoriteIds {
                 if let favorite = favoritesById[id] {
                     records.append(SyncRecordMapper.toCKRecord(sqlFavorite: favorite, in: zoneID))
@@ -947,7 +970,10 @@ final class SyncCoordinator {
         let dirtyFolderIds = changeTracker.dirtyRecords(for: .favoriteFolder)
         if !dirtyFolderIds.isEmpty {
             let folders = await services.sqlFavoriteManager.fetchFolders()
-            let foldersById = Dictionary(folders.map { ($0.id.uuidString, $0) }, uniquingKeysWith: { first, _ in first })
+            let foldersById = Dictionary(
+                folders.map { ($0.id.uuidString, $0) },
+                uniquingKeysWith: { first, _ in first }
+            )
             for id in dirtyFolderIds {
                 if let folder = foldersById[id] {
                     records.append(SyncRecordMapper.toCKRecord(sqlFavoriteFolder: folder, in: zoneID))

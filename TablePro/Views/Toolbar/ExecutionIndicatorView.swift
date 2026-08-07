@@ -44,7 +44,10 @@ struct ExecutionIndicatorView: View {
                 Text(chProgress.formattedSummary)
                     .font(.system(.subheadline, design: .monospaced).weight(.regular))
                     .foregroundStyle(ThemeEngine.shared.colors.toolbar.tertiaryTextSwiftUI)
-                    .accessibilityLabel(String(format: String(localized: "Last query: %@"), chProgress.formattedSummary))
+                    .accessibilityLabel(String(
+                        format: String(localized: "Last query: %@"),
+                        chProgress.formattedSummary
+                    ))
                     .help(String(localized: "Last query execution summary"))
             } else if let duration = lastDuration {
                 Text(formattedDuration(duration))
@@ -93,15 +96,25 @@ struct ExecutionIndicatorView: View {
 }
 
 #Preview("Completed Fast") {
-    ExecutionIndicatorView(isExecuting: false, lastDuration: 0.023, clickHouseProgress: nil, lastClickHouseProgress: nil)
-        .padding()
-        .background(Color(nsColor: .windowBackgroundColor))
+    ExecutionIndicatorView(
+        isExecuting: false,
+        lastDuration: 0.023,
+        clickHouseProgress: nil,
+        lastClickHouseProgress: nil
+    )
+    .padding()
+    .background(Color(nsColor: .windowBackgroundColor))
 }
 
 #Preview("Completed Slow") {
-    ExecutionIndicatorView(isExecuting: false, lastDuration: 2.456, clickHouseProgress: nil, lastClickHouseProgress: nil)
-        .padding()
-        .background(Color(nsColor: .windowBackgroundColor))
+    ExecutionIndicatorView(
+        isExecuting: false,
+        lastDuration: 2.456,
+        clickHouseProgress: nil,
+        lastClickHouseProgress: nil
+    )
+    .padding()
+    .background(Color(nsColor: .windowBackgroundColor))
 }
 
 #Preview("No Duration") {

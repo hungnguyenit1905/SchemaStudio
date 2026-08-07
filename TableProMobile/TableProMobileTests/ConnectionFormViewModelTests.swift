@@ -1,20 +1,19 @@
 import Foundation
-import Testing
 import TableProDatabase
-import TableProModels
 @testable import TableProMobile
+import TableProModels
+import Testing
 
 @MainActor
 @Suite("ConnectionFormViewModel")
 struct ConnectionFormViewModelTests {
-
     private func makeStoredConnection() -> DatabaseConnection {
         var conn = DatabaseConnection(
             id: UUID(),
             name: "Local",
             type: .postgresql,
             host: "10.0.0.1",
-            port: 5432,
+            port: 5_432,
             username: "alice",
             database: "appdb",
             sshEnabled: false,

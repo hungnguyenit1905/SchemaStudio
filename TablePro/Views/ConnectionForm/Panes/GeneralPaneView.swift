@@ -48,7 +48,6 @@ struct GeneralPaneView: View {
         .defaultFocus($nameFocused, true)
     }
 
-    @ViewBuilder
     private var testConnectionSection: some View {
         Section {
             LabeledContent {
@@ -59,8 +58,7 @@ struct GeneralPaneView: View {
         }
     }
 
-    @ViewBuilder
-    private var connectionSection: some View {
+    @ViewBuilder private var connectionSection: some View {
         switch connectionMode {
         case .fileBased:
             Section(String(localized: "Database File")) {
@@ -85,8 +83,6 @@ struct GeneralPaneView: View {
                         prompt: Text(containerEntityPlaceholder)
                     )
                 }
-            } else {
-                EmptyView()
             }
         case .network:
             Section(String(localized: "Connection")) {
@@ -100,12 +96,14 @@ struct GeneralPaneView: View {
                 }
             }
 
-            if coordinator.ssh.state.enabled && coordinator.network.hasHostListField {
+            if coordinator.ssh.state.enabled, coordinator.network.hasHostListField {
                 let hostsValue = firstHostListValue
                 if hostsValue.contains(",") {
                     Section {
                         Label(
-                            String(localized: "Over an SSH tunnel, SchemaStudio connects directly to the first host. Replica set failover is not available."),
+                            String(
+                                localized: "Over an SSH tunnel, SchemaStudio connects directly to the first host. Replica set failover is not available."
+                            ),
                             systemImage: "exclamationmark.triangle"
                         )
                         .font(.caption)
@@ -124,8 +122,7 @@ struct GeneralPaneView: View {
         String(format: String(localized: "%@_name"), containerEntityName.lowercased())
     }
 
-    @ViewBuilder
-    private var hostFieldsView: some View {
+    @ViewBuilder private var hostFieldsView: some View {
         let connectionFields = coordinator.network.connectionFields
         if coordinator.network.hasHostListField {
             ForEach(connectionFields, id: \.id) { field in
@@ -156,7 +153,7 @@ struct GeneralPaneView: View {
             sshForwardSocketField
         }
         ForEach(connectionFields, id: \.id) { field in
-            if !isHostListField(field) && coordinator.network.isFieldVisible(field) {
+            if !isHostListField(field), coordinator.network.isFieldVisible(field) {
                 ConnectionFieldRow(
                     field: field,
                     value: networkFieldBinding(for: field)
@@ -169,8 +166,7 @@ struct GeneralPaneView: View {
         coordinator.ssh.state.enabled && coordinator.network.forwardsToUnixSocket
     }
 
-    @ViewBuilder
-    private var sshForwardSocketField: some View {
+    @ViewBuilder private var sshForwardSocketField: some View {
         TextField(
             String(localized: "Socket Path"),
             text: $coordinator.network.sshForwardUnixSocketPath,
@@ -220,15 +216,14 @@ struct GeneralPaneView: View {
             .foregroundStyle(tint)
     }
 
-    @ViewBuilder
-    private var authenticationSection: some View {
+    @ViewBuilder private var authenticationSection: some View {
         if connectionMode != .fileBased {
             let authFields = coordinator.auth.authFields.splitCredentialControllers()
             Section(String(localized: "Authentication")) {
                 ForEach(authFields.controllers, id: \.id) { field in
                     authFieldRow(field)
                 }
-                if connectionMode == .network && !coordinator.auth.hidesUsername {
+                if connectionMode == .network, !coordinator.auth.hidesUsername {
                     TextField(
                         String(localized: "Username"),
                         text: $coordinator.auth.username
@@ -271,8 +266,7 @@ struct GeneralPaneView: View {
         }
     }
 
-    @ViewBuilder
-    private var pgpassStatusView: some View {
+    @ViewBuilder private var pgpassStatusView: some View {
         switch coordinator.auth.pgpassStatus {
         case .notChecked:
             EmptyView()
@@ -307,19 +301,22 @@ struct GeneralPaneView: View {
         }
     }
 
-    @ViewBuilder
-    private var kerberosCaption: some View {
+    @ViewBuilder private var kerberosCaption: some View {
         if type.pluginTypeId == "SQL Server",
            coordinator.auth.additionalFieldValues["mssqlAuthMethod"] == "windows" {
             Label(
-                String(localized: "Leave the principal and password blank to use your existing Kerberos ticket. Run kinit user@REALM.COM in Terminal first if you don't have one."),
+                String(
+                    localized: "Leave the principal and password blank to use your existing Kerberos ticket. Run kinit user@REALM.COM in Terminal first if you don't have one."
+                ),
                 systemImage: "info.circle"
             )
             .font(.caption)
             .foregroundStyle(.secondary)
             if hostIsIPAddress {
                 Label(
-                    String(localized: "Windows Authentication needs the server's hostname, not an IP address. Kerberos service principals aren't registered against IP addresses."),
+                    String(
+                        localized: "Windows Authentication needs the server's hostname, not an IP address. Kerberos service principals aren't registered against IP addresses."
+                    ),
                     systemImage: "exclamationmark.triangle.fill"
                 )
                 .font(.caption)

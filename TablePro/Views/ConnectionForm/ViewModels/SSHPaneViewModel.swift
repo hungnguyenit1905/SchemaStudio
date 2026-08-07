@@ -27,7 +27,7 @@ final class SSHPaneViewModel {
             issues.append(String(localized: "SSH host is required"))
         }
         if !state.port.isEmpty,
-           Int(state.port).map({ !(1...65_535).contains($0) }) ?? true {
+           Int(state.port).map({ !(1 ... 65_535).contains($0) }) ?? true {
             issues.append(String(localized: "SSH port must be between 1 and 65535"))
         }
         if !state.jumpHosts.allSatisfy(\.isValid) {

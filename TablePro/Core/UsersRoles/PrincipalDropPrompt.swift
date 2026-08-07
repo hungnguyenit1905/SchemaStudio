@@ -29,7 +29,7 @@ struct PrincipalDropPrompt: Identifiable, Equatable {
 
     static func dropOptions(for disposition: Disposition) -> PluginPrincipalDropOptions {
         switch disposition {
-        case let .reassign(target):
+        case .reassign(let target):
             PluginPrincipalDropOptions(reassignOwnedTo: target)
         case .dropOwned:
             PluginPrincipalDropOptions(dropOwned: true)

@@ -37,10 +37,9 @@ internal enum FormatScopeResolver {
 
     static func reapplyBoundaryWhitespace(from original: String, to formatted: String) -> String {
         guard let firstNonWhitespace = original.firstIndex(where: { !$0.isWhitespace }),
-              let lastNonWhitespace = original.lastIndex(where: { !$0.isWhitespace })
-        else { return formatted }
+              let lastNonWhitespace = original.lastIndex(where: { !$0.isWhitespace }) else { return formatted }
 
-        let prefix = original[original.startIndex..<firstNonWhitespace]
+        let prefix = original[original.startIndex ..< firstNonWhitespace]
         let suffix = original[original.index(after: lastNonWhitespace)...]
         return prefix + formatted + suffix
     }

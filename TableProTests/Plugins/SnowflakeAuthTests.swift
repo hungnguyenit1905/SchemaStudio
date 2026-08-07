@@ -56,10 +56,10 @@ struct SnowflakeConnectionsTOMLTests {
     @Test("Parses sections with key-value pairs")
     func testBasicSection() {
         let toml = """
-            [default]
-            account = "xy12345"
-            user = jane
-            """
+        [default]
+        account = "xy12345"
+        user = jane
+        """
         let parsed = SnowflakeConnectionsTOML.parse(toml)
         #expect(parsed["default"]?["account"] == "xy12345")
         #expect(parsed["default"]?["user"] == "jane")
@@ -80,11 +80,11 @@ struct SnowflakeConnectionsTOMLTests {
     @Test("Comments are stripped outside strings and kept inside both quote styles")
     func testCommentHandling() {
         let toml = """
-            [default]
-            account = "abc" # trailing comment
-            password = "p#ss"
-            token = 'a#b'
-            """
+        [default]
+        account = "abc" # trailing comment
+        password = "p#ss"
+        token = 'a#b'
+        """
         let parsed = SnowflakeConnectionsTOML.parse(toml)
         #expect(parsed["default"]?["account"] == "abc")
         #expect(parsed["default"]?["password"] == "p#ss")
@@ -108,12 +108,12 @@ struct SnowflakeSPKIWrappingTests {
 
     @Test("Short keys use single-byte DER lengths")
     func testShortFormLength() {
-        let pkcs1 = Data((0..<10).map { UInt8($0) })
+        let pkcs1 = Data((0 ..< 10).map { UInt8($0) })
         let spki = [UInt8](SnowflakeKeyPairAuth.wrapPKCS1IntoSPKI(pkcs1))
 
         #expect(spki[0] == 0x30)
         #expect(Int(spki[1]) == spki.count - 2)
-        #expect(Array(spki[2..<17]) == Self.rsaAlgorithmID)
+        #expect(Array(spki[2 ..< 17]) == Self.rsaAlgorithmID)
         #expect(spki[17] == 0x03)
         #expect(Int(spki[18]) == pkcs1.count + 1)
         #expect(spki[19] == 0x00)
@@ -129,7 +129,7 @@ struct SnowflakeSPKIWrappingTests {
         #expect(spki[1] == 0x82)
         let bodyLength = (Int(spki[2]) << 8) | Int(spki[3])
         #expect(bodyLength == spki.count - 4)
-        #expect(Array(spki[4..<19]) == Self.rsaAlgorithmID)
+        #expect(Array(spki[4 ..< 19]) == Self.rsaAlgorithmID)
         #expect(spki[19] == 0x03)
         #expect(spki[20] == 0x82)
         let bitStringLength = (Int(spki[21]) << 8) | Int(spki[22])

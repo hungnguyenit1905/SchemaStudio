@@ -35,11 +35,11 @@ public enum SurrealQL {
 
     public static func recordIdPart(_ id: SurrealValue) -> String {
         switch id {
-        case let .int(number):
+        case .int(let number):
             return String(number)
-        case let .string(text):
+        case .string(let text):
             return isSimpleIdentifier(text) ? text : "`" + escapeBackticks(text) + "`"
-        case let .uuid(value):
+        case .uuid(let value):
             return "`" + value.uuidString.lowercased() + "`"
         default:
             return "`" + escapeBackticks(id.displayText) + "`"
@@ -59,7 +59,7 @@ public enum SurrealQL {
             return SurrealRecordID(table: table, id: idValue(fromRaw: trimmed))
         }
 
-        let table = unwrap(String(trimmed[trimmed.startIndex..<separator]))
+        let table = unwrap(String(trimmed[trimmed.startIndex ..< separator]))
         let rawId = String(trimmed[trimmed.index(after: separator)...])
         guard !table.isEmpty, !rawId.isEmpty else { return nil }
         return SurrealRecordID(table: table, id: idValue(fromRaw: rawId))

@@ -17,7 +17,9 @@ struct SSHChannelRelayTests {
     func cancelled() {
         let local = SocketPair()
         let transport = SocketPair()
-        defer { local.close(); transport.close() }
+        defer { local.close()
+            transport.close()
+        }
 
         let result = runRelay(
             localFD: local.a,
@@ -33,7 +35,9 @@ struct SSHChannelRelayTests {
     func transportHangup() {
         let local = SocketPair()
         let transport = SocketPair()
-        defer { local.close(); transport.close() }
+        defer { local.close()
+            transport.close()
+        }
 
         transport.closeB()
 
@@ -50,7 +54,9 @@ struct SSHChannelRelayTests {
     func transportHalfCloseEOF() {
         let local = SocketPair()
         let transport = SocketPair()
-        defer { local.close(); transport.close() }
+        defer { local.close()
+            transport.close()
+        }
 
         shutdown(transport.b, SHUT_WR)
 
@@ -67,7 +73,9 @@ struct SSHChannelRelayTests {
     func localHangup() {
         let local = SocketPair()
         let transport = SocketPair()
-        defer { local.close(); transport.close() }
+        defer { local.close()
+            transport.close()
+        }
 
         local.closeB()
 
@@ -84,7 +92,9 @@ struct SSHChannelRelayTests {
     func channelClosed() {
         let local = SocketPair()
         let transport = SocketPair()
-        defer { local.close(); transport.close() }
+        defer { local.close()
+            transport.close()
+        }
 
         let result = runRelay(
             localFD: local.a,
@@ -99,7 +109,9 @@ struct SSHChannelRelayTests {
     func forwardsChannelData() {
         let local = SocketPair()
         let transport = SocketPair()
-        defer { local.close(); transport.close() }
+        defer { local.close()
+            transport.close()
+        }
 
         let payload = Data("hello".utf8)
         var dummy: UInt8 = 1
@@ -120,7 +132,9 @@ struct SSHChannelRelayTests {
     func forwardsLocalData() {
         let local = SocketPair()
         let transport = SocketPair()
-        defer { local.close(); transport.close() }
+        defer { local.close()
+            transport.close()
+        }
 
         let payload = Data("world".utf8)
         payload.withUnsafeBytes { raw in
@@ -144,7 +158,10 @@ struct SSHChannelRelayTests {
         let transport = SocketPair()
         let first = SocketPair()
         let second = SocketPair()
-        defer { transport.close(); first.close(); second.close() }
+        defer { transport.close()
+            first.close()
+            second.close()
+        }
 
         var dummy: UInt8 = 1
         _ = Darwin.send(transport.b, &dummy, 1, 0)

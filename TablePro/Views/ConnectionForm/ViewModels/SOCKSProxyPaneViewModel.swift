@@ -20,7 +20,7 @@ final class SOCKSProxyPaneViewModel {
             issues.append(String(localized: "SOCKS proxy host is required"))
         }
 
-        let portIsValid = Int(state.port).map { (1...65_535).contains($0) } ?? false
+        let portIsValid = Int(state.port).map { (1 ... 65_535).contains($0) } ?? false
         if !portIsValid {
             issues.append(String(localized: "SOCKS proxy port must be between 1 and 65535"))
         }

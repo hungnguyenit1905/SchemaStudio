@@ -45,10 +45,10 @@ final class UsersRolesViewModel {
         var id: String {
             switch self {
             case .create: "create"
-            case let .changePassword(ref): "password:\(ref.displayName)"
-            case let .drop(prompt): "drop:\(prompt.id)"
-            case let .roleMembership(ref): "membership:\(ref.displayName)"
-            case let .copyPrivileges(ref): "copy:\(ref.displayName)"
+            case .changePassword(let ref): "password:\(ref.displayName)"
+            case .drop(let prompt): "drop:\(prompt.id)"
+            case .roleMembership(let ref): "membership:\(ref.displayName)"
+            case .copyPrivileges(let ref): "copy:\(ref.displayName)"
             case .review: "review"
             }
         }
@@ -93,14 +93,11 @@ final class UsersRolesViewModel {
     var activeSheet: ActiveSheet?
     var actionError: String?
 
-    @ObservationIgnored
-    private(set) var loader: PrincipalListLoader?
+    @ObservationIgnored private(set) var loader: PrincipalListLoader?
 
-    @ObservationIgnored
-    let expansionStore: PrivilegeExpansionStore
+    @ObservationIgnored let expansionStore: PrivilegeExpansionStore
 
-    @ObservationIgnored
-    var scopeSearchTask: Task<Void, Never>?
+    @ObservationIgnored var scopeSearchTask: Task<Void, Never>?
 
     init(connectionId: UUID, databaseType: DatabaseType) {
         self.connectionId = connectionId
@@ -245,7 +242,7 @@ final class UsersRolesViewModel {
 
         do {
             if !changeManager.hasLoadedGrants(for: ref) {
-                changeManager.loadGrants(try await loader.grants(for: ref), for: ref)
+                try await changeManager.loadGrants(loader.grants(for: ref), for: ref)
             }
             await loadRoleGrants(for: ref)
 

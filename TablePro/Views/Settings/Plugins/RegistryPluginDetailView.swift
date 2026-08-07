@@ -103,8 +103,7 @@ struct RegistryPluginDetailView: View {
         }
     }
 
-    @ViewBuilder
-    private var installActionView: some View {
+    @ViewBuilder private var installActionView: some View {
         if let progress = installProgress {
             switch progress.phase {
             case .downloading(let fraction):
@@ -149,8 +148,7 @@ struct RegistryPluginDetailView: View {
         }
     }
 
-    @ViewBuilder
-    private var updateActionView: some View {
+    @ViewBuilder private var updateActionView: some View {
         if let progress = installProgress {
             switch progress.phase {
             case .downloading(let fraction):

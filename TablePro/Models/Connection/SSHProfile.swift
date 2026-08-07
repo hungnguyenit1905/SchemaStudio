@@ -51,8 +51,19 @@ struct SSHProfile: Identifiable, Hashable, Codable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, host, port, username, authMethod, privateKeyPath, agentSocketPath, jumpHosts
-        case totpMode, totpAlgorithm, totpDigits, totpPeriod
+        case id
+        case name
+        case host
+        case port
+        case username
+        case authMethod
+        case privateKeyPath
+        case agentSocketPath
+        case jumpHosts
+        case totpMode
+        case totpAlgorithm
+        case totpDigits
+        case totpPeriod
     }
 
     func toSSHConfiguration() -> SSHConfiguration {

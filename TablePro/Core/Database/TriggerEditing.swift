@@ -19,7 +19,7 @@ enum TriggerEditingError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notConnected: String(localized: "Not connected to database")
-        case let .denied(reason): reason
+        case .denied(let reason): reason
         case .dropUnavailable: String(localized: "This database cannot drop triggers")
         }
     }
@@ -80,7 +80,7 @@ enum TriggerEditing {
         let dropSQL = originalName.flatMap { driver.generateDropTriggerSQL(name: $0, table: tableName) }
 
         switch strategy {
-        case let .transactional(dropFirst):
+        case .transactional(let dropFirst):
             try await runInTransaction(driver: driver, dropSQL: dropFirst ? dropSQL : nil, sql: sql)
         case .dropThenCreate:
             guard let dropSQL else { throw TriggerEditingError.dropUnavailable }
@@ -133,7 +133,12 @@ enum TriggerEditing {
         }
     }
 
-    static func runDropThenCreate(driver: DatabaseDriver, dropSQL: String, sql: String, rollback: String?) async throws {
+    static func runDropThenCreate(
+        driver: DatabaseDriver,
+        dropSQL: String,
+        sql: String,
+        rollback: String?
+    ) async throws {
         _ = try await driver.execute(query: dropSQL)
         do {
             _ = try await driver.execute(query: sql)
@@ -141,9 +146,15 @@ enum TriggerEditing {
             if let rollback {
                 do {
                     _ = try await driver.execute(query: rollback)
-                    logger.error("Trigger edit failed; restored original definition: \(error.localizedDescription, privacy: .public)")
+                    logger
+                        .error(
+                            "Trigger edit failed; restored original definition: \(error.localizedDescription, privacy: .public)"
+                        )
                 } catch let rollbackError {
-                    logger.error("Trigger edit failed and rollback failed, trigger may be missing: edit=\(error.localizedDescription, privacy: .public) rollback=\(rollbackError.localizedDescription, privacy: .public)")
+                    logger
+                        .error(
+                            "Trigger edit failed and rollback failed, trigger may be missing: edit=\(error.localizedDescription, privacy: .public) rollback=\(rollbackError.localizedDescription, privacy: .public)"
+                        )
                 }
             }
             throw error

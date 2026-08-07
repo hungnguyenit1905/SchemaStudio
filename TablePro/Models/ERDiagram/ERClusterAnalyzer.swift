@@ -17,7 +17,9 @@ enum ERClusterAnalyzer {
 
         func find(_ start: UUID) -> UUID {
             var root = start
-            while let next = parent[root], next != root { root = next }
+            while let next = parent[root], next != root {
+                root = next
+            }
             var current = start
             while let next = parent[current], next != root {
                 parent[current] = root
@@ -45,8 +47,7 @@ enum ERClusterAnalyzer {
         for edge in edges {
             guard let from = nodeIndex[edge.fromTable],
                   let to = nodeIndex[edge.toTable],
-                  from != to
-            else { continue }
+                  from != to else { continue }
             union(from, to)
         }
 
@@ -65,7 +66,9 @@ enum ERClusterAnalyzer {
 
         var result: [UUID: Int] = [:]
         for (index, component) in ordered.enumerated() {
-            for member in component { result[member] = index }
+            for member in component {
+                result[member] = index
+            }
         }
         return result
     }

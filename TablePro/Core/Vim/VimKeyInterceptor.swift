@@ -120,7 +120,7 @@ final class VimKeyInterceptor {
         0xF700: "k", // Up
         0xF701: "j", // Down
         0xF702: "h", // Left
-        0xF703: "l"  // Right
+        0xF703: "l" // Right
     ]
 
     // MARK: - Event Handling
@@ -159,7 +159,7 @@ final class VimKeyInterceptor {
 
         // Ctrl+R in Normal mode → redo (Vim convention)
         if modifiers.contains(.control) {
-            if !engine.mode.isInsert && event.keyCode == 15 { // keyCode 15 = R
+            if !engine.mode.isInsert, event.keyCode == 15 { // keyCode 15 = R
                 engine.redo()
                 return nil
             }

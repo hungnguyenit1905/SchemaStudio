@@ -55,8 +55,7 @@ struct DatabaseTreeFilterPopover: View {
         .padding(.vertical, 6)
     }
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         if selectableDatabases.isEmpty {
             ContentUnavailableView(
                 String(localized: "No Databases"),

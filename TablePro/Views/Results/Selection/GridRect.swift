@@ -10,14 +10,14 @@ struct GridRect: Hashable {
     }
 
     init(cell: GridCoord) {
-        self.rows = cell.row...cell.row
-        self.columns = cell.column...cell.column
+        self.rows = cell.row ... cell.row
+        self.columns = cell.column ... cell.column
     }
 
     static func between(_ a: GridCoord, _ b: GridCoord) -> GridRect {
         GridRect(
-            rows: min(a.row, b.row)...max(a.row, b.row),
-            columns: min(a.column, b.column)...max(a.column, b.column)
+            rows: min(a.row, b.row) ... max(a.row, b.row),
+            columns: min(a.column, b.column) ... max(a.column, b.column)
         )
     }
 
@@ -32,6 +32,6 @@ struct GridRect: Hashable {
         let cLow = max(0, columns.lowerBound)
         let cHigh = min(columnLimit - 1, columns.upperBound)
         guard rLow <= rHigh, cLow <= cHigh else { return nil }
-        return GridRect(rows: rLow...rHigh, columns: cLow...cHigh)
+        return GridRect(rows: rLow ... rHigh, columns: cLow ... cHigh)
     }
 }

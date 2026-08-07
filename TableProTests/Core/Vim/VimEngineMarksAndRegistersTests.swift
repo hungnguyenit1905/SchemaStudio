@@ -5,9 +5,9 @@
 //  Specification tests for marks (m / ' / `) and named/numbered registers ("{a-z}, "0-9).
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineMarksAndRegistersTests: XCTestCase {
@@ -27,7 +27,9 @@ final class VimEngineMarksAndRegistersTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {
@@ -120,20 +122,26 @@ final class VimEngineMarksAndRegistersTests: XCTestCase {
         keys("\"ayy")
         keys("j")
         keys("\"ap")
-        XCTAssertEqual(buffer.text, "hello world\nsecond line\nhello world\nthird line\n",
-            "Named register 'a' should preserve the yank across other yanks/deletes")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nsecond line\nhello world\nthird line\n",
+            "Named register 'a' should preserve the yank across other yanks/deletes"
+        )
     }
 
     func testNamedRegisterIndependentFromUnnamed() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("\"ayy") // 'a' has line 0
         keys("j")
-        keys("yy")    // unnamed register has line 1
+        keys("yy") // unnamed register has line 1
         // "ap should still paste line 0; p should paste line 1.
         keys("k")
         keys("\"ap")
-        XCTAssertEqual(buffer.text, "hello world\nhello world\nsecond line\nthird line\n",
-            "Named register 'a' should be unaffected by intervening unnamed yanks")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nhello world\nsecond line\nthird line\n",
+            "Named register 'a' should be unaffected by intervening unnamed yanks"
+        )
     }
 
     func testDeleteToNamedRegister() {
@@ -141,8 +149,11 @@ final class VimEngineMarksAndRegistersTests: XCTestCase {
         keys("\"add") // delete line 0 into 'a'
         XCTAssertEqual(buffer.text, "second line\nthird line\n")
         keys("\"ap")
-        XCTAssertEqual(buffer.text, "second line\nhello world\nthird line\n",
-            "Deleted text should be retrievable from the named register")
+        XCTAssertEqual(
+            buffer.text,
+            "second line\nhello world\nthird line\n",
+            "Deleted text should be retrievable from the named register"
+        )
     }
 
     // MARK: - Numbered Registers: Yank Cycle
@@ -155,8 +166,11 @@ final class VimEngineMarksAndRegistersTests: XCTestCase {
         keys("jdd")
         XCTAssertEqual(buffer.text, "hello world\nthird line\n")
         keys("\"0p") // paste from yank register, not from latest delete
-        XCTAssertEqual(buffer.text, "hello world\nthird line\nhello world\n",
-            "\"0 should preserve the last YANKED text, not the last deleted text")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nthird line\nhello world\n",
+            "\"0 should preserve the last YANKED text, not the last deleted text"
+        )
     }
 
     func testDeletePopulatesRegisterOne() {
@@ -166,8 +180,11 @@ final class VimEngineMarksAndRegistersTests: XCTestCase {
         keys("dd") // line 1 → "1, old "1 → "2
         XCTAssertEqual(buffer.text, "third line\n")
         keys("\"2p")
-        XCTAssertEqual(buffer.text, "third line\nhello world\n",
-            "\"2 should hold the previously deleted line after another deletion")
+        XCTAssertEqual(
+            buffer.text,
+            "third line\nhello world\n",
+            "\"2 should hold the previously deleted line after another deletion"
+        )
     }
 
     func testRegistersDoNotApplyToMotions() {
@@ -189,7 +206,10 @@ final class VimEngineMarksAndRegistersTests: XCTestCase {
         keys("yy") // append "second line\n" to 'a'
         // Now 'a' should contain both lines.
         keys("\"ap")
-        XCTAssertEqual(buffer.text.contains("hello world\nsecond line\nhello world\nsecond line\n"), true,
-            "Uppercase register should append to lowercase counterpart")
+        XCTAssertEqual(
+            buffer.text.contains("hello world\nsecond line\nhello world\nsecond line\n"),
+            true,
+            "Uppercase register should append to lowercase counterpart"
+        )
     }
 }

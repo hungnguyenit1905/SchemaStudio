@@ -32,10 +32,16 @@ internal enum LinkedSQLFavoriteWriter {
         } catch let error as NSError where
             error.domain == NSCocoaErrorDomain &&
             error.code == NSFileWriteInapplicableStringEncodingError {
-            Self.logger.error("Encoding \(loaded.encoding.rawValue) cannot represent edited content at \(url.path, privacy: .public)")
+            Self.logger
+                .error(
+                    "Encoding \(loaded.encoding.rawValue) cannot represent edited content at \(url.path, privacy: .public)"
+                )
             throw WriteError.encodingMismatch(loaded.encoding)
         } catch {
-            Self.logger.error("Failed to write metadata to \(url.path, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .error(
+                    "Failed to write metadata to \(url.path, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
             throw WriteError.writeFailed
         }
     }

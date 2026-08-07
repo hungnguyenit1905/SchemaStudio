@@ -131,7 +131,7 @@ public struct SurrealFieldKind: Equatable, Sendable {
 
     private static func genericHead(_ body: String) -> String {
         guard let angle = body.firstIndex(of: "<") else { return body }
-        return String(body[body.startIndex..<angle]).trimmingCharacters(in: .whitespaces)
+        return String(body[body.startIndex ..< angle]).trimmingCharacters(in: .whitespaces)
     }
 
     private static func unwrapGeneric(_ body: String, prefix: String) -> String? {
@@ -140,7 +140,7 @@ public struct SurrealFieldKind: Equatable, Sendable {
         let start = body.index(body.startIndex, offsetBy: prefix.count + 1)
         let end = body.index(before: body.endIndex)
         guard start < end else { return nil }
-        return String(body[start..<end]).trimmingCharacters(in: .whitespaces)
+        return String(body[start ..< end]).trimmingCharacters(in: .whitespaces)
     }
 
     private static func splitUnion(_ body: String) -> [String] {

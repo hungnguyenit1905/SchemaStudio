@@ -18,11 +18,11 @@ internal final class LibSSH2Tunnel: @unchecked Sendable {
 
     private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LibSSH2Tunnel")
 
-    private let session: OpaquePointer           // LIBSSH2_SESSION*
-    private let socketFD: Int32                   // TCP socket to SSH server
-    private let listenFD: Int32                   // Local listening socket
+    private let session: OpaquePointer // LIBSSH2_SESSION*
+    private let socketFD: Int32 // TCP socket to SSH server
+    private let listenFD: Int32 // Local listening socket
 
-    // Jump host chain (in connection order)
+    /// Jump host chain (in connection order)
     private let jumpChain: [JumpHop]
 
     private var forwardingTask: Task<Void, Never>?
@@ -47,10 +47,10 @@ internal final class LibSSH2Tunnel: @unchecked Sendable {
     private let forwardFailure = SSHForwardFailureRecorder()
 
     struct JumpHop {
-        let session: OpaquePointer    // LIBSSH2_SESSION*
-        let socket: Int32             // TCP or socketpair fd
-        let channel: OpaquePointer    // LIBSSH2_CHANNEL* (direct-tcpip to next hop)
-        let relayTask: Task<Void, Never>?  // socketpair relay task (nil for first hop)
+        let session: OpaquePointer // LIBSSH2_SESSION*
+        let socket: Int32 // TCP or socketpair fd
+        let channel: OpaquePointer // LIBSSH2_CHANNEL* (direct-tcpip to next hop)
+        let relayTask: Task<Void, Never>? // socketpair relay task (nil for first hop)
     }
 
     private static let relayBufferSize = 32_768 // 32KB
@@ -71,8 +71,14 @@ internal final class LibSSH2Tunnel: @unchecked Sendable {
     /// noticing a client the kernel already accepted costs a slim part of the margin above.
     internal static let acceptPollTimeoutMs: Int32 = 200
 
-    init(connectionId: UUID, localPort: Int, session: OpaquePointer,
-         socketFD: Int32, listenFD: Int32, jumpChain: [JumpHop] = []) {
+    init(
+        connectionId: UUID,
+        localPort: Int,
+        session: OpaquePointer,
+        socketFD: Int32,
+        listenFD: Int32,
+        jumpChain: [JumpHop] = []
+    ) {
         self.connectionId = connectionId
         self.localPort = localPort
         self.session = session
@@ -147,7 +153,7 @@ internal final class LibSSH2Tunnel: @unchecked Sendable {
         keepAliveTask = Task.detached { [weak self] in
             guard let self else { return }
 
-            while !Task.isCancelled && self.isRunning {
+            while !Task.isCancelled, self.isRunning {
                 let failed = await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
                     self.sessionQueue.async {
                         var secondsToNext: Int32 = 0
@@ -182,7 +188,9 @@ internal final class LibSSH2Tunnel: @unchecked Sendable {
         keepAliveTask?.cancel()
         let currentClientTasks = clientTasks.withLock { tasks -> [Task<Void, Never>] in
             let copy = tasks
-            for task in tasks { task.cancel() }
+            for task in tasks {
+                task.cancel()
+            }
             tasks.removeAll()
             return copy
         }
@@ -244,7 +252,9 @@ internal final class LibSSH2Tunnel: @unchecked Sendable {
         forwardingTask?.cancel()
         keepAliveTask?.cancel()
         clientTasks.withLock { tasks in
-            for task in tasks { task.cancel() }
+            for task in tasks {
+                task.cancel()
+            }
             tasks.removeAll()
         }
 

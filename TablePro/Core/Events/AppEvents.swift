@@ -39,7 +39,6 @@ final class AppEvents {
 
     let databaseDidConnect = PassthroughSubject<DatabaseDidConnect, Never>()
 
-
     // MARK: - Window
 
     let mainWindowWillClose = PassthroughSubject<Void, Never>()

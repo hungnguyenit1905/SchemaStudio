@@ -1,7 +1,7 @@
 import Foundation
-import TableProPluginKit
 import Network
 @testable import SchemaStudio
+import TableProPluginKit
 import XCTest
 
 final class MCPStreamableHttpClientTransportTests: XCTestCase {
@@ -295,7 +295,7 @@ final class MCPStreamableHttpClientTransportTests: XCTestCase {
         fake.expireSession()
 
         let callCount = 5
-        for index in 0..<callCount {
+        for index in 0 ..< callCount {
             try await transport.send(.request(
                 JsonRpcRequest(id: .number(Int64(100 + index)), method: "tools/call", params: nil)
             ))
@@ -875,35 +875,36 @@ private final class MockHttpServer: @unchecked Sendable {
     }
 
     private func readRequest(connection: NWConnection, accumulated: Data) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) { [weak self] data, _, isComplete, error in
-            guard let self else { return }
-            if let error {
-                _ = error
-                connection.cancel()
-                return
-            }
-            var buffer = accumulated
-            if let data {
-                buffer.append(data)
-            }
-
-            if let request = Self.parseRequest(buffer) {
-                Task {
-                    let response = await self.state.respond(to: request)
-                    let raw = Self.serializeResponse(response)
-                    connection.send(content: raw, completion: .contentProcessed { _ in
-                        connection.cancel()
-                    })
+        connection
+            .receive(minimumIncompleteLength: 1, maximumLength: 64 * 1_024) { [weak self] data, _, isComplete, error in
+                guard let self else { return }
+                if let error {
+                    _ = error
+                    connection.cancel()
+                    return
                 }
-                return
-            }
+                var buffer = accumulated
+                if let data {
+                    buffer.append(data)
+                }
 
-            if isComplete {
-                connection.cancel()
-                return
+                if let request = Self.parseRequest(buffer) {
+                    Task {
+                        let response = await self.state.respond(to: request)
+                        let raw = Self.serializeResponse(response)
+                        connection.send(content: raw, completion: .contentProcessed { _ in
+                            connection.cancel()
+                        })
+                    }
+                    return
+                }
+
+                if isComplete {
+                    connection.cancel()
+                    return
+                }
+                self.readRequest(connection: connection, accumulated: buffer)
             }
-            self.readRequest(connection: connection, accumulated: buffer)
-        }
     }
 
     private static func parseRequest(_ data: Data) -> MockHttpRequest? {
@@ -926,7 +927,7 @@ private final class MockHttpServer: @unchecked Sendable {
         var headers: [(String, String)] = []
         for line in lines.dropFirst() where !line.isEmpty {
             guard let colon = line.firstIndex(of: ":") else { continue }
-            let key = String(line[line.startIndex..<colon])
+            let key = String(line[line.startIndex ..< colon])
             var rest = line[line.index(after: colon)...]
             if rest.first == " " {
                 rest = rest.dropFirst()
@@ -946,7 +947,7 @@ private final class MockHttpServer: @unchecked Sendable {
             if remaining < contentLength {
                 return nil
             }
-            body = data.subdata(in: bodyStart..<(bodyStart + contentLength))
+            body = data.subdata(in: bodyStart ..< (bodyStart + contentLength))
         } else {
             body = Data()
         }

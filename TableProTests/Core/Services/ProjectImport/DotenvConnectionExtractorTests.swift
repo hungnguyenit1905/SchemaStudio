@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("Dotenv Connection Extractor")
 struct DotenvConnectionExtractorTests {
@@ -109,7 +109,7 @@ struct DotenvConnectionExtractorTests {
         let candidate = extract(source).first
         #expect(candidate?.parsedURL.type == .postgresql)
         #expect(candidate?.parsedURL.host == "127.0.0.1")
-        #expect(candidate?.parsedURL.port == 5432)
+        #expect(candidate?.parsedURL.port == 5_432)
         #expect(candidate?.warnings.isEmpty == false)
     }
 
@@ -176,7 +176,10 @@ struct DotenvConnectionExtractorTests {
 
     @Test("A production named file raises the safe mode level")
     func testProductionRaisesSafeMode() {
-        let document = DotenvParser.parse("DATABASE_URL=postgresql://u:p@db.example.com:5432/app", processEnvironment: [:])
+        let document = DotenvParser.parse(
+            "DATABASE_URL=postgresql://u:p@db.example.com:5432/app",
+            processEnvironment: [:]
+        )
         let candidates = DotenvConnectionExtractor.extract(
             document: document,
             relativePath: ".env.production",

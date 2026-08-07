@@ -34,8 +34,7 @@ struct ConnectionTagEditor: View {
         }
     }
 
-    @ViewBuilder
-    private var selectionView: some View {
+    @ViewBuilder private var selectionView: some View {
         if selectedTags.isEmpty {
             Text("Add tags")
                 .foregroundStyle(.secondary)

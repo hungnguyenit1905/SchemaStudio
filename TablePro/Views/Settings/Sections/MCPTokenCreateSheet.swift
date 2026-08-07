@@ -72,8 +72,7 @@ struct MCPTokenCreateSheet: View {
         }
     }
 
-    @ViewBuilder
-    private var connectionList: some View {
+    @ViewBuilder private var connectionList: some View {
         if connections.isEmpty {
             Text(String(localized: "No saved connections"))
                 .foregroundStyle(.secondary)

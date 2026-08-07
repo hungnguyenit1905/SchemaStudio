@@ -135,7 +135,10 @@ actor ConnectionHealthMonitor {
     /// (e.g., mid-reconnect). On ping failure, triggers the reconnect sequence.
     private func performHealthCheck() async {
         guard state == .healthy else {
-            Self.logger.debug("Skipping health check — state is \(String(describing: self.state)) for connection \(self.connectionId)")
+            Self.logger
+                .debug(
+                    "Skipping health check — state is \(String(describing: self.state)) for connection \(self.connectionId)"
+                )
             return
         }
 
@@ -148,7 +151,10 @@ actor ConnectionHealthMonitor {
                     "Ping #\(self.pingCount) fired only \(String(format: "%.2f", interval))s after previous for \(self.connectionId)"
                 )
             } else {
-                Self.logger.debug("Ping #\(self.pingCount) for \(self.connectionId) (interval: \(String(format: "%.1f", interval))s)")
+                Self.logger
+                    .debug(
+                        "Ping #\(self.pingCount) for \(self.connectionId) (interval: \(String(format: "%.1f", interval))s)"
+                    )
             }
         } else {
             Self.logger.debug("First ping (#\(self.pingCount)) for \(self.connectionId)")

@@ -109,95 +109,97 @@ struct StructureView: View {
 
     // MARK: - Indexes Tab
 
-    private var indexesTab: some View {
-        Group {
-            if indexes.isEmpty {
-                ContentUnavailableView(
-                    "No Indexes",
-                    systemImage: "list.number",
-                    description: Text("This table has no indexes.")
-                )
-            } else {
-                List {
-                    ForEach(indexes, id: \.name) { index in
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Text(index.name)
-                                    .font(.body)
-                                    .fontWeight(.semibold)
+    @ViewBuilder private var indexesTab: some View {
+        if indexes.isEmpty {
+            ContentUnavailableView(
+                "No Indexes",
+                systemImage: "list.number",
+                description: Text("This table has no indexes.")
+            )
+        } else {
+            List {
+                ForEach(indexes, id: \.name) { index in
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text(index.name)
+                                .font(.body)
+                                .fontWeight(.semibold)
 
-                                Spacer()
+                            Spacer()
 
-                                if index.isPrimary {
-                                    MetadataBadge(text: "Primary", foreground: .orange, background: Color.orange.opacity(0.15))
-                                }
-
-                                if index.isUnique && !index.isPrimary {
-                                    MetadataBadge(text: "Unique", foreground: .blue, background: Color.blue.opacity(0.15))
-                                }
-
-                                if !index.type.isEmpty {
-                                    MetadataBadge(index.type)
-                                }
+                            if index.isPrimary {
+                                MetadataBadge(
+                                    text: "Primary",
+                                    foreground: .orange,
+                                    background: Color.orange.opacity(0.15)
+                                )
                             }
 
-                            Text(index.columns.joined(separator: ", "))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            if index.isUnique, !index.isPrimary {
+                                MetadataBadge(
+                                    text: "Unique",
+                                    foreground: .blue,
+                                    background: Color.blue.opacity(0.15)
+                                )
+                            }
+
+                            if !index.type.isEmpty {
+                                MetadataBadge(index.type)
+                            }
                         }
-                        .padding(.vertical, 2)
+
+                        Text(index.columns.joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
+                    .padding(.vertical, 2)
                 }
-                .listStyle(.insetGrouped)
             }
+            .listStyle(.insetGrouped)
         }
     }
 
     // MARK: - Foreign Keys Tab
 
-    private var foreignKeysTab: some View {
-        Group {
-            if foreignKeys.isEmpty {
-                ContentUnavailableView(
-                    "No Foreign Keys",
-                    systemImage: "arrow.triangle.branch",
-                    description: Text("This table has no foreign key relationships.")
-                )
-            } else {
-                List {
-                    ForEach(foreignKeys, id: \.name) { fk in
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(fk.name)
-                                .font(.body)
-                                .fontWeight(.semibold)
+    @ViewBuilder private var foreignKeysTab: some View {
+        if foreignKeys.isEmpty {
+            ContentUnavailableView(
+                "No Foreign Keys",
+                systemImage: "arrow.triangle.branch",
+                description: Text("This table has no foreign key relationships.")
+            )
+        } else {
+            List {
+                ForEach(foreignKeys, id: \.name) { fk in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(fk.name)
+                            .font(.body)
+                            .fontWeight(.semibold)
 
-                            Text(verbatim: "\(fk.column) \u{2192} \(fk.referencedTable).\(fk.referencedColumn)")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                        Text(verbatim: "\(fk.column) \u{2192} \(fk.referencedTable).\(fk.referencedColumn)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
 
-                            HStack(spacing: 12) {
-                                if !fk.onDelete.isEmpty,
-                                   fk.onDelete.uppercased() != "NO ACTION"
-                                {
-                                    Text("ON DELETE \(fk.onDelete)")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
+                        HStack(spacing: 12) {
+                            if !fk.onDelete.isEmpty,
+                               fk.onDelete.uppercased() != "NO ACTION" {
+                                Text("ON DELETE \(fk.onDelete)")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
 
-                                if !fk.onUpdate.isEmpty,
-                                   fk.onUpdate.uppercased() != "NO ACTION"
-                                {
-                                    Text("ON UPDATE \(fk.onUpdate)")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
+                            if !fk.onUpdate.isEmpty,
+                               fk.onUpdate.uppercased() != "NO ACTION" {
+                                Text("ON UPDATE \(fk.onUpdate)")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
                             }
                         }
-                        .padding(.vertical, 2)
                     }
+                    .padding(.vertical, 2)
                 }
-                .listStyle(.insetGrouped)
             }
+            .listStyle(.insetGrouped)
         }
     }
 
@@ -228,7 +230,10 @@ struct StructureView: View {
             self.indexes = try await fetchedIndexes
             self.foreignKeys = try await fetchedForeignKeys
 
-            Self.logger.debug("Loaded structure for \(table.name, privacy: .public): \(columns.count) columns, \(indexes.count) indexes, \(foreignKeys.count) foreign keys")
+            Self.logger
+                .debug(
+                    "Loaded structure for \(table.name, privacy: .public): \(columns.count) columns, \(indexes.count) indexes, \(foreignKeys.count) foreign keys"
+                )
         } catch {
             let context = ErrorContext(
                 operation: "loadStructure",

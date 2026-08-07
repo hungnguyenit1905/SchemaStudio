@@ -488,7 +488,8 @@ internal final class EtcdHttpClient: @unchecked Sendable {
                 throw EtcdError.authFailed("Authentication required")
             default:
                 Self.logger.warning("Prefix probe \(candidate) returned HTTP \(httpResponse.statusCode)")
-                throw EtcdError.serverError("Unexpected HTTP \(httpResponse.statusCode) from \(candidate)/maintenance/status")
+                throw EtcdError
+                    .serverError("Unexpected HTTP \(httpResponse.statusCode) from \(candidate)/maintenance/status")
             }
         }
 
@@ -707,7 +708,11 @@ internal final class EtcdHttpClient: @unchecked Sendable {
         _ = try await performRequest(path: path, body: body)
     }
 
-    private func performRequest<Req: Encodable>(path: String, body: Req, allowReauth: Bool = true) async throws -> Data {
+    private func performRequest<Req: Encodable>(
+        path: String,
+        body: Req,
+        allowReauth: Bool = true
+    ) async throws -> Data {
         lock.lock()
         guard let session else {
             lock.unlock()
@@ -731,7 +736,10 @@ internal final class EtcdHttpClient: @unchecked Sendable {
         request.httpBody = try JSONEncoder().encode(body)
 
         let (data, response) = try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<(Data, URLResponse), Error>) in
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<
+                (Data, URLResponse),
+                Error
+            >) in
                 self.lock.lock()
                 guard self.sessionGeneration == generation, let currentSession = self.session else {
                     self.lock.unlock()

@@ -177,7 +177,7 @@ final class JetBrainsCredentialStore {
         guard blob.count > 4 else { return nil }
         let ivLength = Int(bigEndianUInt32(blob, 0))
         guard ivLength == kCCBlockSizeAES128, blob.count > 4 + ivLength else { return nil }
-        let iv = Array(blob[4..<4 + ivLength])
+        let iv = Array(blob[4 ..< 4 + ivLength])
         let ciphertext = Array(blob[(4 + ivLength)...])
         return aesCBCDecrypt(ciphertext, key: Self.builtInKey, iv: iv)
     }

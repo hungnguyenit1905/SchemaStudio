@@ -11,25 +11,25 @@ struct PrivilegeRow: Identifiable, Hashable {
 
     var id: String {
         switch kind {
-        case let .category(category): "category:\(category.key)"
-        case let .privilege(descriptor): "privilege:\(descriptor.name)"
+        case .category(let category): "category:\(category.key)"
+        case .privilege(let descriptor): "privilege:\(descriptor.name)"
         }
     }
 
     var title: String {
         switch kind {
-        case let .category(category): category.title
-        case let .privilege(descriptor): descriptor.label
+        case .category(let category): category.title
+        case .privilege(let descriptor): descriptor.label
         }
     }
 
     var descriptor: PluginPrivilegeDescriptor? {
-        guard case let .privilege(descriptor) = kind else { return nil }
+        guard case .privilege(let descriptor) = kind else { return nil }
         return descriptor
     }
 
     var category: PrivilegeCategory? {
-        guard case let .category(category) = kind else { return nil }
+        guard case .category(let category) = kind else { return nil }
         return category
     }
 }

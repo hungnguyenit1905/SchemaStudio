@@ -25,8 +25,7 @@ struct ImportErrorView: View {
                     .font(.title3.weight(.semibold))
 
                 if let pluginError = error as? PluginImportError,
-                   case .statementFailed(let statement, let line, let underlyingError) = pluginError
-                {
+                   case .statementFailed(let statement, let line, let underlyingError) = pluginError {
                     Text("Failed at line \(line)")
                         .font(.body)
                         .foregroundStyle(.secondary)

@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("SQL Escaping")
 struct SQLEscapingTests {
-
     // MARK: - escapeStringLiteral Tests (ANSI SQL)
 
     @Test("Plain string unchanged")

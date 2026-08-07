@@ -18,7 +18,13 @@ extension TableViewCoordinator {
         case .blocked:
             return
         case .viewInline(let value):
-            showOverlayViewer(tableView: tableView, row: row, column: tableColumn, columnIndex: columnIndex, value: value)
+            showOverlayViewer(
+                tableView: tableView,
+                row: row,
+                column: tableColumn,
+                columnIndex: columnIndex,
+                value: value
+            )
         case .viewJson:
             showJSONViewerPopover(tableView: tableView, row: row, column: tableColumn, columnIndex: columnIndex)
         case .viewBlob:
@@ -28,7 +34,13 @@ extension TableViewCoordinator {
         case .editInline:
             beginCellEdit(row: row, tableColumnIndex: tableColumn)
         case .editOverlay(let value):
-            showOverlayEditor(tableView: tableView, row: row, column: tableColumn, columnIndex: columnIndex, value: value)
+            showOverlayEditor(
+                tableView: tableView,
+                row: row,
+                column: tableColumn,
+                columnIndex: columnIndex,
+                value: value
+            )
         case .editJson:
             showJSONEditorPopover(tableView: tableView, row: row, column: tableColumn, columnIndex: columnIndex)
         case .editBlob:
@@ -105,14 +117,14 @@ extension TableViewCoordinator {
 
     func handleFKArrowAction(row: Int, columnIndex: Int, openInNewTab: Bool) {
         let tableRows = tableRowsProvider()
-        guard row >= 0 && row < cachedRowCount,
-              columnIndex >= 0 && columnIndex < tableRows.columns.count else { return }
+        guard row >= 0, row < cachedRowCount,
+              columnIndex >= 0, columnIndex < tableRows.columns.count else { return }
 
         let columnName = tableRows.columns[columnIndex]
         guard let fkInfo = tableRows.columnForeignKeys[columnName] else { return }
 
         let value = cellValue(at: row, column: columnIndex)
-        guard let value = value, !value.isEmpty else { return }
+        guard let value, !value.isEmpty else { return }
 
         delegate?.dataGridNavigateFK(value: value, fkInfo: fkInfo, openInNewTab: openInNewTab)
     }

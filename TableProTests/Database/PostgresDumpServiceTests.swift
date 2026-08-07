@@ -152,7 +152,7 @@ struct PostgresDumpServiceCommandTests {
             fileURL: URL(fileURLWithPath: "/tmp/x.dump"),
             password: "s3cret"
         )
-        let allowed: Set<String> = [
+        let allowed: Set = [
             "PATH", "HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "LC_ALL",
             "PGPASSWORD", "PGSSLMODE"
         ]
@@ -249,7 +249,9 @@ struct PostgresDumpServiceStateMachineTests {
         }
 
         runner.finish(.init(exitCode: 0, stderr: "", wasCancelled: false))
-        let finalState = try await firstMatching(updates) { if case .finished = $0 { return true }; return false }
+        let finalState = try await firstMatching(updates) { if case .finished = $0 { return true }
+            return false
+        }
 
         if case .finished(let db, _, _) = finalState {
             #expect(db == "sales")
@@ -271,7 +273,9 @@ struct PostgresDumpServiceStateMachineTests {
         )
 
         runner.finish(.init(exitCode: 1, stderr: "FATAL: connection refused", wasCancelled: false))
-        let finalState = try await firstMatching(updates) { if case .failed = $0 { return true }; return false }
+        let finalState = try await firstMatching(updates) { if case .failed = $0 { return true }
+            return false
+        }
 
         if case .failed(let message) = finalState {
             #expect(message == "FATAL: connection refused")
@@ -333,7 +337,9 @@ struct PostgresDumpServiceStateMachineTests {
             fileURL: URL(fileURLWithPath: "/tmp/test-emptyerr.dump")
         )
         runner.finish(.init(exitCode: 42, stderr: "", wasCancelled: false))
-        let finalState = try await firstMatching(updates) { if case .failed = $0 { return true }; return false }
+        let finalState = try await firstMatching(updates) { if case .failed = $0 { return true }
+            return false
+        }
 
         if case .failed(let message) = finalState {
             #expect(message.contains("42"))

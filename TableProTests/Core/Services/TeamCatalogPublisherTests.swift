@@ -39,7 +39,7 @@ struct TeamCatalogPublisherTests {
         let connection = DatabaseConnection(name: "Prod DB")
         let written = try TeamCatalogPublisher.publish([connection], to: folder)
 
-        let data = try Data(contentsOf: try #require(written.first))
+        let data = try Data(contentsOf: #require(written.first))
         let envelope = try ConnectionImportDecoder.decodeData(data)
         #expect(envelope.credentials == nil)
         #expect(envelope.connections.first?.name == "Prod DB")
@@ -53,7 +53,7 @@ struct TeamCatalogPublisherTests {
         let connection = DatabaseConnection(name: "Prod DB", passwordSource: .command(shell: "echo PWNED"))
         let written = try TeamCatalogPublisher.publish([connection], to: folder)
 
-        let data = try Data(contentsOf: try #require(written.first))
+        let data = try Data(contentsOf: #require(written.first))
         let raw = String(data: data, encoding: .utf8) ?? ""
         #expect(!raw.contains("PWNED"))
         #expect(!raw.contains("passwordSource"))

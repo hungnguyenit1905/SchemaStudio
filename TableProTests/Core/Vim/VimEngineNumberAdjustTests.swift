@@ -6,9 +6,9 @@
 //  the cursor on the current line.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineNumberAdjustTests: XCTestCase {
@@ -42,8 +42,11 @@ final class VimEngineNumberAdjustTests: XCTestCase {
     func testCtrlAFindsNumberAfterCursor() {
         make("x = 42\n", at: 0)
         _ = engine.process("\u{01}", shift: false)
-        XCTAssertEqual(buffer.text, "x = 43\n",
-            "Ctrl+A should find the next number to the right of the cursor on the current line")
+        XCTAssertEqual(
+            buffer.text,
+            "x = 43\n",
+            "Ctrl+A should find the next number to the right of the cursor on the current line"
+        )
     }
 
     func testCtrlAWithCount() {
@@ -56,8 +59,11 @@ final class VimEngineNumberAdjustTests: XCTestCase {
     func testCtrlANegativeNumber() {
         make("x = -5\n", at: 4)
         _ = engine.process("\u{01}", shift: false)
-        XCTAssertEqual(buffer.text, "x = -4\n",
-            "Ctrl+A on a negative number should increment toward zero")
+        XCTAssertEqual(
+            buffer.text,
+            "x = -4\n",
+            "Ctrl+A on a negative number should increment toward zero"
+        )
     }
 
     func testCtrlAZeroToOne() {
@@ -69,8 +75,11 @@ final class VimEngineNumberAdjustTests: XCTestCase {
     func testCtrlAOnLineWithoutNumberIsNoOp() {
         make("foo bar baz\n", at: 0)
         _ = engine.process("\u{01}", shift: false)
-        XCTAssertEqual(buffer.text, "foo bar baz\n",
-            "Ctrl+A on a line without any number should not modify the buffer")
+        XCTAssertEqual(
+            buffer.text,
+            "foo bar baz\n",
+            "Ctrl+A on a line without any number should not modify the buffer"
+        )
     }
 
     // MARK: - Ctrl+X: Decrement
@@ -100,15 +109,21 @@ final class VimEngineNumberAdjustTests: XCTestCase {
     func testCtrlAOnHex() {
         make("x = 0x1F\n", at: 4)
         _ = engine.process("\u{01}", shift: false)
-        XCTAssertEqual(buffer.text, "x = 0x20\n",
-            "Ctrl+A on a hex number should preserve the format and increment")
+        XCTAssertEqual(
+            buffer.text,
+            "x = 0x20\n",
+            "Ctrl+A on a hex number should preserve the format and increment"
+        )
     }
 
     func testCtrlXOnHex() {
         make("x = 0x10\n", at: 4)
         _ = engine.process("\u{18}", shift: false)
-        XCTAssertEqual(buffer.text, "x = 0xf\n",
-            "Ctrl+X on hex should preserve the format and decrement")
+        XCTAssertEqual(
+            buffer.text,
+            "x = 0xf\n",
+            "Ctrl+X on hex should preserve the format and decrement"
+        )
     }
 
     // MARK: - Cursor Position After Adjust
@@ -118,8 +133,11 @@ final class VimEngineNumberAdjustTests: XCTestCase {
         _ = engine.process("\u{01}", shift: false)
         // After 9 → 10, cursor should land on '0' (the new last digit).
         XCTAssertEqual(buffer.text, "x = 10\n")
-        XCTAssertEqual(buffer.selectedRange().location, 5,
-            "Cursor should land on the last digit of the new number after increment")
+        XCTAssertEqual(
+            buffer.selectedRange().location,
+            5,
+            "Cursor should land on the last digit of the new number after increment"
+        )
     }
 
     // MARK: - Multi-Digit Numbers
@@ -127,7 +145,10 @@ final class VimEngineNumberAdjustTests: XCTestCase {
     func testCtrlAOnLargeNumber() {
         make("count = 999\n", at: 8)
         _ = engine.process("\u{01}", shift: false)
-        XCTAssertEqual(buffer.text, "count = 1000\n",
-            "Ctrl+A across a digit-rollover should add a digit")
+        XCTAssertEqual(
+            buffer.text,
+            "count = 1000\n",
+            "Ctrl+A across a digit-rollover should add a digit"
+        )
     }
 }

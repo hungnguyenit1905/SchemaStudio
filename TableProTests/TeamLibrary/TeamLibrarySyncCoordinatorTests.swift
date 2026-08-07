@@ -17,7 +17,8 @@ struct TeamLibrarySyncCoordinatorTests {
         mock: MockTeamLibraryAPIClient,
         available: Bool = true
     ) -> TeamLibrarySyncCoordinator {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("team_library_\(UUID().uuidString).json")
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("team_library_\(UUID().uuidString).json")
         return TeamLibrarySyncCoordinator(
             apiClient: mock,
             store: TeamLibraryStore(fileURL: url),
@@ -33,7 +34,16 @@ struct TeamLibrarySyncCoordinatorTests {
         mock.pullResponse = TeamLibraryPullResponse(
             connections: [],
             queryFolders: [],
-            queries: [.init(clientId: UUID().uuidString, folderClientId: nil, connectionClientId: nil, name: "Q", query: "select 1", keyword: nil, sortOrder: 0, publishedBy: "a@b.com")],
+            queries: [.init(
+                clientId: UUID().uuidString,
+                folderClientId: nil,
+                connectionClientId: nil,
+                name: "Q",
+                query: "select 1",
+                keyword: nil,
+                sortOrder: 0,
+                publishedBy: "a@b.com"
+            )],
             fetchedAt: "now"
         )
         let coordinator = makeCoordinator(mock: mock)

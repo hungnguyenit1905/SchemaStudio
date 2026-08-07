@@ -87,6 +87,7 @@ struct TableInfo: Identifiable, Hashable, Sendable {
         }
         return "\(name)_\(type.rawValue)"
     }
+
     let name: String
     let type: TableType
     let rowCount: Int?
@@ -183,7 +184,7 @@ struct IndexInfo: Identifiable, Hashable {
     let columns: [String]
     let isUnique: Bool
     let isPrimary: Bool
-    let type: String  // BTREE, HASH, FULLTEXT, etc.
+    let type: String // BTREE, HASH, FULLTEXT, etc.
     let columnPrefixes: [String: Int]?
     let whereClause: String?
 
@@ -214,7 +215,7 @@ struct ForeignKeyInfo: Identifiable, Hashable {
     let referencedTable: String
     let referencedColumn: String
     let referencedSchema: String?
-    let onDelete: String  // CASCADE, SET NULL, RESTRICT, NO ACTION
+    let onDelete: String // CASCADE, SET NULL, RESTRICT, NO ACTION
     let onUpdate: String
 
     init(

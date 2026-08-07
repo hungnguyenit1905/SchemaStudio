@@ -18,7 +18,7 @@ enum SQLCompletionKind: String, CaseIterable {
     case schema
     case alias
     case `operator`
-    case favorite   // Saved SQL favorite (keyword expansion)
+    case favorite // Saved SQL favorite (keyword expansion)
 
     /// SF Symbol for display
     var iconName: String {
@@ -71,11 +71,11 @@ struct SQLCompletionItem: Identifiable, Hashable {
     let id: UUID
     let label: String
     let kind: SQLCompletionKind
-    let insertText: String      // Text to insert (may differ from label)
-    let detail: String?         // Type info, e.g., "VARCHAR(255)"
-    let documentation: String?  // Tooltip/description
-    var sortPriority: Int       // For ranking (lower = higher priority)
-    let filterText: String      // Text used for matching
+    let insertText: String // Text to insert (may differ from label)
+    let detail: String? // Type info, e.g., "VARCHAR(255)"
+    let documentation: String? // Tooltip/description
+    var sortPriority: Int // For ranking (lower = higher priority)
+    let filterText: String // Text used for matching
     var matchedRanges: [Range<Int>] = []
     var fuzzyPenalty: Int = 0
 

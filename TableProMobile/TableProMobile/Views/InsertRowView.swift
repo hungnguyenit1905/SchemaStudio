@@ -34,6 +34,7 @@ struct InsertRowView: View {
             col.isPrimaryKey && col.typeName.uppercased().contains("INT")
         })
     }
+
     @State private var isSaving = false
     @State private var operationError: AppError?
     @State private var showOperationError = false
@@ -75,7 +76,8 @@ struct InsertRowView: View {
                                     .foregroundStyle(isNullFlags[safe: index] == true ? .white : .secondary)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(isNullFlags[safe: index] == true ? Color.accentColor : Color(.systemFill))
+                                    .background(isNullFlags[safe: index] == true ? Color
+                                        .accentColor : Color(.systemFill))
                                     .clipShape(Capsule())
                             }
                             .buttonStyle(.plain)
@@ -168,8 +170,7 @@ struct InsertRowView: View {
     private func keyboardType(for column: ColumnInfo) -> UIKeyboardType {
         let type = column.typeName.uppercased()
         if type.contains("INT") || type.contains("REAL") || type.contains("FLOAT")
-            || type.contains("DOUBLE") || type.contains("NUMERIC") || type.contains("DECIMAL")
-        {
+            || type.contains("DOUBLE") || type.contains("NUMERIC") || type.contains("DECIMAL") {
             return .decimalPad
         }
         return .default
@@ -205,7 +206,7 @@ struct InsertRowView: View {
             let isNull = isNullFlags[safe: index] == true
             let text = values[safe: index] ?? ""
 
-            if column.isPrimaryKey && (isNull || text.isEmpty) {
+            if column.isPrimaryKey, isNull || text.isEmpty {
                 continue
             }
 

@@ -167,7 +167,7 @@ final class MongoDBConnection: @unchecked Sendable {
         client = nil
         stateLock.unlock()
         let cleanupQueue = queue
-        if let handle = handle {
+        if let handle {
             cleanupQueue.async {
                 mongoc_client_destroy(handle)
             }
@@ -183,7 +183,7 @@ final class MongoDBConnection: @unchecked Sendable {
 
         if !user.isEmpty {
             let encodedUser = user.addingPercentEncoding(withAllowedCharacters: .urlUserAllowed) ?? user
-            if let password = password, !password.isEmpty {
+            if let password, !password.isEmpty {
                 let encodedPassword = password.addingPercentEncoding(
                     withAllowedCharacters: .urlPasswordAllowed
                 ) ?? password
@@ -241,7 +241,7 @@ final class MongoDBConnection: @unchecked Sendable {
             params.append("replicaSet=\(rs)")
         }
 
-        var explicitKeys: Set<String> = [
+        var explicitKeys: Set = [
             "connectTimeoutMS", "serverSelectionTimeoutMS",
             "authSource", "authMechanism", "replicaSet",
             "tls", "tlsAllowInvalidCertificates", "tlsAllowInvalidHostnames",
@@ -359,7 +359,7 @@ final class MongoDBConnection: @unchecked Sendable {
 
         #if canImport(CLibMongoc)
         if let staleLsid { bson_destroy(staleLsid) }
-        if let handle = handle {
+        if let handle {
             queue.async { mongoc_client_destroy(handle) }
         }
         #endif
@@ -464,10 +464,9 @@ final class MongoDBConnection: @unchecked Sendable {
             defer { bson_destroy(reply) }
 
             let dbName = database.isEmpty ? "admin" : database
-            let ok = dbName.withCString { ptr in
+            return dbName.withCString { ptr in
                 mongoc_client_command_simple(client, ptr, command, nil, reply, &error)
             }
-            return ok
         }
         #else
         throw MongoDBError.libmongocUnavailable
@@ -494,6 +493,7 @@ final class MongoDBConnection: @unchecked Sendable {
         return nil
         #endif
     }
+
     func currentDatabase() -> String { database }
 
     // MARK: - Command Execution
@@ -543,7 +543,11 @@ final class MongoDBConnection: @unchecked Sendable {
         #endif
     }
 
-    func aggregate(database: String, collection: String, pipeline: String) async throws -> (docs: [[String: Any]], isTruncated: Bool) {
+    func aggregate(
+        database: String,
+        collection: String,
+        pipeline: String
+    ) async throws -> (docs: [[String: Any]], isTruncated: Bool) {
         #if canImport(CLibMongoc)
         resetCancellation()
         return try await pluginDispatchAsync(on: queue) { [self] in
@@ -715,6 +719,7 @@ final class MongoDBConnection: @unchecked Sendable {
         throw MongoDBError.libmongocUnavailable
         #endif
     }
+
     // MARK: - Streaming Queries
 
     func streamFind(
@@ -760,11 +765,11 @@ final class MongoDBConnection: @unchecked Sendable {
                     defer { bson_destroy(filterBson) }
 
                     var optsJson: [String: Any] = [:]
-                    if let sort = sort, let data = sort.data(using: .utf8),
+                    if let sort, let data = sort.data(using: .utf8),
                        let obj = try? JSONSerialization.jsonObject(with: data) {
                         optsJson["sort"] = obj
                     }
-                    if let projection = projection, let data = projection.data(using: .utf8),
+                    if let projection, let data = projection.data(using: .utf8),
                        let obj = try? JSONSerialization.jsonObject(with: data) {
                         optsJson["projection"] = obj
                     }
@@ -881,7 +886,6 @@ final class MongoDBConnection: @unchecked Sendable {
     }
 }
 
-
 final class MongoStreamState: @unchecked Sendable {
     var cursor: OpaquePointer?
     var collection: OpaquePointer?
@@ -917,7 +921,7 @@ extension MongoDBConnection {
 #if canImport(CLibMongoc)
 extension MongoDBConnection {
     func bsonToDict(_ bson: OpaquePointer?) -> [String: Any] {
-        guard let bson = bson, let jsonStr = bsonToJson(bson),
+        guard let bson, let jsonStr = bsonToJson(bson),
               let data = jsonStr.data(using: .utf8),
               let dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
             return [:]
@@ -926,8 +930,8 @@ extension MongoDBConnection {
     }
 
     func bsonToJson(_ bson: OpaquePointer?) -> String? {
-        guard let bson = bson else { return nil }
-        var length: Int = 0
+        guard let bson else { return nil }
+        var length = 0
         guard let jsonCStr = bson_as_canonical_extended_json(bson, &length) else { return nil }
         defer { bson_free(jsonCStr) }
         return String(cString: jsonCStr)
@@ -975,7 +979,9 @@ extension MongoDBConnection {
             }
             // Recurse into non-Extended-JSON dicts
             var result: [String: Any] = [:]
-            for (k, v) in dict { result[k] = unwrapExtendedJson(v) }
+            for (k, v) in dict {
+                result[k] = unwrapExtendedJson(v)
+            }
             return result
         }
         if let arr = value as? [Any] {

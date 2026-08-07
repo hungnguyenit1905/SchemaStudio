@@ -16,6 +16,7 @@ final class DatabaseSwitcherViewModel {
     var searchText = "" {
         didSet { selectedDatabase = filteredDatabases.first?.name }
     }
+
     var selectedDatabase: String?
     var isLoading = false
     var errorMessage: String?
@@ -75,12 +76,13 @@ final class DatabaseSwitcherViewModel {
 
         do {
             let target = switchTarget
-            let names = try await services.databaseManager.withBrowseMetadataDriver(connectionId: connectionId) { driver in
-                switch target {
-                case .database: try await driver.fetchDatabases()
-                case .schema: try await driver.fetchSchemas()
+            let names = try await services.databaseManager
+                .withBrowseMetadataDriver(connectionId: connectionId) { driver in
+                    switch target {
+                    case .database: try await driver.fetchDatabases()
+                    case .schema: try await driver.fetchSchemas()
+                    }
                 }
-            }
             databases = names.sorted().map { name in
                 DatabaseMetadata.minimal(name: name, isSystem: isSystemItem(name))
             }
@@ -90,7 +92,10 @@ final class DatabaseSwitcherViewModel {
             isLoading = false
             guard switchTarget == .database else { return }
             do {
-                let metadataList = try await services.databaseManager.withBrowseMetadataDriver(connectionId: connectionId, workload: .bulk) { driver in
+                let metadataList = try await services.databaseManager.withBrowseMetadataDriver(
+                    connectionId: connectionId,
+                    workload: .bulk
+                ) { driver in
                     try await driver.fetchAllDatabaseMetadata()
                 }
                 databases = metadataList.sorted { $0.name < $1.name }
@@ -135,8 +140,7 @@ final class DatabaseSwitcherViewModel {
         guard !items.isEmpty else { return }
         guard let current = selectedDatabase,
               let index = items.firstIndex(where: { $0.name == current }),
-              index > 0
-        else { return }
+              index > 0 else { return }
         selectedDatabase = items[index - 1].name
     }
 
@@ -145,8 +149,7 @@ final class DatabaseSwitcherViewModel {
         guard !items.isEmpty else { return }
         if let current = selectedDatabase,
            let index = items.firstIndex(where: { $0.name == current }),
-           index < items.count - 1
-        {
+           index < items.count - 1 {
             selectedDatabase = items[index + 1].name
         } else if selectedDatabase == nil {
             selectedDatabase = items.first?.name

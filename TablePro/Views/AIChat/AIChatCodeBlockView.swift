@@ -106,8 +106,7 @@ struct AIChatCodeBlockView: View, Equatable {
         }
     }
 
-    @ViewBuilder
-    private var codeContent: some View {
+    @ViewBuilder private var codeContent: some View {
         if usesLightweightContent {
             Text(code.isEmpty ? " " : code)
                 .font(.system(.body, design: .monospaced))

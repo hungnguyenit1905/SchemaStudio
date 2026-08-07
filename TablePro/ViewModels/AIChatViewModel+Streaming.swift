@@ -122,7 +122,7 @@ extension AIChatViewModel {
             var chatMessages: [ChatTurnWire] = []
             for turn in priorTurns {
                 if Task.isCancelled { return }
-                chatMessages.append(await self.resolveTurnForWire(turn))
+                await chatMessages.append(self.resolveTurnForWire(turn))
             }
             if Task.isCancelled { return }
             let promptContext: PromptContext? = await MainActor.run {
@@ -395,9 +395,19 @@ extension AIChatViewModel {
                 }
                 await self.startReasoning(providerID: providerID, assistantID: assistantID, idMap: &reasoningIDMap)
             case .reasoningDelta(let providerID, let text):
-                await self.appendReasoning(providerID: providerID, text: text, assistantID: assistantID, idMap: &reasoningIDMap)
+                await self.appendReasoning(
+                    providerID: providerID,
+                    text: text,
+                    assistantID: assistantID,
+                    idMap: &reasoningIDMap
+                )
             case .reasoningEnd(let providerID, let opaque):
-                await self.finalizeReasoning(providerID: providerID, opaque: opaque, assistantID: assistantID, idMap: &reasoningIDMap)
+                await self.finalizeReasoning(
+                    providerID: providerID,
+                    opaque: opaque,
+                    assistantID: assistantID,
+                    idMap: &reasoningIDMap
+                )
             }
 
             if ContinuousClock.now - lastFlushTime >= flushInterval {
@@ -433,7 +443,12 @@ extension AIChatViewModel {
         idMap = updated
     }
 
-    private func appendReasoning(providerID: String, text: String, assistantID: UUID, idMap: inout [String: UUID]) async {
+    private func appendReasoning(
+        providerID: String,
+        text: String,
+        assistantID: UUID,
+        idMap: inout [String: UUID]
+    ) async {
         let captured = idMap
         let updated = await MainActor.run { [weak self] () -> [String: UUID] in
             guard let self,
@@ -445,7 +460,12 @@ extension AIChatViewModel {
         idMap = updated
     }
 
-    private func finalizeReasoning(providerID: String, opaque: ReasoningOpaque?, assistantID: UUID, idMap: inout [String: UUID]) async {
+    private func finalizeReasoning(
+        providerID: String,
+        opaque: ReasoningOpaque?,
+        assistantID: UUID,
+        idMap: inout [String: UUID]
+    ) async {
         let captured = idMap
         let updated = await MainActor.run { [weak self] () -> [String: UUID] in
             guard let self,
@@ -518,8 +538,7 @@ extension AIChatViewModel {
             self?.finalizeStreamingMessage(id: assistantIDForRound)
             let assistantWire: ChatTurnWire = {
                 guard let self,
-                      let idx = self.messages.firstIndex(where: { $0.id == assistantIDForRound })
-                else {
+                      let idx = self.messages.firstIndex(where: { $0.id == assistantIDForRound }) else {
                     return ChatTurnWire(
                         id: assistantIDForRound,
                         role: .assistant,
@@ -556,8 +575,7 @@ extension AIChatViewModel {
         guard !content.isEmpty || usage != nil else { return }
         await MainActor.run { [weak self] in
             guard let self,
-                  let idx = self.messages.firstIndex(where: { $0.id == assistantID })
-            else { return }
+                  let idx = self.messages.firstIndex(where: { $0.id == assistantID }) else { return }
             if !content.isEmpty {
                 self.messages[idx].appendStreamingToken(content)
             }
@@ -620,11 +638,13 @@ extension AIChatViewModel {
         await withTaskGroup(of: (Int, ToolResultBlock).self) { group in
             for (index, block) in blocks.enumerated() {
                 group.addTask {
-                    (index, await runToolUse(block, mode: mode, context: context, registry: registry))
+                    await (index, runToolUse(block, mode: mode, context: context, registry: registry))
                 }
             }
             var indexed: [(Int, ToolResultBlock)] = []
-            for await pair in group { indexed.append(pair) }
+            for await pair in group {
+                indexed.append(pair)
+            }
             return indexed.sorted(by: { $0.0 < $1.0 }).map(\.1)
         }
     }

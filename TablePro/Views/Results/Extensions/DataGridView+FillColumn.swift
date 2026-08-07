@@ -7,7 +7,8 @@ import AppKit
 import TableProPluginKit
 
 extension TableViewCoordinator {
-    @objc func fillColumn(_ sender: NSMenuItem) {
+    @objc
+    func fillColumn(_ sender: NSMenuItem) {
         guard let columnIndex = sender.representedObject as? Int else { return }
         presentFillColumnDialog(columnIndex: columnIndex)
     }
@@ -72,7 +73,7 @@ extension TableViewCoordinator {
 
     static func fillTargetRows(rowCount: Int, isEditable: Bool, isRowDeleted: (Int) -> Bool) -> [Int] {
         guard isEditable, rowCount > 0 else { return [] }
-        return (0..<rowCount).filter { !isRowDeleted($0) }
+        return (0 ..< rowCount).filter { !isRowDeleted($0) }
     }
 
     static func fillColumnValue(text: String, setNull: Bool) -> PluginCellValue {
@@ -127,7 +128,8 @@ private final class FillColumnAccessoryView: NSView {
 
     var firstResponderView: NSView { valueField }
 
-    @objc private func nullStateChanged() {
+    @objc
+    private func nullStateChanged() {
         valueField.isEnabled = nullCheckbox?.state != .on
     }
 }

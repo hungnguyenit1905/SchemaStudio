@@ -48,8 +48,7 @@ struct ProjectFolderScanSheet: View {
         }
     }
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         switch step {
         case .scanning:
             centered {

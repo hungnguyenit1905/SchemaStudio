@@ -42,7 +42,7 @@ struct RecentTablesStoreTests {
     func capsPerDatabase() throws {
         let store = try makeStore()
         let conn = UUID()
-        for index in 0..<15 {
+        for index in 0 ..< 15 {
             store.record(connectionId: conn, database: "db", schema: nil, name: "t\(index)", isView: false)
         }
         let entries = store.entries(connectionId: conn).filter { $0.database == "db" }
@@ -55,8 +55,24 @@ struct RecentTablesStoreTests {
     func capIsPerDatabase() throws {
         let store = try makeStore()
         let conn = UUID()
-        for index in 0..<10 { store.record(connectionId: conn, database: "db", schema: nil, name: "d\(index)", isView: false) }
-        for index in 0..<10 { store.record(connectionId: conn, database: "other", schema: nil, name: "o\(index)", isView: false) }
+        for index in 0 ..< 10 {
+            store.record(
+                connectionId: conn,
+                database: "db",
+                schema: nil,
+                name: "d\(index)",
+                isView: false
+            )
+        }
+        for index in 0 ..< 10 {
+            store.record(
+                connectionId: conn,
+                database: "other",
+                schema: nil,
+                name: "o\(index)",
+                isView: false
+            )
+        }
         #expect(store.entries(connectionId: conn).filter { $0.database == "db" }.count == 10)
         #expect(store.entries(connectionId: conn).filter { $0.database == "other" }.count == 10)
     }

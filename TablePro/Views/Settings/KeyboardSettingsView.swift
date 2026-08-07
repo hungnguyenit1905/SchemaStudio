@@ -56,89 +56,94 @@ struct KeyboardSettingsView: View {
 
     var body: some View {
         content
-        .alert(
-            String(localized: "Shortcut Conflict"),
-            isPresented: Binding(
-                get: { conflictAlert != nil },
-                set: { if !$0 { conflictAlert = nil } }
-            )
-        ) {
-            Button(String(localized: "Cancel"), role: .cancel) {
-                conflictAlert = nil
-            }
-            Button(String(localized: "Reassign")) {
-                if let state = conflictAlert {
-                    settings.clearShortcut(for: state.conflictingAction)
-                    settings.setShortcut(state.combo, for: state.action)
+            .alert(
+                String(localized: "Shortcut Conflict"),
+                isPresented: Binding(
+                    get: { conflictAlert != nil },
+                    set: { if !$0 { conflictAlert = nil } }
+                )
+            ) {
+                Button(String(localized: "Cancel"), role: .cancel) {
+                    conflictAlert = nil
                 }
-                conflictAlert = nil
+                Button(String(localized: "Reassign")) {
+                    if let state = conflictAlert {
+                        settings.clearShortcut(for: state.conflictingAction)
+                        settings.setShortcut(state.combo, for: state.action)
+                    }
+                    conflictAlert = nil
+                }
+            } message: {
+                if let state = conflictAlert {
+                    Text(
+                        String(
+                            format: String(
+                                localized: "%@ is already used by \"%@\" in %@. Reassigning removes it from that action."
+                            ),
+                            state.combo.displayString,
+                            state.conflictingAction.displayName,
+                            state.conflictingAction.category.displayName
+                        )
+                    )
+                }
             }
-        } message: {
-            if let state = conflictAlert {
+            .alert(
+                String(localized: "System Reserved Shortcut"),
+                isPresented: Binding(
+                    get: { systemReservedAlert != nil },
+                    set: { if !$0 { systemReservedAlert = nil } }
+                )
+            ) {
+                Button(String(localized: "OK"), role: .cancel) {
+                    systemReservedAlert = nil
+                }
+            } message: {
+                Text(String(localized: "This shortcut is reserved by macOS and cannot be assigned."))
+            }
+            .alert(
+                String(localized: "Reserved Shortcut"),
+                isPresented: Binding(
+                    get: { reservedAlert != nil },
+                    set: { if !$0 { reservedAlert = nil } }
+                )
+            ) {
+                Button(String(localized: "OK"), role: .cancel) {
+                    reservedAlert = nil
+                }
+            } message: {
+                if let state = reservedAlert {
+                    Text(
+                        String(
+                            format: String(localized: "This shortcut is reserved for \"%@\" and cannot be assigned."),
+                            state.name
+                        )
+                    )
+                }
+            }
+            .alert(
+                String(localized: "Modifier Key Required"),
+                isPresented: Binding(
+                    get: { needsModifierAlert != nil },
+                    set: { if !$0 { needsModifierAlert = nil } }
+                )
+            ) {
+                Button(String(localized: "OK"), role: .cancel) {
+                    needsModifierAlert = nil
+                }
+            } message: {
                 Text(
                     String(
-                        format: String(localized: "%@ is already used by \"%@\" in %@. Reassigning removes it from that action."),
-                        state.combo.displayString,
-                        state.conflictingAction.displayName,
-                        state.conflictingAction.category.displayName
+                        localized: "This action needs a modifier key like ⌘ or ⌥. A plain key won't reach the menu reliably."
                     )
                 )
             }
-        }
-        .alert(
-            String(localized: "System Reserved Shortcut"),
-            isPresented: Binding(
-                get: { systemReservedAlert != nil },
-                set: { if !$0 { systemReservedAlert = nil } }
-            )
-        ) {
-            Button(String(localized: "OK"), role: .cancel) {
-                systemReservedAlert = nil
+            .onAppear {
+                SystemHotkeyChecker.shared.reload()
             }
-        } message: {
-            Text(String(localized: "This shortcut is reserved by macOS and cannot be assigned."))
-        }
-        .alert(
-            String(localized: "Reserved Shortcut"),
-            isPresented: Binding(
-                get: { reservedAlert != nil },
-                set: { if !$0 { reservedAlert = nil } }
-            )
-        ) {
-            Button(String(localized: "OK"), role: .cancel) {
-                reservedAlert = nil
-            }
-        } message: {
-            if let state = reservedAlert {
-                Text(
-                    String(
-                        format: String(localized: "This shortcut is reserved for \"%@\" and cannot be assigned."),
-                        state.name
-                    )
-                )
-            }
-        }
-        .alert(
-            String(localized: "Modifier Key Required"),
-            isPresented: Binding(
-                get: { needsModifierAlert != nil },
-                set: { if !$0 { needsModifierAlert = nil } }
-            )
-        ) {
-            Button(String(localized: "OK"), role: .cancel) {
-                needsModifierAlert = nil
-            }
-        } message: {
-            Text(String(localized: "This action needs a modifier key like ⌘ or ⌥. A plain key won't reach the menu reliably."))
-        }
-        .onAppear {
-            SystemHotkeyChecker.shared.reload()
-        }
     }
 
     // MARK: - Shortcut Row
 
-    @ViewBuilder
     private func shortcutRow(for action: ShortcutAction) -> some View {
         HStack(spacing: 8) {
             Text(action.displayName)

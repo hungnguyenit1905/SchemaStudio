@@ -16,7 +16,7 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
     private let lock = NSLock()
     private var _serverVersion: String?
 
-    // Table description cache to avoid repeated DescribeTable calls
+    /// Table description cache to avoid repeated DescribeTable calls
     private var _tableDescriptionCache: [String: TableDescription] = [:]
 
     private var connection: DynamoDBConnection? {
@@ -566,7 +566,7 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
 
             let response = try await conn.scan(
                 tableName: parsed.tableName,
-                limit: 1000,
+                limit: 1_000,
                 exclusiveStartKey: lastEvaluatedKey
             )
 
@@ -639,7 +639,7 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
                 tableName: parsed.tableName,
                 keyConditionExpression: keyCondition,
                 expressionAttributeValues: expressionValues,
-                limit: 1000,
+                limit: 1_000,
                 exclusiveStartKey: lastEvaluatedKey
             )
 
@@ -651,7 +651,7 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
                 )
             }
 
-            if !headerSent && !items.isEmpty {
+            if !headerSent, !items.isEmpty {
                 columns = DynamoDBItemFlattener.unionColumns(from: items, keySchema: keySchema)
                 let typeNames = DynamoDBItemFlattener.columnTypeNames(for: columns, items: items)
                 continuation.yield(.header(PluginStreamHeader(
@@ -729,7 +729,7 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
             )
             items = response.Items ?? []
 
-            if !headerSent && !items.isEmpty {
+            if !headerSent, !items.isEmpty {
                 columns = DynamoDBItemFlattener.unionColumns(from: items, keySchema: keySchema)
                 let typeNames = DynamoDBItemFlattener.columnTypeNames(for: columns, items: items)
                 continuation.yield(.header(PluginStreamHeader(
@@ -815,7 +815,7 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
         let hasFilters = !parsed.filters.isEmpty
 
         repeat {
-            let batchLimit = min(fetchLimit - allItems.count, 1000)
+            let batchLimit = min(fetchLimit - allItems.count, 1_000)
             let response = try await conn.scan(
                 tableName: parsed.tableName,
                 limit: batchLimit,
@@ -839,10 +839,12 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
         let total = allItems.count
         let start = min(parsed.offset, total)
         let end = min(start + parsed.limit, total)
-        let pageItems = start < end ? Array(allItems[start..<end]) : []
+        let pageItems = start < end ? Array(allItems[start ..< end]) : []
 
-        let columns = DynamoDBItemFlattener.unionColumns(from: allItems.isEmpty ? pageItems : allItems,
-                                                         keySchema: keySchema)
+        let columns = DynamoDBItemFlattener.unionColumns(
+            from: allItems.isEmpty ? pageItems : allItems,
+            keySchema: keySchema
+        )
         let typeNames = DynamoDBItemFlattener.columnTypeNames(for: columns, items: allItems)
         let rows = DynamoDBItemFlattener.flatten(items: pageItems, columns: columns)
 
@@ -878,7 +880,7 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
         let fetchLimit = min(parsed.limit + parsed.offset, Self.maxItems)
 
         repeat {
-            let batchLimit = min(fetchLimit - allItems.count, 1000)
+            let batchLimit = min(fetchLimit - allItems.count, 1_000)
             let response = try await conn.query(
                 tableName: parsed.tableName,
                 keyConditionExpression: keyCondition,
@@ -901,10 +903,12 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
 
         let start = min(parsed.offset, allItems.count)
         let end = min(start + parsed.limit, allItems.count)
-        let pageItems = start < end ? Array(allItems[start..<end]) : []
+        let pageItems = start < end ? Array(allItems[start ..< end]) : []
 
-        let columns = DynamoDBItemFlattener.unionColumns(from: allItems.isEmpty ? pageItems : allItems,
-                                                         keySchema: keySchema)
+        let columns = DynamoDBItemFlattener.unionColumns(
+            from: allItems.isEmpty ? pageItems : allItems,
+            keySchema: keySchema
+        )
         let typeNames = DynamoDBItemFlattener.columnTypeNames(for: columns, items: allItems)
         let rows = DynamoDBItemFlattener.flatten(items: pageItems, columns: columns)
 
@@ -933,8 +937,7 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
                 var emptyColumns: [String] = []
                 var emptyTypeNames: [String] = []
                 if let name = tableName,
-                   let conn = connection
-                {
+                   let conn = connection {
                     let keySchema = try await cachedKeySchema(name, conn: conn)
                     let sampleResponse = try await conn.scan(tableName: name, limit: 1)
                     let sampleItems = sampleResponse.Items ?? []
@@ -1068,7 +1071,7 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
         repeat {
             let response = try await conn.scan(
                 tableName: tableName,
-                limit: 10000,
+                limit: 10_000,
                 exclusiveStartKey: lastKey,
                 select: "COUNT"
             )
@@ -1092,7 +1095,7 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
         repeat {
             let response = try await conn.scan(
                 tableName: tableName,
-                limit: 1000,
+                limit: 1_000,
                 exclusiveStartKey: lastKey
             )
             var items = response.Items ?? []
@@ -1126,7 +1129,7 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
                 tableName: parsed.tableName,
                 keyConditionExpression: keyCondition,
                 expressionAttributeValues: expressionValues,
-                limit: 10000,
+                limit: 10_000,
                 exclusiveStartKey: lastKey,
                 select: "COUNT"
             )

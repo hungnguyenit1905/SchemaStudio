@@ -171,8 +171,7 @@ struct AppMenuCommands: Commands {
     private var resolvedCloseTabActions: MainContentCommandActions? {
         if let actions { return actions }
         guard let window = NSApp.keyWindow,
-              window.identifier?.rawValue.hasPrefix("main") == true
-        else { return nil }
+              window.identifier?.rawValue.hasPrefix("main") == true else { return nil }
         if let coordinator = MainContentCoordinator.coordinator(forWindow: window) {
             return coordinator.commandActions
         }
@@ -216,7 +215,11 @@ struct AppMenuCommands: Commands {
                 }
                 let centered = NSMutableParagraphStyle()
                 centered.alignment = .center
-                credits.addAttribute(.paragraphStyle, value: centered, range: NSRange(location: 0, length: credits.length))
+                credits.addAttribute(
+                    .paragraphStyle,
+                    value: centered,
+                    range: NSRange(location: 0, length: credits.length)
+                )
                 NSApplication.shared.orderFrontStandardAboutPanel(options: [
                     .credits: credits
                 ])
@@ -226,6 +229,7 @@ struct AppMenuCommands: Commands {
         }
 
         // MARK: - Keyboard Shortcut Architecture
+
         //
         // This app uses a hybrid approach for keyboard shortcuts:
         //
@@ -333,10 +337,10 @@ struct AppMenuCommands: Commands {
 
             Button(resolvedCloseTabActions?.closeTabsForOtherDatabasesTitle
                 ?? String(localized: "Close Tabs for Other Databases")) {
-                resolvedCloseTabActions?.closeTabsForOtherDatabases()
-            }
-            .optionalKeyboardShortcut(shortcut(for: .closeTabsForOtherDatabases))
-            .disabled(resolvedCloseTabActions?.canCloseTabsForOtherDatabases != true)
+                    resolvedCloseTabActions?.closeTabsForOtherDatabases()
+                }
+                .optionalKeyboardShortcut(shortcut(for: .closeTabsForOtherDatabases))
+                .disabled(resolvedCloseTabActions?.canCloseTabsForOtherDatabases != true)
 
             Button(String(localized: "Close All Tabs")) {
                 resolvedCloseTabActions?.closeAllTabs()
@@ -452,7 +456,10 @@ struct AppMenuCommands: Commands {
                 actions?.previewSQL()
             } label: {
                 if let dbType = actions?.currentDatabaseType {
-                    Text(String(format: String(localized: "Preview %@"), PluginManager.shared.queryLanguageName(for: dbType)))
+                    Text(String(
+                        format: String(localized: "Preview %@"),
+                        PluginManager.shared.queryLanguageName(for: dbType)
+                    ))
                 } else {
                     Text("Preview SQL")
                 }
@@ -754,12 +761,11 @@ struct AppMenuCommands: Commands {
 
             Button(actions?.isResultTabPinned == true
                 ? String(localized: "Unpin Result")
-                : String(localized: "Pin Result"))
-            {
-                actions?.pinResultTab()
-            }
-            .optionalKeyboardShortcut(shortcut(for: .pinResultTab))
-            .disabled(!(actions?.canPinResultTab ?? false))
+                : String(localized: "Pin Result")) {
+                    actions?.pinResultTab()
+                }
+                .optionalKeyboardShortcut(shortcut(for: .pinResultTab))
+                .disabled(!(actions?.canPinResultTab ?? false))
 
             Button("Close Result Tab") {
                 actions?.closeResultTab()
@@ -799,7 +805,7 @@ struct AppMenuCommands: Commands {
 
         // Tab navigation shortcuts — native macOS window tabs
         CommandGroup(after: .windowArrangement) {
-            ForEach(1...9, id: \.self) { number in
+            ForEach(1 ... 9, id: \.self) { number in
                 Button("Select Tab \(number)") {
                     actions?.selectTab(number: number)
                 }
@@ -856,8 +862,7 @@ struct AppMenuCommands: Commands {
 
 @main
 struct TableProApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self)
-    var appDelegate
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @State private var settingsManager = AppSettingsManager.shared
     @State private var commandRegistry = CommandActionsRegistry.shared

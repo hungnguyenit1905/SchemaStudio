@@ -468,7 +468,10 @@ final class MainContentCommandActions {
         }
 
         let visibleTabbedWindows = (window.tabbedWindows ?? [window]).filter(\.isVisible)
-        Self.logger.info("[close] finish visibleTabs=\(visibleTabbedWindows.count) tabManagerTabs=\(self.coordinator?.tabManager.tabs.count ?? 0)")
+        Self.logger
+            .info(
+                "[close] finish visibleTabs=\(visibleTabbedWindows.count) tabManagerTabs=\(self.coordinator?.tabManager.tabs.count ?? 0)"
+            )
 
         if visibleTabbedWindows.count > 1 || coordinator?.tabManager.tabs.isEmpty == true {
             window.close()
@@ -494,7 +497,7 @@ final class MainContentCommandActions {
     }
 
     private func saveAndClose(asBatchSurvivor: Bool?) async -> Bool {
-        guard let coordinator = coordinator else {
+        guard let coordinator else {
             finish(asBatchSurvivor: asBatchSurvivor)
             return true
         }
@@ -579,7 +582,8 @@ final class MainContentCommandActions {
 
     private func isExternallyModified(tab: QueryTab, url: URL) -> Bool {
         guard let loadMtime = tab.content.loadMtime,
-              let currentMtime = (try? FileManager.default.attributesOfItem(atPath: url.path)[.modificationDate]) as? Date else {
+              let currentMtime = (try? FileManager.default
+                  .attributesOfItem(atPath: url.path)[.modificationDate]) as? Date else {
             return false
         }
         return currentMtime > loadMtime.addingTimeInterval(0.5)
@@ -660,8 +664,7 @@ final class MainContentCommandActions {
 
     var supportsUserManagement: Bool {
         guard let connectionId = coordinator?.connectionId,
-              let adapter = DatabaseManager.shared.driver(for: connectionId) as? PluginDriverAdapter
-        else { return false }
+              let adapter = DatabaseManager.shared.driver(for: connectionId) as? PluginDriverAdapter else { return false }
         return adapter.schemaPluginDriver.capabilities.contains(.userManagement)
     }
 
@@ -691,7 +694,7 @@ final class MainContentCommandActions {
     // MARK: - Filter Operations (Group A — Called Directly)
 
     func toggleFilterPanel() {
-        guard let coordinator = coordinator,
+        guard let coordinator,
               coordinator.tabManager.selectedTab?.tabType == .table else { return }
         coordinator.toggleFilterPanel()
     }

@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("Delta")
@@ -28,9 +28,9 @@ struct DeltaTests {
 
     @Test("rowsInserted equality matches on the underlying IndexSet")
     func rowsInsertedEquality() {
-        let lhs = Delta.rowsInserted(IndexSet(0...2))
-        let rhs = Delta.rowsInserted(IndexSet(0...2))
-        let other = Delta.rowsInserted(IndexSet(0...3))
+        let lhs = Delta.rowsInserted(IndexSet(0 ... 2))
+        let rhs = Delta.rowsInserted(IndexSet(0 ... 2))
+        let other = Delta.rowsInserted(IndexSet(0 ... 3))
         #expect(lhs == rhs)
         #expect(lhs != other)
     }

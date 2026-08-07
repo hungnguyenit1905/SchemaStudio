@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @MainActor
@@ -470,7 +470,7 @@ struct DataChangeManagerExtendedTests {
         #expect(manager.changes.count == 1)
 
         manager.undoManagerProvider?()?.undo()
-        #expect(manager.changes.count == 0)
+        #expect(manager.changes.isEmpty)
 
         manager.undoManagerProvider?()?.redo()
         #expect(manager.changes.count == 1)

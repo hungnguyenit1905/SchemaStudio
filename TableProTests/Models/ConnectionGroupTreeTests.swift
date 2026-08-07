@@ -11,7 +11,6 @@ import Testing
 
 @Suite("ConnectionGroupTree")
 struct ConnectionGroupTreeTests {
-
     // MARK: - Helpers
 
     private func makeGroup(
@@ -529,10 +528,10 @@ struct ConnectionGroupTreeTests {
 
     @Test("Indexed tree matches reference for sorting across multiple siblings")
     func indexedTree_sortingEquivalence() {
-        let groups = (0..<8).map { idx in
+        let groups = (0 ..< 8).map { idx in
             makeGroup(name: "Group \(idx)", sortOrder: (idx * 7) % 11)
         }
-        let connections = (0..<groups.count).map { idx in
+        let connections = (0 ..< groups.count).map { idx in
             DatabaseConnection(name: "Conn \(idx)", groupId: groups[idx].id, sortOrder: (idx * 3) % 7)
         }
 
@@ -543,7 +542,7 @@ struct ConnectionGroupTreeTests {
 
     @Test("Indexed depth/count/maxDepth match reference for deep tree")
     func indices_matchReference_deepTree() {
-        let ids = (0..<6).map { _ in UUID() }
+        let ids = (0 ..< 6).map { _ in UUID() }
         var groups: [ConnectionGroup] = []
         for (index, id) in ids.enumerated() {
             let parent = index == 0 ? UUID() : ids[index - 1]
@@ -566,7 +565,10 @@ struct ConnectionGroupTreeTests {
 
         for group in groups {
             #expect(indices.depthByGroup[group.id] == depthOf(groupId: group.id, groups: groups))
-            #expect(indices.maxDescendantDepthByGroup[group.id] == maxDescendantDepth(groupId: group.id, groups: groups))
+            #expect(indices.maxDescendantDepthByGroup[group.id] == maxDescendantDepth(
+                groupId: group.id,
+                groups: groups
+            ))
             #expect(indices.connectionCountByGroup[group.id] == connectionCount(
                 in: group.id,
                 connections: connections,
@@ -577,7 +579,7 @@ struct ConnectionGroupTreeTests {
 
     @Test("Random property test: indexed tree and indices match reference")
     func indices_randomPropertyTest() {
-        for seed in 0..<32 {
+        for seed in 0 ..< 32 {
             let (groups, connections) = generateRandomTopology(seed: seed)
             let referenceTree = buildGroupTree(groups: groups, connections: connections, parentId: nil)
             let indexedTree = buildGroupTreeIndexed(groups: groups, connections: connections)
@@ -629,7 +631,7 @@ struct ConnectionGroupTreeTests {
         var rng = SeededRNG(seed: UInt64(seed))
         let groupCount = Int(rng.next() % 12) + 1
         var groups: [ConnectionGroup] = []
-        for index in 0..<groupCount {
+        for index in 0 ..< groupCount {
             let parentId: UUID?
             if groups.isEmpty || (rng.next() % 3 == 0) {
                 parentId = nil
@@ -647,7 +649,7 @@ struct ConnectionGroupTreeTests {
         }
         let connectionCount = Int(rng.next() % 15) + 1
         var connections: [DatabaseConnection] = []
-        for _ in 0..<connectionCount {
+        for _ in 0 ..< connectionCount {
             let groupId: UUID?
             if groups.isEmpty || rng.next() % 4 == 0 {
                 groupId = nil
@@ -667,11 +669,11 @@ struct ConnectionGroupTreeTests {
     }
 }
 
-fileprivate struct SeededRNG: RandomNumberGenerator {
+private struct SeededRNG: RandomNumberGenerator {
     var state: UInt64
 
     init(seed: UInt64) {
-        state = seed == 0 ? 0xDEADBEEFCAFEBABE : seed
+        state = seed == 0 ? 0xDEAD_BEEF_CAFE_BABE : seed
     }
 
     mutating func next() -> UInt64 {
