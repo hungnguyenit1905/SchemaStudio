@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic updates. The app no longer checks for or installs updates, and the "Check for Updates" command is gone.
 - Anonymous usage reporting, along with the "Share anonymous usage data" setting. The app sends no telemetry.
 - License activation and Team Library sync. Both required a service this fork does not run, so Pro features report as unavailable.
+- iCloud sync for connections, groups, tags, settings, and SSH profiles. The app declares no iCloud container, so everything stays on the device.
 - Plugin download counts, and the built-in plugin registry now needs a registry URL to be configured before it will fetch anything.
 
 ### Added

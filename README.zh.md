@@ -12,22 +12,18 @@
 <p align="center">
   <a href="https://github.com/hungnguyenit1905/SchemaStudio">官网</a> ·
   <a href="https://github.com/hungnguyenit1905/SchemaStudio">文档</a> ·
-  <a href="https://github.com/TableProApp/TablePro/releases">下载</a> ·
+  <a href="https://github.com/hungnguyenit1905/SchemaStudio/releases">下载</a> ·
   <a href="https://discord.gg/hCNmUUbnD4">Discord</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/TableProApp/TablePro/releases/latest"><img src="https://img.shields.io/github/v/release/TableProApp/SchemaStudio" alt="Release"></a>
+  <a href="https://github.com/hungnguyenit1905/SchemaStudio/releases/latest"><img src="https://img.shields.io/github/v/release/hungnguyenit1905/SchemaStudio" alt="Release"></a>
   <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="License: AGPL v3"></a>
 </p>
 
 <p align="center">
   <a href="README.md">English</a>
   <a href="README.vi.md">Tiếng Việt</a>
-</p>
-
-<p align="center">
-  <a href="https://trendshift.io/repositories/24114" target="_blank"><img src="https://trendshift.io/api/badge/repositories/24114" alt="TableProApp%2FSchemaStudio | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </p>
 
 ---
@@ -89,7 +85,7 @@ SchemaStudio 补上缺失的第四类:原生、多数据库、开源。
 | BigQuery | 插件 |
 | libSQL / Turso | 插件 |
 
-内置驱动随应用一起发布。插件驱动按需从[插件仓库](https://github.com/TableProApp/plugins)安装。
+内置驱动随应用一起发布。插件驱动按需安装,需先在设置中配置插件仓库 URL。
 
 ## 主要功能
 
@@ -98,40 +94,37 @@ SchemaStudio 补上缺失的第四类:原生、多数据库、开源。
 - 原生窗口标签、多窗口、分屏
 - SSH 隧道(密码和密钥认证)、SSL/TLS
 - 查询历史全文搜索
-- iCloud 同步:连接、分组、标签、设置、SSH 配置
 - AI 聊天、行内建议、Explain/Optimize
 - MCP 服务器和 URL scheme:Raycast、Cursor、Claude Desktop
 - 插件系统:用 Swift 自己写数据库驱动
 
 ## 安装
 
-```bash
-brew install --cask tablepro
-```
+从 [GitHub Releases](https://github.com/hungnguyenit1905/SchemaStudio/releases) 下载最新的 DMG。
 
-或从 [GitHub Releases](https://github.com/TableProApp/TablePro/releases) 下载。
+暂无 Homebrew cask。
 
 ## 文档
 
-完整文档请见 [docs.tablepro.app](https://github.com/hungnguyenit1905/SchemaStudio)。
+完整文档见 [`docs/`](docs/) 目录。
 
 ## 支持开发
 
-应用在 AGPLv3 下免费。如果你在工作中使用 SchemaStudio,请购买[许可证](https://github.com/hungnguyenit1905/SchemaStudio)。每一份购买都资助下一个版本。如果买不起,就用免费版吧。这就是它免费的原因。
+应用在 AGPLv3 下免费。本分支不出售许可证;它所基于的上游项目是 [TablePro](https://github.com/TableProApp/TablePro)。
 
 ## 赞助者
 
 感谢这些为 SchemaStudio 提供支持的朋友们:
 
-**[SimpleLocalize](https://simplelocalize.io?ref=tablepro)** · **[CodeRabbit](https://coderabbit.ai?ref=tablepro)** · **[Nimbus](https://getnimbus.io?ref=tablepro)** · **[Visnalize](https://visnalize.com?ref=tablepro)** · **[Dwarves Foundation](https://dwarves.foundation/?ref=tablepro)** · **[Huy TQ](https://github.com/imhuytq)** · **[Xermius](https://xermius.com?ref=tablepro)** · **[Unikorn](https://unikorn.vn?ref=tablepro)**
+**[SimpleLocalize](https://simplelocalize.io)** · **[CodeRabbit](https://coderabbit.ai)** · **[Nimbus](https://getnimbus.io)** · **[Visnalize](https://visnalize.com)** · **[Dwarves Foundation](https://dwarves.foundation/)** · **[Huy TQ](https://github.com/imhuytq)** · **[Xermius](https://xermius.com)** · **[Unikorn](https://unikorn.vn)**
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=TableProApp%2FSchemaStudio&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=hungnguyenit1905%2FSchemaStudio&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=TableProApp/SchemaStudio&type=date&theme=dark&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=TableProApp/SchemaStudio&type=date&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=TableProApp/SchemaStudio&type=date&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=hungnguyenit1905/SchemaStudio&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=hungnguyenit1905/SchemaStudio&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=hungnguyenit1905/SchemaStudio&type=date&legend=top-left" />
  </picture>
 </a>
 

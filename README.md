@@ -12,22 +12,18 @@
 <p align="center">
   <a href="https://github.com/hungnguyenit1905/SchemaStudio">Website</a> ·
   <a href="https://github.com/hungnguyenit1905/SchemaStudio">Docs</a> ·
-  <a href="https://github.com/TableProApp/TablePro/releases">Download</a> ·
+  <a href="https://github.com/hungnguyenit1905/SchemaStudio/releases">Download</a> ·
   <a href="https://discord.gg/hCNmUUbnD4">Discord</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/TableProApp/TablePro/releases/latest"><img src="https://img.shields.io/github/v/release/TableProApp/SchemaStudio" alt="Release"></a>
+  <a href="https://github.com/hungnguyenit1905/SchemaStudio/releases/latest"><img src="https://img.shields.io/github/v/release/hungnguyenit1905/SchemaStudio" alt="Release"></a>
   <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="License: AGPL v3"></a>
 </p>
 
 <p align="center">
   <a href="README.vi.md">Tiếng Việt</a>
   <a href="README.zh.md">简体中文</a>
-</p>
-
-<p align="center">
-  <a href="https://trendshift.io/repositories/24114" target="_blank"><img src="https://trendshift.io/api/badge/repositories/24114" alt="TableProApp%2FSchemaStudio | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </p>
 
 ---
@@ -90,7 +86,7 @@ SchemaStudio is the missing fourth: native, multi-database, and open source.
 | BigQuery | Plugin |
 | libSQL / Turso | Plugin |
 
-Built-in drivers ship with the app. Plugin drivers install on demand from the [plugin registry](https://github.com/TableProApp/plugins).
+Built-in drivers ship with the app. Plugin drivers install on demand, and need a plugin registry URL configured in Settings first.
 
 ## What's inside
 
@@ -99,18 +95,15 @@ Built-in drivers ship with the app. Plugin drivers install on demand from the [p
 - Native window tabs, multi-window, split panes
 - SSH tunnels with password and key authentication, SSL/TLS
 - Query history with full-text search
-- iCloud sync for connections, groups, tags, settings, and SSH profiles
 - AI chat, inline suggestions, and Explain/Optimize
 - MCP server and URL scheme for Raycast, Cursor, Claude Desktop
 - Plugin system, write your own database driver in Swift
 
 ## Install
 
-```bash
-brew install --cask tablepro
-```
+Download the latest DMG from [GitHub Releases](https://github.com/hungnguyenit1905/SchemaStudio/releases).
 
-Or download from [GitHub Releases](https://github.com/TableProApp/TablePro/releases).
+There is no Homebrew cask yet.
 
 ## How to Build
 
@@ -141,7 +134,7 @@ To build and run a signed app, configure your personal Apple team, a unique bund
 
 ## Documentation
 
-Full docs at [docs.tablepro.app](https://github.com/hungnguyenit1905/SchemaStudio).
+Full docs live in [`docs/`](docs/).
 
 ## Support development
 
@@ -151,15 +144,15 @@ The app is free under AGPLv3. This fork sells no licenses; the upstream project 
 
 Thanks to these amazing people for supporting SchemaStudio:
 
-**[SimpleLocalize](https://simplelocalize.io?ref=tablepro)** · **[CodeRabbit](https://coderabbit.ai?ref=tablepro)** · **[Nimbus](https://getnimbus.io?ref=tablepro)** · **[Visnalize](https://visnalize.com?ref=tablepro)** · **[Dwarves Foundation](https://dwarves.foundation/?ref=tablepro)** · **[Huy TQ](https://github.com/imhuytq)** · **[Xermius](https://xermius.com?ref=tablepro)** · **[Unikorn](https://unikorn.vn?ref=tablepro)**
+**[SimpleLocalize](https://simplelocalize.io)** · **[CodeRabbit](https://coderabbit.ai)** · **[Nimbus](https://getnimbus.io)** · **[Visnalize](https://visnalize.com)** · **[Dwarves Foundation](https://dwarves.foundation/)** · **[Huy TQ](https://github.com/imhuytq)** · **[Xermius](https://xermius.com)** · **[Unikorn](https://unikorn.vn)**
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=TableProApp%2FSchemaStudio&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=hungnguyenit1905%2FSchemaStudio&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=TableProApp/SchemaStudio&type=date&theme=dark&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=TableProApp/SchemaStudio&type=date&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=TableProApp/SchemaStudio&type=date&legend=top-left&sealed_token=z_8BUG_QiaPNiKmaeuB4TbNUzFzi7Sb2UdMZLGWjDEGLHl0NB0DnQJtO3jV-bnBlKg2Oh7WaoeVdnOajcEmwVnmQpjZ0lNXWkCk7oZHwqqopO1FbEvvzZunUK7fR-AGZrVziaegZPsCMvtW6KjFZbdGny5sOj6-pFDtwA1Df-h-4Wcj90Dg1wIUeFKls" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=hungnguyenit1905/SchemaStudio&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=hungnguyenit1905/SchemaStudio&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=hungnguyenit1905/SchemaStudio&type=date&legend=top-left" />
  </picture>
 </a>
 
