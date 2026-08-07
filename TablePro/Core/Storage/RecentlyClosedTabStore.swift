@@ -51,7 +51,7 @@ internal final class RecentlyClosedTabStore {
     internal static let maxEntries = 20
     internal static let maxAge: TimeInterval = 60 * 60 * 24 * 30
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "RecentlyClosedTabStore")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "RecentlyClosedTabStore")
 
     internal private(set) var entries: [RecentlyClosedTabEntry] = []
 
@@ -220,7 +220,7 @@ internal final class RecentlyClosedTabStore {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         return appSupport
-            .appendingPathComponent("TablePro", isDirectory: true)
+            .appendingPathComponent("SchemaStudio", isDirectory: true)
             .appendingPathComponent("RecentlyClosedTabs", isDirectory: true)
     }
 

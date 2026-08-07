@@ -60,8 +60,8 @@ enum ActiveSheet: Identifiable {
 /// Coordinator managing MainContentView business logic
 @MainActor @Observable
 final class MainContentCoordinator {
-    static let logger = Logger(subsystem: "com.TablePro", category: "MainContentCoordinator")
-    static let lifecycleLogger = Logger(subsystem: "com.TablePro", category: "NativeTabLifecycle")
+    static let logger = Logger(subsystem: "com.SchemaStudio", category: "MainContentCoordinator")
+    static let lifecycleLogger = Logger(subsystem: "com.SchemaStudio", category: "NativeTabLifecycle")
 
     /// Monotonic counter for correlating rapid tab-switch/close log entries.
     static var switchSeq: Int = 0
@@ -789,7 +789,7 @@ final class MainContentCoordinator {
         }
 
         if !alreadyHandled && !Self.isAppTerminating {
-            let logger = Logger(subsystem: "com.TablePro", category: "MainContentCoordinator")
+            let logger = Logger(subsystem: "com.SchemaStudio", category: "MainContentCoordinator")
             logger.warning("teardown() was not called before deallocation for connection \(connectionId)")
         }
 

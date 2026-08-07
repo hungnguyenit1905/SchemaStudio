@@ -160,7 +160,7 @@ private func decodeKbdintString(_ pointer: UnsafePointer<CChar>?, length: Int32)
 
 internal struct KeyboardInteractiveAuthenticator: SSHAuthenticator {
     private static let logger = Logger(
-        subsystem: "com.TablePro",
+        subsystem: "com.SchemaStudio",
         category: "KeyboardInteractiveAuthenticator"
     )
 

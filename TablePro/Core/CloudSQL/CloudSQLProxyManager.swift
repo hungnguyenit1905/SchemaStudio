@@ -9,13 +9,13 @@ import os
 
 actor CloudSQLProxyManager: TunnelManaging {
     static let shared = CloudSQLProxyManager()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CloudSQLProxyManager")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CloudSQLProxyManager")
 
     private static let readinessTimeout: TimeInterval = 30
     private static let readinessPollInterval: UInt64 = 250_000_000
     private static let portRetryCount = 5
     private static let stalePidsDefaultsKey = "cloudSQLProxyStalePids"
-    private static let credentialsFilePrefix = "com.TablePro.cloudsqlproxy."
+    private static let credentialsFilePrefix = "com.SchemaStudio.cloudsqlproxy."
 
     private struct TunnelState {
         let runner: any SupervisedProcessRunner

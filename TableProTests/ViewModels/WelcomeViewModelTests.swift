@@ -23,8 +23,8 @@ final class WelcomeViewModelTests: XCTestCase {
     override func setUp() {
         super.setUp()
         let unique = UUID().uuidString
-        suiteName = "com.TablePro.tests.WelcomeViewModel.\(unique)"
-        syncSuiteName = "com.TablePro.tests.WelcomeViewModel.sync.\(unique)"
+        suiteName = "com.SchemaStudio.tests.WelcomeViewModel.\(unique)"
+        syncSuiteName = "com.SchemaStudio.tests.WelcomeViewModel.sync.\(unique)"
         guard let defaults = UserDefaults(suiteName: suiteName),
               let syncDefaults = UserDefaults(suiteName: syncSuiteName) else {
             XCTFail("Could not create isolated UserDefaults suites")

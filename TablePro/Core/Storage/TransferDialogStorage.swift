@@ -11,8 +11,8 @@ final class TransferDialogStorage {
     private let defaults: UserDefaults
 
     private enum Keys {
-        static let lastExportFormatId = "com.TablePro.export.dialog.lastFormatId"
-        static let lastImportEncoding = "com.TablePro.import.dialog.lastEncoding"
+        static let lastExportFormatId = "com.SchemaStudio.export.dialog.lastFormatId"
+        static let lastImportEncoding = "com.SchemaStudio.import.dialog.lastEncoding"
     }
 
     init(userDefaults: UserDefaults = .standard) {

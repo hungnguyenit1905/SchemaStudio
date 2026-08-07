@@ -8,7 +8,7 @@ import os
 
 @MainActor @Observable
 final class CopilotService {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CopilotService")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CopilotService")
     static let shared = CopilotService()
 
     enum Status: Sendable, Equatable {

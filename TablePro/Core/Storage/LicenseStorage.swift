@@ -13,14 +13,14 @@ import os
 final class LicenseStorage {
     static let shared = LicenseStorage()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "LicenseStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LicenseStorage")
 
     private let defaults = UserDefaults.standard
     private let keychain: KeychainHelper
 
     private enum Keys {
-        static let keychainLicenseKey = "com.TablePro.license.key"
-        static let licensePayload = "com.TablePro.license.payload"
+        static let keychainLicenseKey = "com.SchemaStudio.license.key"
+        static let licensePayload = "com.SchemaStudio.license.payload"
     }
 
     init(keychain: KeychainHelper = .shared) {
@@ -105,7 +105,7 @@ final class LicenseStorage {
               )?.takeRetainedValue() as? String
         else {
             // Fallback: use a persistent UUID stored in UserDefaults
-            let fallbackKey = "com.TablePro.license.fallbackMachineId"
+            let fallbackKey = "com.SchemaStudio.license.fallbackMachineId"
             if let existing = defaults.string(forKey: fallbackKey) {
                 return existing.sha256
             }

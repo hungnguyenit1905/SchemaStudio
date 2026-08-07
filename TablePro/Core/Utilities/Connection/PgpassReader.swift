@@ -8,7 +8,7 @@ import os
 
 /// Reads and parses the standard PostgreSQL ~/.pgpass file
 enum PgpassReader {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PgpassReader")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PgpassReader")
 
     /// Whether ~/.pgpass exists
     static func fileExists() -> Bool {

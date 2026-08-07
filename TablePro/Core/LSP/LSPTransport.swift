@@ -34,7 +34,7 @@ enum LSPTransportError: Error, LocalizedError {
 // MARK: - LSPTransport
 
 actor LSPTransport {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "LSPTransport")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LSPTransport")
 
     private var process: Process?
     private var stdinPipe: Pipe?

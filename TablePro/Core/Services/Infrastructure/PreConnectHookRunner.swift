@@ -9,7 +9,7 @@ import os
 /// Runs a shell script before establishing a database connection.
 /// Non-zero exit aborts the connection with an error.
 enum PreConnectHookRunner {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PreConnectHookRunner")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PreConnectHookRunner")
 
     enum HookError: LocalizedError {
         case scriptFailed(exitCode: Int32, stderr: String)

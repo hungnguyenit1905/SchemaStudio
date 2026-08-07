@@ -397,7 +397,7 @@ final class QueryTabManager {
 
     deinit {
         #if DEBUG
-        Logger(subsystem: "com.TablePro", category: "QueryTabManager")
+        Logger(subsystem: "com.SchemaStudio", category: "QueryTabManager")
             .debug("QueryTabManager deallocated")
         #endif
     }

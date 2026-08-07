@@ -41,7 +41,7 @@ enum TriggerApplyStrategy: Equatable {
 
 @MainActor
 enum TriggerEditing {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "TriggerEditing")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "TriggerEditing")
 
     static func apply(
         connection: DatabaseConnection,

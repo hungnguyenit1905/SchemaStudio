@@ -16,7 +16,7 @@ enum ToolApprovalDecision: Sendable {
 final class ToolApprovalCenter {
     static let shared = ToolApprovalCenter()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ToolApprovalCenter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ToolApprovalCenter")
 
     private var pending: [String: CheckedContinuation<ToolApprovalDecision, Never>] = [:]
 

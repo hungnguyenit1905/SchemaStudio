@@ -10,7 +10,7 @@ import TableProImport
 import TableProPluginKit
 
 struct TablePlusImporter: ForeignAppImporter {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "TablePlusImporter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "TablePlusImporter")
 
     let id = "tableplus"
     let displayName = "TablePlus"

@@ -10,7 +10,7 @@ import Foundation
 import os
 import TableProPluginKit
 
-private let navigationLogger = Logger(subsystem: "com.TablePro", category: "MainContentCoordinator+Navigation")
+private let navigationLogger = Logger(subsystem: "com.SchemaStudio", category: "MainContentCoordinator+Navigation")
 
 extension MainContentCoordinator {
     // MARK: - Table Tab Opening

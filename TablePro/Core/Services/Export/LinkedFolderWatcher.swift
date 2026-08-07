@@ -23,7 +23,7 @@ struct LinkedConnection: Identifiable {
 @Observable
 final class LinkedFolderWatcher {
     static let shared = LinkedFolderWatcher()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "LinkedFolderWatcher")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LinkedFolderWatcher")
 
     private(set) var linkedConnections: [LinkedConnection] = []
     private var watchSources: [UUID: DispatchSourceFileSystemObject] = [:]

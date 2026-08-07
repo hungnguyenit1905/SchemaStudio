@@ -77,20 +77,20 @@ struct FilterSettings: Codable, Equatable {
 @MainActor
 final class FilterSettingsStorage {
     static let shared = FilterSettingsStorage()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "FilterSettingsStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "FilterSettingsStorage")
 
-    private static let legacyLastFiltersKeyPrefix = "com.TablePro.filter.lastFilters."
-    private static let legacyKnownFilterKeysKey = "com.TablePro.filter.knownFilterKeys"
-    private static let migrationCompleteKey = "com.TablePro.filterStateMigrationComplete"
-    private static let compositeKeyMigrationKey = "com.TablePro.filterStateCompositeKeyMigrationComplete"
-    private static let settingsKey = "com.TablePro.filter.settings"
+    private static let legacyLastFiltersKeyPrefix = "com.SchemaStudio.filter.lastFilters."
+    private static let legacyKnownFilterKeysKey = "com.SchemaStudio.filter.knownFilterKeys"
+    private static let migrationCompleteKey = "com.SchemaStudio.filterStateMigrationComplete"
+    private static let compositeKeyMigrationKey = "com.SchemaStudio.filterStateCompositeKeyMigrationComplete"
+    private static let settingsKey = "com.SchemaStudio.filter.settings"
 
     private let defaults: UserDefaults
 
     private let filterStateDirectory: URL
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
-    private let ioQueue = DispatchQueue(label: "com.TablePro.FilterSettingsStorage.io", qos: .utility)
+    private let ioQueue = DispatchQueue(label: "com.SchemaStudio.FilterSettingsStorage.io", qos: .utility)
 
     private var cachedSettings: FilterSettings?
     private var lastFiltersCache: [String: PersistedFilterState] = [:]
@@ -431,7 +431,7 @@ final class FilterSettingsStorage {
             in: .userDomainMask
         ).first ?? FileManager.default.temporaryDirectory
         return appSupport
-            .appendingPathComponent("TablePro", isDirectory: true)
+            .appendingPathComponent("SchemaStudio", isDirectory: true)
             .appendingPathComponent("FilterState", isDirectory: true)
     }
 

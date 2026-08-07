@@ -23,7 +23,7 @@ struct PluginLazyActivationVerificationTests {
         try fm.createDirectory(at: contentsURL, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: root) }
 
-        let bundleId = "com.TablePro.test.tampered.\(UUID().uuidString)"
+        let bundleId = "com.SchemaStudio.test.tampered.\(UUID().uuidString)"
         let typeId = "tampered-db-\(UUID().uuidString)"
         let info: [String: Any] = [
             "CFBundleIdentifier": bundleId,
@@ -83,7 +83,7 @@ struct PluginLazyActivationVerificationTests {
         try fm.createDirectory(at: macosURL, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: root) }
 
-        let bundleId = "com.TablePro.test.broken.\(UUID().uuidString)"
+        let bundleId = "com.SchemaStudio.test.broken.\(UUID().uuidString)"
         let typeId = "broken-db-\(UUID().uuidString)"
         let info: [String: Any] = [
             "CFBundleIdentifier": bundleId,

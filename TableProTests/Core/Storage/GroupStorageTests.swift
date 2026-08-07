@@ -22,9 +22,9 @@ final class GroupStorageTests: XCTestCase {
     override func setUp() {
         super.setUp()
         let unique = UUID().uuidString
-        suiteName = "com.TablePro.tests.GroupStorage.\(unique)"
+        suiteName = "com.SchemaStudio.tests.GroupStorage.\(unique)"
         defaults = UserDefaults(suiteName: suiteName)!
-        syncSuiteName = "com.TablePro.tests.Sync.\(unique)"
+        syncSuiteName = "com.SchemaStudio.tests.Sync.\(unique)"
         syncDefaults = UserDefaults(suiteName: syncSuiteName)!
         let metadata = SyncMetadataStorage(userDefaults: syncDefaults)
         tracker = SyncChangeTracker(metadataStorage: metadata)

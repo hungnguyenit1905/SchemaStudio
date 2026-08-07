@@ -25,7 +25,7 @@ struct MCPConnectionAuthSnapshot: Sendable {
 typealias MCPConnectionSnapshotResolver = @Sendable (UUID) async -> MCPConnectionAuthSnapshot?
 
 public actor MCPAuthPolicy {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCPAuthPolicy")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCPAuthPolicy")
 
     private let connectionResolver: MCPConnectionSnapshotResolver
 

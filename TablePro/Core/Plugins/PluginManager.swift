@@ -17,7 +17,7 @@ final class PluginManager {
     static let currentPluginKitVersion = 19
     static let minimumCompatiblePluginKitVersion = 19
     static let currentInspectorKitVersion = 1
-    private static let disabledPluginsKey = "com.TablePro.disabledPlugins"
+    private static let disabledPluginsKey = "com.SchemaStudio.disabledPlugins"
     private static let legacyDisabledPluginsKey = "disabledPlugins"
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -100,7 +100,7 @@ final class PluginManager {
         set { defaults.set(Array(newValue), forKey: Self.disabledPluginsKey) }
     }
 
-    static let logger = Logger(subsystem: "com.TablePro", category: "PluginManager")
+    static let logger = Logger(subsystem: "com.SchemaStudio", category: "PluginManager")
 
     private var pendingPluginURLs: [(url: URL, source: PluginSource)] = []
 
@@ -135,7 +135,7 @@ final class PluginManager {
     }
 
     nonisolated private static func clearLegacyNeedsRestartKey(in defaults: UserDefaults) {
-        let legacyKey = "com.TablePro.needsRestart"
+        let legacyKey = "com.SchemaStudio.needsRestart"
         if defaults.object(forKey: legacyKey) != nil {
             defaults.removeObject(forKey: legacyKey)
         }

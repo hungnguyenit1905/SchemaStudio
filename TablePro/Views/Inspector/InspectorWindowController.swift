@@ -7,10 +7,10 @@ import AppKit
 import TableProPluginKit
 
 extension NSToolbarItem.Identifier {
-    static let inspectorAddRow = NSToolbarItem.Identifier("com.TablePro.inspector.addRow")
-    static let inspectorDeleteRows = NSToolbarItem.Identifier("com.TablePro.inspector.deleteRows")
-    static let inspectorToggleFilter = NSToolbarItem.Identifier("com.TablePro.inspector.toggleFilter")
-    static let inspectorColumns = NSToolbarItem.Identifier("com.TablePro.inspector.columns")
+    static let inspectorAddRow = NSToolbarItem.Identifier("com.SchemaStudio.inspector.addRow")
+    static let inspectorDeleteRows = NSToolbarItem.Identifier("com.SchemaStudio.inspector.deleteRows")
+    static let inspectorToggleFilter = NSToolbarItem.Identifier("com.SchemaStudio.inspector.toggleFilter")
+    static let inspectorColumns = NSToolbarItem.Identifier("com.SchemaStudio.inspector.columns")
 }
 
 @MainActor
@@ -37,7 +37,7 @@ final class InspectorWindowController: NSWindowController, NSWindowDelegate, NST
             defer: false
         )
         window.minSize = NSSize(width: 480, height: 320)
-        window.tabbingIdentifier = "com.TablePro.CSVDocument"
+        window.tabbingIdentifier = "com.SchemaStudio.CSVDocument"
         window.tabbingMode = .preferred
         window.titleVisibility = .visible
         window.isReleasedWhenClosed = false
@@ -53,12 +53,12 @@ final class InspectorWindowController: NSWindowController, NSWindowDelegate, NST
         window.setContentSize(NSSize(width: 1_000, height: 640))
         window.center()
         if let url = nsDocument.fileURL {
-            windowFrameAutosaveName = "com.TablePro.CSVInspector.\(url.absoluteString)"
+            windowFrameAutosaveName = "com.SchemaStudio.CSVInspector.\(url.absoluteString)"
         } else {
-            windowFrameAutosaveName = "com.TablePro.CSVInspector.untitled"
+            windowFrameAutosaveName = "com.SchemaStudio.CSVInspector.untitled"
         }
 
-        let toolbar = NSToolbar(identifier: "com.TablePro.CSVInspectorToolbar")
+        let toolbar = NSToolbar(identifier: "com.SchemaStudio.CSVInspectorToolbar")
         toolbar.delegate = self
         toolbar.displayMode = .iconOnly
         toolbar.allowsUserCustomization = false

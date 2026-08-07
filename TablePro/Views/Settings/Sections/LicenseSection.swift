@@ -8,7 +8,7 @@ import os
 import SwiftUI
 
 struct LicenseSection: View {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "LicenseSection")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LicenseSection")
 
     private let licenseManager = LicenseManager.shared
 

@@ -6,7 +6,7 @@ import SwiftASN1
 import X509
 
 actor MCPTLSManager {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCPTLSManager")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCPTLSManager")
     private static let keychainLabel = "com.tablepro.mcp-tls"
     private static let keyApplicationTag = Data("com.tablepro.mcp-tls.key".utf8)
     private static let certificateValiditySeconds: TimeInterval = 365 * 24 * 60 * 60

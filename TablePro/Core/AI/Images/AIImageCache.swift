@@ -9,16 +9,16 @@ import os
 final class AIImageCache: @unchecked Sendable {
     static let shared = AIImageCache()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "AIImageCache")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "AIImageCache")
 
     private let cacheDirectory: URL
-    private let queue = DispatchQueue(label: "com.TablePro.AIImageCache", qos: .utility)
+    private let queue = DispatchQueue(label: "com.SchemaStudio.AIImageCache", qos: .utility)
 
     private init() {
         let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         cacheDirectory = base
-            .appendingPathComponent("com.TablePro", isDirectory: true)
+            .appendingPathComponent("com.SchemaStudio", isDirectory: true)
             .appendingPathComponent("AIChatImages", isDirectory: true)
         try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
     }

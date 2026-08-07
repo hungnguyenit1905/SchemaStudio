@@ -15,7 +15,7 @@ import os
 internal final class HostKeyStore: @unchecked Sendable {
     static let shared = HostKeyStore()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "HostKeyStore")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "HostKeyStore")
 
     enum VerificationResult: Equatable {
         case trusted
@@ -33,9 +33,9 @@ internal final class HostKeyStore: @unchecked Sendable {
             self.filePath = NSTemporaryDirectory() + "TablePro_known_hosts"
             return
         }
-        let tableProDir = appSupport.appendingPathComponent("TablePro")
-        try? FileManager.default.createDirectory(at: tableProDir, withIntermediateDirectories: true)
-        self.filePath = tableProDir.appendingPathComponent("known_hosts").path
+        let schemaStudioDir = appSupport.appendingPathComponent("SchemaStudio")
+        try? FileManager.default.createDirectory(at: schemaStudioDir, withIntermediateDirectories: true)
+        self.filePath = schemaStudioDir.appendingPathComponent("known_hosts").path
     }
 
     /// Testing initializer with a custom file path

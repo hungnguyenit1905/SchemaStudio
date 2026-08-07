@@ -8,7 +8,7 @@ import os
 import TableProPluginKit
 
 final class SQLFileParser: Sendable {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SQLFileParser")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SQLFileParser")
 
     private enum ParserState {
         case normal

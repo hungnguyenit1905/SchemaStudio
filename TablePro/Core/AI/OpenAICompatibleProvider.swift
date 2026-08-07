@@ -8,7 +8,7 @@ import os
 
 final class OpenAICompatibleProvider: ChatTransport {
     private static let logger = Logger(
-        subsystem: "com.TablePro",
+        subsystem: "com.SchemaStudio",
         category: "OpenAICompatibleProvider"
     )
 

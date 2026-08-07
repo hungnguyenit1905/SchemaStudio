@@ -9,7 +9,7 @@ import SwiftUI
 
 @MainActor
 internal final class WindowManager {
-    private static let lifecycleLogger = Logger(subsystem: "com.TablePro", category: "NativeTabLifecycle")
+    private static let lifecycleLogger = Logger(subsystem: "com.SchemaStudio", category: "NativeTabLifecycle")
 
     internal static let shared = WindowManager()
 
@@ -133,9 +133,9 @@ internal final class WindowManager {
 
     internal static func tabbingIdentifier(for connectionId: UUID) -> String {
         if AppSettingsManager.shared.tabs.groupAllConnectionTabs {
-            return "com.TablePro.main"
+            return "com.SchemaStudio.main"
         }
-        return "com.TablePro.main.\(connectionId.uuidString)"
+        return "com.SchemaStudio.main.\(connectionId.uuidString)"
     }
 
     private func findSibling(

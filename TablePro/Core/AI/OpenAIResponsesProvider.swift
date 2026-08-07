@@ -19,7 +19,7 @@ enum ResponsesDialect: Sendable {
 }
 
 final class OpenAIResponsesProvider: ChatTransport {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "OpenAIResponsesProvider")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "OpenAIResponsesProvider")
 
     private let endpoint: String
     private let apiKey: String?

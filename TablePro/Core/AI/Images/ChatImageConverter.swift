@@ -25,7 +25,7 @@ enum ChatImageConverterError: Error, LocalizedError {
 }
 
 enum ChatImageConverter {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ChatImageConverter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ChatImageConverter")
 
     static let maxLongEdgePixels: CGFloat = 2_000
     static let jpegQuality: CGFloat = 0.92

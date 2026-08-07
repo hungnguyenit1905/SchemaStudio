@@ -21,7 +21,7 @@ struct ResolverEnvironment: Sendable {
 }
 
 enum SSHConfigResolver {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SSHConfigResolver")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SSHConfigResolver")
 
     static func resolve(
         _ config: SSHConfiguration,

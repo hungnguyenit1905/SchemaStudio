@@ -10,7 +10,7 @@ import TableProImport
 import TableProPluginKit
 
 struct DataGripImporter: ForeignAppImporter {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "DataGripImporter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "DataGripImporter")
 
     let id = "datagrip"
     let displayName = "DataGrip"

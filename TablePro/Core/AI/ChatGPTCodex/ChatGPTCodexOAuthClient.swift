@@ -7,7 +7,7 @@ import Foundation
 import os
 
 final class ChatGPTCodexOAuthClient: ChatGPTCodexTokenRefreshing {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ChatGPTCodexOAuthClient")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ChatGPTCodexOAuthClient")
 
     private let session: URLSession
 

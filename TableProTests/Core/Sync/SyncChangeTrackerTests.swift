@@ -17,7 +17,7 @@ struct SyncChangeTrackerTests {
 
     init() {
         let unique = UUID().uuidString
-        let syncDefaults = UserDefaults(suiteName: "com.TablePro.tests.SyncChangeTracker.\(unique)")!
+        let syncDefaults = UserDefaults(suiteName: "com.SchemaStudio.tests.SyncChangeTracker.\(unique)")!
         metadata = SyncMetadataStorage(userDefaults: syncDefaults)
         tracker = SyncChangeTracker(metadataStorage: metadata)
     }

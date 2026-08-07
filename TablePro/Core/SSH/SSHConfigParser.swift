@@ -29,7 +29,7 @@ struct SSHConfigEntry: Identifiable, Hashable {
 }
 
 enum SSHConfigParser {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SSHConfigParser")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SSHConfigParser")
     private static let maxIncludeDepth = 10
 
     static let defaultConfigPath = FileManager.default.homeDirectoryForCurrentUser

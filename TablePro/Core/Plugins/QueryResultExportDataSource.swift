@@ -15,7 +15,7 @@ final class QueryResultExportDataSource: PluginExportDataSource, @unchecked Send
     private let rows: [[PluginCellValue]]
     private let driver: DatabaseDriver?
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "QueryResultExportDataSource")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "QueryResultExportDataSource")
 
     init(tableRows: TableRows, databaseType: DatabaseType, driver: DatabaseDriver?) {
         self.databaseTypeId = databaseType.rawValue

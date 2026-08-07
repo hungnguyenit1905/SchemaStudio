@@ -11,7 +11,7 @@ import os
 actor PluginInstaller {
     static let shared = PluginInstaller()
 
-    static let logger = Logger(subsystem: "com.TablePro", category: "PluginInstaller")
+    static let logger = Logger(subsystem: "com.SchemaStudio", category: "PluginInstaller")
 
     private var activeTasks: [String: Task<URL, Error>] = [:]
     private var stagedUpdates: [String: URL] = [:]

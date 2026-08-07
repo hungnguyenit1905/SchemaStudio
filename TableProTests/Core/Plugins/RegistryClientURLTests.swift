@@ -22,7 +22,7 @@ struct RegistryClientURLTests {
 
     @Test("customRegistryURLKey has expected value")
     func customURLKeyConstant() {
-        #expect(RegistryClient.customRegistryURLKey == "com.TablePro.customRegistryURL")
+        #expect(RegistryClient.customRegistryURLKey == "com.SchemaStudio.customRegistryURL")
     }
 
     @Test("setting a custom URL via UserDefaults is supported")

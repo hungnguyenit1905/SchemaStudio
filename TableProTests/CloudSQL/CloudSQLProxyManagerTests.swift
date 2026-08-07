@@ -187,7 +187,7 @@ struct CloudSQLProxyManagerTests {
         )
 
         let path = FileManager.default.temporaryDirectory
-            .appendingPathComponent("com.TablePro.cloudsqlproxy.\(id.uuidString).json")
+            .appendingPathComponent("com.SchemaStudio.cloudsqlproxy.\(id.uuidString).json")
         #expect(FileManager.default.fileExists(atPath: path.path))
         let perms = try FileManager.default.attributesOfItem(atPath: path.path)[.posixPermissions] as? Int
         #expect(perms == 0o600)

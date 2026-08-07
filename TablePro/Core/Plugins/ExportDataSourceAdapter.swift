@@ -12,7 +12,7 @@ final class ExportDataSourceAdapter: PluginExportDataSource, @unchecked Sendable
     private let driver: DatabaseDriver
     private let dbType: DatabaseType
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ExportDataSourceAdapter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ExportDataSourceAdapter")
 
     init(driver: DatabaseDriver, databaseType: DatabaseType) {
         self.driver = driver

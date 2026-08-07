@@ -16,7 +16,7 @@ extension PluginManager {
                 self?.handleNetworkPathChange(satisfied: satisfied)
             }
         }
-        monitor.start(queue: DispatchQueue(label: "com.TablePro.pluginNetworkMonitor"))
+        monitor.start(queue: DispatchQueue(label: "com.SchemaStudio.pluginNetworkMonitor"))
     }
 
     private func handleNetworkPathChange(satisfied: Bool) {

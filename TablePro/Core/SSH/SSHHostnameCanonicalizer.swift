@@ -24,7 +24,7 @@ struct SSHCanonicalizationOptions: Sendable, Hashable {
 }
 
 enum SSHHostnameCanonicalizer {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SSHCanonicalize")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SSHCanonicalize")
 
     /// Returns nil only when no `CanonicalDomains` candidate resolves AND
     /// `CanonicalizeFallbackLocal` is set to `no`. The caller treats nil as

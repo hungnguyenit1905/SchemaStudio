@@ -25,7 +25,7 @@ protocol ClipboardProvider {
 struct NSPasteboardClipboardProvider: ClipboardProvider {
     private static let tsvType = NSPasteboard.PasteboardType("public.utf8-tab-separated-values-text")
     private static let csvType = NSPasteboard.PasteboardType("public.comma-separated-values-text")
-    private static let gridRowsType = NSPasteboard.PasteboardType("com.TablePro.gridRows")
+    private static let gridRowsType = NSPasteboard.PasteboardType("com.SchemaStudio.gridRows")
 
     func readText() -> String? {
         NSPasteboard.general.string(forType: .string)

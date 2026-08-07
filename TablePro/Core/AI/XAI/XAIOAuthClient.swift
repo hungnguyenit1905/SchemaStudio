@@ -7,7 +7,7 @@ import Foundation
 import os
 
 final class XAIOAuthClient: XAITokenRefreshing {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "XAIOAuthClient")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "XAIOAuthClient")
 
     private let session: URLSession
 

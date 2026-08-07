@@ -16,7 +16,7 @@ final class ImportDataSinkAdapter: PluginImportDataSink, @unchecked Sendable {
     private let columnMapping: [String: String]
     private let rowGenerator: SQLStatementGenerator?
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ImportDataSinkAdapter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ImportDataSinkAdapter")
 
     init(
         driver: DatabaseDriver,

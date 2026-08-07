@@ -9,8 +9,8 @@ import os
 actor XAITokenStore {
     static let shared = XAITokenStore()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "XAITokenStore")
-    private static let storageKey = "com.TablePro.aioauth.xai"
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "XAITokenStore")
+    private static let storageKey = "com.SchemaStudio.aioauth.xai"
 
     private let keychain: KeychainStoring
     private let refresher: XAITokenRefreshing

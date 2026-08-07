@@ -21,7 +21,7 @@ final class MCPServerManager {
         let remoteAddress: String?
     }
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCPServerManager")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCPServerManager")
 
     static let shared = MCPServerManager()
 

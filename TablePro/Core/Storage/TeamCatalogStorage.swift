@@ -8,7 +8,7 @@
 import Foundation
 
 internal enum TeamCatalogStorage {
-    private static let folderPathKey = "com.TablePro.teamCatalog.folderPath"
+    private static let folderPathKey = "com.SchemaStudio.teamCatalog.folderPath"
 
     static var folderURL: URL? {
         get {

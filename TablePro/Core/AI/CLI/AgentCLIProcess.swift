@@ -40,7 +40,7 @@ struct AgentCLILaunch: Sendable {
 }
 
 struct AgentCLIProcess: Sendable {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "AgentCLIProcess")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "AgentCLIProcess")
     private static let terminationGracePeriod: Duration = .milliseconds(750)
 
     let label: String

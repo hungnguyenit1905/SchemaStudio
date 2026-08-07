@@ -35,8 +35,8 @@ enum SOCKSProxyError: Error, LocalizedError, Equatable {
 
 actor SOCKSProxyManager: TunnelManaging {
     static let shared = SOCKSProxyManager()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SOCKSProxyManager")
-    private static let networkQueue = DispatchQueue(label: "com.TablePro.SOCKSProxyManager.network")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SOCKSProxyManager")
+    private static let networkQueue = DispatchQueue(label: "com.SchemaStudio.SOCKSProxyManager.network")
 
     private struct RelayPair {
         let inbound: NWConnection

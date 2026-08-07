@@ -19,7 +19,7 @@ import os
 import Security
 
 internal enum SSHKeychainLookup {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SSHKeychainLookup")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SSHKeychainLookup")
     private static let keychainService = "OpenSSH"
 
     /// Look up a passphrase stored by `ssh-add --apple-use-keychain`.

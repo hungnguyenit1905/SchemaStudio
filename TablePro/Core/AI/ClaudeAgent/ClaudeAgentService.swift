@@ -23,7 +23,7 @@ final class ClaudeAgentService {
 
     static let shared = ClaudeAgentService()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ClaudeAgentService")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ClaudeAgentService")
 
     private(set) var state: InstallState = .unknown
     private(set) var isRefreshing = false

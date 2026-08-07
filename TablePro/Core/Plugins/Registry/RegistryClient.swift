@@ -16,18 +16,18 @@ final class RegistryClient {
 
     let session: URLSession
     static let supportedSchemaVersion = 2
-    private static let logger = Logger(subsystem: "com.TablePro", category: "RegistryClient")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "RegistryClient")
     private static let manifestFreshnessWindow: TimeInterval = 300
 
     private static let defaultRegistryURL = URL(string:
         "https://raw.githubusercontent.com/TableProApp/plugins/main/plugins.json")!
 
-    static let customRegistryURLKey = "com.TablePro.customRegistryURL"
-    private static let lastFetchKey = "com.TablePro.registryLastFetch"
+    static let customRegistryURLKey = "com.SchemaStudio.customRegistryURL"
+    private static let lastFetchKey = "com.SchemaStudio.registryLastFetch"
     private static let legacyManifestCacheKey = "registryManifestCache"
-    private static let legacyETagKeys = ["registryETag", "com.TablePro.registryETag"]
+    private static let legacyETagKeys = ["registryETag", "com.SchemaStudio.registryETag"]
     private static let legacyLastFetchKey = "registryLastFetch"
-    private static let legacyLastRegistryURLKey = "com.TablePro.lastRegistryURL"
+    private static let legacyLastRegistryURLKey = "com.SchemaStudio.lastRegistryURL"
 
     private let defaults: UserDefaults
     private let manifestCacheURL: URL
@@ -93,7 +93,7 @@ final class RegistryClient {
         guard manifestCacheURL == Self.defaultManifestCacheURL() else { return }
         let fm = FileManager.default
         guard let cachesDir = fm.urls(for: .cachesDirectory, in: .userDomainMask).first else { return }
-        let bundleId = Bundle.main.bundleIdentifier ?? "com.TablePro"
+        let bundleId = Bundle.main.bundleIdentifier ?? "com.SchemaStudio"
         let legacyURL = cachesDir.appendingPathComponent(bundleId, isDirectory: true)
             .appendingPathComponent(Self.manifestCacheFileName)
         guard fm.fileExists(atPath: legacyURL.path) else { return }

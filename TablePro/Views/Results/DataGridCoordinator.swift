@@ -4,7 +4,7 @@ import os
 import SwiftUI
 import TableProPluginKit
 
-private let fkTraceLogger = Logger(subsystem: "com.TablePro", category: "DataGrid")
+private let fkTraceLogger = Logger(subsystem: "com.SchemaStudio", category: "DataGrid")
 
 // MARK: - Coordinator
 
@@ -45,7 +45,7 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
     var currentSortState = SortState()
 
     private var columnIndexByDataIndex: [Int: Int] = [:]
-    private static let selectionCacheLogger = Logger(subsystem: "com.TablePro", category: "DataGrid.ColumnIndexCache")
+    private static let selectionCacheLogger = Logger(subsystem: "com.SchemaStudio", category: "DataGrid.ColumnIndexCache")
 
     func tableColumnIndex(for dataIndex: Int) -> Int? {
         if let cached = columnIndexByDataIndex[dataIndex] {

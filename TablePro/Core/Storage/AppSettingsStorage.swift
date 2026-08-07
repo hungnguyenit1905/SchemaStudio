@@ -12,7 +12,7 @@ import os
 /// Persistent storage for app settings
 final class AppSettingsStorage {
     static let shared = AppSettingsStorage()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "AppSettingsStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "AppSettingsStorage")
 
     private let defaults: UserDefaults
     private let decoder = JSONDecoder()
@@ -21,19 +21,19 @@ final class AppSettingsStorage {
     // MARK: - UserDefaults Keys
 
     private enum Keys {
-        static let general = "com.TablePro.settings.general"
-        static let appearance = "com.TablePro.settings.appearance"
-        static let editor = "com.TablePro.settings.editor"
-        static let dataGrid = "com.TablePro.settings.dataGrid"
-        static let history = "com.TablePro.settings.history"
-        static let tabs = "com.TablePro.settings.tabs"
-        static let keyboard = "com.TablePro.settings.keyboard"
-        static let ai = "com.TablePro.settings.ai"
-        static let sync = "com.TablePro.settings.sync"
-        static let mcp = "com.TablePro.settings.mcp"
-        static let hasCompletedOnboarding = "com.TablePro.settings.hasCompletedOnboarding"
-        static let startupReopenMigration = "com.TablePro.settings.didMigrateStartupToReopenLast"
-        static let jsonFieldHeightMigration = "com.TablePro.settings.didMigrateJsonFieldHeightKey"
+        static let general = "com.SchemaStudio.settings.general"
+        static let appearance = "com.SchemaStudio.settings.appearance"
+        static let editor = "com.SchemaStudio.settings.editor"
+        static let dataGrid = "com.SchemaStudio.settings.dataGrid"
+        static let history = "com.SchemaStudio.settings.history"
+        static let tabs = "com.SchemaStudio.settings.tabs"
+        static let keyboard = "com.SchemaStudio.settings.keyboard"
+        static let ai = "com.SchemaStudio.settings.ai"
+        static let sync = "com.SchemaStudio.settings.sync"
+        static let mcp = "com.SchemaStudio.settings.mcp"
+        static let hasCompletedOnboarding = "com.SchemaStudio.settings.hasCompletedOnboarding"
+        static let startupReopenMigration = "com.SchemaStudio.settings.didMigrateStartupToReopenLast"
+        static let jsonFieldHeightMigration = "com.SchemaStudio.settings.didMigrateJsonFieldHeightKey"
         static let legacyJsonFieldHeight = "rightSidebar.jsonFieldHeight"
     }
 
@@ -168,28 +168,28 @@ final class AppSettingsStorage {
 
     func saveLastDatabase(_ database: String?, for connectionId: UUID) {
         if let database {
-            defaults.set(database, forKey: "com.TablePro.lastSelectedDatabase.\(connectionId)")
+            defaults.set(database, forKey: "com.SchemaStudio.lastSelectedDatabase.\(connectionId)")
         } else {
-            defaults.removeObject(forKey: "com.TablePro.lastSelectedDatabase.\(connectionId)")
+            defaults.removeObject(forKey: "com.SchemaStudio.lastSelectedDatabase.\(connectionId)")
         }
     }
 
     func loadLastDatabase(for connectionId: UUID) -> String? {
-        defaults.string(forKey: "com.TablePro.lastSelectedDatabase.\(connectionId)")
+        defaults.string(forKey: "com.SchemaStudio.lastSelectedDatabase.\(connectionId)")
     }
 
     // MARK: - Last Selected Schema (per connection)
 
     func saveLastSchema(_ schema: String?, for connectionId: UUID) {
         if let schema {
-            defaults.set(schema, forKey: "com.TablePro.lastSelectedSchema.\(connectionId)")
+            defaults.set(schema, forKey: "com.SchemaStudio.lastSelectedSchema.\(connectionId)")
         } else {
-            defaults.removeObject(forKey: "com.TablePro.lastSelectedSchema.\(connectionId)")
+            defaults.removeObject(forKey: "com.SchemaStudio.lastSelectedSchema.\(connectionId)")
         }
     }
 
     func loadLastSchema(for connectionId: UUID) -> String? {
-        defaults.string(forKey: "com.TablePro.lastSelectedSchema.\(connectionId)")
+        defaults.string(forKey: "com.SchemaStudio.lastSelectedSchema.\(connectionId)")
     }
 
     // MARK: - Onboarding

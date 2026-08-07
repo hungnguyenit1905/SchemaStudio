@@ -8,7 +8,7 @@ import os
 
 final class CodableListPreferenceStore<Element: Codable & Identifiable>: @unchecked Sendable {
     private static var logger: Logger {
-        Logger(subsystem: "com.TablePro", category: "CodableListPreferenceStore")
+        Logger(subsystem: "com.SchemaStudio", category: "CodableListPreferenceStore")
     }
 
     private let key: DefaultsKey<[Element]>

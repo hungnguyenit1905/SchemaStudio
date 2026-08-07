@@ -13,7 +13,7 @@ import os
 /// encoding, HMAC-SHA256 signing, HTTP transport, heartbeat scheduling, and cooldown persistence.
 @MainActor
 public final class AnalyticsHeartbeatService {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "AnalyticsHeartbeat")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "AnalyticsHeartbeat")
 
     private let provider: AnalyticsEnvironmentProvider
 
@@ -26,7 +26,7 @@ public final class AnalyticsHeartbeatService {
     /// Prevents duplicate sends on iOS when the app cycles between foreground/background.
     private let cooldownInterval: TimeInterval
 
-    private static let lastHeartbeatKey = "com.TablePro.analytics.lastHeartbeatDate"
+    private static let lastHeartbeatKey = "com.SchemaStudio.analytics.lastHeartbeatDate"
 
     private let session: URLSession = {
         let config = URLSessionConfiguration.default

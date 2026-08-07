@@ -13,7 +13,7 @@ public struct InitializeHandler: MCPMethodHandler {
         "2025-11-25"
     ]
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.Handler.Initialize")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.Handler.Initialize")
 
     public init() {}
 

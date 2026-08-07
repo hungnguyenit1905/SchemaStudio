@@ -146,7 +146,7 @@ enum TokenPermissions: String, Codable, Sendable, CaseIterable, Identifiable {
 actor MCPTokenStore {
     static let stdioBridgeTokenName = "__stdio_bridge__"
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCPTokenStore")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCPTokenStore")
 
     private var tokens: [MCPAuthToken] = []
     private let storageUrl: URL
@@ -158,7 +158,7 @@ actor MCPTokenStore {
     init() {
         let appSupportUrl = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
-        let directory = appSupportUrl.appendingPathComponent("TablePro")
+        let directory = appSupportUrl.appendingPathComponent("SchemaStudio")
         self.storageUrl = directory.appendingPathComponent("mcp-tokens.json")
     }
 

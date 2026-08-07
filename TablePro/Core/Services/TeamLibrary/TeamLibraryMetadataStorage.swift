@@ -9,7 +9,7 @@
 import Foundation
 
 enum TeamLibraryMetadataStorage {
-    private static let lastPullKey = "com.TablePro.teamLibrary.lastPullAt"
+    private static let lastPullKey = "com.SchemaStudio.teamLibrary.lastPullAt"
     private static let pullInterval: TimeInterval = 7 * 24 * 60 * 60
 
     static var lastPullAt: Date? {

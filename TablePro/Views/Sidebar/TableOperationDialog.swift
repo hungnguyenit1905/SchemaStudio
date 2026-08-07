@@ -11,7 +11,7 @@ import SwiftUI
 
 /// Confirmation dialog for table delete/truncate operations
 struct TableOperationDialog: View {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "TableOperationDialog")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "TableOperationDialog")
 
     // MARK: - Properties
 
@@ -184,7 +184,7 @@ struct TableOperationDialog: View {
 
 // MARK: - Preview
 
-private let previewLogger = Logger(subsystem: "com.TablePro", category: "TableOperationDialog")
+private let previewLogger = Logger(subsystem: "com.SchemaStudio", category: "TableOperationDialog")
 
 #Preview("Drop Table - MySQL") {
     TableOperationDialog(

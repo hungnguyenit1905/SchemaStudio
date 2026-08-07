@@ -7,7 +7,7 @@ import Foundation
 import os
 
 enum PluginBundleLoader {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PluginBundleLoader")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PluginBundleLoader")
 
     static func load(_ bundle: Bundle) throws {
         do {

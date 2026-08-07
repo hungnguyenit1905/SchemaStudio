@@ -16,7 +16,7 @@ public struct PullResult: Sendable {
 }
 
 public actor CloudKitSyncEngine {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CloudKitSyncEngine")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CloudKitSyncEngine")
 
     private let container: CKContainer?
     private let database: CKDatabase?

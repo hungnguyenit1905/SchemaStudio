@@ -10,7 +10,7 @@ import SwiftUI
 
 @MainActor @Observable
 final class DatabaseSwitcherViewModel {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "DatabaseSwitcherViewModel")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "DatabaseSwitcherViewModel")
 
     var databases: [DatabaseMetadata] = []
     var searchText = "" {

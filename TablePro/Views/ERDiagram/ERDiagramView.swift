@@ -10,7 +10,7 @@ struct ERDiagramView: View {
     @State private var currentCursor: NSCursor?
     @State private var magnifyStartMag: CGFloat?
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ERDiagramView")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ERDiagramView")
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {

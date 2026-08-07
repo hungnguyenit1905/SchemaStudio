@@ -9,7 +9,7 @@ import os
 @Observable
 @MainActor
 final class CloudflareTunnelPaneViewModel {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CloudflareTunnelPane")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CloudflareTunnelPane")
 
     var state = CloudflareTunnelFormState()
 

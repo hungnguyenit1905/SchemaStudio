@@ -22,8 +22,8 @@ struct ConnectionStorageRemoveTagTests {
             at: fileURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
-        let defaultsName = "com.TablePro.tests.ConnectionStorage.RemoveTag.\(unique)"
-        let syncName = "com.TablePro.tests.Sync.RemoveTag.\(unique)"
+        let defaultsName = "com.SchemaStudio.tests.ConnectionStorage.RemoveTag.\(unique)"
+        let syncName = "com.SchemaStudio.tests.Sync.RemoveTag.\(unique)"
         guard let defaults = UserDefaults(suiteName: defaultsName),
               let syncDefaults = UserDefaults(suiteName: syncName) else {
             fatalError("UserDefaults suite creation failed in test setup")

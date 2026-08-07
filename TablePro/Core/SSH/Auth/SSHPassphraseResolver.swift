@@ -12,7 +12,7 @@ import Foundation
 import os
 
 internal enum SSHPassphraseResolver {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SSHPassphraseResolver")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SSHPassphraseResolver")
 
     /// Resolve passphrase from non-interactive sources only.
     ///

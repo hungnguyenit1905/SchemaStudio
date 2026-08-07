@@ -20,7 +20,7 @@ import UniformTypeIdentifiers
 @MainActor
 @Observable
 final class MainContentCommandActions {
-    nonisolated private static let logger = Logger(subsystem: "com.TablePro", category: "MainContentCommandActions")
+    nonisolated private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MainContentCommandActions")
 
     enum WindowCloseOutcome {
         case closed

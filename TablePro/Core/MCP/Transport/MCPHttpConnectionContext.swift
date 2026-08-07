@@ -3,7 +3,7 @@ import Network
 import os
 
 actor HttpConnectionContext {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.HttpServer")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.HttpServer")
 
     nonisolated let id: UUID
     private let connection: NWConnection

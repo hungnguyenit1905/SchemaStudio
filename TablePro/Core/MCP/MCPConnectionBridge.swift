@@ -3,7 +3,7 @@ import os
 import TableProPluginKit
 
 public actor MCPConnectionBridge {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCPConnectionBridge")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCPConnectionBridge")
 
     public init() {}
 

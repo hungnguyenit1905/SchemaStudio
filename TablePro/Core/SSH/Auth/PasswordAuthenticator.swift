@@ -9,7 +9,7 @@ import os
 import CLibSSH2
 
 internal struct PasswordAuthenticator: SSHAuthenticator {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PasswordAuthenticator")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PasswordAuthenticator")
 
     let password: String
 

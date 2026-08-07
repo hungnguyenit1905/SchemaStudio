@@ -19,7 +19,7 @@ struct FilterPreset: Identifiable, Codable, Equatable {
 @MainActor final class FilterPresetStorage {
     static let shared = FilterPresetStorage()
 
-    private let presetsKey = "com.TablePro.filter.presets"
+    private let presetsKey = "com.SchemaStudio.filter.presets"
     private let defaults = UserDefaults.standard
 
     /// Cached presets to avoid repeated UserDefaults read + JSON decode

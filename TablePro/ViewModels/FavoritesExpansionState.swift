@@ -14,8 +14,8 @@ internal final class FavoritesExpansionState {
     private(set) var foldersByConnection: [UUID: Set<UUID>] = [:]
     private(set) var linkedNodesByConnection: [UUID: Set<String>] = [:]
 
-    @ObservationIgnored private let foldersKey = "com.TablePro.favoritesExpandedFolders"
-    @ObservationIgnored private let linkedKey = "com.TablePro.favoritesExpandedLinkedNodes"
+    @ObservationIgnored private let foldersKey = "com.SchemaStudio.favoritesExpandedFolders"
+    @ObservationIgnored private let linkedKey = "com.SchemaStudio.favoritesExpandedLinkedNodes"
 
     private init() {
         load()

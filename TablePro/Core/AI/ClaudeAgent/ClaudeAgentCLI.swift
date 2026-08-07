@@ -36,7 +36,7 @@ struct ClaudeAgentCLI: Sendable {
     static let installCommand = "npm install -g @anthropic-ai/claude-code"
     static let minimumVersion = "2.1.205"
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ClaudeAgentCLI")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ClaudeAgentCLI")
     private static let subscriptionOverridingKeys: Set<String> = [
         "ANTHROPIC_API_KEY",
         "ANTHROPIC_AUTH_TOKEN"

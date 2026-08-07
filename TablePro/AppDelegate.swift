@@ -11,8 +11,8 @@ import UserNotifications
 
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "AppDelegate")
-    static let lifecycleLogger = Logger(subsystem: "com.TablePro", category: "NativeTabLifecycle")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "AppDelegate")
+    static let lifecycleLogger = Logger(subsystem: "com.SchemaStudio", category: "NativeTabLifecycle")
 
     private var hasRunPostLaunchActivation = false
 
@@ -30,7 +30,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        Logger(subsystem: "com.TablePro", category: "CSVInspector")
+        Logger(subsystem: "com.SchemaStudio", category: "CSVInspector")
             .debug("AppDelegate.application(_:open:) urls=\(urls.map(\.lastPathComponent).joined(separator: ","), privacy: .public)")
         AppLaunchCoordinator.shared.handleOpenURLs(urls)
     }
@@ -172,7 +172,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func windowWillClose(_ notification: Notification) {
         guard let window = notification.object as? NSWindow else { return }
 
-        let csvLogger = Logger(subsystem: "com.TablePro", category: "CSVInspector")
+        let csvLogger = Logger(subsystem: "com.SchemaStudio", category: "CSVInspector")
         if AppLaunchCoordinator.isMainWindow(window) {
             let remaining = NSApp.windows.filter {
                 $0 !== window && AppLaunchCoordinator.isMainWindow($0) && $0.isVisible

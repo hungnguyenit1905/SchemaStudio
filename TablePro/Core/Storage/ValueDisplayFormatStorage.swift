@@ -57,6 +57,6 @@ internal final class ValueDisplayFormatStorage {
     }
 
     private static func legacyKey(for scope: TableScope) -> String {
-        "com.TablePro.columns.displayFormat.\(scope.connectionId.uuidString).\(scope.table)"
+        "com.SchemaStudio.columns.displayFormat.\(scope.connectionId.uuidString).\(scope.table)"
     }
 }

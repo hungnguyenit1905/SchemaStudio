@@ -8,7 +8,7 @@ import os
 
 extension WelcomeViewModel {
     private static let projectFolderLogger = Logger(
-        subsystem: "com.TablePro",
+        subsystem: "com.SchemaStudio",
         category: "WelcomeProjectFolder"
     )
 

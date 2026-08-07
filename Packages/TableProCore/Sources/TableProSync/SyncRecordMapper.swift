@@ -6,7 +6,7 @@ import TableProModels
 import TableProSyncTransport
 
 public enum SyncRecordMapper {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SyncRecordMapper")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SyncRecordMapper")
     private static let encoder = JSONEncoder()
     private static let decoder = JSONDecoder()
 

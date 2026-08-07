@@ -8,7 +8,7 @@ import os
 import TableProPluginKit
 
 final class PlainFileImportSource: PluginImportSource, @unchecked Sendable {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PlainFileImportSource")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PlainFileImportSource")
 
     private let url: URL
 

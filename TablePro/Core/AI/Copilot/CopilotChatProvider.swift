@@ -7,7 +7,7 @@ import Foundation
 import os
 
 final class CopilotChatProvider: ChatTransport {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CopilotChatProvider")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CopilotChatProvider")
 
     private var conversationId: String?
     private var turnIds: [String] = []

@@ -11,7 +11,7 @@ internal protocol OperationAuthenticating: Sendable {
 }
 
 internal struct BiometricOperationAuthenticating: OperationAuthenticating {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ExecutionGate")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ExecutionGate")
 
     func authenticate(reason: String) async -> Bool {
         let context = LAContext()

@@ -332,7 +332,7 @@ extension DatabaseDriver {
                 let fks = try await fetchForeignKeys(table: table.name)
                 if !fks.isEmpty { result[table.name] = fks }
             } catch {
-                Logger(subsystem: "com.TablePro", category: "DatabaseDriver")
+                Logger(subsystem: "com.SchemaStudio", category: "DatabaseDriver")
                     .debug("Failed to fetch foreign keys for \(table.name): \(error.localizedDescription)")
             }
         }
@@ -348,7 +348,7 @@ extension DatabaseDriver {
                     let fks = try await fetchForeignKeys(table: tableName)
                     if !fks.isEmpty { result[tableName] = fks }
                 } catch {
-                    Logger(subsystem: "com.TablePro", category: "DatabaseDriver")
+                    Logger(subsystem: "com.SchemaStudio", category: "DatabaseDriver")
                         .debug("Failed to fetch foreign keys for \(tableName): \(error.localizedDescription)")
                 }
             }
@@ -366,7 +366,7 @@ extension DatabaseDriver {
                 let indexes = try await fetchIndexes(table: tableName)
                 if !indexes.isEmpty { result[tableName] = indexes }
             } catch {
-                Logger(subsystem: "com.TablePro", category: "DatabaseDriver")
+                Logger(subsystem: "com.SchemaStudio", category: "DatabaseDriver")
                     .debug("Failed to fetch indexes for \(tableName): \(error.localizedDescription)")
             }
         }
@@ -383,7 +383,7 @@ extension DatabaseDriver {
                 let columns = try await fetchColumns(table: table.name)
                 result[table.name] = columns
             } catch {
-                Logger(subsystem: "com.TablePro", category: "DatabaseDriver")
+                Logger(subsystem: "com.SchemaStudio", category: "DatabaseDriver")
                     .debug("Skipping columns for table '\(table.name)': \(error.localizedDescription)")
             }
         }
@@ -456,7 +456,7 @@ extension DatabaseDriver {
 /// Factory for creating database drivers via plugin lookup
 @MainActor
 enum DatabaseDriverFactory {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "DatabaseDriverFactory")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "DatabaseDriverFactory")
 
     /// Async variant that awaits background plugin loading instead of blocking the main thread.
     /// Preferred for all call sites that are already in an async context.

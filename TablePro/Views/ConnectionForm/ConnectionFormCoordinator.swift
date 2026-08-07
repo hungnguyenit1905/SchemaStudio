@@ -22,7 +22,7 @@ final class WeakCoordinatorRef {
 @Observable
 @MainActor
 final class ConnectionFormCoordinator {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ConnectionFormCoordinator")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ConnectionFormCoordinator")
 
     let connectionId: UUID?
     private(set) var originalConnection: DatabaseConnection?

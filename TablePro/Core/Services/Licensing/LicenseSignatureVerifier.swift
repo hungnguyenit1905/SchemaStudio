@@ -18,7 +18,7 @@ final class LicenseSignatureVerifier {
     private init() {
         self.publicKey = Self.loadPublicKey()
         if publicKey == nil {
-            Logger(subsystem: "com.TablePro", category: "LicenseSignatureVerifier")
+            Logger(subsystem: "com.SchemaStudio", category: "LicenseSignatureVerifier")
                 .error("Failed to load license public key from app bundle")
         }
     }

@@ -6,7 +6,7 @@ import os
 /// Detects connected components, places each with a force-directed pass, then packs
 /// the component blocks into the 2D plane so the diagram fills both axes.
 enum ERDiagramLayout {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ERDiagramLayout")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ERDiagramLayout")
 
     /// Multiplier derived from the user's system text-size preference.
     /// 1.0 at the default (~13pt body), grows with Larger Accessibility Sizes.

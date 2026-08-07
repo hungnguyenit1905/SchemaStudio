@@ -10,7 +10,7 @@ import os
 
 /// Singleton registry of AI provider descriptors
 final class AIProviderRegistry: @unchecked Sendable {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "AIProviderRegistry")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "AIProviderRegistry")
 
     static let shared = AIProviderRegistry()
 

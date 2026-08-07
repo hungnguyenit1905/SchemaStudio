@@ -5,7 +5,7 @@ import SQLite3
 
 actor MCPAuditLogStorage {
     static let shared = MCPAuditLogStorage()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCPAuditLogStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCPAuditLogStorage")
 
     private static let retentionDays: Int = 90
 
@@ -55,7 +55,7 @@ actor MCPAuditLogStorage {
             Self.logger.error("Unable to access application support directory")
             return
         }
-        let directory = appSupport.appendingPathComponent("TablePro")
+        let directory = appSupport.appendingPathComponent("SchemaStudio")
         try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
 
         let suffix = testDatabaseSuffix ?? ""

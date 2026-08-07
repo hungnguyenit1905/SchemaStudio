@@ -7,7 +7,7 @@ import Foundation
 import os
 
 enum SSHMatchExecutor {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SSHMatchExecutor")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SSHMatchExecutor")
     private static let timeoutSeconds: TimeInterval = 5
 
     /// Mirrors OpenSSH `Match exec` semantics: runs through `/bin/sh -c`,

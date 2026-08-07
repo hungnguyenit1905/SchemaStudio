@@ -419,7 +419,7 @@ struct FileColumnLayoutPersisterTests {
         defer { cleanup(directory) }
         let defaults = try #require(UserDefaults(suiteName: "colvis-\(UUID().uuidString)"))
         let tableKey = key("users", UUID())
-        let legacyKey = "com.TablePro.columns.hiddenColumns." + tableKey.storageKey
+        let legacyKey = "com.SchemaStudio.columns.hiddenColumns." + tableKey.storageKey
         defaults.set(["email", "phone"], forKey: legacyKey)
 
         let persister = FileColumnLayoutPersister(storageDirectory: directory, defaults: defaults)

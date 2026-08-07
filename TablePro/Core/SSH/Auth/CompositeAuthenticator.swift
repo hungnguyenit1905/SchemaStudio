@@ -11,7 +11,7 @@ import CLibSSH2
 /// Authenticator that tries multiple auth methods in sequence.
 /// Used for servers requiring e.g. password + keyboard-interactive (TOTP).
 internal struct CompositeAuthenticator: SSHAuthenticator {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CompositeAuthenticator")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CompositeAuthenticator")
 
     let authenticators: [any SSHAuthenticator]
 

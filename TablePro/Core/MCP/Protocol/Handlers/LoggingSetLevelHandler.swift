@@ -6,7 +6,7 @@ public struct LoggingSetLevelHandler: MCPMethodHandler {
     public static let requiredScopes: Set<MCPScope> = []
     public static let allowedSessionStates: Set<MCPSessionAllowedState> = [.ready]
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.Logging")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.Logging")
 
     public static let supportedLevels: Set<String> = [
         "debug", "info", "notice", "warning", "error", "critical", "alert", "emergency"

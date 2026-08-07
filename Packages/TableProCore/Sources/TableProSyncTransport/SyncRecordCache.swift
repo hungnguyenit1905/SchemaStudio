@@ -3,12 +3,12 @@ import Foundation
 import os
 
 public final class SyncRecordCache {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SyncRecordCache")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SyncRecordCache")
 
     private let defaults: UserDefaults
     private let storageKey: String
 
-    public init(defaults: UserDefaults = .standard, storageKey: String = "com.TablePro.sync.recordCache") {
+    public init(defaults: UserDefaults = .standard, storageKey: String = "com.SchemaStudio.sync.recordCache") {
         self.defaults = defaults
         self.storageKey = storageKey
     }

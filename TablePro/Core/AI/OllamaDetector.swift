@@ -10,7 +10,7 @@ import os
 
 /// Detects local Ollama server and auto-registers as an AI provider
 enum OllamaDetector {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "OllamaDetector")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "OllamaDetector")
 
     /// Check for Ollama on app launch and register if found
     @MainActor

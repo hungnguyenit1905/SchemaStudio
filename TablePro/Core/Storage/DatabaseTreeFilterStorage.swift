@@ -11,7 +11,7 @@ final class DatabaseTreeFilterStorage {
     }
 
     private func databasesKey(connectionId: UUID) -> String {
-        "com.TablePro.treeDatabaseFilter.\(connectionId.uuidString).selected"
+        "com.SchemaStudio.treeDatabaseFilter.\(connectionId.uuidString).selected"
     }
 
     func selectedDatabases(connectionId: UUID) -> Set<String> {

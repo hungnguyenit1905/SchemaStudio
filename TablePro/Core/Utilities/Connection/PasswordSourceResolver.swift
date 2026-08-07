@@ -10,7 +10,7 @@ import os
 /// File and command sources require a non-sandboxed build; TablePro ships with the hardened
 /// runtime and no App Sandbox, so spawning a process and reading arbitrary files is allowed.
 enum PasswordSourceResolver {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PasswordSourceResolver")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PasswordSourceResolver")
 
     private static let commandTimeoutSeconds: UInt64 = 30
     private static let maxOutputBytes = 1_048_576
@@ -159,7 +159,7 @@ enum PasswordSourceResolver {
             try process.run()
 
             let drainGroup = DispatchGroup()
-            let drainQueue = DispatchQueue(label: "com.TablePro.PasswordSourceResolver.pipe-drain", attributes: .concurrent)
+            let drainQueue = DispatchQueue(label: "com.SchemaStudio.PasswordSourceResolver.pipe-drain", attributes: .concurrent)
             drainPipe(
                 stdoutPipe.fileHandleForReading,
                 into: stdoutCollector,

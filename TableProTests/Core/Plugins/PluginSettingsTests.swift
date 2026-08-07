@@ -101,7 +101,7 @@ struct PluginSettingsStorageTests {
         #expect(storageB.load(String.self) == "fromB")
     }
 
-    @Test("keys are namespaced with com.TablePro.plugin prefix")
+    @Test("keys are namespaced with com.SchemaStudio.plugin prefix")
     func keysNamespaced() {
         let pluginId = "test.namespace.\(UUID().uuidString)"
         let storage = PluginSettingsStorage(pluginId: pluginId)
@@ -109,7 +109,7 @@ struct PluginSettingsStorageTests {
 
         storage.save(true)
 
-        let expectedKey = "com.TablePro.plugin.\(pluginId).settings"
+        let expectedKey = "com.SchemaStudio.plugin.\(pluginId).settings"
         let value = UserDefaults.standard.data(forKey: expectedKey)
         #expect(value != nil)
     }
@@ -255,7 +255,7 @@ struct DisabledPluginsMigrationTests {
     @Test("migration moves legacy key to namespaced key")
     func migrationMovesKey() {
         let testKey = "disabledPlugins"
-        let namespacedKey = "com.TablePro.disabledPlugins"
+        let namespacedKey = "com.SchemaStudio.disabledPlugins"
         let defaults = UserDefaults.standard
 
         // Save current state
@@ -295,7 +295,7 @@ struct DisabledPluginsMigrationTests {
     @Test("migration is no-op when legacy key absent")
     func migrationNoOpWhenAbsent() {
         let testKey = "disabledPlugins"
-        let namespacedKey = "com.TablePro.disabledPlugins"
+        let namespacedKey = "com.SchemaStudio.disabledPlugins"
         let defaults = UserDefaults.standard
 
         let savedNamespaced = defaults.stringArray(forKey: namespacedKey)
@@ -331,7 +331,7 @@ struct DisabledPluginsMigrationTests {
     @Test("migration preserves namespaced key when both keys exist")
     func migrationPreservesNamespacedWhenBothExist() {
         let testKey = "disabledPlugins"
-        let namespacedKey = "com.TablePro.disabledPlugins"
+        let namespacedKey = "com.SchemaStudio.disabledPlugins"
         let defaults = UserDefaults.standard
 
         let savedNamespaced = defaults.stringArray(forKey: namespacedKey)

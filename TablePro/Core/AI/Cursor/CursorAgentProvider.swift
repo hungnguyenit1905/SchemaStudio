@@ -7,7 +7,7 @@ import Foundation
 import os
 
 final class CursorAgentProvider: ChatTransport {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CursorAgentProvider")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CursorAgentProvider")
 
     private let model: String
     private let cli: CursorAgentCLI

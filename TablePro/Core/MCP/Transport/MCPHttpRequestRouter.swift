@@ -2,7 +2,7 @@ import Foundation
 import os
 
 struct MCPHttpRequestRouter: Sendable {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.HttpRouter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.HttpRouter")
 
     private static let staticInternalErrorEnvelope = Data(
         #"{"jsonrpc":"2.0","id":null,"error":{"code":-32603,"message":"internal_error"}}"#.utf8

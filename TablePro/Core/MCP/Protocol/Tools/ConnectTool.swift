@@ -23,7 +23,7 @@ public struct ConnectTool: MCPToolImplementation {
         openWorldHint: true
     )
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.Tools")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.Tools")
 
     public init() {}
 

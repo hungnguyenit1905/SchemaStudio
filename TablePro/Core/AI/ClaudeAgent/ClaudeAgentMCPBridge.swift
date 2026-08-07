@@ -17,7 +17,7 @@ protocol ClaudeAgentMCPBridging: Sendable {
 }
 
 struct ClaudeAgentMCPBridge: ClaudeAgentMCPBridging {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ClaudeAgentMCPBridge")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ClaudeAgentMCPBridge")
     private static let tokenName = "__claude_agent__"
     private static let tokenLifetime: TimeInterval = 15 * 60
 

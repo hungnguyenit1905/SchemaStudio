@@ -26,9 +26,9 @@ struct ConnectionStoragePersistenceTests {
             at: fileURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
-        let suiteName = "com.TablePro.tests.ConnectionStorage.\(unique)"
+        let suiteName = "com.SchemaStudio.tests.ConnectionStorage.\(unique)"
         guard let defaults = UserDefaults(suiteName: suiteName),
-              let syncDefaults = UserDefaults(suiteName: "com.TablePro.tests.Sync.\(unique)")
+              let syncDefaults = UserDefaults(suiteName: "com.SchemaStudio.tests.Sync.\(unique)")
         else {
             fatalError("Failed to create isolated test user defaults")
         }

@@ -2,7 +2,7 @@ import Foundation
 import os
 
 public actor MCPProtocolDispatcher {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.Dispatcher")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.Dispatcher")
 
     private let handlers: [String: any MCPMethodHandler]
     private let sessionStore: MCPSessionStore

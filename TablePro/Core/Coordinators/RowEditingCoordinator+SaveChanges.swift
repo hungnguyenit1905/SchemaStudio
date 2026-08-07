@@ -8,7 +8,7 @@ import os
 import SwiftUI
 import TableProPluginKit
 
-private let saveChangesLogger = Logger(subsystem: "com.TablePro", category: "RowEditingCoordinator")
+private let saveChangesLogger = Logger(subsystem: "com.SchemaStudio", category: "RowEditingCoordinator")
 
 extension RowEditingCoordinator {
     /// The scope is read once, before the destructive-delete sheet and the authorization

@@ -12,7 +12,7 @@ public enum MCPHttpServerState: Sendable, Equatable {
 }
 
 public actor MCPHttpServerTransport {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "MCP.HttpServer")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCP.HttpServer")
 
     private let configuration: MCPHttpServerConfiguration
     private let sessionStore: MCPSessionStore

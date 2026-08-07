@@ -10,7 +10,7 @@ import os
 
 actor CloudSQLProxyBinaryManager {
     static let shared = CloudSQLProxyBinaryManager()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "CloudSQLProxyBinary")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "CloudSQLProxyBinary")
 
     static let pinnedVersion = "2.23.0"
 

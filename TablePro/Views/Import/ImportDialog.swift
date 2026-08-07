@@ -13,7 +13,7 @@ import TableProPluginKit
 import UniformTypeIdentifiers
 
 struct ImportDialog: View {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ImportDialog")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ImportDialog")
     @Binding var isPresented: Bool
     let connection: DatabaseConnection
     let initialFileURL: URL?

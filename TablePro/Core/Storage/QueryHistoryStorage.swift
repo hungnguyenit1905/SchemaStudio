@@ -26,7 +26,7 @@ enum DateFilter {
 }
 
 actor QueryHistoryStorage {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "QueryHistoryStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "QueryHistoryStorage")
 
     private var db: OpaquePointer?
     private var cachedMaxHistoryEntries: Int = 10_000
@@ -50,7 +50,7 @@ actor QueryHistoryStorage {
         let appSupport = fileManager.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
         ).first ?? fileManager.temporaryDirectory
-        let dir = appSupport.appendingPathComponent("TablePro")
+        let dir = appSupport.appendingPathComponent("SchemaStudio")
         try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("query_history.db")
     }

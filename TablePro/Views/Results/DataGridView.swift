@@ -105,7 +105,7 @@ struct DataGridView: NSViewRepresentable {
 
         let hasMoveRow = delegate != nil
         if hasMoveRow {
-            tableView.registerForDraggedTypes([NSPasteboard.PasteboardType("com.TablePro.rowDrag")])
+            tableView.registerForDraggedTypes([NSPasteboard.PasteboardType("com.SchemaStudio.rowDrag")])
             tableView.draggingDestinationFeedbackStyle = .gap
         }
 
@@ -221,7 +221,7 @@ struct DataGridView: NSViewRepresentable {
             }
         }
 
-        let rowDragType = NSPasteboard.PasteboardType("com.TablePro.rowDrag")
+        let rowDragType = NSPasteboard.PasteboardType("com.SchemaStudio.rowDrag")
         let hasDragRegistered = tableView.registeredDraggedTypes.contains(rowDragType)
         if hasMoveDelegate && !hasDragRegistered {
             tableView.registerForDraggedTypes([rowDragType])

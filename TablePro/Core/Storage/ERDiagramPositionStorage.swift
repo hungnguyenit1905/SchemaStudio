@@ -10,7 +10,7 @@ final class ERDiagramPositionStorage {
     private init() {}
 
     private func key(connectionId: UUID, schemaKey: String) -> String {
-        "com.TablePro.erDiagram.positions.\(connectionId.uuidString).\(schemaKey)"
+        "com.SchemaStudio.erDiagram.positions.\(connectionId.uuidString).\(schemaKey)"
     }
 
     func load(connectionId: UUID, schemaKey: String) -> [String: CGPoint] {

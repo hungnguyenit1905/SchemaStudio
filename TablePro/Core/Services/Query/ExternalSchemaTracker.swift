@@ -16,7 +16,7 @@ final class ExternalSchemaTracker {
         let database: String
     }
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ExternalSchemaTracker")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ExternalSchemaTracker")
 
     private var namesByDatabase: [Key: Set<String>] = [:]
 

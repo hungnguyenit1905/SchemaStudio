@@ -6,7 +6,7 @@
 import Foundation
 import os
 
-private let columnScopeLog = Logger(subsystem: "com.TablePro", category: "ColumnFetchScope")
+private let columnScopeLog = Logger(subsystem: "com.SchemaStudio", category: "ColumnFetchScope")
 
 extension MainContentCoordinator {
     func selectColumns(for tab: QueryTab) -> [String]? {

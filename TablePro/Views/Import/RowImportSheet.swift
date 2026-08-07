@@ -14,7 +14,7 @@ import SwiftUI
 import TableProPluginKit
 
 struct RowImportSheet: View {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "RowImportSheet")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "RowImportSheet")
 
     @Binding var isPresented: Bool
     let connection: DatabaseConnection

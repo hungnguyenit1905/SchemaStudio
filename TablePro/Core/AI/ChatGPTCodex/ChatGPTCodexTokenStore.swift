@@ -9,8 +9,8 @@ import os
 actor ChatGPTCodexTokenStore {
     static let shared = ChatGPTCodexTokenStore()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "ChatGPTCodexTokenStore")
-    private static let storageKey = "com.TablePro.aioauth.chatgptCodex"
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "ChatGPTCodexTokenStore")
+    private static let storageKey = "com.SchemaStudio.aioauth.chatgptCodex"
 
     private let keychain: KeychainStoring
     private let refresher: ChatGPTCodexTokenRefreshing

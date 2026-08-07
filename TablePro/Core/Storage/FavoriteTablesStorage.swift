@@ -8,7 +8,7 @@ extension Notification.Name {
 
 final class FavoriteTablesStorage {
     static let shared = FavoriteTablesStorage()
-    private static let logger = Logger(subsystem: "com.TablePro", category: "FavoriteTablesStorage")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "FavoriteTablesStorage")
 
     struct FavoriteEntry: Codable, Hashable {
         let connectionId: UUID
@@ -19,7 +19,7 @@ final class FavoriteTablesStorage {
 
     private let defaults: UserDefaults
     private let syncTracker: SyncChangeTracker
-    private let key = "com.TablePro.favoriteTables"
+    private let key = "com.SchemaStudio.favoriteTables"
     private var cache: Set<FavoriteEntry>?
     private let lock = NSLock()
 

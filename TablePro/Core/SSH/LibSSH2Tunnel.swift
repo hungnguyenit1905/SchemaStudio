@@ -16,7 +16,7 @@ internal final class LibSSH2Tunnel: @unchecked Sendable {
     let localPort: Int
     let createdAt: Date
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "LibSSH2Tunnel")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LibSSH2Tunnel")
 
     private let session: OpaquePointer           // LIBSSH2_SESSION*
     private let socketFD: Int32                   // TCP socket to SSH server
@@ -81,16 +81,16 @@ internal final class LibSSH2Tunnel: @unchecked Sendable {
         self.jumpChain = jumpChain
         self.createdAt = Date()
         self.sessionQueue = DispatchQueue(
-            label: "com.TablePro.ssh.session.\(connectionId.uuidString)",
+            label: "com.SchemaStudio.ssh.session.\(connectionId.uuidString)",
             qos: .utility
         )
         self.relayQueue = DispatchQueue(
-            label: "com.TablePro.ssh.relay.\(connectionId.uuidString)",
+            label: "com.SchemaStudio.ssh.relay.\(connectionId.uuidString)",
             qos: .utility,
             attributes: .concurrent
         )
         self.acceptQueue = DispatchQueue(
-            label: "com.TablePro.ssh.accept.\(connectionId.uuidString)",
+            label: "com.SchemaStudio.ssh.accept.\(connectionId.uuidString)",
             qos: .utility
         )
     }

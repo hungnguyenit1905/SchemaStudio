@@ -12,7 +12,7 @@ import os
 internal final class WindowOpener {
     internal static let shared = WindowOpener()
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "WindowOpener")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "WindowOpener")
 
     @ObservationIgnored private var openWelcomeAction: (() -> Void)?
     @ObservationIgnored private var openConnectionFormAction: ((ConnectionFormRequest) -> Void)?

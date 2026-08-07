@@ -8,7 +8,7 @@ import Foundation
 import os
 import TableProPluginKit
 
-private let progressLog = Logger(subsystem: "com.TablePro", category: "ProgressiveLoad")
+private let progressLog = Logger(subsystem: "com.SchemaStudio", category: "ProgressiveLoad")
 
 @MainActor @Observable
 final class PaginationCoordinator {

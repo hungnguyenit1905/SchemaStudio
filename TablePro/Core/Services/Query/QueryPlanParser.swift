@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-private let logger = Logger(subsystem: "com.TablePro", category: "QueryPlanParser")
+private let logger = Logger(subsystem: "com.SchemaStudio", category: "QueryPlanParser")
 
 // MARK: - Parser Protocol
 

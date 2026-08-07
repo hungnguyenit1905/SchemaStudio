@@ -20,7 +20,7 @@ final class SchemaRefreshService {
         let database: String?
     }
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "SchemaRefreshService")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "SchemaRefreshService")
 
     private let schemaService: SchemaService
     private let treeMetadataService: DatabaseTreeMetadataService

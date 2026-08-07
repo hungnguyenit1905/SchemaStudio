@@ -18,7 +18,7 @@ internal struct SSHTunnelCredentials: Sendable {
 
 /// Creates fully-connected and authenticated SSH tunnels using libssh2.
 internal enum LibSSH2TunnelFactory {
-    private static let logger = Logger(subsystem: "com.TablePro", category: "LibSSH2TunnelFactory")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "LibSSH2TunnelFactory")
 
     private static let connectionTimeout: Int32 = 10 // seconds
 
@@ -54,7 +54,7 @@ internal enum LibSSH2TunnelFactory {
         let chain = try await buildAuthenticatedChain(
             config: config,
             credentials: credentials,
-            queueLabel: "com.TablePro.ssh.hop.\(connectionId.uuidString)"
+            queueLabel: "com.SchemaStudio.ssh.hop.\(connectionId.uuidString)"
         )
 
         do {
@@ -104,7 +104,7 @@ internal enum LibSSH2TunnelFactory {
         let chain = try await buildAuthenticatedChain(
             config: config,
             credentials: credentials,
-            queueLabel: "com.TablePro.ssh.test-hop"
+            queueLabel: "com.SchemaStudio.ssh.test-hop"
         )
 
         logger.info("SSH test connection successful to \(config.host)")
@@ -728,7 +728,7 @@ internal enum LibSSH2TunnelFactory {
         socketFD: Int32,
         destination: SSHForwardDestination
     ) throws {
-        let probeQueue = DispatchQueue(label: "com.TablePro.ssh.probe")
+        let probeQueue = DispatchQueue(label: "com.SchemaStudio.ssh.probe")
         probeQueue.sync { libssh2_session_set_blocking(session, 0) }
         defer { probeQueue.sync { libssh2_session_set_blocking(session, 1) } }
 
@@ -796,7 +796,7 @@ internal enum LibSSH2TunnelFactory {
         sessionQueue: DispatchQueue
     ) -> Task<Void, Never> {
         let relayQueue = DispatchQueue(
-            label: "com.TablePro.ssh.hop-relay",
+            label: "com.SchemaStudio.ssh.hop-relay",
             qos: .utility
         )
         return Task.detached {

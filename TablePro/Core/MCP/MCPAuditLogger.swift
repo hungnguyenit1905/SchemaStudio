@@ -2,12 +2,12 @@ import Foundation
 import os
 
 enum MCPAuditLogger {
-    private static let serverAuth = Logger(subsystem: "com.TablePro", category: "MCPAuth")
-    private static let serverAccess = Logger(subsystem: "com.TablePro", category: "MCPAccess")
-    private static let serverAdmin = Logger(subsystem: "com.TablePro", category: "MCPAdmin")
-    private static let serverQuery = Logger(subsystem: "com.TablePro", category: "MCPQuery")
-    private static let serverTool = Logger(subsystem: "com.TablePro", category: "MCPTool")
-    private static let serverResource = Logger(subsystem: "com.TablePro", category: "MCPResource")
+    private static let serverAuth = Logger(subsystem: "com.SchemaStudio", category: "MCPAuth")
+    private static let serverAccess = Logger(subsystem: "com.SchemaStudio", category: "MCPAccess")
+    private static let serverAdmin = Logger(subsystem: "com.SchemaStudio", category: "MCPAdmin")
+    private static let serverQuery = Logger(subsystem: "com.SchemaStudio", category: "MCPQuery")
+    private static let serverTool = Logger(subsystem: "com.SchemaStudio", category: "MCPTool")
+    private static let serverResource = Logger(subsystem: "com.SchemaStudio", category: "MCPResource")
 
     private static let sqlExcerptLimit = 256
 

@@ -70,7 +70,7 @@ final class PluginDriverAdapter: DatabaseDriver, SchemaSwitchable {
         return pluginDriver.escapeStringLiteral(schema)
     }
 
-    private static let logger = Logger(subsystem: "com.TablePro", category: "PluginDriverAdapter")
+    private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PluginDriverAdapter")
 
     private static let iso8601Formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()

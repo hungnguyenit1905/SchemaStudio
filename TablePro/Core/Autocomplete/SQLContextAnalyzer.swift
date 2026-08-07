@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-private let regexLogger = Logger(subsystem: "com.TablePro", category: "SQLContextAnalyzer.Regex")
+private let regexLogger = Logger(subsystem: "com.SchemaStudio", category: "SQLContextAnalyzer.Regex")
 
 private func compileRegex(_ pattern: String, options: NSRegularExpression.Options = []) -> NSRegularExpression {
     if let regex = try? NSRegularExpression(pattern: pattern, options: options) {

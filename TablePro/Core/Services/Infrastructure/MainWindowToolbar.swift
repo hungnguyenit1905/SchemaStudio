@@ -11,9 +11,9 @@ import TableProPluginKit
 
 @MainActor
 internal final class MainWindowToolbar: NSObject, NSToolbarDelegate {
-    private static let lifecycleLogger = Logger(subsystem: "com.TablePro", category: "NativeTabLifecycle")
+    private static let lifecycleLogger = Logger(subsystem: "com.SchemaStudio", category: "NativeTabLifecycle")
 
-    internal static let toolbarIdentifier = NSToolbar.Identifier("com.TablePro.main.toolbar.v2")
+    internal static let toolbarIdentifier = NSToolbar.Identifier("com.SchemaStudio.main.toolbar.v2")
 
     weak var coordinator: MainContentCoordinator?
 
@@ -51,24 +51,24 @@ internal final class MainWindowToolbar: NSObject, NSToolbarDelegate {
 
     // MARK: - Identifiers
 
-    static let connectionGroup = NSToolbarItem.Identifier("com.TablePro.toolbar.connectionGroup")
-    static let connection = NSToolbarItem.Identifier("com.TablePro.toolbar.connection")
-    static let database = NSToolbarItem.Identifier("com.TablePro.toolbar.database")
-    static let refresh = NSToolbarItem.Identifier("com.TablePro.toolbar.refresh")
-    static let saveChanges = NSToolbarItem.Identifier("com.TablePro.toolbar.saveChanges")
-    static let principal = NSToolbarItem.Identifier("com.TablePro.toolbar.principal")
-    static let quickSwitcher = NSToolbarItem.Identifier("com.TablePro.toolbar.quickSwitcher")
-    static let newTab = NSToolbarItem.Identifier("com.TablePro.toolbar.newTab")
-    static let previewSQL = NSToolbarItem.Identifier("com.TablePro.toolbar.previewSQL")
-    static let results = NSToolbarItem.Identifier("com.TablePro.toolbar.results")
+    static let connectionGroup = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.connectionGroup")
+    static let connection = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.connection")
+    static let database = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.database")
+    static let refresh = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.refresh")
+    static let saveChanges = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.saveChanges")
+    static let principal = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.principal")
+    static let quickSwitcher = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.quickSwitcher")
+    static let newTab = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.newTab")
+    static let previewSQL = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.previewSQL")
+    static let results = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.results")
     static let inspector = NSToolbarItem.Identifier.toggleInspector
-    static let dashboard = NSToolbarItem.Identifier("com.TablePro.toolbar.dashboard")
-    static let history = NSToolbarItem.Identifier("com.TablePro.toolbar.history")
-    static let exportTables = NSToolbarItem.Identifier("com.TablePro.toolbar.export")
-    static let importTables = NSToolbarItem.Identifier("com.TablePro.toolbar.import")
-    static let refreshSaveGroup = NSToolbarItem.Identifier("com.TablePro.toolbar.refreshSaveGroup")
-    static let exportImportGroup = NSToolbarItem.Identifier("com.TablePro.toolbar.exportImportGroup")
-    static let sidebarToggle = NSToolbarItem.Identifier("com.TablePro.toolbar.sidebarToggle")
+    static let dashboard = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.dashboard")
+    static let history = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.history")
+    static let exportTables = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.export")
+    static let importTables = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.import")
+    static let refreshSaveGroup = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.refreshSaveGroup")
+    static let exportImportGroup = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.exportImportGroup")
+    static let sidebarToggle = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.sidebarToggle")
 
     // MARK: - NSToolbarDelegate
 
