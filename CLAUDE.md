@@ -204,7 +204,7 @@ These have caused real bugs when violated:
 | Filter defaults      | UserDefaults     | `FilterSettingsStorage` (default column/operator, panel state) |
 | Filter presets       | UserDefaults     | `FilterPresetStorage`                       |
 | Per-table filters    | JSON files       | `FilterSettingsStorage` (one file per connection + database + schema + table; saves the valid working set, each row's enabled flag included) |
-| Favorite tables      | UserDefaults     | `FavoriteTablesStorage` (per connection + database + schema; iCloud-synced) |
+| Favorite tables      | UserDefaults     | `FavoriteTablesStorage` (per connection + database + schema; still records changes through `SyncChangeTracker`, but sync is disabled in this fork so the data stays on the device) |
 | Tree database filter | UserDefaults     | `DatabaseTreeFilterStorage` (per connection; selected database set, empty = show all; device-local). Live value held in `SharedSidebarState`. |
 | Recent tables        | UserDefaults     | `RecentTablesStore` (per connection, keyed by database, last 10 each; device-local). Live value held in `SharedSidebarState`, recorded at the `QueryTabManager` open chokepoint. |
 | Trusted external links | UserDefaults   | `ExternalConnectionTrustStore` (keyed by database type + host + database + username + URL `name`, never the port; loopback hosts only, enforced on read and write). Consulted by `ExternalConnectionGate` before the external-URL confirmation alert. |
