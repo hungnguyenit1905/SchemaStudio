@@ -15,10 +15,6 @@ struct ConnectionRowView: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            connection.type.iconImage
-                .renderingMode(.template)
-                .foregroundStyle(isEmphasized ? AnyShapeStyle(.white) : AnyShapeStyle(connection.displayColor))
-
             Text(connection.name)
                 .fontWeight(status.isConnected ? .semibold : .regular)
                 .lineLimit(1)
