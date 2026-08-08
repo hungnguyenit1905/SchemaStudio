@@ -1277,6 +1277,22 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         "DROP INDEX \(quoteIdentifier(core.currentSchema)).\(quoteIdentifier(indexName))"
     }
 
+    func generateResetSequenceSQL(table: String, schema: String?, column: String) -> String? {
+        guard includesSequencesCatalog() else { return nil }
+        let schemaName = schema ?? core.currentSchema
+        let qualified = "\(quoteIdentifier(schemaName)).\(quoteIdentifier(table))"
+        let tableLiteral = escapeLiteral(qualified)
+        let columnLiteral = escapeLiteral(column)
+        return """
+        SELECT pg_catalog.setval(s.seq, COALESCE(s.top, 1), s.top IS NOT NULL)
+        FROM (
+            SELECT pg_catalog.pg_get_serial_sequence('\(tableLiteral)', '\(columnLiteral)') AS seq,
+                   (SELECT MAX(\(quoteIdentifier(column))) FROM \(qualified)) AS top
+        ) s
+        WHERE s.seq IS NOT NULL
+        """
+    }
+
     func generateAddForeignKeySQL(table: String, fk: PluginForeignKeyDefinition) -> String? {
         "ALTER TABLE \(qualifiedTableName(table)) ADD \(pgForeignKeyDefinition(fk))"
     }

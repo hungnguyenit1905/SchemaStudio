@@ -132,6 +132,7 @@
                 "pages": [
                   "features/csv-inspector",
                   "features/import-export",
+                  "features/data-transfer",
                   "features/backup-restore",
                   "features/change-tracking",
                   "features/filtering"

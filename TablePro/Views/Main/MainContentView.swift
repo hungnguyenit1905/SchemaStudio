@@ -171,11 +171,17 @@ struct MainContentView: View {
                 if !$0 {
                     coordinator.activeSheet = nil
                     coordinator.exportPreselectedTableNames = nil
+                    coordinator.dataTransferPreselectedScope = nil
                 }
             }
         )
 
         switch sheet {
+        case .dataTransfer:
+            DataTransferWizard(
+                isPresented: dismissBinding,
+                preselectedScope: coordinator.dataTransferPreselectedScope
+            )
         case .createDatabase:
             let viewModel = DatabaseSwitcherViewModel(
                 connectionId: connection.id,

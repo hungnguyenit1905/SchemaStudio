@@ -44,6 +44,27 @@ final class ImportDataSinkAdapter: PluginImportDataSink, @unchecked Sendable {
         }
     }
 
+    /// Bulk copy needs a generator that already knows the target's columns,
+    /// its generated columns and its own quoting, none of which the mapping
+    /// alone can supply.
+    init(
+        driver: DatabaseDriver,
+        databaseType: DatabaseType,
+        targetTable: String,
+        columnMapping: [String: String],
+        rowGenerator: SQLStatementGenerator
+    ) {
+        self.driver = driver
+        self.databaseType = databaseType
+        self.databaseTypeId = databaseType.rawValue
+        self.targetTable = targetTable
+        self.columnMapping = Dictionary(
+            columnMapping.map { ($0.key.lowercased(), $0.value) },
+            uniquingKeysWith: { _, last in last }
+        )
+        self.rowGenerator = rowGenerator
+    }
+
     func execute(statement: String) async throws {
         _ = try await driver.execute(query: statement)
     }

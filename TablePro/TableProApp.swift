@@ -553,6 +553,13 @@ struct AppMenuCommands: Commands {
             .disabled(!(actions?.isConnected ?? false))
         }
 
+        CommandMenu("Tools") {
+            Button(String(localized: "Data Transfer\u{2026}")) {
+                actions?.openDataTransfer()
+            }
+            .disabled(!(actions?.isConnected ?? false))
+        }
+
         // Edit menu - Undo/Redo (smart handling for both text editor and data grid)
         CommandGroup(replacing: .undoRedo) {
             Button("Undo") {
@@ -803,55 +810,57 @@ struct AppMenuCommands: Commands {
             .keyboardShortcut("-", modifiers: .command)
         }
 
-        // Tab navigation shortcuts — native macOS window tabs
-        CommandGroup(after: .windowArrangement) {
-            ForEach(1 ... 9, id: \.self) { number in
-                Button("Select Tab \(number)") {
-                    actions?.selectTab(number: number)
+        Group {
+            // Tab navigation shortcuts — native macOS window tabs
+            CommandGroup(after: .windowArrangement) {
+                ForEach(1 ... 9, id: \.self) { number in
+                    Button("Select Tab \(number)") {
+                        actions?.selectTab(number: number)
+                    }
+                    .keyboardShortcut(
+                        KeyEquivalent(Character(String(number))),
+                        modifiers: .command
+                    )
+                    .disabled(!(actions?.isConnected ?? false))
                 }
-                .keyboardShortcut(
-                    KeyEquivalent(Character(String(number))),
-                    modifiers: .command
-                )
+
+                Divider()
+
+                // Previous tab (Cmd+Shift+[) — delegate to native macOS tab switching
+                Button("Show Previous Tab") {
+                    NSApp.sendAction(#selector(NSWindow.selectPreviousTab(_:)), to: nil, from: nil)
+                }
+                .optionalKeyboardShortcut(shortcut(for: .showPreviousTab))
                 .disabled(!(actions?.isConnected ?? false))
+
+                // Next tab (Cmd+Shift+]) — delegate to native macOS tab switching
+                Button("Show Next Tab") {
+                    NSApp.sendAction(#selector(NSWindow.selectNextTab(_:)), to: nil, from: nil)
+                }
+                .optionalKeyboardShortcut(shortcut(for: .showNextTab))
+                .disabled(!(actions?.isConnected ?? false))
+
+                Divider()
+
+                Button("Bring All to Front") {
+                    NSApp.arrangeInFront(nil)
+                }
             }
 
-            Divider()
+            // Help menu — replace default "[App Name] Help" item (which calls
+            // showHelp: and fails with "Help isn't available" when no Help Book
+            // is registered). The search field is preserved automatically.
+            CommandGroup(replacing: .help) {
+                Button("GitHub Repository") {
+                    if let url = URL(string: "https://github.com/TableProApp/TablePro") { NSWorkspace.shared.open(url) }
+                }
 
-            // Previous tab (Cmd+Shift+[) — delegate to native macOS tab switching
-            Button("Show Previous Tab") {
-                NSApp.sendAction(#selector(NSWindow.selectPreviousTab(_:)), to: nil, from: nil)
-            }
-            .optionalKeyboardShortcut(shortcut(for: .showPreviousTab))
-            .disabled(!(actions?.isConnected ?? false))
+                Divider()
 
-            // Next tab (Cmd+Shift+]) — delegate to native macOS tab switching
-            Button("Show Next Tab") {
-                NSApp.sendAction(#selector(NSWindow.selectNextTab(_:)), to: nil, from: nil)
-            }
-            .optionalKeyboardShortcut(shortcut(for: .showNextTab))
-            .disabled(!(actions?.isConnected ?? false))
-
-            Divider()
-
-            Button("Bring All to Front") {
-                NSApp.arrangeInFront(nil)
-            }
-        }
-
-        // Help menu — replace default "[App Name] Help" item (which calls
-        // showHelp: and fails with "Help isn't available" when no Help Book
-        // is registered). The search field is preserved automatically.
-        CommandGroup(replacing: .help) {
-            Button("GitHub Repository") {
-                if let url = URL(string: "https://github.com/TableProApp/TablePro") { NSWorkspace.shared.open(url) }
-            }
-
-            Divider()
-
-            Button(String(localized: "Report an Issue")) {
-                if let url = URL(string: "https://github.com/TableProApp/TablePro/issues") {
-                    NSWorkspace.shared.open(url)
+                Button(String(localized: "Report an Issue")) {
+                    if let url = URL(string: "https://github.com/TableProApp/TablePro/issues") {
+                        NSWorkspace.shared.open(url)
+                    }
                 }
             }
         }

@@ -1,0 +1,71 @@
+---
+title: Data Transfer
+description: Copy tables, indexes and foreign keys from one connection to another of the same database type, without going through a file.
+---
+
+Data Transfer copies tables straight from one connection to another. It reads rows from the source
+in a stream and writes them to the target in batches, so a table larger than memory still goes
+through. Open it from **Tools > Data Transfer…**, or right-click a database in the sidebar and pick
+**Data Transfer…** to start with that connection and database already filled in.
+
+<Note>
+Both connections have to use the same database type. A MySQL source cannot write to a PostgreSQL
+target in this version. The target connection also has to allow writes, so a read-only
+[Safe Mode](/features/safe-mode) level blocks the run.
+</Note>
+
+## The three steps
+
+1. **Source and target.** Pick a connection, a database, and a schema on each side. The target list
+   only shows connections of the same database type, and it refuses a target that points at the
+   same database as the source.
+2. **Tables.** Pick the tables to copy. The list holds tables only, no views, and shows an estimated
+   row count for each one. The target table always keeps the source name.
+3. **Mode and options.** Pick how the target is prepared, review the checks, then start.
+
+## Modes
+
+| Mode | What it does at the target |
+| ---- | -------------------------- |
+| Copy (drop and recreate target) | Drops the table if it exists, recreates it from the source structure, then loads the rows. |
+| Empty target then transfer | Empties the existing table and loads the rows into it. The table keeps its own indexes and foreign keys. |
+
+## Options
+
+- **Create target table if it does not exist**: in *Empty target then transfer*, creates a table
+  that is missing instead of failing on it. With the option off, a missing table is reported as an
+  error and nothing is created behind your back.
+- **Use a single transaction**: wraps the row loading of each table in its own transaction, so a
+  failure part-way through leaves that table as it was. Statements that create, drop or empty a
+  table stay outside it, because most engines commit those on their own.
+- **Continue when a table fails**: moves on to the next table instead of stopping the run. The
+  report lists every failure at the end.
+
+## What runs, and in what order
+
+The transfer checks everything it can before it writes anything: it reads the structure of every
+selected table, works out which tables already exist at the target, and, for *Empty target then
+transfer*, compares the columns. A target table that is missing a column stops the run before it is
+emptied. A table that another table still references through a foreign key stops the run before it
+is dropped, and names the constraint.
+
+Once the checks pass, the run goes through three passes over the whole selection: create the tables,
+load the rows, then add the indexes and foreign keys. The first pass runs with foreign key checks
+off, because most engines refuse to empty or drop a table another table points at, and the tables
+are prepared in no particular order. The checks go back on as soon as the pass ends. Foreign keys go on last so a child table can
+be loaded before its parent, which removes the need to order tables at all. After the rows are in,
+sequences are lifted to the largest value in the table, so the first insert after a transfer does
+not collide with an existing key.
+
+## What is not carried over
+
+- **Generated columns.** They are computed by the server and reject a written value, so they are
+  not created and not written. The wizard warns about them before the run.
+- **CHECK constraints, partitioning, and triggers.**
+- **Views, materialized views, foreign tables and system tables**, which never appear in the list.
+
+## Stopping a transfer
+
+**Stop** ends the run after the current batch. A statement already running on the server cannot be
+interrupted, so a large batch finishes first. An open transaction is rolled back, and the report
+shows which tables completed, which failed, and which never ran.

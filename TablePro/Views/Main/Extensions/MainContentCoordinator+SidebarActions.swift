@@ -152,6 +152,14 @@ extension MainContentCoordinator {
         activeSheet = .exportDialog
     }
 
+    /// The wizard picks its own source and target, so the scope only
+    /// prefills the first step. It comes from the clicked node, which can
+    /// belong to a different connection than this window.
+    func openDataTransferWizard(preselectedScope: DatabaseScope? = nil) {
+        dataTransferPreselectedScope = preselectedScope
+        activeSheet = .dataTransfer
+    }
+
     func openExportQueryResultsDialog() {
         guard let tab = tabManager.selectedTab,
               !tabSessionRegistry.tableRows(for: tab.id).rows.isEmpty else { return }

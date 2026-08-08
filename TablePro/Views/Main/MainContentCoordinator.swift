@@ -41,6 +41,7 @@ enum ActiveSheet: Identifiable {
     case restoreDatabase(fileURL: URL)
     case maintenance(operation: String, tableName: String)
     case createDatabase
+    case dataTransfer
 
     var id: String {
         switch self {
@@ -53,6 +54,7 @@ enum ActiveSheet: Identifiable {
         case .restoreDatabase(let fileURL): "restoreDatabase-\(fileURL.path)"
         case .maintenance(let operation, let tableName): "maintenance-\(operation)-\(tableName)"
         case .createDatabase: "createDatabase"
+        case .dataTransfer: "dataTransfer"
         }
     }
 }
@@ -181,6 +183,7 @@ final class MainContentCoordinator {
     var databaseToDrop: String?
     var importFileURL: URL?
     var exportPreselectedTableNames: Set<String>?
+    var dataTransferPreselectedScope: DatabaseScope?
     var pendingLoadTrigger: TableLoadTrigger?
     @ObservationIgnored var deferredRestoreLoadTabId: UUID?
 

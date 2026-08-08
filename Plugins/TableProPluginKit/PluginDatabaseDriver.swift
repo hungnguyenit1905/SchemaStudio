@@ -241,6 +241,13 @@ public protocol PluginDatabaseDriver: AnyObject, Sendable {
     func generateIndexDefinitionSQL(index: PluginIndexDefinition, tableName: String?) -> String?
     func generateForeignKeyDefinitionSQL(fk: PluginForeignKeyDefinition) -> String?
 
+    /// Statement that lifts the column's sequence to the largest value the
+    /// table holds. Rows written with an explicit key do not advance a
+    /// sequence, so a table loaded by a bulk copy hands out a duplicate key on
+    /// the next server-side default unless the sequence is caught up.
+    /// Return nil where the engine has no sequence to correct.
+    func generateResetSequenceSQL(table: String, schema: String?, column: String) -> String?
+
     // Table operations (optional — return nil to use app-level fallback)
     func truncateTableStatements(table: String, schema: String?, cascade: Bool) -> [String]?
     func dropObjectStatement(name: String, objectType: String, schema: String?, cascade: Bool) -> String?
@@ -548,6 +555,8 @@ public extension PluginDatabaseDriver {
     func generateColumnDefinitionSQL(column: PluginColumnDefinition) -> String? { nil }
     func generateIndexDefinitionSQL(index: PluginIndexDefinition, tableName: String?) -> String? { nil }
     func generateForeignKeyDefinitionSQL(fk: PluginForeignKeyDefinition) -> String? { nil }
+
+    func generateResetSequenceSQL(table: String, schema: String?, column: String) -> String? { nil }
 
     func truncateTableStatements(table: String, schema: String?, cascade: Bool) -> [String]? { nil }
     func dropObjectStatement(name: String, objectType: String, schema: String?, cascade: Bool) -> String? { nil }

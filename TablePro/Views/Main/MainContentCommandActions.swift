@@ -803,6 +803,10 @@ final class MainContentCommandActions {
         coordinator?.openExportQueryResultsDialog()
     }
 
+    func openDataTransfer() {
+        coordinator?.openDataTransferWizard(preselectedScope: nil)
+    }
+
     func importTables(formatId: String) {
         coordinator?.openImportDialog(formatId: formatId)
     }

@@ -70,6 +70,15 @@ extension DatabaseTreeOutlineCoordinator {
                 self?.setActiveSchema(database: database, schema: schema)
             },
             refreshDatabase: { [weak self] in self?.refreshDatabase($0, connectionId: nodeConnectionId) },
+            openDataTransfer: { [weak self] database in
+                self?.mainCoordinator?.openDataTransferWizard(
+                    preselectedScope: DatabaseScope(
+                        connectionId: nodeConnectionId,
+                        database: database,
+                        schema: nil
+                    )
+                )
+            },
             refreshObjects: { [weak self] database, schema in
                 self?.refreshObjects(database: database, schema: schema, connectionId: nodeConnectionId)
             },
