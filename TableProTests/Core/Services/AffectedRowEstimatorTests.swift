@@ -5,6 +5,7 @@
 
 import Foundation
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("AffectedRowEstimator")
@@ -98,6 +99,115 @@ struct AffectedRowEstimatorTests {
     func writeStatementIsRecognised() {
         #expect(QuerySqlParser.leadingWriteKind(from: "DELETE FROM a USING b WHERE a.id = b.id") == .delete)
         #expect(QuerySqlParser.leadingWriteKind(from: "update users set a = 1") == .update)
+    }
+}
+
+@Suite("AffectedRowEstimator engine support")
+struct AffectedRowEstimatorLanguageTests {
+    @Test("A SQL editor language is countable")
+    func sqlIsCountable() {
+        #expect(AffectedRowEstimator.supportsCounting(language: .sql))
+    }
+
+    @Test("Redis and Etcd speak bash and are never counted")
+    func bashIsNotCountable() {
+        #expect(!AffectedRowEstimator.supportsCounting(language: .bash))
+    }
+
+    @Test("Elasticsearch and MongoDB speak javascript and are never counted")
+    func javascriptIsNotCountable() {
+        #expect(!AffectedRowEstimator.supportsCounting(language: .javascript))
+    }
+
+    @Test("A dialect a future plugin invents is never counted")
+    func customIsNotCountable() {
+        #expect(!AffectedRowEstimator.supportsCounting(language: .custom("surrealql")))
+        #expect(!AffectedRowEstimator.supportsCounting(language: .custom("sql")))
+    }
+}
+
+@Suite("AffectedRowEstimator time box")
+struct AffectedRowEstimatorTimeBoxTests {
+    private struct CountFailure: Error {}
+
+    private static let shortBox: Duration = .milliseconds(120)
+
+    @Test("A count that answers inside the box returns its value")
+    func promptCountReturnsValue() async {
+        let value = await AffectedRowEstimator.firstResult(within: Self.shortBox) { 42 }
+
+        #expect(value == 42)
+    }
+
+    @Test("A count that outlives the box returns no value")
+    func slowCountTimesOut() async {
+        let value = await AffectedRowEstimator.firstResult(within: Self.shortBox) { () -> Int? in
+            try await Task.sleep(for: .seconds(30))
+            return 42
+        }
+
+        #expect(value == nil)
+    }
+
+    @Test("A count that outlives the box gives up at the box, not at the count")
+    func slowCountReturnsAtTheBox() async {
+        let started = ContinuousClock.now
+        _ = await AffectedRowEstimator.firstResult(within: Self.shortBox) { () -> Int? in
+            try await Task.sleep(for: .seconds(30))
+            return 42
+        }
+
+        #expect(ContinuousClock.now - started < .seconds(5))
+    }
+
+    @Test("A count that fails returns no value instead of propagating the error")
+    func failedCountReturnsNil() async {
+        let value = await AffectedRowEstimator.firstResult(within: Self.shortBox) { () -> Int? in
+            throw CountFailure()
+        }
+
+        #expect(value == nil)
+    }
+
+    @Test("A cancelled count returns no value")
+    func cancelledCountReturnsNil() async {
+        let task = Task {
+            await AffectedRowEstimator.firstResult(within: .seconds(30)) { () -> Int? in
+                try await Task.sleep(for: .seconds(30))
+                return 42
+            }
+        }
+        task.cancel()
+
+        #expect(await task.value == nil)
+    }
+
+    @Test("A timed out count on a predicated statement degrades to could not determine")
+    func timedOutPredicatedStatementIsUndetermined() async {
+        let count = await AffectedRowEstimator.firstResult(within: Self.shortBox) { () -> Int? in
+            try await Task.sleep(for: .seconds(30))
+            return 42
+        }
+        let resolved = AffectedRowEstimator.resolve(
+            statement: SingleTableWriteStatement(kind: .delete, table: "users", whereClause: "id < 100"),
+            count: count
+        )
+
+        #expect(resolved == .undetermined(.couldNotDetermine))
+    }
+
+    @Test("A timed out count on a whole table statement still says whole table")
+    func timedOutWholeTableKeepsItsMeaning() async {
+        let count = await AffectedRowEstimator.firstResult(within: Self.shortBox) { () -> Int? in
+            try await Task.sleep(for: .seconds(30))
+            return 42
+        }
+        let resolved = AffectedRowEstimator.resolve(
+            statement: SingleTableWriteStatement(kind: .delete, table: "users", whereClause: nil),
+            count: count
+        )
+
+        #expect(resolved == .wholeTable(nil))
     }
 }
 
