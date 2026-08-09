@@ -688,6 +688,7 @@ struct MainEditorContentView: View {
             sortedIDs: nil,
             displayFormats: displayFormats(for: tab),
             delegate: dataTabDelegate,
+            onAggregatesChange: { @MainActor @Sendable in selectionState.aggregates = $0 },
             selectedRowIndices: Binding(
                 get: { selectionState.indices },
                 set: { selectionState.indices = $0 }
@@ -800,6 +801,7 @@ struct MainEditorContentView: View {
             snapshot: StatusBarSnapshot(tab: tab, tableRows: resolvedRows),
             filterState: tab.filterState,
             selectedRowIndices: selectionState.indices,
+            selectionAggregates: selectionState.aggregates,
             viewMode: resultsViewModeBinding(for: tab),
             paginationCallbacks: PaginationCallbacks(
                 onFirst: onFirstPage,

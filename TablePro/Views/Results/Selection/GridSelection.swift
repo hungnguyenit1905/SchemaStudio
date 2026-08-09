@@ -9,6 +9,10 @@ struct GridSelection: Equatable {
 
     var isEmpty: Bool { rectangles.isEmpty }
 
+    var approximateCellCount: Int {
+        rectangles.reduce(0) { $0 + ($1.rows.count * $1.columns.count) }
+    }
+
     func contains(_ coord: GridCoord) -> Bool {
         rectangles.contains { $0.contains(coord) }
     }

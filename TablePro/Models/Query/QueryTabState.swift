@@ -9,6 +9,7 @@ import TableProPluginKit
 @MainActor @Observable
 final class GridSelectionState {
     var indices: Set<Int> = []
+    var aggregates: GridSelectionAggregates = .empty
 }
 
 /// Type of tab

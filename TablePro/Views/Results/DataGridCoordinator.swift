@@ -172,6 +172,9 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
     let cellRegistry: DataGridCellRegistry
     let columnPool = DataGridColumnPool()
     let selectionController = GridSelectionController()
+    var onAggregatesChange: (@MainActor @Sendable (GridSelectionAggregates) -> Void)?
+    private var aggregateTask: Task<Void, Never>?
+    private static let mainActorAggregateCellLimit = 20_000
     var overlayEditor: CellOverlayEditor?
     var overlayViewer: CellOverlayViewer?
 
@@ -220,6 +223,10 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         super.init()
         cellRegistry.accessoryDelegate = self
         updateCache()
+
+        selectionController.onSelectionChange = { [weak self] selection in
+            self?.publishSelectionAggregates(for: selection)
+        }
 
         observeThemeChanges()
 
@@ -274,6 +281,8 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         prewarmTask = nil
         prewarmResumeTask?.cancel()
         prewarmResumeTask = nil
+        aggregateTask?.cancel()
+        aggregateTask = nil
         detachScrollObservers()
         selectionController.clear()
         overlayEditor?.dismiss(commit: false)
@@ -363,6 +372,38 @@ final class TableViewCoordinator: NSObject, NSTableViewDelegate, NSTableViewData
         visualIndex.rebuild(from: changeManager, sortedIDs: displayIDs)
         tableView.reloadData()
         startBackgroundPrewarm()
+    }
+
+    func publishSelectionAggregates(for selection: GridSelection) {
+        guard let onAggregatesChange else { return }
+        aggregateTask?.cancel()
+        aggregateTask = nil
+
+        let tableRows = tableRowsProvider()
+        let displayIDs = displayIDs
+
+        guard selection.approximateCellCount > Self.mainActorAggregateCellLimit else {
+            onAggregatesChange(Self.aggregates(for: selection, tableRows: tableRows, displayIDs: displayIDs))
+            return
+        }
+
+        aggregateTask = Task.detached(priority: .userInitiated) {
+            let aggregates = Self.aggregates(for: selection, tableRows: tableRows, displayIDs: displayIDs)
+            guard !Task.isCancelled else { return }
+            await MainActor.run { onAggregatesChange(aggregates) }
+        }
+    }
+
+    nonisolated private static func aggregates(
+        for selection: GridSelection,
+        tableRows: TableRows,
+        displayIDs: [RowID]?
+    ) -> GridSelectionAggregates {
+        GridAggregateCalculator.aggregates(
+            for: selection,
+            columnTypes: tableRows.columnTypes,
+            rowProvider: { DisplayRowMapping.row(forDisplay: $0, displayIDs: displayIDs, in: tableRows) }
+        )
     }
 
     func displayRow(at displayIndex: Int) -> Row? {

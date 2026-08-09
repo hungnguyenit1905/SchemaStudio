@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Selecting a range of cells in a number column shows the count, sum, average, smallest, and largest value in the status bar. Cells that are empty are counted separately and left out of the totals.
 - Data Transfer, a tool that copies tables, indexes and foreign keys between two connections of the same database type. Preparing a target table turns foreign key checks off first, so emptying a table that other tables point at no longer fails. Open it from the Tools menu or by right-clicking a database in the sidebar.
 - Redshift external schemas now list their tables. Spectrum, federated query, cross-database, and datashare schemas showed up empty because their tables are not in the standard catalog.
 - External schemas are marked in the sidebar, and their tables show an external icon. External tables open read-only, because Redshift rejects `UPDATE` and `DELETE` on them.

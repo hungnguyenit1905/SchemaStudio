@@ -37,6 +37,7 @@ struct MainStatusBarView: View {
     let snapshot: StatusBarSnapshot
     let filterState: TabFilterState
     let selectedRowIndices: Set<Int>
+    let selectionAggregates: GridSelectionAggregates
     @Binding var viewMode: ResultsViewMode
     let paginationCallbacks: PaginationCallbacks
     let columnState: StatusBarColumnState
@@ -52,6 +53,28 @@ struct MainStatusBarView: View {
 
     static func showsAddRow(viewMode: ResultsViewMode, canAddRow: Bool) -> Bool {
         viewMode == .data && canAddRow
+    }
+
+    static func selectionSummary(for aggregates: GridSelectionAggregates) -> String {
+        var parts = [String(format: String(localized: "Count %d"), aggregates.cellCount)]
+
+        if aggregates.nullCount > 0 {
+            parts.append(String(format: String(localized: "Null %d"), aggregates.nullCount))
+        }
+
+        if let sum = aggregates.sum, let average = aggregates.average,
+           let minimum = aggregates.minimum, let maximum = aggregates.maximum {
+            parts.append(String(format: String(localized: "Sum %@"), formatted(sum)))
+            parts.append(String(format: String(localized: "Avg %@"), formatted(average)))
+            parts.append(String(format: String(localized: "Min %@"), formatted(minimum)))
+            parts.append(String(format: String(localized: "Max %@"), formatted(maximum)))
+        }
+
+        return parts.joined(separator: "   ")
+    }
+
+    private static func formatted(_ value: Decimal) -> String {
+        value.formatted(.number.precision(.fractionLength(0 ... 10)))
     }
 
     private var filterToggleHelp: String {
@@ -155,6 +178,14 @@ struct MainStatusBarView: View {
                         Text("·")
                             .foregroundStyle(.tertiary)
                         Text(statusMessage)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if selectionAggregates.isMultiCell {
+                        Text("·")
+                            .foregroundStyle(.tertiary)
+                        Text(Self.selectionSummary(for: selectionAggregates))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

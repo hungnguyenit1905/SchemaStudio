@@ -38,6 +38,7 @@ struct DataGridView: NSViewRepresentable {
     var displayFormats: [ValueDisplayFormat?] = []
     var delegate: (any DataGridViewDelegate)?
     var layoutPersister: (any ColumnLayoutPersisting)?
+    var onAggregatesChange: (@MainActor @Sendable (GridSelectionAggregates) -> Void)?
 
     @Binding var selectedRowIndices: Set<Int>
     @Binding var sortState: SortState
@@ -123,6 +124,7 @@ struct DataGridView: NSViewRepresentable {
         // after a Structure/JSON tab toggle) finds the cache already matching
         // the registry rows and skips the reload, leaving the table empty.
         context.coordinator.syncDisplayFormats(displayFormats)
+        context.coordinator.onAggregatesChange = onAggregatesChange
         context.coordinator.delegate = delegate
         delegate?.dataGridAttach(tableViewCoordinator: context.coordinator)
         context.coordinator.dropdownColumns = configuration.dropdownColumns
@@ -263,6 +265,7 @@ struct DataGridView: NSViewRepresentable {
         coordinator.sortedIDs = sortedIDs
         coordinator.updateCache()
         coordinator.syncDisplayFormats(displayFormats)
+        coordinator.onAggregatesChange = onAggregatesChange
         coordinator.delegate = delegate
         delegate?.dataGridAttach(tableViewCoordinator: coordinator)
         coordinator.dropdownColumns = configuration.dropdownColumns

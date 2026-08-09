@@ -44,7 +44,7 @@ final class GridSelectionController {
         if newSelection.isEmpty {
             announcement = String(localized: "Cell selection cleared")
         } else if let rect = newSelection.boundingRectangle {
-            let cellCount = newSelection.rectangles.reduce(0) { $0 + ($1.rows.count * $1.columns.count) }
+            let cellCount = newSelection.approximateCellCount
             announcement = String(
                 format: String(localized: "%d cells selected, rows %d to %d, columns %d to %d"),
                 cellCount,
