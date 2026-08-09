@@ -17,17 +17,23 @@ internal struct AffectedRowEstimator: Sendable {
             return .undetermined(.couldNotDetermine)
         }
 
-        let context = await MainActor.run { () -> (isSQL: Bool, scope: DatabaseScope?) in
+        let context = await MainActor.run { () -> (language: EditorLanguage, scope: DatabaseScope?) in
             (
-                PluginManager.shared.editorLanguage(for: databaseType) == .sql,
+                PluginManager.shared.editorLanguage(for: databaseType),
                 DatabaseManager.shared.browseScope(for: connectionId)
             )
         }
-        guard context.isSQL else { return .undetermined(.notACountableStatement) }
+        guard Self.supportsCounting(language: context.language) else {
+            return .undetermined(.notACountableStatement)
+        }
         guard let scope = context.scope else { return .undetermined(.couldNotDetermine) }
 
         let count = await Self.countRows(scope: scope, countSQL: Self.countStatement(for: statement))
         return Self.resolve(statement: statement, count: count)
+    }
+
+    static func supportsCounting(language: EditorLanguage) -> Bool {
+        language == .sql
     }
 
     static func countStatement(for statement: SingleTableWriteStatement) -> String {
@@ -43,29 +49,25 @@ internal struct AffectedRowEstimator: Sendable {
         return .exact(count)
     }
 
-    private enum CountOutcome: Sendable {
-        case finished(Int?)
+    private enum RaceOutcome<Value: Sendable>: Sendable {
+        case finished(Value?)
         case timedOut
     }
 
-    private static func countRows(scope: DatabaseScope, countSQL: String) async -> Int? {
-        await withTaskGroup(of: CountOutcome.self) { group in
+    static func firstResult<Value: Sendable>(
+        within limit: Duration,
+        of operation: @escaping @Sendable () async throws -> Value?
+    ) async -> Value? {
+        await withTaskGroup(of: RaceOutcome<Value>.self) { group in
             group.addTask {
                 do {
-                    let value = try await DatabaseManager.shared.withMetadataDriver(
-                        scope: scope,
-                        workload: .interactive
-                    ) { driver in
-                        let result = try await driver.execute(query: countSQL)
-                        return result.rows.first?.first?.asText.flatMap { Int($0) }
-                    }
-                    return .finished(value)
+                    return try await .finished(operation())
                 } catch {
                     return .finished(nil)
                 }
             }
             group.addTask {
-                try? await Task.sleep(for: timeBox)
+                try? await Task.sleep(for: limit)
                 return .timedOut
             }
 
@@ -77,6 +79,18 @@ internal struct AffectedRowEstimator: Sendable {
                 return value
             case .timedOut:
                 return nil
+            }
+        }
+    }
+
+    private static func countRows(scope: DatabaseScope, countSQL: String) async -> Int? {
+        await firstResult(within: timeBox) {
+            try await DatabaseManager.shared.withMetadataDriver(
+                scope: scope,
+                workload: .interactive
+            ) { driver in
+                let result = try await driver.execute(query: countSQL)
+                return result.rows.first?.first?.asText.flatMap { Int($0) }
             }
         }
     }
