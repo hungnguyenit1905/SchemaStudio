@@ -28,7 +28,7 @@ final class LicenseSignatureVerifier {
     /// Verify a signed license payload and return the decoded data if valid.
     /// Throws `LicenseError.signatureInvalid` if the signature doesn't match.
     func verify(payload: SignedLicensePayload) throws -> LicensePayloadData {
-        guard let publicKey = publicKey else {
+        guard let publicKey else {
             throw LicenseError.signatureInvalid
         }
 
@@ -61,8 +61,7 @@ final class LicenseSignatureVerifier {
     /// Load the RSA public key from the app bundle's PEM file
     private static func loadPublicKey() -> SecKey? {
         guard let url = Bundle.main.url(forResource: "license_public", withExtension: "pem"),
-              let pemString = try? String(contentsOf: url, encoding: .utf8)
-        else {
+              let pemString = try? String(contentsOf: url, encoding: .utf8) else {
             return nil
         }
 

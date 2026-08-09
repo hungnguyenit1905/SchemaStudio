@@ -84,7 +84,14 @@ actor CopilotBinaryManager {
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
-        process.arguments = ["xzf", tempTar.path, "-C", baseDirectory.path, "--strip-components=1", "package/copilot-language-server"]
+        process.arguments = [
+            "xzf",
+            tempTar.path,
+            "-C",
+            baseDirectory.path,
+            "--strip-components=1",
+            "package/copilot-language-server"
+        ]
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             process.terminationHandler = { proc in

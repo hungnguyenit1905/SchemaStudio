@@ -157,7 +157,8 @@ struct MongoDBStatementGenerator {
     // MARK: - DELETE MANY
 
     /// Batch multiple deletes into a single deleteMany with $in when all rows have _id
-    private func generateBulkDelete(from changes: [PluginRowChange]) -> (statement: String, parameters: [PluginCellValue])? {
+    private func generateBulkDelete(from changes: [PluginRowChange])
+        -> (statement: String, parameters: [PluginCellValue])? {
         guard changes.count > 1, let idIndex = idColumnIndex else { return nil }
 
         var idValues: [String] = []

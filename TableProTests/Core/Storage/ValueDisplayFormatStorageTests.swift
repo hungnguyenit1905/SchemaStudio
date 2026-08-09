@@ -44,7 +44,7 @@ struct ValueDisplayFormatStorageTests {
         let conn = UUID()
         let target = scope("public", connectionId: conn)
         let legacyKey = "com.SchemaStudio.columns.displayFormat.\(conn.uuidString).orders"
-        defaults.set(try JSONEncoder().encode(["id": ValueDisplayFormat.uuid]), forKey: legacyKey)
+        try defaults.set(JSONEncoder().encode(["id": ValueDisplayFormat.uuid]), forKey: legacyKey)
 
         #expect(storage.load(for: target) == ["id": .uuid])
         #expect(defaults.data(forKey: legacyKey) == nil)

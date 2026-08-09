@@ -1,13 +1,12 @@
 import Foundation
-import Testing
 import TableProDatabase
-import TableProModels
 @testable import TableProMobile
+import TableProModels
+import Testing
 
 @MainActor
 @Suite("RowDetailViewModel")
 struct RowDetailViewModelTests {
-
     private func makeColumns() -> [ColumnInfo] {
         [
             ColumnInfo(name: "id", typeName: "INT", isPrimaryKey: true, isNullable: false, ordinalPosition: 0),

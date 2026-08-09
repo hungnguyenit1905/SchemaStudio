@@ -4,13 +4,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("EditorTabPayload")
 struct EditorTabPayloadTests {
-
     @Test("Each init creates unique ID")
     func eachInitCreatesUniqueId() {
         let connectionId = UUID()

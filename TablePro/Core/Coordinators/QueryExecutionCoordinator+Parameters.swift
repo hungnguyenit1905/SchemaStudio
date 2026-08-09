@@ -56,7 +56,10 @@ extension QueryExecutionCoordinator {
             style: style
         )
 
-        paramLog.info("Executing parameterized query: \(conversion.sql.prefix(100), privacy: .public) with \(conversion.values.count) parameters")
+        paramLog
+            .info(
+                "Executing parameterized query: \(conversion.sql.prefix(100), privacy: .public) with \(conversion.values.count) parameters"
+            )
 
         executeQueryInternalParameterized(
             conversion.sql,
@@ -404,7 +407,7 @@ extension QueryExecutionCoordinator {
                 return .cancelled
             }
             do {
-                results.append(try await executeStatement(
+                try await results.append(executeStatement(
                     rowCap: statement.rowCap,
                     originalSQL: statement.executableSQL,
                     driver: driver,

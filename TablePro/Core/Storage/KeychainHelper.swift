@@ -45,12 +45,10 @@ final class KeychainHelper: KeychainStoring {
 
     private static func resolveAccessGroup() -> String? {
         guard let task = SecTaskCreateFromSelf(nil),
-              let groups = SecTaskCopyValueForEntitlement(task, "keychain-access-groups" as CFString, nil) as? [String]
-        else { return nil }
+              let groups = SecTaskCopyValueForEntitlement(task, "keychain-access-groups" as CFString, nil) as? [String] else { return nil }
         let candidate = groups.first { $0.hasSuffix(accessGroupSuffix) } ?? groups.first
         guard let candidate,
-              candidate.range(of: teamPrefixedGroupPattern, options: .regularExpression) != nil
-        else { return nil }
+              candidate.range(of: teamPrefixedGroupPattern, options: .regularExpression) != nil else { return nil }
         return candidate
     }
 
@@ -190,9 +188,9 @@ final class KeychainHelper: KeychainStoring {
     private static let canUseDataProtectionKeychain: Bool = {
         #if DEBUG
         guard let task = SecTaskCreateFromSelf(nil),
-              SecTaskCopyValueForEntitlement(task, "com.apple.application-identifier" as CFString, nil) != nil
-        else {
-            logger.warning("No application-identifier entitlement; falling back to the file-based keychain (DEBUG build)")
+              SecTaskCopyValueForEntitlement(task, "com.apple.application-identifier" as CFString, nil) != nil else {
+            logger
+                .warning("No application-identifier entitlement; falling back to the file-based keychain (DEBUG build)")
             return false
         }
         return true

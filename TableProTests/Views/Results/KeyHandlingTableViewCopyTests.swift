@@ -54,7 +54,7 @@ struct KeyHandlingTableViewCopyTests {
     private func applyRangeSelection(to coordinator: TableViewCoordinator) {
         coordinator.selectionController.update(
             .single(
-                GridRect(rows: 0...1, columns: 0...1),
+                GridRect(rows: 0 ... 1, columns: 0 ... 1),
                 anchor: GridCoord(row: 0, column: 0),
                 active: GridCoord(row: 1, column: 0)
             )

@@ -36,15 +36,27 @@ final class AIEditorContextMenu: NSMenu, NSMenuDelegate {
         let cutItem = NSMenuItem(title: String(localized: "Cut"), action: #selector(NSText.cut(_:)), keyEquivalent: "")
         menu.addItem(cutItem)
 
-        let copyItem = NSMenuItem(title: String(localized: "Copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "")
+        let copyItem = NSMenuItem(
+            title: String(localized: "Copy"),
+            action: #selector(NSText.copy(_:)),
+            keyEquivalent: ""
+        )
         menu.addItem(copyItem)
 
-        let pasteItem = NSMenuItem(title: String(localized: "Paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "")
+        let pasteItem = NSMenuItem(
+            title: String(localized: "Paste"),
+            action: #selector(NSText.paste(_:)),
+            keyEquivalent: ""
+        )
         menu.addItem(pasteItem)
 
         menu.addItem(.separator())
 
-        let selectAllItem = NSMenuItem(title: String(localized: "Select All"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "")
+        let selectAllItem = NSMenuItem(
+            title: String(localized: "Select All"),
+            action: #selector(NSText.selectAll(_:)),
+            keyEquivalent: ""
+        )
         menu.addItem(selectAllItem)
 
         menu.addItem(.separator())
@@ -97,21 +109,25 @@ final class AIEditorContextMenu: NSMenu, NSMenuDelegate {
 
     // MARK: - AI Actions
 
-    @objc private func handleExplainWithAI() {
+    @objc
+    private func handleExplainWithAI() {
         guard let text = selectedText?() else { return }
         onExplainWithAI?(text)
     }
 
-    @objc private func handleOptimizeWithAI() {
+    @objc
+    private func handleOptimizeWithAI() {
         guard let text = selectedText?() else { return }
         onOptimizeWithAI?(text)
     }
 
-    @objc private func handleFormatSQL() {
+    @objc
+    private func handleFormatSQL() {
         onFormatSQL?()
     }
 
-    @objc private func handleSaveAsFavorite() {
+    @objc
+    private func handleSaveAsFavorite() {
         if let text = selectedText?(), !text.isEmpty {
             onSaveAsFavorite?(text)
         } else if let text = fullText?(), !text.isEmpty {

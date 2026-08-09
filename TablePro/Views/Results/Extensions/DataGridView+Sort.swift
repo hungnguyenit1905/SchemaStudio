@@ -44,7 +44,7 @@ extension TableViewCoordinator {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
-        guard let tableView = tableView,
+        guard let tableView,
               let headerView = tableView.headerView,
               let window = tableView.window else { return }
 
@@ -52,7 +52,7 @@ extension TableViewCoordinator {
         let pointInHeader = headerView.convert(mouseLocation, from: nil)
         let columnIndex = headerView.column(at: pointInHeader)
 
-        guard columnIndex >= 0 && columnIndex < tableView.tableColumns.count else { return }
+        guard columnIndex >= 0, columnIndex < tableView.tableColumns.count else { return }
 
         let column = tableView.tableColumns[columnIndex]
         if column.identifier == ColumnIdentitySchema.rowNumberIdentifier { return }
@@ -66,39 +66,13 @@ extension TableViewCoordinator {
             return column.title
         }()
 
-        if let dataColumnIndex = dataColumnIndex(from: column.identifier) {
-            let sortAscItem = NSMenuItem(
-                title: String(localized: "Sort Ascending"),
-                action: #selector(sortAscending(_:)),
-                keyEquivalent: ""
-            )
-            sortAscItem.representedObject = dataColumnIndex
-            sortAscItem.target = self
-            menu.addItem(sortAscItem)
+        addSortItems(to: menu, column: column)
 
-            let sortDescItem = NSMenuItem(
-                title: String(localized: "Sort Descending"),
-                action: #selector(sortDescending(_:)),
-                keyEquivalent: ""
-            )
-            sortDescItem.representedObject = dataColumnIndex
-            sortDescItem.target = self
-            menu.addItem(sortDescItem)
-
-            if currentSortState.isSorting {
-                let clearSortItem = NSMenuItem(
-                    title: String(localized: "Don't Sort"),
-                    action: #selector(clearSortAction),
-                    keyEquivalent: ""
-                )
-                clearSortItem.target = self
-                menu.addItem(clearSortItem)
-            }
-
-            menu.addItem(NSMenuItem.separator())
-        }
-
-        let copyItem = NSMenuItem(title: String(localized: "Copy Column Name"), action: #selector(copyColumnName(_:)), keyEquivalent: "")
+        let copyItem = NSMenuItem(
+            title: String(localized: "Copy Column Name"),
+            action: #selector(copyColumnName(_:)),
+            keyEquivalent: ""
+        )
         copyItem.representedObject = baseName
         copyItem.target = self
         menu.addItem(copyItem)
@@ -128,7 +102,11 @@ extension TableViewCoordinator {
             menu.addItem(fillItem)
         }
 
-        let filterItem = NSMenuItem(title: String(localized: "Filter with column"), action: #selector(filterWithColumn(_:)), keyEquivalent: "")
+        let filterItem = NSMenuItem(
+            title: String(localized: "Filter with column"),
+            action: #selector(filterWithColumn(_:)),
+            keyEquivalent: ""
+        )
         filterItem.representedObject = baseName
         filterItem.target = self
         menu.addItem(filterItem)
@@ -166,7 +144,8 @@ extension TableViewCoordinator {
         }
 
         if let dataColumnIndex = dataColumnIndex(from: column.identifier) {
-            let columnType = dataColumnIndex < tableRows.columnTypes.count ? tableRows.columnTypes[dataColumnIndex] : nil
+            let columnType = dataColumnIndex < tableRows.columnTypes.count ? tableRows
+                .columnTypes[dataColumnIndex] : nil
             let applicableFormats = ValueDisplayFormat.applicableFormats(for: columnType)
             if applicableFormats.count > 1 {
                 let displaySubmenu = NSMenu()
@@ -197,24 +176,37 @@ extension TableViewCoordinator {
 
         menu.addItem(NSMenuItem.separator())
 
-        let sizeToFitItem = NSMenuItem(title: String(localized: "Size to Fit"), action: #selector(sizeColumnToFit(_:)), keyEquivalent: "")
+        let sizeToFitItem = NSMenuItem(
+            title: String(localized: "Size to Fit"),
+            action: #selector(sizeColumnToFit(_:)),
+            keyEquivalent: ""
+        )
         sizeToFitItem.representedObject = columnIndex
         sizeToFitItem.target = self
         menu.addItem(sizeToFitItem)
 
-        let sizeAllItem = NSMenuItem(title: String(localized: "Size All Columns to Fit"), action: #selector(sizeAllColumnsToFit(_:)), keyEquivalent: "")
+        let sizeAllItem = NSMenuItem(
+            title: String(localized: "Size All Columns to Fit"),
+            action: #selector(sizeAllColumnsToFit(_:)),
+            keyEquivalent: ""
+        )
         sizeAllItem.target = self
         menu.addItem(sizeAllItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        let hideItem = NSMenuItem(title: String(localized: "Hide Column"), action: #selector(hideColumn(_:)), keyEquivalent: "")
+        let hideItem = NSMenuItem(
+            title: String(localized: "Hide Column"),
+            action: #selector(hideColumn(_:)),
+            keyEquivalent: ""
+        )
         hideItem.representedObject = baseName
         hideItem.target = self
         menu.addItem(hideItem)
 
         if delegate != nil,
-           tableView.tableColumns.contains(where: { $0.isHidden && $0.identifier != ColumnIdentitySchema.rowNumberIdentifier }) {
+           tableView.tableColumns
+           .contains(where: { $0.isHidden && $0.identifier != ColumnIdentitySchema.rowNumberIdentifier }) {
             let showAllItem = NSMenuItem(
                 title: String(localized: "Show All Columns"),
                 action: #selector(showAllColumns),
@@ -227,7 +219,10 @@ extension TableViewCoordinator {
         appendColumnStructureItems(to: menu, forColumnIdentifier: column.identifier)
     }
 
-    private func appendColumnStructureItems(to menu: NSMenu, forColumnIdentifier identifier: NSUserInterfaceItemIdentifier) {
+    private func appendColumnStructureItems(
+        to menu: NSMenu,
+        forColumnIdentifier identifier: NSUserInterfaceItemIdentifier
+    ) {
         guard let dataColumnIndex = dataColumnIndex(from: identifier),
               let structureItems = delegate?.dataGridColumnStructureMenuItems(forColumn: dataColumnIndex),
               !structureItems.isEmpty else { return }
@@ -237,7 +232,8 @@ extension TableViewCoordinator {
         }
     }
 
-    @objc func sortAscending(_ sender: NSMenuItem) {
+    @objc
+    func sortAscending(_ sender: NSMenuItem) {
         guard let columnIndex = sender.representedObject as? Int else { return }
         var state = SortState()
         state.columns = [SortColumn(columnIndex: columnIndex, direction: .ascending)]
@@ -246,7 +242,8 @@ extension TableViewCoordinator {
         delegate?.dataGridSortStateChanged(state)
     }
 
-    @objc func sortDescending(_ sender: NSMenuItem) {
+    @objc
+    func sortDescending(_ sender: NSMenuItem) {
         guard let columnIndex = sender.representedObject as? Int else { return }
         var state = SortState()
         state.columns = [SortColumn(columnIndex: columnIndex, direction: .descending)]
@@ -255,11 +252,13 @@ extension TableViewCoordinator {
         delegate?.dataGridSortStateChanged(state)
     }
 
-    @objc func showAllColumns() {
+    @objc
+    func showAllColumns() {
         delegate?.dataGridShowAllColumns()
     }
 
-    @objc func clearSortAction() {
+    @objc
+    func clearSortAction() {
         currentSortState = SortState()
         applyCurrentSortStateToHeader()
         delegate?.dataGridSortStateChanged(SortState())
@@ -270,22 +269,26 @@ extension TableViewCoordinator {
         header.applySortState(currentSortState, schema: identitySchema)
     }
 
-    @objc func copyColumnName(_ sender: NSMenuItem) {
+    @objc
+    func copyColumnName(_ sender: NSMenuItem) {
         guard let columnName = sender.representedObject as? String else { return }
         ClipboardService.shared.writeText(columnName)
     }
 
-    @objc func copyColumnValues(_ sender: NSMenuItem) {
+    @objc
+    func copyColumnValues(_ sender: NSMenuItem) {
         guard let columnIndex = sender.representedObject as? Int else { return }
         copyColumnValues(columnIndex: columnIndex)
     }
 
-    @objc func filterWithColumn(_ sender: NSMenuItem) {
+    @objc
+    func filterWithColumn(_ sender: NSMenuItem) {
         guard let columnName = sender.representedObject as? String else { return }
         delegate?.dataGridFilterColumn(columnName)
     }
 
-    @objc func filterColumnValues(_ sender: NSMenuItem) {
+    @objc
+    func filterColumnValues(_ sender: NSMenuItem) {
         guard let dataIndex = sender.representedObject as? Int,
               let tableView,
               let header = tableView.headerView as? SortableHeaderView,
@@ -295,24 +298,28 @@ extension TableViewCoordinator {
         presentValueFilterPopover(forColumn: dataIndex, anchor: anchor, in: header)
     }
 
-    @objc func clearColumnValueFilter(_ sender: NSMenuItem) {
+    @objc
+    func clearColumnValueFilter(_ sender: NSMenuItem) {
         guard let dataIndex = sender.representedObject as? Int else { return }
         applyValueFilter(nil, columnName: "", forColumn: dataIndex)
     }
 
-    @objc func clearAllValueFiltersAction() {
+    @objc
+    func clearAllValueFiltersAction() {
         clearAllValueFilters()
     }
 
-    @objc func hideColumn(_ sender: NSMenuItem) {
+    @objc
+    func hideColumn(_ sender: NSMenuItem) {
         guard let columnName = sender.representedObject as? String else { return }
         delegate?.dataGridHideColumn(columnName)
     }
 
-    @objc func sizeColumnToFit(_ sender: NSMenuItem) {
+    @objc
+    func sizeColumnToFit(_ sender: NSMenuItem) {
         guard let tableView,
               let columnIndex = sender.representedObject as? Int,
-              columnIndex >= 0 && columnIndex < tableView.tableColumns.count else { return }
+              columnIndex >= 0, columnIndex < tableView.tableColumns.count else { return }
 
         let column = tableView.tableColumns[columnIndex]
         guard let dataColumnIndex = dataColumnIndex(from: column.identifier) else { return }
@@ -324,7 +331,8 @@ extension TableViewCoordinator {
         )
     }
 
-    @objc func sizeAllColumnsToFit(_ sender: NSMenuItem) {
+    @objc
+    func sizeAllColumnsToFit(_ sender: NSMenuItem) {
         guard let tableView else { return }
 
         let tableRows = tableRowsProvider()
@@ -342,7 +350,8 @@ extension TableViewCoordinator {
         }
     }
 
-    @objc func setDisplayFormat(_ sender: NSMenuItem) {
+    @objc
+    func setDisplayFormat(_ sender: NSMenuItem) {
         guard let info = sender.representedObject as? DisplayFormatMenuItem else { return }
 
         let formatToStore: ValueDisplayFormat? = (info.format == .raw) ? nil : info.format
@@ -367,9 +376,44 @@ extension TableViewCoordinator {
         let visibleRange = tableView.rows(in: visibleRect)
         if visibleRange.length > 0 {
             tableView.reloadData(
-                forRowIndexes: IndexSet(integersIn: visibleRange.location..<(visibleRange.location + visibleRange.length)),
-                columnIndexes: IndexSet(integersIn: 0..<tableView.numberOfColumns)
+                forRowIndexes: IndexSet(integersIn: visibleRange
+                    .location ..< (visibleRange.location + visibleRange.length)),
+                columnIndexes: IndexSet(integersIn: 0 ..< tableView.numberOfColumns)
             )
+        }
+    }
+
+    private func addSortItems(to menu: NSMenu, column: NSTableColumn) {
+        if let dataColumnIndex = dataColumnIndex(from: column.identifier) {
+            let sortAscItem = NSMenuItem(
+                title: String(localized: "Sort Ascending"),
+                action: #selector(sortAscending(_:)),
+                keyEquivalent: ""
+            )
+            sortAscItem.representedObject = dataColumnIndex
+            sortAscItem.target = self
+            menu.addItem(sortAscItem)
+
+            let sortDescItem = NSMenuItem(
+                title: String(localized: "Sort Descending"),
+                action: #selector(sortDescending(_:)),
+                keyEquivalent: ""
+            )
+            sortDescItem.representedObject = dataColumnIndex
+            sortDescItem.target = self
+            menu.addItem(sortDescItem)
+
+            if currentSortState.isSorting {
+                let clearSortItem = NSMenuItem(
+                    title: String(localized: "Don't Sort"),
+                    action: #selector(clearSortAction),
+                    keyEquivalent: ""
+                )
+                clearSortItem.target = self
+                menu.addItem(clearSortItem)
+            }
+
+            menu.addItem(NSMenuItem.separator())
         }
     }
 }

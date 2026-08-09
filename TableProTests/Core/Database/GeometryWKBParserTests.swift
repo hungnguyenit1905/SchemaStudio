@@ -77,7 +77,6 @@ private func wkbPolygon(_ rings: [[(Double, Double)]]) -> [UInt8] {
 
 @Suite("GeometryWKBParser")
 struct GeometryWKBParserTests {
-
     @Test("Point: little-endian binary produces WKT")
     func testPoint() {
         let data = mysqlGeometry(wkb: wkbPoint(1.0, 2.0))
@@ -132,7 +131,8 @@ struct GeometryWKBParserTests {
         wkb += wkbPolygon([ring2])
         let data = mysqlGeometry(wkb: wkb)
         let result = GeometryWKBParser.parse(data)
-        #expect(result == "MULTIPOLYGON(((0.0 0.0, 1.0 0.0, 1.0 1.0, 0.0 0.0)), ((2.0 2.0, 3.0 2.0, 3.0 3.0, 2.0 2.0)))")
+        #expect(result ==
+            "MULTIPOLYGON(((0.0 0.0, 1.0 0.0, 1.0 1.0, 0.0 0.0)), ((2.0 2.0, 3.0 2.0, 3.0 3.0, 2.0 2.0)))")
     }
 
     @Test("GeometryCollection: nested types produce WKT")
@@ -408,11 +408,10 @@ private enum GeometryWKBParser {
     }
 
     private static func formatCoord(_ value: Double) -> String {
-        if value == value.rounded() && abs(value) < 1e15 {
+        if value == value.rounded(), abs(value) < 1e15 {
             return String(format: "%.1f", value)
         }
-        let formatted = String(format: "%.15g", value)
-        return formatted
+        return String(format: "%.15g", value)
     }
 
     static func hexString(_ data: Data) -> String {

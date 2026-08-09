@@ -16,7 +16,7 @@ final class ClickHousePlugin: NSObject, TableProPlugin, DriverPlugin {
     static let databaseTypeId = "ClickHouse"
     static let databaseDisplayName = "ClickHouse"
     static let iconName = "clickhouse-icon"
-    static let defaultPort = 8123
+    static let defaultPort = 8_123
 
     // MARK: - UI/Capability Metadata
 
@@ -180,6 +180,7 @@ final class ClickHousePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         result = result.replacingOccurrences(of: "\u{1A}", with: "\\Z")
         return result
     }
+
     func beginTransaction() async throws {}
     func commitTransaction() async throws {}
     func rollbackTransaction() async throws {}
@@ -681,11 +682,18 @@ final class ClickHousePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         "ALTER TABLE \(quoteIdentifier(table)) ADD COLUMN \(clickhouseColumnDefinition(column))"
     }
 
-    func generateModifyColumnSQL(table: String, oldColumn: PluginColumnDefinition, newColumn: PluginColumnDefinition) -> String? {
+    func generateModifyColumnSQL(
+        table: String,
+        oldColumn: PluginColumnDefinition,
+        newColumn: PluginColumnDefinition
+    ) -> String? {
         let tableName = quoteIdentifier(table)
         var stmts: [String] = []
         if oldColumn.name != newColumn.name {
-            stmts.append("ALTER TABLE \(tableName) RENAME COLUMN \(quoteIdentifier(oldColumn.name)) TO \(quoteIdentifier(newColumn.name))")
+            stmts
+                .append(
+                    "ALTER TABLE \(tableName) RENAME COLUMN \(quoteIdentifier(oldColumn.name)) TO \(quoteIdentifier(newColumn.name))"
+                )
         }
         if oldColumn.dataType != newColumn.dataType || oldColumn.isNullable != newColumn.isNullable
             || oldColumn.defaultValue != newColumn.defaultValue || oldColumn.comment != newColumn.comment {

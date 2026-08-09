@@ -116,9 +116,20 @@ internal struct SQLTokenFormatter {
     private var selectColumnIndentStack: [Int] = []
 
     private enum ClauseContext {
-        case select, from, where_, join, caseExpr, subquery, with
-        case insert, update, set, createTable, createTableBody
-        case inlineParen, windowParen
+        case select
+        case from
+        case where_
+        case join
+        case caseExpr
+        case subquery
+        case with
+        case insert
+        case update
+        case set
+        case createTable
+        case createTableBody
+        case inlineParen
+        case windowParen
     }
 
     /// True after BETWEEN keyword — suppresses the next AND from being a clause break
@@ -134,11 +145,13 @@ internal struct SQLTokenFormatter {
         for (i, token) in tokens.enumerated() {
             if token.type == .whitespace { continue }
             meaningfulIndex += 1
-            if token.type == .punctuation && token.value == ";" {
+            if token.type == .punctuation, token.value == ";" {
                 var nlCount = 0
-                for j in (i + 1)..<tokens.count {
+                for j in (i + 1) ..< tokens.count {
                     guard tokens[j].type == .whitespace else { break }
-                    for c in tokens[j].value where c == "\n" { nlCount += 1 }
+                    for c in tokens[j].value where c == "\n" {
+                        nlCount += 1
+                    }
                 }
                 newlinesAfterSemicolon[meaningfulIndex] = nlCount
             }
@@ -261,7 +274,7 @@ internal struct SQLTokenFormatter {
             return
         }
         // CTE body: AS (
-        if prev?.upperValue == "AS" && clauseStack.contains(.with) {
+        if prev?.upperValue == "AS", clauseStack.contains(.with) {
             output += " ("
             output += "\n"
             selectColumnIndentStack.append(selectColumnIndent)
@@ -272,7 +285,7 @@ internal struct SQLTokenFormatter {
             return
         }
         // CREATE TABLE columns: table_name (
-        if clauseStack.contains(.createTable) && !clauseStack.contains(.createTableBody) {
+        if clauseStack.contains(.createTable), !clauseStack.contains(.createTableBody) {
             output += " ("
             output += "\n"
             afterNewline = true
@@ -293,7 +306,7 @@ internal struct SQLTokenFormatter {
         if let prevUpper = prev?.upperValue, prev?.type == .keyword,
            !functions.contains(prevUpper), !dataTypes.contains(prevUpper) {
             output += suppressNextSpace ? "(" : " ("
-        } else if currentContext == .insert && prev?.type == .identifier {
+        } else if currentContext == .insert, prev?.type == .identifier {
             output += " ("
         } else {
             output += "("
@@ -404,7 +417,7 @@ internal struct SQLTokenFormatter {
         case "TABLE", "AS":
             appendToken(kw)
         default:
-            if options.uppercaseKeywords && (functions.contains(upper) || dataTypes.contains(upper)) {
+            if options.uppercaseKeywords, functions.contains(upper) || dataTypes.contains(upper) {
                 appendToken(token.value)
             } else {
                 appendToken(kw)
@@ -446,7 +459,7 @@ internal struct SQLTokenFormatter {
 
     private mutating func handleAndOr(kw: String, upper: String) {
         // BETWEEN x AND y — AND stays inline
-        if upper == "AND" && afterBetween {
+        if upper == "AND", afterBetween {
             afterBetween = false
             output += " " + kw
             afterNewline = false
@@ -464,14 +477,14 @@ internal struct SQLTokenFormatter {
 
     private mutating func handleJoinPrefix(upper: String, kw: String, next: SQLToken?, next2: SQLToken?) {
         // LEFT OUTER JOIN → skip 2 tokens (OUTER, JOIN)
-        if next?.upperValue == "OUTER" && next2?.upperValue == "JOIN" {
+        if next?.upperValue == "OUTER", next2?.upperValue == "JOIN" {
             inSelectColumns = false
             let joinKw = options.uppercaseKeywords ? "\(upper) OUTER JOIN" : "\(upper.lowercased()) outer join"
             newline()
             appendToken(joinKw)
             replaceTop(with: .join)
             skipCount = 2
-        // LEFT JOIN → skip 1 token (JOIN)
+            // LEFT JOIN → skip 1 token (JOIN)
         } else if next?.upperValue == "JOIN" {
             inSelectColumns = false
             let joinKw = options.uppercaseKeywords ? "\(upper) JOIN" : "\(upper.lowercased()) join"
@@ -529,7 +542,7 @@ internal struct SQLTokenFormatter {
         }
 
         var line = kw
-        if upper == "UNION" && next?.upperValue == "ALL" {
+        if upper == "UNION", next?.upperValue == "ALL" {
             let allKw = options.uppercaseKeywords ? "ALL" : "all"
             line += " " + allKw
             skipCount = 1 // skip ALL

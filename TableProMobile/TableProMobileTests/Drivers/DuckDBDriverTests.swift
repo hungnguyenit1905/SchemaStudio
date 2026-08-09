@@ -1,7 +1,7 @@
-import XCTest
 import TableProDatabase
-import TableProModels
 @testable import TableProMobile
+import TableProModels
+import XCTest
 
 final class DuckDBDriverTests: XCTestCase {
     private var driver: DuckDBDriver?
@@ -33,24 +33,24 @@ final class DuckDBDriverTests: XCTestCase {
     func testStreamingMatchesMaterializedAcrossTypes() async throws {
         let driver = try XCTUnwrap(driver)
         let query = """
-            SELECT
-                42::INTEGER AS i,
-                9223372036854775807::BIGINT AS big,
-                170141183460469231731687303715884105727::HUGEINT AS huge,
-                (-170141183460469231731687303715884105727)::HUGEINT AS huge_neg,
-                3.5::DOUBLE AS d,
-                true AS b,
-                'hello' AS s,
-                NULL::INTEGER AS n,
-                DATE '2024-03-09' AS dt,
-                TIMESTAMP '2024-03-09 12:34:56.789' AS tstamp,
-                'abc'::BLOB AS payload,
-                '550e8400-e29b-41d4-a716-446655440000'::UUID AS uid,
-                12.34::DECIMAL(5,2) AS dec,
-                INTERVAL '1' MONTH AS iv,
-                [1, 2, 3] AS lst,
-                {'a': 1, 'b': 2} AS strct
-            """
+        SELECT
+            42::INTEGER AS i,
+            9223372036854775807::BIGINT AS big,
+            170141183460469231731687303715884105727::HUGEINT AS huge,
+            (-170141183460469231731687303715884105727)::HUGEINT AS huge_neg,
+            3.5::DOUBLE AS d,
+            true AS b,
+            'hello' AS s,
+            NULL::INTEGER AS n,
+            DATE '2024-03-09' AS dt,
+            TIMESTAMP '2024-03-09 12:34:56.789' AS tstamp,
+            'abc'::BLOB AS payload,
+            '550e8400-e29b-41d4-a716-446655440000'::UUID AS uid,
+            12.34::DECIMAL(5,2) AS dec,
+            INTERVAL '1' MONTH AS iv,
+            [1, 2, 3] AS lst,
+            {'a': 1, 'b': 2} AS strct
+        """
         let materialized = try await driver.execute(query: query)
         let streamed = try await streamedRows(driver, query)
 
@@ -72,10 +72,10 @@ final class DuckDBDriverTests: XCTestCase {
     func testExecuteRendersComplexAndScalarTypes() async throws {
         let driver = try XCTUnwrap(driver)
         let result = try await driver.execute(query: """
-            SELECT [1,2,3] AS lst, {'a':1,'b':2} AS strct, 12.34::DECIMAL(5,2) AS dec,
-            '550e8400-e29b-41d4-a716-446655440000'::UUID AS uid, DATE '2024-03-09' AS dt,
-            TIMESTAMP '2024-03-09 12:34:56' AS ts, 'abc'::BLOB AS payload
-            """)
+        SELECT [1,2,3] AS lst, {'a':1,'b':2} AS strct, 12.34::DECIMAL(5,2) AS dec,
+        '550e8400-e29b-41d4-a716-446655440000'::UUID AS uid, DATE '2024-03-09' AS dt,
+        TIMESTAMP '2024-03-09 12:34:56' AS ts, 'abc'::BLOB AS payload
+        """)
         XCTAssertEqual(result.rows.count, 1)
         XCTAssertEqual(result.rows[0][0], "[1, 2, 3]")
         XCTAssertEqual(result.rows[0][1], "{'a': 1, 'b': 2}")
@@ -90,14 +90,15 @@ final class DuckDBDriverTests: XCTestCase {
         XCTAssertTrue(alive)
     }
 
-    func testServerVersionIsReported() async throws {
+    func testServerVersionIsReported() throws {
         let driver = try XCTUnwrap(driver)
         XCTAssertNotNil(driver.serverVersion)
     }
 
     func testCreateInsertSelect() async throws {
         let driver = try XCTUnwrap(driver)
-        _ = try await driver.execute(query: "CREATE TABLE items (id INTEGER PRIMARY KEY, label VARCHAR, active BOOLEAN)")
+        _ = try await driver
+            .execute(query: "CREATE TABLE items (id INTEGER PRIMARY KEY, label VARCHAR, active BOOLEAN)")
         _ = try await driver.execute(query: "INSERT INTO items VALUES (1, 'first', true), (2, 'second', false)")
 
         let result = try await driver.execute(query: "SELECT id, label, active FROM items ORDER BY id")

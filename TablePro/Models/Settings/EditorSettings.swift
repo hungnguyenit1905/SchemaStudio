@@ -117,7 +117,8 @@ struct EditorSettings: Codable, Equatable {
         vimModeEnabled = try container.decodeIfPresent(Bool.self, forKey: .vimModeEnabled) ?? false
         uppercaseKeywords = try container.decodeIfPresent(Bool.self, forKey: .uppercaseKeywords) ?? false
         queryParametersEnabled = try container.decodeIfPresent(Bool.self, forKey: .queryParametersEnabled) ?? true
-        jsonViewerPreferredMode = try container.decodeIfPresent(JSONViewMode.self, forKey: .jsonViewerPreferredMode) ?? .text
+        jsonViewerPreferredMode = try container
+            .decodeIfPresent(JSONViewMode.self, forKey: .jsonViewerPreferredMode) ?? .text
     }
 
     /// Clamped tab width (1-16)

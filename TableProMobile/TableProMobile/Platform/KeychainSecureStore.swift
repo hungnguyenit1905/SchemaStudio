@@ -17,7 +17,10 @@ final class KeychainSecureStore: SecureStore {
         guard let prefix = Bundle.main.infoDictionary?["AppIdentifierPrefix"] as? String,
               !prefix.isEmpty,
               !prefix.hasPrefix("$(") else {
-            logger.warning("AppIdentifierPrefix unavailable; using the app-local keychain without a shared access group (expected for unsigned or test builds; in a signed build, widget keychain sharing is off).")
+            logger
+                .warning(
+                    "AppIdentifierPrefix unavailable; using the app-local keychain without a shared access group (expected for unsigned or test builds; in a signed build, widget keychain sharing is off)."
+                )
             return nil
         }
 
@@ -96,7 +99,7 @@ final class KeychainSecureStore: SecureStore {
             kSecUseDataProtectionKeychain as String: true,
         ]
         let status = SecItemDelete(applyingAccessGroup(query) as CFDictionary)
-        if status != errSecSuccess && status != errSecItemNotFound {
+        if status != errSecSuccess, status != errSecItemNotFound {
             throw KeychainError.deleteFailed(status)
         }
     }

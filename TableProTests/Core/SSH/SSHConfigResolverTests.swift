@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("SSH config resolver")
@@ -46,7 +46,7 @@ struct SSHConfigResolverTests {
         """)
         let resolved = SSHConfigResolver.resolve(makeConfig(host: "aia-bastion"), document: document, env: Self.stubEnv)
         #expect(resolved.host == "10.0.0.5")
-        #expect(resolved.port == 2200)
+        #expect(resolved.port == 2_200)
         #expect(resolved.username == "ubuntu")
     }
 
@@ -69,11 +69,11 @@ struct SSHConfigResolverTests {
             Port 2200
         """)
         let resolved = SSHConfigResolver.resolve(
-            makeConfig(host: "alias", port: 9999),
+            makeConfig(host: "alias", port: 9_999),
             document: document,
             env: Self.stubEnv
         )
-        #expect(resolved.port == 9999)
+        #expect(resolved.port == 9_999)
     }
 
     @Test("Unset form port falls back to ssh config Port")
@@ -88,7 +88,7 @@ struct SSHConfigResolverTests {
             document: document,
             env: Self.stubEnv
         )
-        #expect(resolved.port == 2200)
+        #expect(resolved.port == 2_200)
     }
 
     @Test("Explicit form port 22 overrides ssh config non-22 Port")
@@ -184,7 +184,7 @@ struct SSHConfigResolverTests {
             document: document,
             env: Self.stubEnv
         )
-        #expect(resolved.port == 2200)
+        #expect(resolved.port == 2_200)
     }
 
     @Test("Glob Host pattern matches")
@@ -215,7 +215,7 @@ struct SSHConfigResolverTests {
         )
         #expect(resolved.proxyJump.count == 1)
         #expect(resolved.proxyJump[0].host == "10.0.0.1")
-        #expect(resolved.proxyJump[0].port == 2200)
+        #expect(resolved.proxyJump[0].port == 2_200)
         #expect(resolved.proxyJump[0].username == "bastion")
     }
 
@@ -354,7 +354,7 @@ struct SSHConfigResolverTests {
             env: Self.stubEnv
         )
         #expect(resolved.username == "finaluser")
-        #expect(resolved.port == 9999)
+        #expect(resolved.port == 9_999)
     }
 
     @Test("Match canonical does not apply when CanonicalizeHostname is off")
@@ -384,7 +384,7 @@ struct SSHConfigResolverTests {
         let resolved = SSHConfigResolver.resolve(jump, document: document, env: Self.stubEnv)
         #expect(resolved.host == "real-bastion.example.com")
         #expect(resolved.username == "opsuser")
-        #expect(resolved.port == 2200)
+        #expect(resolved.port == 2_200)
     }
 
     @Test("Global directives apply before any Host stanza")

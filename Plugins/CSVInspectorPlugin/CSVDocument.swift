@@ -1,6 +1,6 @@
 import AppKit
-import TableProPluginKit
 import os
+import TableProPluginKit
 
 public final class CSVDocument: NSDocument, CSVConfigurableDocument {
     static let logger = Logger(subsystem: "com.TablePro", category: "CSVInspector")
@@ -117,7 +117,9 @@ public final class CSVDocument: NSDocument, CSVConfigurableDocument {
         isPromptingExternalChange = true
         let alert = NSAlert()
         alert.messageText = String(localized: "File modified externally")
-        alert.informativeText = String(localized: "Another app changed this file. Discard your unsaved changes and reload?")
+        alert
+            .informativeText =
+            String(localized: "Another app changed this file. Discard your unsaved changes and reload?")
         alert.addButton(withTitle: String(localized: "Reload"))
         alert.addButton(withTitle: String(localized: "Keep Changes"))
         alert.alertStyle = .warning

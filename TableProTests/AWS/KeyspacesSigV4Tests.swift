@@ -18,7 +18,7 @@ struct KeyspacesSigV4Tests {
 
     @Test("Extracts the 32-byte nonce that follows the nonce= marker")
     func nonceExtraction() {
-        let nonceBytes = Data((0..<32).map { UInt8($0) })
+        let nonceBytes = Data((0 ..< 32).map { UInt8($0) })
         var challenge = Data("nonce=".utf8)
         challenge.append(nonceBytes)
         challenge.append(Data(",foo=bar".utf8))
@@ -32,17 +32,20 @@ struct KeyspacesSigV4Tests {
 
     @Test("Returns nil when the nonce is shorter than 32 bytes")
     func nonceTruncated() {
-        let challenge = Data("nonce=".utf8) + Data((0..<10).map { UInt8($0) })
+        let challenge = Data("nonce=".utf8) + Data((0 ..< 10).map { UInt8($0) })
         #expect(KeyspacesSigV4.nonce(fromChallenge: challenge) == nil)
     }
 
     @Test("The auth response carries signature, access key, and amzdate")
     func authResponseShape() {
-        let nonce = Data((0..<32).map { UInt8($0) })
+        let nonce = Data((0 ..< 32).map { UInt8($0) })
         let response = KeyspacesSigV4.authResponse(
             nonce: nonce, credentials: credentials, region: "us-east-1", now: fixedDate
         )
-        let fields = Dictionary(uniqueKeysWithValues: response.split(separator: ",").compactMap { pair -> (String, String)? in
+        let fields = Dictionary(uniqueKeysWithValues: response.split(separator: ",").compactMap { pair -> (
+            String,
+            String
+        )? in
             let parts = pair.split(separator: "=", maxSplits: 1)
             guard parts.count == 2 else { return nil }
             return (String(parts[0]), String(parts[1]))
@@ -67,8 +70,18 @@ struct KeyspacesSigV4Tests {
     @Test("Same inputs produce the same signature")
     func deterministic() {
         let nonce = Data(repeating: 9, count: 32)
-        let first = KeyspacesSigV4.authResponse(nonce: nonce, credentials: credentials, region: "us-east-1", now: fixedDate)
-        let second = KeyspacesSigV4.authResponse(nonce: nonce, credentials: credentials, region: "us-east-1", now: fixedDate)
+        let first = KeyspacesSigV4.authResponse(
+            nonce: nonce,
+            credentials: credentials,
+            region: "us-east-1",
+            now: fixedDate
+        )
+        let second = KeyspacesSigV4.authResponse(
+            nonce: nonce,
+            credentials: credentials,
+            region: "us-east-1",
+            now: fixedDate
+        )
         #expect(first == second)
     }
 }

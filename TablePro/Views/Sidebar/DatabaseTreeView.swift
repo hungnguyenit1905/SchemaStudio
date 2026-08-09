@@ -7,12 +7,13 @@ import SwiftUI
 import TableProPluginKit
 
 struct DatabaseTreeTableRef: Hashable, Identifiable {
+    let connectionId: UUID
     let database: String
     let schema: String?
     let table: TableInfo
 
     var id: String {
-        "\(database)|\(schema ?? "")|\(table.id)"
+        "\(connectionId.uuidString)|\(database)|\(schema ?? "")|\(table.id)"
     }
 
     static func == (lhs: DatabaseTreeTableRef, rhs: DatabaseTreeTableRef) -> Bool {
@@ -25,12 +26,13 @@ struct DatabaseTreeTableRef: Hashable, Identifiable {
 }
 
 struct DatabaseTreeRoutineRef: Identifiable {
+    let connectionId: UUID
     let database: String
     let schema: String?
     let routine: RoutineInfo
 
     var id: String {
-        "\(database)|\(schema ?? "")|\(routine.id)"
+        "\(connectionId.uuidString)|\(database)|\(schema ?? "")|\(routine.id)"
     }
 }
 
@@ -65,48 +67,23 @@ struct DatabaseTreeView: View {
         isConnected ? "connected" : "down"
     }
 
-    private var databases: [DatabaseMetadata] {
-        treeService.databases(for: connectionId)
-    }
-
-    private var filteredDatabases: [DatabaseMetadata] {
-        DatabaseTreeVisibility.visible(
-            databases: databases,
-            selected: sidebarState.databaseFilterSelected,
-            activeDatabase: activeDatabase
-        )
-    }
-
-    private var isFilterHidingEverything: Bool {
-        DatabaseTreeVisibility.isFiltering(selected: sidebarState.databaseFilterSelected)
-            && filteredDatabases.isEmpty
-    }
-
+    /// The tree spans every saved connection, so it always renders. Per-connection
+    /// loading, empty and error states are status rows under their own connection
+    /// node; gating the whole outline on one connection would hide the others.
     var body: some View {
-        Group {
-            switch treeService.databaseListState(for: connectionId) {
-            case .failed(let message):
-                errorState(message: message)
-            case .loaded where databases.isEmpty:
-                emptyDatabasesState
-            case .loaded where isFilterHidingEverything:
-                filteredEmptyState
-            case .loaded:
-                outline
-            case .idle, .loading:
-                loadingState
+        outline
+            .task(id: connectionToken) {
+                await treeService.loadDatabases(connectionId: connectionId, databaseType: databaseType)
             }
-        }
-        .task(id: connectionToken) {
-            await treeService.loadDatabases(connectionId: connectionId, databaseType: databaseType)
-        }
-        .task(id: viewModel.searchText) {
-            let live = viewModel.searchText
-            guard !live.isEmpty else { searchText = ""; return }
-            try? await Task.sleep(nanoseconds: 250_000_000)
-            guard !Task.isCancelled else { return }
-            searchText = live
-        }
+            .task(id: viewModel.searchText) {
+                let live = viewModel.searchText
+                guard !live.isEmpty else { searchText = ""
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 250_000_000)
+                guard !Task.isCancelled else { return }
+                searchText = live
+            }
     }
 
     private var outline: some View {
@@ -117,53 +94,12 @@ struct DatabaseTreeView: View {
             windowState: windowState,
             sidebarState: sidebarState,
             viewModel: viewModel,
-            pendingTruncates: pendingTruncates,
-            pendingDeletes: pendingDeletes,
+            pendingTruncates: [connectionId: pendingTruncates],
+            pendingDeletes: [connectionId: pendingDeletes],
             searchText: searchText,
             connectionToken: connectionToken,
             activeDatabase: activeDatabase,
             activeSchema: activeSchema
         )
-    }
-
-    private var loadingState: some View {
-        ProgressView()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private func errorState(message: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.title)
-                .foregroundStyle(.orange)
-            Text(message)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-    }
-
-    private var emptyDatabasesState: some View {
-        ContentUnavailableView(
-            String(localized: "No Databases"),
-            systemImage: "cylinder",
-            description: Text("This server has no databases yet.")
-        )
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var filteredEmptyState: some View {
-        ContentUnavailableView {
-            Label(String(localized: "No Databases Shown"), systemImage: "line.3.horizontal.decrease.circle")
-        } description: {
-            Text("The database filter hides every database on this connection.")
-        } actions: {
-            Button(String(localized: "Show All")) {
-                sidebarState.databaseFilterSelected = []
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

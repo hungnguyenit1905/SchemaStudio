@@ -18,7 +18,7 @@ extension VimEngine {
 
         let rangeStart = min(startPos, endPos)
         var rangeEnd = max(startPos, endPos)
-        if inclusive && rangeEnd < buffer.length && buffer.character(at: rangeEnd) != 0x0A {
+        if inclusive, rangeEnd < buffer.length, buffer.character(at: rangeEnd) != 0x0A {
             rangeEnd += 1
         }
         let range = NSRange(location: rangeStart, length: rangeEnd - rangeStart)
@@ -111,7 +111,7 @@ extension VimEngine {
         let pos = buffer.selectedRange().location
         let startRange = buffer.lineRange(forOffset: pos)
         var endOffset = startRange.location + startRange.length
-        for _ in 1..<count {
+        for _ in 1 ..< count {
             if endOffset < buffer.length {
                 let nextLineRange = buffer.lineRange(forOffset: endOffset)
                 endOffset = nextLineRange.location + nextLineRange.length
@@ -133,7 +133,7 @@ extension VimEngine {
         let pos = buffer.selectedRange().location
         let startRange = buffer.lineRange(forOffset: pos)
         var endOffset = startRange.location + startRange.length
-        for _ in 1..<count {
+        for _ in 1 ..< count {
             if endOffset < buffer.length {
                 let nextLineRange = buffer.lineRange(forOffset: endOffset)
                 endOffset = nextLineRange.location + nextLineRange.length
@@ -147,7 +147,7 @@ extension VimEngine {
         let pos = buffer.selectedRange().location
         let startRange = buffer.lineRange(forOffset: pos)
         var endOffset = startRange.location + startRange.length
-        for _ in 1..<count {
+        for _ in 1 ..< count {
             if endOffset < buffer.length {
                 let nextLineRange = buffer.lineRange(forOffset: endOffset)
                 endOffset = nextLineRange.location + nextLineRange.length
@@ -219,7 +219,7 @@ extension VimEngine {
         noteEdit(at: pos, in: buffer)
         buffer.replaceCharacters(in: range, with: "")
         let newContentEnd = contentEnd - deleteCount
-        if pos >= newContentEnd && newContentEnd > lineRange.location {
+        if pos >= newContentEnd, newContentEnd > lineRange.location {
             buffer.setSelectedRange(NSRange(location: newContentEnd - 1, length: 0))
         } else {
             buffer.setSelectedRange(NSRange(location: pos, length: 0))
@@ -248,7 +248,9 @@ extension VimEngine {
             && lineEnd <= buffer.length
             && buffer.character(at: lineEnd - 1) == 0x0A ? lineEnd - 1 : lineEnd
         let deleteCount = min(count, max(0, contentEnd - pos))
-        guard deleteCount > 0 else { setMode(.insert); return }
+        guard deleteCount > 0 else { setMode(.insert)
+            return
+        }
         let range = NSRange(location: pos, length: deleteCount)
         register.text = buffer.string(in: range)
         register.isLinewise = false
@@ -278,7 +280,7 @@ extension VimEngine {
         let pos = buffer.selectedRange().location
         let startRange = buffer.lineRange(forOffset: pos)
         var endOffset = startRange.location + startRange.length
-        for _ in 1..<count {
+        for _ in 1 ..< count {
             if endOffset < buffer.length {
                 let nextLineRange = buffer.lineRange(forOffset: endOffset)
                 endOffset = nextLineRange.location + nextLineRange.length
@@ -306,7 +308,7 @@ extension VimEngine {
         let pos = buffer.selectedRange().location
         let startRange = buffer.lineRange(forOffset: pos)
         var endOffset = startRange.location + startRange.length
-        for _ in 1..<count {
+        for _ in 1 ..< count {
             if endOffset < buffer.length {
                 let nextLineRange = buffer.lineRange(forOffset: endOffset)
                 endOffset = nextLineRange.location + nextLineRange.length
@@ -318,7 +320,7 @@ extension VimEngine {
 
     func joinLines(_ count: Int, withSpace: Bool, in buffer: VimTextBuffer) {
         let joinCount = max(count - 1, 1)
-        for _ in 0..<joinCount {
+        for _ in 0 ..< joinCount {
             guard performSingleJoin(withSpace: withSpace, in: buffer) else { return }
         }
     }
@@ -333,7 +335,7 @@ extension VimEngine {
         let linesCovered = max(1, endLine - startLine + 1)
         buffer.setSelectedRange(NSRange(location: startLineRange.location, length: 0))
         let joins = max(linesCovered - 1, 1)
-        for _ in 0..<joins {
+        for _ in 0 ..< joins {
             guard performSingleJoin(withSpace: withSpace, in: buffer) else { break }
         }
         setMode(.normal)

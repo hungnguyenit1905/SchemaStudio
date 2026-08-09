@@ -45,14 +45,14 @@ struct AIConversationTests {
         let id = UUID()
         let now = ISO8601DateFormatter().string(from: Date())
         let json = """
-            {
-                "id": "\(id.uuidString)",
-                "title": "Legacy",
-                "messages": [],
-                "createdAt": "\(now)",
-                "updatedAt": "\(now)"
-            }
-            """
+        {
+            "id": "\(id.uuidString)",
+            "title": "Legacy",
+            "messages": [],
+            "createdAt": "\(now)",
+            "updatedAt": "\(now)"
+        }
+        """
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let conversation = try decoder.decode(AIConversation.self, from: Data(json.utf8))

@@ -37,7 +37,9 @@ struct TrustedExternalConnectionsSection: View {
         } header: {
             Text("Trusted Links")
         } footer: {
-            Text("Links you chose to always allow. SchemaStudio connects without asking. Only connections on this machine can be trusted.")
+            Text(
+                "Links you chose to always allow. SchemaStudio connects without asking. Only connections on this machine can be trusted."
+            )
         }
         .onAppear(perform: refresh)
     }

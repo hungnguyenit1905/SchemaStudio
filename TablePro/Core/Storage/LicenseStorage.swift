@@ -43,6 +43,7 @@ final class LicenseStorage {
     }
 
     // MARK: - Signed Payload (UserDefaults)
+
     // Note: The signed license payload (email, expiry) is stored in UserDefaults rather than
     // Keychain because it is a verifiable signed blob — the RSA-SHA256 signature is re-verified
     // on every cold start (LicenseManager). The license key itself is in Keychain.
@@ -102,8 +103,7 @@ final class LicenseStorage {
                   kIOPlatformUUIDKey as CFString,
                   kCFAllocatorDefault,
                   0
-              )?.takeRetainedValue() as? String
-        else {
+              )?.takeRetainedValue() as? String else {
             // Fallback: use a persistent UUID stored in UserDefaults
             let fallbackKey = "com.SchemaStudio.license.fallbackMachineId"
             if let existing = defaults.string(forKey: fallbackKey) {

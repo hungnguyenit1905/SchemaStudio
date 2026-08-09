@@ -36,7 +36,7 @@ final class DuckDBDriver: DatabaseDriver, @unchecked Sendable {
         try await actor.open(path: resolvedPath)
         try? await actor.query("SET autoinstall_known_extensions=false")
         try? await actor.query("SET autoload_known_extensions=false")
-        setInterruptHandle(await actor.connectionHandle)
+        await setInterruptHandle(actor.connectionHandle)
     }
 
     func disconnect() async throws {
@@ -66,7 +66,8 @@ final class DuckDBDriver: DatabaseDriver, @unchecked Sendable {
                 bookmarkDataIsStale: &isStale
             )
             guard url.startAccessingSecurityScopedResource() else {
-                throw DuckDBDriverError.connectionFailed("Cannot access the DuckDB file. Open it again to grant access.")
+                throw DuckDBDriverError
+                    .connectionFailed("Cannot access the DuckDB file. Open it again to grant access.")
             }
             setSecuredURL(url)
             return url.path
@@ -234,7 +235,7 @@ actor DuckDBActor {
         let columnCount = duckdb_column_count(&result)
         let rowsChanged = Int(duckdb_rows_changed(&result))
         var plan: [DuckDBStreamColumn] = []
-        for index in 0..<columnCount {
+        for index in 0 ..< columnCount {
             let name = duckdb_column_name(&result, index).map { String(cString: $0) } ?? "column_\(index)"
             let type = duckdb_column_type(&result, index)
             plan.append(DuckDBStreamColumn(
@@ -290,17 +291,17 @@ actor DuckDBActor {
 
             let size = duckdb_data_chunk_get_size(chunk)
             var vectors: [duckdb_vector?] = []
-            for index in 0..<plan.count {
+            for index in 0 ..< plan.count {
                 vectors.append(duckdb_data_chunk_get_vector(chunk, idx_t(index)))
             }
-            for row in 0..<size {
+            for row in 0 ..< size {
                 if rows.count >= maxRows {
                     truncated = true
                     break chunks
                 }
                 var values: [String?] = []
                 values.reserveCapacity(plan.count)
-                for index in 0..<plan.count {
+                for index in 0 ..< plan.count {
                     guard let vector = vectors[index] else {
                         values.append(nil)
                         continue

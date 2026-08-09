@@ -11,7 +11,7 @@ import Foundation
 struct ConnectionTag: Identifiable, Hashable, Codable {
     let id: UUID
     var name: String
-    var isPreset: Bool  // Preset tags cannot be deleted
+    var isPreset: Bool // Preset tags cannot be deleted
     var color: ConnectionColor
 
     init(id: UUID = UUID(), name: String, isPreset: Bool = false, color: ConnectionColor = .gray) {
@@ -24,7 +24,10 @@ struct ConnectionTag: Identifiable, Hashable, Codable {
     // MARK: - Codable (Migration Support)
 
     enum CodingKeys: String, CodingKey {
-        case id, name, isPreset, color
+        case id
+        case name
+        case isPreset
+        case color
     }
 
     init(from decoder: Decoder) throws {

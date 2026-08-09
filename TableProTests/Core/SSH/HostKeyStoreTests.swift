@@ -127,12 +127,14 @@ struct HostKeyStoreTests {
 
         #expect(store.verify(keyData: key1, keyType: "ssh-rsa", hostname: "host-a.com", port: 22) == .trusted)
         #expect(store.verify(keyData: key2, keyType: "ssh-ed25519", hostname: "host-b.com", port: 22) == .trusted)
-        #expect(store.verify(keyData: key3, keyType: "ecdsa-sha2-nistp256", hostname: "host-c.com", port: 22) == .trusted)
+        #expect(store
+            .verify(keyData: key3, keyType: "ecdsa-sha2-nistp256", hostname: "host-c.com", port: 22) == .trusted)
 
         // Removing one host should not affect others
         store.remove(hostname: "host-b.com", port: 22)
         #expect(store.verify(keyData: key1, keyType: "ssh-rsa", hostname: "host-a.com", port: 22) == .trusted)
-        #expect(store.verify(keyData: key3, keyType: "ecdsa-sha2-nistp256", hostname: "host-c.com", port: 22) == .trusted)
+        #expect(store
+            .verify(keyData: key3, keyType: "ecdsa-sha2-nistp256", hostname: "host-c.com", port: 22) == .trusted)
     }
 
     @Test("Same hostname with different ports are separate entries")
@@ -145,13 +147,14 @@ struct HostKeyStoreTests {
         let key2222 = makeTestKey(0x55)
 
         store.trust(hostname: "example.com", port: 22, key: key22, keyType: "ssh-rsa")
-        store.trust(hostname: "example.com", port: 2222, key: key2222, keyType: "ssh-ed25519")
+        store.trust(hostname: "example.com", port: 2_222, key: key2222, keyType: "ssh-ed25519")
 
         #expect(store.verify(keyData: key22, keyType: "ssh-rsa", hostname: "example.com", port: 22) == .trusted)
-        #expect(store.verify(keyData: key2222, keyType: "ssh-ed25519", hostname: "example.com", port: 2222) == .trusted)
+        #expect(store
+            .verify(keyData: key2222, keyType: "ssh-ed25519", hostname: "example.com", port: 2_222) == .trusted)
 
         // Key from port 22 should not match port 2222
-        let result = store.verify(keyData: key22, keyType: "ssh-rsa", hostname: "example.com", port: 2222)
+        let result = store.verify(keyData: key22, keyType: "ssh-rsa", hostname: "example.com", port: 2_222)
         switch result {
         case .mismatch:
             break // expected — different key stored for this port

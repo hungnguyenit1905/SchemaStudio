@@ -23,6 +23,7 @@ final class IOSSyncCoordinator {
         engine = newEngine
         return newEngine
     }
+
     private var debounceTask: Task<Void, Never>?
     private var needsResync = false
 

@@ -85,7 +85,10 @@ struct CSVImportOptionsView: View {
                     .disabled(plugin.settings.errorHandling == .skipAndContinue)
                     .help(plugin.settings.errorHandling == .skipAndContinue
                         ? String(localized: "Not available in skip-and-continue mode")
-                        : String(localized: "Insert all rows in a single transaction. If any row fails, all changes are rolled back."))
+                        :
+                        String(
+                            localized: "Insert all rows in a single transaction. If any row fails, all changes are rolled back."
+                        ))
 
                 Toggle("Delete existing rows before import", isOn: Bindable(plugin).settings.deleteExistingRows)
                     .help("Remove every row from the target table before inserting the imported rows.")

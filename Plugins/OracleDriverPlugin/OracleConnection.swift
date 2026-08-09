@@ -206,7 +206,10 @@ final class OracleConnectionWrapper: @unchecked Sendable {
         } catch let sqlError as OracleSQLError {
             let detail = Self.connectFailureDetail(sqlError)
             let phase = sqlError.handshakePhase ?? "unknown"
-            osLogger.error("Oracle connection failed at phase \(phase, privacy: .public) (\(sqlError.code.description, privacy: .public)): \(detail)")
+            osLogger
+                .error(
+                    "Oracle connection failed at phase \(phase, privacy: .public) (\(sqlError.code.description, privacy: .public)): \(detail)"
+                )
             if let sslError = OracleSSLClassifier.classifySSLError(detail) {
                 throw sslError
             }
@@ -302,7 +305,9 @@ final class OracleConnectionWrapper: @unchecked Sendable {
     ) -> String {
         switch category {
         case .authVersionNotSupported:
-            return String(localized: "This Oracle server is older than release 11.1, which the database driver does not support.")
+            return String(
+                localized: "This Oracle server is older than release 11.1, which the database driver does not support."
+            )
         case .authConnectionDropped:
             return String(localized: "The Oracle server closed the connection during the login handshake.")
         case .authVerifierUnsupported:
@@ -332,7 +337,9 @@ final class OracleConnectionWrapper: @unchecked Sendable {
         }
         osLogger.error("Oracle connection reset after fatal protocol error: \(sqlError.code.description)")
         return OracleError(
-            message: String(localized: "The server sent an unexpected message and the connection was reset. Run the query again."),
+            message: String(
+                localized: "The server sent an unexpected message and the connection was reset. Run the query again."
+            ),
             category: .protocolError
         )
     }
@@ -421,7 +428,10 @@ final class OracleConnectionWrapper: @unchecked Sendable {
     }
 
     private func queryTimeoutError(_ timeout: TimeoutError) -> OracleError {
-        osLogger.error("Oracle query timed out after \(Int(timeout.seconds), privacy: .public)s; the connection was closed to recover")
+        osLogger
+            .error(
+                "Oracle query timed out after \(Int(timeout.seconds), privacy: .public)s; the connection was closed to recover"
+            )
         return OracleError(message: Self.queryTimeoutMessage, category: .queryTimedOut)
     }
 
@@ -605,22 +615,22 @@ final class OracleConnectionWrapper: @unchecked Sendable {
                 return Self.decodeNumber(cell)
 
             case .binaryFloat:
-                return String(try cell.decode(Float.self))
+                return try String(cell.decode(Float.self))
 
             case .binaryDouble:
-                return String(try cell.decode(Double.self))
+                return try String(cell.decode(Double.self))
 
             case .boolean:
                 return try cell.decode(Bool.self) ? "true" : "false"
 
             case .date:
-                return OracleCellFormatting.formatDate(try cell.decode(Date.self))
+                return try OracleCellFormatting.formatDate(cell.decode(Date.self))
 
             case .timestamp:
-                return OracleCellFormatting.formatTimestamp(try cell.decode(Date.self), style: .utc)
+                return try OracleCellFormatting.formatTimestamp(cell.decode(Date.self), style: .utc)
 
             case .timestampLTZ, .timestampTZ:
-                return OracleCellFormatting.formatTimestamp(try cell.decode(Date.self), style: .local)
+                return try OracleCellFormatting.formatTimestamp(cell.decode(Date.self), style: .local)
 
             case .intervalDS:
                 let interval = try cell.decode(IntervalDS.self)
@@ -655,7 +665,10 @@ final class OracleConnectionWrapper: @unchecked Sendable {
                 return unsupportedPlaceholder(for: cell.dataType)
             }
         } catch {
-            osLogger.error("Oracle decode failed for column '\(cell.columnName)' type \(self.oracleTypeName(cell.dataType)): \(String(describing: error))")
+            osLogger
+                .error(
+                    "Oracle decode failed for column '\(cell.columnName)' type \(self.oracleTypeName(cell.dataType)): \(String(describing: error))"
+                )
             return "<decode error>"
         }
     }

@@ -11,7 +11,8 @@ enum TeradataSSLMapping {
             verifiesCertificate: ssl.verifiesCertificate,
             verifiesHostname: ssl.verifiesHostname,
             caCertificatePath: ssl.caCertificatePath,
-            modeLabel: modeLabel(for: ssl.mode))
+            modeLabel: modeLabel(for: ssl.mode)
+        )
     }
 
     private static func modeLabel(for mode: SSLMode) -> String {

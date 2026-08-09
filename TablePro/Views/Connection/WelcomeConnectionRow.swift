@@ -79,7 +79,6 @@ struct WelcomeConnectionRow: View {
         }
     }
 
-    @ViewBuilder
     private func trailingAccessories(tags: [ConnectionTag]) -> some View {
         HStack(spacing: 8) {
             if isDriverRejected {
@@ -118,8 +117,7 @@ struct WelcomeConnectionRow: View {
         .frame(width: 16, alignment: .center)
     }
 
-    @ViewBuilder
-    private var favoriteStarImage: some View {
+    @ViewBuilder private var favoriteStarImage: some View {
         if connection.isFavorite {
             Image(systemName: "star.fill")
                 .imageScale(.small)

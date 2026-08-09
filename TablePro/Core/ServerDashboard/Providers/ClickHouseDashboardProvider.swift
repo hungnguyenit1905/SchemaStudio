@@ -11,11 +11,11 @@ struct ClickHouseDashboardProvider: ServerDashboardQueryProvider {
 
     func fetchSessions(execute: (String) async throws -> QueryResult) async throws -> [DashboardSession] {
         let sql = """
-            SELECT query_id, user, current_database, elapsed, read_rows,
-                   memory_usage, left(query, 1000) AS query
-            FROM system.processes
-            ORDER BY elapsed DESC
-            """
+        SELECT query_id, user, current_database, elapsed, read_rows,
+               memory_usage, left(query, 1000) AS query
+        FROM system.processes
+        ORDER BY elapsed DESC
+        """
         let result = try await execute(sql)
         let col = columnIndex(from: result.columns)
         return result.rows.map { row in
@@ -41,9 +41,9 @@ struct ClickHouseDashboardProvider: ServerDashboardQueryProvider {
         var metrics: [DashboardMetric] = []
 
         let metricsResult = try await execute("""
-            SELECT metric, value FROM system.metrics
-            WHERE metric IN ('Query', 'Merge', 'PartMutation')
-            """)
+        SELECT metric, value FROM system.metrics
+        WHERE metric IN ('Query', 'Merge', 'PartMutation')
+        """)
         let col = columnIndex(from: metricsResult.columns)
         for row in metricsResult.rows {
             let metric = value(row, at: col["metric"])
@@ -59,9 +59,9 @@ struct ClickHouseDashboardProvider: ServerDashboardQueryProvider {
         }
 
         let diskResult = try await execute("""
-            SELECT formatReadableSize(sum(bytes_on_disk)) AS disk_usage
-            FROM system.parts WHERE active
-            """)
+        SELECT formatReadableSize(sum(bytes_on_disk)) AS disk_usage
+        FROM system.parts WHERE active
+        """)
         if let row = diskResult.rows.first {
             metrics.append(DashboardMetric(
                 id: "disk_usage",
@@ -77,13 +77,13 @@ struct ClickHouseDashboardProvider: ServerDashboardQueryProvider {
 
     func fetchSlowQueries(execute: (String) async throws -> QueryResult) async throws -> [DashboardSlowQuery] {
         let sql = """
-            SELECT user, query_duration_ms / 1000 AS duration_secs,
-                   left(query, 1000) AS query
-            FROM system.query_log
-            WHERE type = 'QueryFinish' AND query_duration_ms > 1000
-            ORDER BY event_time DESC
-            LIMIT 20
-            """
+        SELECT user, query_duration_ms / 1000 AS duration_secs,
+               left(query, 1000) AS query
+        FROM system.query_log
+        WHERE type = 'QueryFinish' AND query_duration_ms > 1000
+        ORDER BY event_time DESC
+        LIMIT 20
+        """
         let result = try await execute(sql)
         let col = columnIndex(from: result.columns)
         return result.rows.map { row in

@@ -221,7 +221,7 @@ final class MCPServerManager {
             chosenPort = preferredPort
         } else {
             do {
-                chosenPort = try MCPPortAllocator.findFreePort(in: 51_000...52_000)
+                chosenPort = try MCPPortAllocator.findFreePort(in: 51_000 ... 52_000)
             } catch {
                 Self.logger.error("Lazy start failed to allocate port: \(error.localizedDescription, privacy: .public)")
                 state = .failed(error.localizedDescription)
@@ -433,9 +433,7 @@ final class MCPServerManager {
         return "\(home)/Library/Application Support/SchemaStudio"
     }()
 
-    private static let handshakeFilePath: String = {
-        "\(handshakeDirectoryPath)/mcp-handshake.json"
-    }()
+    private static let handshakeFilePath: String = "\(handshakeDirectoryPath)/mcp-handshake.json"
 
     private struct HandshakeFilePayload: Codable {
         let port: Int

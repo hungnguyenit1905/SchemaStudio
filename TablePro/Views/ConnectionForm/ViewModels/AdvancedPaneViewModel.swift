@@ -47,8 +47,7 @@ final class AdvancedPaneViewModel {
     func resetForType(_ newType: DatabaseType) {
         var values: [String: String] = [:]
         for field in PluginManager.shared.additionalConnectionFields(for: newType)
-            where field.section == .advanced
-        {
+            where field.section == .advanced {
             if let defaultValue = field.defaultValue {
                 values[field.id] = defaultValue
             }
@@ -67,8 +66,7 @@ final class AdvancedPaneViewModel {
             }
         }
         if connection.additionalFields["redisDatabase"] == nil,
-           let rdb = connection.redisDatabase
-        {
+           let rdb = connection.redisDatabase {
             values["redisDatabase"] = String(rdb)
         }
         additionalFieldValues = values

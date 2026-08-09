@@ -17,7 +17,7 @@ enum KeywordUppercaseHelper {
     /// Checks if a UTF-16 character is part of a SQL identifier (a-z, A-Z, 0-9, _).
     static func isWordCharacter(_ ch: unichar) -> Bool {
         (ch >= 0x41 && ch <= 0x5A) || (ch >= 0x61 && ch <= 0x7A) ||
-        (ch >= 0x30 && ch <= 0x39) || ch == 0x5F
+            (ch >= 0x30 && ch <= 0x39) || ch == 0x5F
     }
 
     /// Scans backwards up to 2,000 characters to determine if `position` is inside
@@ -37,7 +37,7 @@ enum KeywordUppercaseHelper {
             let ch = text.character(at: i)
 
             if inBlockComment {
-                if ch == 0x2A && i + 1 < position && text.character(at: i + 1) == 0x2F {
+                if ch == 0x2A, i + 1 < position, text.character(at: i + 1) == 0x2F {
                     inBlockComment = false
                     i += 2
                     continue
@@ -51,7 +51,7 @@ enum KeywordUppercaseHelper {
                 continue
             }
             if inDollarQuote {
-                if ch == 0x24 && i + 1 < position && text.character(at: i + 1) == 0x24 {
+                if ch == 0x24, i + 1 < position, text.character(at: i + 1) == 0x24 {
                     inDollarQuote = false
                     i += 2
                     continue
@@ -60,36 +60,36 @@ enum KeywordUppercaseHelper {
                 continue
             }
 
-            if ch == 0x5C && (inSingleQuote || inDoubleQuote) {
+            if ch == 0x5C, inSingleQuote || inDoubleQuote {
                 i += 2
                 continue
             }
 
             switch ch {
-            case 0x27: if !inDoubleQuote && !inBacktick { inSingleQuote.toggle() }
-            case 0x22: if !inSingleQuote && !inBacktick { inDoubleQuote.toggle() }
-            case 0x60: if !inSingleQuote && !inDoubleQuote { inBacktick.toggle() }
+            case 0x27: if !inDoubleQuote, !inBacktick { inSingleQuote.toggle() }
+            case 0x22: if !inSingleQuote, !inBacktick { inDoubleQuote.toggle() }
+            case 0x60: if !inSingleQuote, !inDoubleQuote { inBacktick.toggle() }
             case 0x23:
-                if !inSingleQuote && !inDoubleQuote && !inBacktick {
+                if !inSingleQuote, !inDoubleQuote, !inBacktick {
                     inLineComment = true
                 }
             case 0x2D:
-                if !inSingleQuote && !inDoubleQuote && !inBacktick &&
-                   i + 1 < position && text.character(at: i + 1) == 0x2D {
+                if !inSingleQuote, !inDoubleQuote, !inBacktick,
+                   i + 1 < position, text.character(at: i + 1) == 0x2D {
                     inLineComment = true
                     i += 2
                     continue
                 }
             case 0x2F:
-                if !inSingleQuote && !inDoubleQuote && !inBacktick &&
-                   i + 1 < position && text.character(at: i + 1) == 0x2A {
+                if !inSingleQuote, !inDoubleQuote, !inBacktick,
+                   i + 1 < position, text.character(at: i + 1) == 0x2A {
                     inBlockComment = true
                     i += 2
                     continue
                 }
             case 0x24:
-                if !inSingleQuote && !inDoubleQuote && !inBacktick &&
-                   i + 1 < position && text.character(at: i + 1) == 0x24 {
+                if !inSingleQuote, !inDoubleQuote, !inBacktick,
+                   i + 1 < position, text.character(at: i + 1) == 0x24 {
                     inDollarQuote.toggle()
                     i += 2
                     continue

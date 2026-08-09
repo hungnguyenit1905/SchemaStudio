@@ -30,7 +30,7 @@ final class CloudSQLProxyPaneViewModel {
         }
 
         if !state.automaticPort {
-            let portIsValid = Int(state.localPort).map { (1...65_535).contains($0) } ?? false
+            let portIsValid = Int(state.localPort).map { (1 ... 65_535).contains($0) } ?? false
             if !portIsValid {
                 issues.append(String(localized: "Local port must be between 1 and 65535"))
             }

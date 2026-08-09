@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("AnthropicProvider stream parser")
@@ -146,7 +146,7 @@ struct AnthropicProviderParserTests {
     }
 
     @Test("finalUsageEvent emits .usage when tokens were observed")
-    func finalUsage() throws {
+    func finalUsage() {
         var state = AnthropicStreamState()
         state.inputTokens = 42
         state.outputTokens = 100

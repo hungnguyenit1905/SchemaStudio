@@ -5,8 +5,8 @@
 
 import Foundation
 import TableProPluginKit
-import Testing
 import TableProSyncTransport
+import Testing
 
 @testable import SchemaStudio
 

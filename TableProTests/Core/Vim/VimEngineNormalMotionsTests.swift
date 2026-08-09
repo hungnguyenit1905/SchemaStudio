@@ -5,9 +5,9 @@
 //  Specification tests for cursor motions in Normal mode.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 // swiftlint:disable file_length type_body_length
 
@@ -34,7 +34,9 @@ final class VimEngineNormalMotionsTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {

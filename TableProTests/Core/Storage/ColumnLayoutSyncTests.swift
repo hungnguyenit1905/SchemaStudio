@@ -5,8 +5,8 @@
 
 import Foundation
 @testable import SchemaStudio
-import Testing
 import TableProSyncTransport
+import Testing
 
 @Suite("Column layout sync")
 @MainActor
@@ -55,6 +55,7 @@ struct ColumnLayoutSyncTests {
 
     @Test("The sync category carries the columnLayout prefix")
     func categoryPrefix() {
-        #expect(FileColumnLayoutPersister.syncCategory(for: "abc").hasPrefix(FileColumnLayoutPersister.syncCategoryPrefix))
+        #expect(FileColumnLayoutPersister.syncCategory(for: "abc")
+            .hasPrefix(FileColumnLayoutPersister.syncCategoryPrefix))
     }
 }

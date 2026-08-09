@@ -4,18 +4,18 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Connection URL Parser — MSSQL")
 struct ConnectionURLParserMSSQLTests {
-
     @Test("Full MSSQL URL with default port")
     func testFullMSSQLURLDefaultPort() {
         let result = ConnectionURLParser.parse("mssql://user:pass@host:1433/mydb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mssql)
         #expect(parsed.host == "host")
@@ -29,7 +29,8 @@ struct ConnectionURLParserMSSQLTests {
     func testSqlServerSchemeAlias() {
         let result = ConnectionURLParser.parse("sqlserver://user:pass@host/db")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mssql)
         #expect(parsed.host == "host")
@@ -42,7 +43,8 @@ struct ConnectionURLParserMSSQLTests {
     func testCaseInsensitiveMSSQLScheme() {
         let result = ConnectionURLParser.parse("MSSQL://user@host/db")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mssql)
         #expect(parsed.host == "host")
@@ -53,7 +55,8 @@ struct ConnectionURLParserMSSQLTests {
     func testMSSQLWithoutCredentials() {
         let result = ConnectionURLParser.parse("mssql://host/db")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mssql)
         #expect(parsed.host == "host")
@@ -66,10 +69,11 @@ struct ConnectionURLParserMSSQLTests {
     func testMSSQLNonDefaultPortPreserved() {
         let result = ConnectionURLParser.parse("mssql://user:pass@host:1434/db")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mssql)
-        #expect(parsed.port == 1434)
+        #expect(parsed.port == 1_434)
         #expect(parsed.host == "host")
         #expect(parsed.database == "db")
     }
@@ -78,7 +82,8 @@ struct ConnectionURLParserMSSQLTests {
     func testMongoDBSrvParsesAsMongoDBType() {
         let result = ConnectionURLParser.parse("mongodb+srv://user:pass@cluster.net/db")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .mongodb)
         #expect(parsed.host == "cluster.net")

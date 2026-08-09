@@ -10,7 +10,7 @@ final class AppLockState {
         case oneMinute = 60
         case fiveMinutes = 300
         case fifteenMinutes = 900
-        case oneHour = 3600
+        case oneHour = 3_600
 
         var id: Int { rawValue }
 
@@ -45,7 +45,8 @@ final class AppLockState {
     }
 
     static var autoLockTimeout: AutoLockTimeout {
-        let stored = UserDefaults.standard.object(forKey: lockTimeoutKey) as? Int ?? AutoLockTimeout.fiveMinutes.rawValue
+        let stored = UserDefaults.standard.object(forKey: lockTimeoutKey) as? Int ?? AutoLockTimeout.fiveMinutes
+            .rawValue
         return AutoLockTimeout(rawValue: stored) ?? .fiveMinutes
     }
 
@@ -79,7 +80,10 @@ final class AppLockState {
         let elapsed = Date().timeIntervalSince(backgrounded)
         let timeout = TimeInterval(Self.autoLockTimeout.rawValue)
         if elapsed >= timeout {
-            Self.logger.info("Idle timeout exceeded (\(elapsed, format: .fixed(precision: 0))s >= \(timeout, format: .fixed(precision: 0))s), locking")
+            Self.logger
+                .info(
+                    "Idle timeout exceeded (\(elapsed, format: .fixed(precision: 0))s >= \(timeout, format: .fixed(precision: 0))s), locking"
+                )
             isLocked = true
         }
         lastBackgroundedAt = nil

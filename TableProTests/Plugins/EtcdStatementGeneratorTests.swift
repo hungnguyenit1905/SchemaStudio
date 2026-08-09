@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import Testing
 import TableProPluginKit
+import Testing
 
 // MARK: - INSERT
 

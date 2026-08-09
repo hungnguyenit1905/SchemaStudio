@@ -43,7 +43,9 @@ enum SSEEventStream {
                         if Task.isCancelled { break }
                         guard let json = decodeLine(line) else { continue }
                         let events = try parse(json, &state)
-                        for event in events { continuation.yield(event) }
+                        for event in events {
+                            continuation.yield(event)
+                        }
                     }
                     for final in finalEvents(state) {
                         continuation.yield(final)

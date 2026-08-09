@@ -6,12 +6,12 @@
 import SwiftUI
 
 internal enum SafeModeLevel: String, Codable, CaseIterable, Identifiable {
-    case silent = "silent"
-    case alert = "alert"
-    case alertFull = "alertFull"
-    case safeMode = "safeMode"
-    case safeModeFull = "safeModeFull"
-    case readOnly = "readOnly"
+    case silent
+    case alert
+    case alertFull
+    case safeMode
+    case safeModeFull
+    case readOnly
 }
 
 internal extension SafeModeLevel {

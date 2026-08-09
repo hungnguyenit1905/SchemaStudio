@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import TableProMobile
+import Testing
 
 @Suite("FileBookmarkStore")
 struct FileBookmarkStoreTests {

@@ -40,17 +40,13 @@ struct AddRowToTableIntent: RowInsertingIntent {
     static var openAppWhenRun = false
     static var authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
 
-    @Parameter(title: "Connection")
-    var connection: ConnectionEntity
+    @Parameter(title: "Connection") var connection: ConnectionEntity
 
-    @Parameter(title: "Database or Schema")
-    var database: DatabaseEntity?
+    @Parameter(title: "Database or Schema") var database: DatabaseEntity?
 
-    @Parameter(title: "Table")
-    var table: TableEntity
+    @Parameter(title: "Table") var table: TableEntity
 
-    @Parameter(title: "Row (JSON or CSV)")
-    var data: String
+    @Parameter(title: "Row (JSON or CSV)") var data: String
 
     static var parameterSummary: some ParameterSummary {
         Summary("Add a row to \(\.$table)") {
@@ -75,17 +71,13 @@ struct AddRowsToTableIntent: RowInsertingIntent {
     static var openAppWhenRun = false
     static var authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
 
-    @Parameter(title: "Connection")
-    var connection: ConnectionEntity
+    @Parameter(title: "Connection") var connection: ConnectionEntity
 
-    @Parameter(title: "Database or Schema")
-    var database: DatabaseEntity?
+    @Parameter(title: "Database or Schema") var database: DatabaseEntity?
 
-    @Parameter(title: "Table")
-    var table: TableEntity
+    @Parameter(title: "Table") var table: TableEntity
 
-    @Parameter(title: "Rows (JSON or CSV)")
-    var data: String?
+    @Parameter(title: "Rows (JSON or CSV)") var data: String?
 
     @Parameter(title: "File", supportedContentTypes: [.commaSeparatedText, .json, .plainText, .data])
     var file: IntentFile?

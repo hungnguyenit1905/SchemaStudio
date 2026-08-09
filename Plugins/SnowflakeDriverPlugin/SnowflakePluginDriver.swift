@@ -252,7 +252,8 @@ final class SnowflakePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         do {
             result = try await rawQuery(SnowflakeSchemaQueries.showObjects(database: database, schema: targetSchema))
         } catch let error as SnowflakeError where error.indicatesInaccessibleObject {
-            Self.logger.debug("Schema \(targetSchema, privacy: .public) is visible but not enumerable; showing it empty")
+            Self.logger
+                .debug("Schema \(targetSchema, privacy: .public) is visible but not enumerable; showing it empty")
             return []
         }
         guard let nameIndex = columnIndex(of: "name", in: result) else { return [] }
@@ -334,13 +335,13 @@ final class SnowflakePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let primaryKeys = try await fetchPrimaryKeyColumns(table: table, schema: targetSchema, database: database)
 
         let sql = """
-            SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT, COMMENT,
-                   NUMERIC_PRECISION, NUMERIC_SCALE, CHARACTER_MAXIMUM_LENGTH
-            FROM \(quoteIdentifier(database)).INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = '\(escapeStringLiteral(targetSchema))'
-              AND TABLE_NAME = '\(escapeStringLiteral(table))'
-            ORDER BY ORDINAL_POSITION
-            """
+        SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT, COMMENT,
+               NUMERIC_PRECISION, NUMERIC_SCALE, CHARACTER_MAXIMUM_LENGTH
+        FROM \(quoteIdentifier(database)).INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = '\(escapeStringLiteral(targetSchema))'
+          AND TABLE_NAME = '\(escapeStringLiteral(table))'
+        ORDER BY ORDINAL_POSITION
+        """
         let result = try await rawQuery(sql)
         Self.logger.debug(
             "fetchColumns table=\(table, privacy: .public) schema=\(targetSchema, privacy: .public) database=\(database, privacy: .public) rows=\(result.rows.count, privacy: .public)"
@@ -387,7 +388,11 @@ final class SnowflakePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         var indexes: [PluginIndexInfo] = []
 
-        let primaryKeys = try await fetchPrimaryKeyColumnsOrdered(table: table, schema: targetSchema, database: database)
+        let primaryKeys = try await fetchPrimaryKeyColumnsOrdered(
+            table: table,
+            schema: targetSchema,
+            database: database
+        )
         if !primaryKeys.isEmpty {
             indexes.append(PluginIndexInfo(
                 name: "PRIMARY KEY",
@@ -412,7 +417,11 @@ final class SnowflakePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         return indexes
     }
 
-    private func fetchPrimaryKeyColumnsOrdered(table: String, schema: String, database: String) async throws -> [String] {
+    private func fetchPrimaryKeyColumnsOrdered(
+        table: String,
+        schema: String,
+        database: String
+    ) async throws -> [String] {
         guard let result = try? await rawQuery(
             SnowflakeSchemaQueries.showPrimaryKeysInTable(database: database, schema: schema, table: table)
         ) else { return [] }
@@ -474,11 +483,11 @@ final class SnowflakePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         }
         guard let database, let targetSchema else { return nil }
         let sql = """
-            SELECT ROW_COUNT
-            FROM \(quoteIdentifier(database)).INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_SCHEMA = '\(escapeStringLiteral(targetSchema))'
-              AND TABLE_NAME = '\(escapeStringLiteral(table))'
-            """
+        SELECT ROW_COUNT
+        FROM \(quoteIdentifier(database)).INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_SCHEMA = '\(escapeStringLiteral(targetSchema))'
+          AND TABLE_NAME = '\(escapeStringLiteral(table))'
+        """
         let result = try await rawQuery(sql)
         guard let value = Self.text(result.rows.first ?? [], 0) else { return nil }
         return Int(value)
@@ -491,11 +500,11 @@ final class SnowflakePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             return PluginTableMetadata(tableName: table)
         }
         let sql = """
-            SELECT ROW_COUNT, BYTES, COMMENT
-            FROM \(quoteIdentifier(database)).INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_SCHEMA = '\(escapeStringLiteral(targetSchema))'
-              AND TABLE_NAME = '\(escapeStringLiteral(table))'
-            """
+        SELECT ROW_COUNT, BYTES, COMMENT
+        FROM \(quoteIdentifier(database)).INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_SCHEMA = '\(escapeStringLiteral(targetSchema))'
+          AND TABLE_NAME = '\(escapeStringLiteral(table))'
+        """
         let result = try await rawQuery(sql)
         let row = result.rows.first ?? []
         let rowCount = Self.text(row, 0).flatMap { Int64($0) }
@@ -653,10 +662,10 @@ final class SnowflakePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         if let cached = lock.withLock({ resolvedSchemaCache[cacheKey] }) { return cached }
 
         let sql = """
-            SELECT TABLE_SCHEMA
-            FROM \(quoteIdentifier(database)).INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_NAME = '\(escapeStringLiteral(table))'
-            """
+        SELECT TABLE_SCHEMA
+        FROM \(quoteIdentifier(database)).INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_NAME = '\(escapeStringLiteral(table))'
+        """
         guard let result = try? await rawQuery(sql) else { return nil }
         let schemas = result.rows.compactMap { Self.text($0, 0) }
         let resolved = schemas.count == 1
@@ -664,7 +673,10 @@ final class SnowflakePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             : (schemas.first { $0 == "PUBLIC" } ?? schemas.first)
         if let resolved {
             lock.withLock { resolvedSchemaCache[cacheKey] = resolved }
-            Self.logger.debug("resolveSchema table=\(table, privacy: .public) -> \(resolved, privacy: .public) (candidates=\(schemas.count, privacy: .public))")
+            Self.logger
+                .debug(
+                    "resolveSchema table=\(table, privacy: .public) -> \(resolved, privacy: .public) (candidates=\(schemas.count, privacy: .public))"
+                )
         }
         return resolved
     }

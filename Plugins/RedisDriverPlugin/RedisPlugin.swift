@@ -26,7 +26,7 @@ final class RedisPlugin: NSObject, TableProPlugin, DriverPlugin {
             id: "redisDatabase",
             label: String(localized: "Database Index"),
             defaultValue: "0",
-            fieldType: .stepper(range: ConnectionField.IntRange(0...15))
+            fieldType: .stepper(range: ConnectionField.IntRange(0 ... 15))
         ),
         ConnectionField(
             id: "redisSeparator",

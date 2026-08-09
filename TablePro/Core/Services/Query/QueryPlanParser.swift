@@ -24,8 +24,7 @@ struct PostgreSQLPlanParser: QueryPlanParser {
         guard let data = rawText.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
               let planDict = json.first,
-              let plan = planDict["Plan"] as? [String: Any]
-        else {
+              let plan = planDict["Plan"] as? [String: Any] else {
             logger.debug("Failed to parse PostgreSQL EXPLAIN JSON")
             return nil
         }
@@ -53,7 +52,7 @@ struct PostgreSQLPlanParser: QueryPlanParser {
         }
 
         // Collect all properties except the ones we extract explicitly
-        let knownKeys: Set<String> = [
+        let knownKeys: Set = [
             "Node Type", "Relation Name", "Schema", "Alias",
             "Startup Cost", "Total Cost", "Plan Rows", "Plan Width",
             "Actual Startup Time", "Actual Total Time", "Actual Rows", "Actual Loops",
@@ -92,8 +91,7 @@ struct MySQLPlanParser: QueryPlanParser {
     func parse(rawText: String) -> QueryPlan? {
         guard let data = rawText.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let queryBlock = json["query_block"] as? [String: Any]
-        else {
+              let queryBlock = json["query_block"] as? [String: Any] else {
             logger.debug("Failed to parse MySQL EXPLAIN JSON")
             return nil
         }
@@ -287,20 +285,20 @@ struct IndentedTextPlanParser: QueryPlanParser {
             return ParsedLine(indent: indent, text: String(trimmed))
         }
 
-        // Build tree from indentation
+        /// Build tree from indentation
         func buildNodes(from startIndex: Int, parentIndent: Int) -> (nodes: [QueryPlanNode], nextIndex: Int) {
             var nodes: [QueryPlanNode] = []
             var i = startIndex
 
             while i < parsed.count {
                 let line = parsed[i]
-                if line.indent <= parentIndent && i > startIndex {
+                if line.indent <= parentIndent, i > startIndex {
                     break
                 }
 
                 let children: [QueryPlanNode]
                 let nextI: Int
-                if i + 1 < parsed.count && parsed[i + 1].indent > line.indent {
+                if i + 1 < parsed.count, parsed[i + 1].indent > line.indent {
                     let result = buildNodes(from: i + 1, parentIndent: line.indent)
                     children = result.nodes
                     nextI = result.nextIndex

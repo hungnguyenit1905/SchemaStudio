@@ -5,12 +5,11 @@
 
 import Darwin
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("PluginInstaller helpers", .serialized)
 struct PluginInstallerHelpersTests {
-
     private func makeTempDir() throws -> URL {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("PluginInstallerTests-\(UUID().uuidString)", isDirectory: true)
@@ -102,7 +101,12 @@ struct PluginInstallerHelpersTests {
         try emptyPlist.write(to: contents.appendingPathComponent("Info.plist"), atomically: true, encoding: .utf8)
 
         #expect(throws: PluginError.self) {
-            try PluginInstaller.validateStagedABI(bundleURL: bundle, currentKit: 13, minimumKit: 13, currentInspector: 1)
+            try PluginInstaller.validateStagedABI(
+                bundleURL: bundle,
+                currentKit: 13,
+                minimumKit: 13,
+                currentInspector: 1
+            )
         }
     }
 

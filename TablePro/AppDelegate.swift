@@ -31,12 +31,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         Logger(subsystem: "com.SchemaStudio", category: "CSVInspector")
-            .debug("AppDelegate.application(_:open:) urls=\(urls.map(\.lastPathComponent).joined(separator: ","), privacy: .public)")
+            .debug(
+                "AppDelegate.application(_:open:) urls=\(urls.map(\.lastPathComponent).joined(separator: ","), privacy: .public)"
+            )
         AppLaunchCoordinator.shared.handleOpenURLs(urls)
     }
 
-    func application(_ application: NSApplication, continue userActivity: NSUserActivity,
-                     restorationHandler: @escaping ([any NSUserActivityRestoring]) -> Void) -> Bool {
+    func application(
+        _ application: NSApplication,
+        continue userActivity: NSUserActivity,
+        restorationHandler: @escaping ([any NSUserActivityRestoring]) -> Void
+    ) -> Bool {
         AppLaunchCoordinator.shared.handleHandoff(userActivity)
         return true
     }
@@ -128,7 +133,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if hasUnsaved {
             let alert = NSAlert()
             alert.messageText = String(localized: "You have unsaved changes")
-            alert.informativeText = String(localized: "Some tabs have unsaved edits. Quitting will discard these changes.")
+            alert
+                .informativeText =
+                String(localized: "Some tabs have unsaved edits. Quitting will discard these changes.")
             alert.alertStyle = .warning
             alert.addButton(withTitle: String(localized: "Cancel"))
             alert.addButton(withTitle: String(localized: "Quit Anyway"))
@@ -157,11 +164,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         LastOpenConnectionsStorage.shared.save(connectionIds: SessionRecoveryTracker.connectionIds())
     }
 
-    @objc func handleSystemDidWake(_ notification: Notification) {
+    @objc
+    func handleSystemDidWake(_ notification: Notification) {
         SQLFolderWatcher.shared.reload()
     }
 
-    @objc func showHelp(_ sender: Any?) {
+    @objc
+    func showHelp(_ sender: Any?) {
         if let url = URL(string: "https://github.com/TableProApp/TablePro") {
             NSWorkspace.shared.open(url)
         }
@@ -169,7 +178,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Window Notifications
 
-    @objc func windowWillClose(_ notification: Notification) {
+    @objc
+    func windowWillClose(_ notification: Notification) {
         guard let window = notification.object as? NSWindow else { return }
 
         let csvLogger = Logger(subsystem: "com.SchemaStudio", category: "CSVInspector")
@@ -177,13 +187,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let remaining = NSApp.windows.filter {
                 $0 !== window && AppLaunchCoordinator.isMainWindow($0) && $0.isVisible
             }.count
-            csvLogger.debug("AppDelegate.windowWillClose - main window '\(window.identifier?.rawValue ?? "nil", privacy: .public)' closing, remaining main windows=\(remaining, privacy: .public)")
+            csvLogger
+                .debug(
+                    "AppDelegate.windowWillClose - main window '\(window.identifier?.rawValue ?? "nil", privacy: .public)' closing, remaining main windows=\(remaining, privacy: .public)"
+                )
             if remaining == 0 {
                 AppEvents.shared.mainWindowWillClose.send(())
                 WindowOpener.shared.openWelcome()
             }
         } else {
-            csvLogger.debug("AppDelegate.windowWillClose - non-main window '\(window.identifier?.rawValue ?? "nil", privacy: .public)' closing")
+            csvLogger
+                .debug(
+                    "AppDelegate.windowWillClose - non-main window '\(window.identifier?.rawValue ?? "nil", privacy: .public)' closing"
+                )
         }
     }
 
@@ -202,7 +218,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let connections = ConnectionStorage.shared.loadConnections()
         if !connections.isEmpty {
-            let connectionsItem = NSMenuItem(title: String(localized: "Open Connection"), action: nil, keyEquivalent: "")
+            let connectionsItem = NSMenuItem(
+                title: String(localized: "Open Connection"),
+                action: nil,
+                keyEquivalent: ""
+            )
             let submenu = NSMenu()
 
             for connection in connections {
@@ -233,16 +253,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return menu
     }
 
-    @objc func showWelcomeFromDock() {
+    @objc
+    func showWelcomeFromDock() {
         WindowOpener.shared.openWelcome()
     }
 
-    @objc func newWindowForTab(_ sender: Any?) {
+    @objc
+    func newWindowForTab(_ sender: Any?) {
         guard let keyWindow = NSApp.keyWindow,
               let connectionId = MainActor.assumeIsolated({
                   WindowLifecycleMonitor.shared.connectionId(forWindow: keyWindow)
-              })
-        else { return }
+              }) else { return }
 
         MainActor.assumeIsolated {
             if let actions = MainContentCoordinator.allActiveCoordinators()
@@ -256,7 +277,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc func connectFromDock(_ sender: NSMenuItem) {
+    @objc
+    func connectFromDock(_ sender: NSMenuItem) {
         guard let connectionId = sender.representedObject as? UUID else { return }
         Task {
             await LaunchIntentRouter.shared.route(.openConnection(connectionId))
@@ -293,8 +315,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         }
         let action = response.actionIdentifier
         guard action == PluginNotificationService.openPluginSettingsActionId
-            || action == UNNotificationDefaultActionIdentifier
-        else { return }
+            || action == UNNotificationDefaultActionIdentifier else { return }
         Task { @MainActor in
             WindowOpener.shared.openSettings(tab: .plugins)
         }

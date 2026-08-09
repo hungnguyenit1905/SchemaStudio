@@ -27,7 +27,7 @@ struct SurrealDBCBORTests {
             .int(4_294_967_295),
             .int(9_223_372_036_854_775_807),
             .int(-1),
-            .int(-1000),
+            .int(-1_000),
             .double(1.5),
             .double(-0.25),
             .string(""),
@@ -49,7 +49,7 @@ struct SurrealDBCBORTests {
             .decimal("12.345"),
             .datetime(seconds: 1_726_403_696, nanoseconds: 789_000_000),
             .datetime(seconds: -14_182_940, nanoseconds: 0),
-            .duration(seconds: 3600, nanoseconds: 0),
+            .duration(seconds: 3_600, nanoseconds: 0),
             .duration(seconds: 0, nanoseconds: 1),
             .uuid(uuid),
             .table("person"),
@@ -133,9 +133,11 @@ struct SurrealDBCBORTests {
 struct SurrealDBDisplayTests {
     @Test("Record ids render as table:id")
     func recordIds() {
-        #expect(SurrealValue.recordId(SurrealRecordID(table: "person", id: .string("alice"))).displayText == "person:alice")
+        #expect(SurrealValue.recordId(SurrealRecordID(table: "person", id: .string("alice")))
+            .displayText == "person:alice")
         #expect(SurrealValue.recordId(SurrealRecordID(table: "person", id: .int(10))).displayText == "person:10")
-        #expect(SurrealValue.recordId(SurrealRecordID(table: "person", id: .string("a b"))).displayText == "person:`a b`")
+        #expect(SurrealValue.recordId(SurrealRecordID(table: "person", id: .string("a b")))
+            .displayText == "person:`a b`")
     }
 
     @Test("Datetimes keep nanosecond precision and handle pre-epoch")
@@ -150,8 +152,8 @@ struct SurrealDBDisplayTests {
 
     @Test("Durations render as SurrealQL literals")
     func durations() {
-        #expect(SurrealValue.duration(seconds: 3600, nanoseconds: 0).displayText == "1h")
-        #expect(SurrealValue.duration(seconds: 5400, nanoseconds: 0).displayText == "1h30m")
+        #expect(SurrealValue.duration(seconds: 3_600, nanoseconds: 0).displayText == "1h")
+        #expect(SurrealValue.duration(seconds: 5_400, nanoseconds: 0).displayText == "1h30m")
         #expect(SurrealValue.duration(seconds: 0, nanoseconds: 500_000_000).displayText == "500ms")
         #expect(SurrealValue.duration(seconds: 0, nanoseconds: 1).displayText == "1ns")
         #expect(SurrealValue.duration(seconds: 0, nanoseconds: 0).displayText == "0ns")

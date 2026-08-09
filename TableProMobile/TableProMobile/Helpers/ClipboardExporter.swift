@@ -11,7 +11,12 @@ enum ExportFormat: String, CaseIterable, Identifiable {
 }
 
 enum ClipboardExporter {
-    static func exportRow(columns: [ColumnInfo], row: [String?], format: ExportFormat, tableName: String? = nil) -> String {
+    static func exportRow(
+        columns: [ColumnInfo],
+        row: [String?],
+        format: ExportFormat,
+        tableName: String? = nil
+    ) -> String {
         switch format {
         case .json:
             return rowToJson(columns: columns, row: row)
@@ -22,7 +27,12 @@ enum ClipboardExporter {
         }
     }
 
-    static func exportRows(columns: [ColumnInfo], rows: [[String?]], format: ExportFormat, tableName: String? = nil) -> String {
+    static func exportRows(
+        columns: [ColumnInfo],
+        rows: [[String?]],
+        format: ExportFormat,
+        tableName: String? = nil
+    ) -> String {
         switch format {
         case .json:
             let objects = rows.map { rowToJson(columns: columns, row: $0) }
@@ -43,7 +53,10 @@ enum ClipboardExporter {
 
     static let pasteboardExpiry: TimeInterval = 60
 
-    static func pasteboardPayload(_ text: String, now: Date = Date()) -> (items: [[String: Any]], options: [UIPasteboard.OptionsKey: Any]) {
+    static func pasteboardPayload(
+        _ text: String,
+        now: Date = Date()
+    ) -> (items: [[String: Any]], options: [UIPasteboard.OptionsKey: Any]) {
         (
             items: [[UTType.utf8PlainText.identifier: text]],
             options: [
@@ -113,9 +126,9 @@ enum ClipboardExporter {
 
     private static func escapeJsonString(_ str: String) -> String {
         str.replacingOccurrences(of: "\\", with: "\\\\")
-           .replacingOccurrences(of: "\"", with: "\\\"")
-           .replacingOccurrences(of: "\n", with: "\\n")
-           .replacingOccurrences(of: "\r", with: "\\r")
-           .replacingOccurrences(of: "\t", with: "\\t")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\r", with: "\\r")
+            .replacingOccurrences(of: "\t", with: "\\t")
     }
 }

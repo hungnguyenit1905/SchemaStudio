@@ -20,11 +20,9 @@ struct DatabaseEntity: AppEntity {
 }
 
 struct DatabaseEntityQuery: EntityQuery {
-    @IntentParameterDependency<AddRowToTableIntent>(\.$connection)
-    var addRow
+    @IntentParameterDependency<AddRowToTableIntent>(\.$connection) var addRow
 
-    @IntentParameterDependency<AddRowsToTableIntent>(\.$connection)
-    var addRows
+    @IntentParameterDependency<AddRowsToTableIntent>(\.$connection) var addRows
 
     func entities(for identifiers: [String]) async throws -> [DatabaseEntity] {
         identifiers.map { DatabaseEntity(id: $0, name: $0, kind: .database) }

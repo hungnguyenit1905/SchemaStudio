@@ -60,7 +60,7 @@ extension DotenvParser {
     }
 
     private static func literal(_ characters: [Character], from start: Int, length: Int) -> String {
-        String(characters[start..<min(start + length, characters.count)])
+        String(characters[start ..< min(start + length, characters.count)])
     }
 
     private static func lookUp(

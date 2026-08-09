@@ -71,7 +71,12 @@ internal enum JSONTreeParser {
         return .success(root)
     }
 
-    private static func buildNode(key: String?, keyPath: String, node: JsonSyntaxNode, nodeCount: inout Int) -> JSONTreeNode {
+    private static func buildNode(
+        key: String?,
+        keyPath: String,
+        node: JsonSyntaxNode,
+        nodeCount: inout Int
+    ) -> JSONTreeNode {
         nodeCount += 1
 
         switch node {

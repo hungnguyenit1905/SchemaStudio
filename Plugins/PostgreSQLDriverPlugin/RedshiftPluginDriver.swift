@@ -75,11 +75,11 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         let resolvedSchema = schema ?? core.currentSchema
         let schemaLiteral = escapeLiteral(resolvedSchema)
         let query = """
-            SELECT table_name, table_type
-            FROM information_schema.tables
-            WHERE table_schema = '\(schemaLiteral)'
-            ORDER BY table_name
-            """
+        SELECT table_name, table_type
+        FROM information_schema.tables
+        WHERE table_schema = '\(schemaLiteral)'
+        ORDER BY table_name
+        """
         let result = try await execute(query: query)
         let localTables = result.rows.compactMap { row -> PluginTableInfo? in
             guard let name = row[0].asText else { return nil }
@@ -193,8 +193,7 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         return result.rows.compactMap { row -> PluginColumnInfo? in
             guard row.count >= 4,
                   let name = row[0].asText,
-                  let rawDataType = row[1].asText
-            else { return nil }
+                  let rawDataType = row[1].asText else { return nil }
 
             let udtName = row.count > 6 ? row[6].asText : nil
             let dataType: String
@@ -260,8 +259,7 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
                 guard row.count >= 3,
                       let tableName = row[0].asText,
                       let name = row[1].asText,
-                      let dataType = row[2].asText
-                else { continue }
+                      let dataType = row[2].asText else { continue }
                 let column = Self.externalColumn(name: name, dataType: dataType, row: row, typeIndex: 2)
                 allColumns[tableName, default: []].append(column)
             }
@@ -283,8 +281,7 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
             guard row.count >= 5,
                   let tableName = row[0].asText,
                   let name = row[1].asText,
-                  let rawDataType = row[2].asText
-            else { continue }
+                  let rawDataType = row[2].asText else { continue }
 
             let udtName = row.count > 7 ? row[7].asText : nil
             let dataType: String
@@ -327,17 +324,17 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         let safeTable = escapeLiteral(table)
         let schemaLiteral = escapeLiteral(schema ?? core.currentSchema)
         let query = """
-            SELECT
-                "column",
-                type,
-                distkey,
-                sortkey
-            FROM pg_table_def
-            WHERE schemaname = '\(schemaLiteral)'
-              AND tablename = '\(safeTable)'
-              AND (distkey = true OR sortkey != 0)
-            ORDER BY sortkey
-            """
+        SELECT
+            "column",
+            type,
+            distkey,
+            sortkey
+        FROM pg_table_def
+        WHERE schemaname = '\(schemaLiteral)'
+          AND tablename = '\(safeTable)'
+          AND (distkey = true OR sortkey != 0)
+        ORDER BY sortkey
+        """
         let result = try await execute(query: query)
 
         var distkeyCols: [String] = []
@@ -363,32 +360,31 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
     func fetchForeignKeys(table: String, schema: String?) async throws -> [PluginForeignKeyInfo] {
         let safeTable = escapeLiteral(table)
         let query = """
-            SELECT
-                tc.constraint_name,
-                kcu.column_name,
-                ccu.table_name AS referenced_table,
-                ccu.column_name AS referenced_column,
-                rc.delete_rule,
-                rc.update_rule
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.key_column_usage kcu
-                ON tc.constraint_name = kcu.constraint_name
-            JOIN information_schema.referential_constraints rc
-                ON tc.constraint_name = rc.constraint_name
-            JOIN information_schema.constraint_column_usage ccu
-                ON rc.unique_constraint_name = ccu.constraint_name
-            WHERE tc.table_name = '\(safeTable)'
-                AND tc.constraint_type = 'FOREIGN KEY'
-            ORDER BY tc.constraint_name
-            """
+        SELECT
+            tc.constraint_name,
+            kcu.column_name,
+            ccu.table_name AS referenced_table,
+            ccu.column_name AS referenced_column,
+            rc.delete_rule,
+            rc.update_rule
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.key_column_usage kcu
+            ON tc.constraint_name = kcu.constraint_name
+        JOIN information_schema.referential_constraints rc
+            ON tc.constraint_name = rc.constraint_name
+        JOIN information_schema.constraint_column_usage ccu
+            ON rc.unique_constraint_name = ccu.constraint_name
+        WHERE tc.table_name = '\(safeTable)'
+            AND tc.constraint_type = 'FOREIGN KEY'
+        ORDER BY tc.constraint_name
+        """
         let result = try await execute(query: query)
         return result.rows.compactMap { row -> PluginForeignKeyInfo? in
             guard row.count >= 6,
                   let name = row[0].asText,
                   let column = row[1].asText,
                   let refTable = row[2].asText,
-                  let refColumn = row[3].asText
-            else { return nil }
+                  let refColumn = row[3].asText else { return nil }
             return PluginForeignKeyInfo(
                 name: name,
                 column: column,
@@ -406,13 +402,14 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         let safeTable = escapeLiteral(table)
         let schemaLiteral = escapeLiteral(resolvedSchema)
         let query = """
-            SELECT tbl_rows
-            FROM svv_table_info
-            WHERE "table" = '\(safeTable)'
-              AND schema = '\(schemaLiteral)'
-            """
+        SELECT tbl_rows
+        FROM svv_table_info
+        WHERE "table" = '\(safeTable)'
+          AND schema = '\(schemaLiteral)'
+        """
         let result = try await execute(query: query)
-        guard let firstRow = result.rows.first, let value = firstRow[0].asText, let count = Int(value) else { return nil }
+        guard let firstRow = result.rows.first, let value = firstRow[0].asText,
+              let count = Int(value) else { return nil }
         return count >= 0 ? count : nil
     }
 
@@ -433,20 +430,20 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         }
 
         let columnsQuery = """
-            SELECT
-                quote_ident(a.attname) || ' ' || format_type(a.atttypid, a.atttypmod) ||
-                CASE WHEN a.attnotnull THEN ' NOT NULL' ELSE '' END ||
-                CASE WHEN a.atthasdef THEN ' DEFAULT ' || pg_get_expr(d.adbin, d.adrelid) ELSE '' END
-            FROM pg_attribute a
-            JOIN pg_class c ON c.oid = a.attrelid
-            JOIN pg_namespace n ON n.oid = c.relnamespace
-            LEFT JOIN pg_attrdef d ON d.adrelid = c.oid AND d.adnum = a.attnum
-            WHERE c.relname = '\(safeTable)'
-              AND n.nspname = '\(schemaLiteral)'
-              AND a.attnum > 0
-              AND NOT a.attisdropped
-            ORDER BY a.attnum
-            """
+        SELECT
+            quote_ident(a.attname) || ' ' || format_type(a.atttypid, a.atttypmod) ||
+            CASE WHEN a.attnotnull THEN ' NOT NULL' ELSE '' END ||
+            CASE WHEN a.atthasdef THEN ' DEFAULT ' || pg_get_expr(d.adbin, d.adrelid) ELSE '' END
+        FROM pg_attribute a
+        JOIN pg_class c ON c.oid = a.attrelid
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        LEFT JOIN pg_attrdef d ON d.adrelid = c.oid AND d.adnum = a.attnum
+        WHERE c.relname = '\(safeTable)'
+          AND n.nspname = '\(schemaLiteral)'
+          AND a.attnum > 0
+          AND NOT a.attisdropped
+        ORDER BY a.attnum
+        """
         let columnsResult = try await execute(query: columnsQuery)
         let columnDefs = columnsResult.rows.compactMap { $0[0].asText }
         guard !columnDefs.isEmpty else {
@@ -481,11 +478,11 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         let safeView = escapeLiteral(view)
         let schemaLiteral = escapeLiteral(schema ?? core.currentSchema)
         let query = """
-            SELECT 'CREATE OR REPLACE VIEW ' || quote_ident(schemaname) || '.' || quote_ident(viewname) || ' AS ' || E'\\n' || definition AS ddl
-            FROM pg_views
-            WHERE viewname = '\(safeView)'
-              AND schemaname = '\(schemaLiteral)'
-            """
+        SELECT 'CREATE OR REPLACE VIEW ' || quote_ident(schemaname) || '.' || quote_ident(viewname) || ' AS ' || E'\\n' || definition AS ddl
+        FROM pg_views
+        WHERE viewname = '\(safeView)'
+          AND schemaname = '\(schemaLiteral)'
+        """
         let result = try await execute(query: query)
         guard let firstRow = result.rows.first, let ddl = firstRow[0].asText else {
             throw LibPQPluginError(message: "Failed to fetch definition for view '\(view)'", sqlState: nil, detail: nil)
@@ -501,16 +498,16 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         let safeTable = escapeLiteral(table)
         let schemaLiteral = escapeLiteral(resolvedSchema)
         let query = """
-            SELECT
-                tbl_rows,
-                size AS size_mb,
-                pct_used,
-                unsorted,
-                stats_off
-            FROM svv_table_info
-            WHERE "table" = '\(safeTable)'
-              AND schema = '\(schemaLiteral)'
-            """
+        SELECT
+            tbl_rows,
+            size AS size_mb,
+            pct_used,
+            unsorted,
+            stats_off
+        FROM svv_table_info
+        WHERE "table" = '\(safeTable)'
+          AND schema = '\(schemaLiteral)'
+        """
         let result = try await execute(query: query)
         guard let row = result.rows.first else {
             return PluginTableMetadata(tableName: table)
@@ -549,14 +546,14 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
     func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
         let escapedDbLiteral = escapeLiteral(database)
         let countQuery = """
-            SELECT COUNT(DISTINCT "table") AS table_count
-            FROM svv_table_info
-            WHERE schema NOT IN ('pg_internal', 'pg_catalog', 'information_schema')
-              AND database = '\(escapedDbLiteral)'
-            """
+        SELECT COUNT(DISTINCT "table") AS table_count
+        FROM svv_table_info
+        WHERE schema NOT IN ('pg_internal', 'pg_catalog', 'information_schema')
+          AND database = '\(escapedDbLiteral)'
+        """
         let sizeQuery = """
-            SELECT SUM(size) FROM svv_table_info WHERE database = current_database()
-            """
+        SELECT SUM(size) FROM svv_table_info WHERE database = current_database()
+        """
         async let countResult = execute(query: countQuery)
         async let sizeResult = execute(query: sizeQuery)
         let (countRes, sizeRes) = try await (countResult, sizeResult)
@@ -580,11 +577,11 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         let dbNames = dbResult.rows.compactMap { $0.first?.asText }
 
         let infoQuery = """
-            SELECT database, COUNT(DISTINCT "table"), COALESCE(SUM(size), 0)
-            FROM svv_table_info
-            WHERE schema NOT IN ('pg_internal', 'pg_catalog', 'information_schema')
-            GROUP BY database
-            """
+        SELECT database, COUNT(DISTINCT "table"), COALESCE(SUM(size), 0)
+        FROM svv_table_info
+        WHERE schema NOT IN ('pg_internal', 'pg_catalog', 'information_schema')
+        GROUP BY database
+        """
         let infoResult = try await execute(query: infoQuery)
         var metadataByName: [String: (tableCount: Int, sizeMb: Int64)] = [:]
         for row in infoResult.rows {

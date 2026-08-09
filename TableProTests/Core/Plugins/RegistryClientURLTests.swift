@@ -4,14 +4,13 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("RegistryClient Configurable URL", .serialized)
 @MainActor
 struct RegistryClientURLTests {
-
     private let defaults = UserDefaults.standard
     private let customURLKey = RegistryClient.customRegistryURLKey
 

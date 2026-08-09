@@ -56,7 +56,6 @@ struct QueryLiveActivityWidget: Widget {
 
     // MARK: - Lock Screen
 
-    @ViewBuilder
     private func lockScreenView(context: ActivityViewContext<QueryActivityAttributes>) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "terminal.fill")
@@ -112,7 +111,7 @@ struct QueryLiveActivityWidget: Widget {
         if let ended = state.endedAt {
             Text(formatElapsed(ended.timeIntervalSince(state.startedAt)))
         } else {
-            Text(timerInterval: state.startedAt...Date.distantFuture, countsDown: false, showsHours: false)
+            Text(timerInterval: state.startedAt ... Date.distantFuture, countsDown: false, showsHours: false)
         }
     }
 

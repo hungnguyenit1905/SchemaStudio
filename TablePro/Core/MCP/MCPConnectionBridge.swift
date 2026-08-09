@@ -180,7 +180,10 @@ public actor MCPConnectionBridge {
         let databaseType = try await ensureConnected(scope.connectionId)
         let normalizedQuery = Self.stripTrailingSemicolons(query)
         let isWrite = QueryClassifier.isWriteQuery(normalizedQuery, databaseType: databaseType)
-        let hasReturning = normalizedQuery.range(of: #"\bRETURNING\b"#, options: [.regularExpression, .caseInsensitive]) != nil
+        let hasReturning = normalizedQuery.range(
+            of: #"\bRETURNING\b"#,
+            options: [.regularExpression, .caseInsensitive]
+        ) != nil
         let shouldCap = !isWrite || hasReturning
 
         let startTime = CFAbsoluteTimeGetCurrent()

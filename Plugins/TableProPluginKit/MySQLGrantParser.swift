@@ -35,11 +35,11 @@ public enum MySQLGrantParser {
         guard let afterGrant = dropKeyword("GRANT", from: trimmed) else { return nil }
         guard let onRange = rangeOfKeyword("ON", in: afterGrant) else { return nil }
 
-        let privilegeText = String(afterGrant[afterGrant.startIndex..<onRange.lowerBound])
+        let privilegeText = String(afterGrant[afterGrant.startIndex ..< onRange.lowerBound])
         let remainder = String(afterGrant[onRange.upperBound...])
         guard let toRange = rangeOfKeyword("TO", in: remainder) else { return nil }
 
-        let targetText = String(remainder[remainder.startIndex..<toRange.lowerBound])
+        let targetText = String(remainder[remainder.startIndex ..< toRange.lowerBound])
             .trimmingCharacters(in: .whitespaces)
         let granteeText = String(remainder[toRange.upperBound...])
 
@@ -63,7 +63,7 @@ public enum MySQLGrantParser {
         guard rangeOfKeyword("ON", in: afterGrant) == nil else { return nil }
         guard let toRange = rangeOfKeyword("TO", in: afterGrant) else { return nil }
 
-        let roleText = String(afterGrant[afterGrant.startIndex..<toRange.lowerBound])
+        let roleText = String(afterGrant[afterGrant.startIndex ..< toRange.lowerBound])
         let roles = splitTopLevel(roleText, separator: ",").compactMap { entry -> String? in
             let name = splitTopLevel(entry.trimmingCharacters(in: .whitespaces), separator: "@").first
             guard let name else { return nil }
@@ -87,7 +87,7 @@ public enum MySQLGrantParser {
         guard let open = raw.firstIndex(of: "("), let close = raw.lastIndex(of: ")"), open < close else {
             return []
         }
-        let inner = String(raw[raw.index(after: open)..<close])
+        let inner = String(raw[raw.index(after: open) ..< close])
         return splitTopLevel(inner, separator: ",").map {
             unquoteIdentifier($0.trimmingCharacters(in: .whitespaces))
         }
@@ -183,7 +183,7 @@ public enum MySQLGrantParser {
                 index += 1
                 continue
             }
-            let candidate = scalars[index..<end].map { Character($0.uppercased()) }
+            let candidate = scalars[index ..< end].map { Character($0.uppercased()) }
             guard candidate == target, isBoundary(scalars, at: end) else {
                 index += 1
                 continue
@@ -191,7 +191,7 @@ public enum MySQLGrantParser {
 
             let lower = text.index(text.startIndex, offsetBy: index)
             let upper = text.index(text.startIndex, offsetBy: end)
-            return lower..<upper
+            return lower ..< upper
         }
         return nil
     }

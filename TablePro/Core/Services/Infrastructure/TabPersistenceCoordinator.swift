@@ -64,7 +64,8 @@ internal final class TabPersistenceCoordinator {
 
     internal func saveNowSync(windowedTabs: [(tab: QueryTab, windowGroupIndex: Int)], selectedTabId: UUID?) {
         guard !windowedTabs.isEmpty else {
-            Self.logger.debug("[persist] saveNowSync skipped empty tab set connId=\(self.connectionId, privacy: .public)")
+            Self.logger
+                .debug("[persist] saveNowSync skipped empty tab set connId=\(self.connectionId, privacy: .public)")
             return
         }
         let persisted = windowedTabs.map { $0.tab.toPersistedTab(windowGroupIndex: $0.windowGroupIndex) }
@@ -125,11 +126,17 @@ internal final class TabPersistenceCoordinator {
                     lastActiveDatabase: activeDatabase,
                     lastActiveSchema: activeSchema
                 )
-                Self.logger.debug("[persist] saveNow written tabCount=\(tabsCopy.count) connId=\(connId, privacy: .public) ms=\(Int(Date().timeIntervalSince(t0) * 1_000))")
+                Self.logger
+                    .debug(
+                        "[persist] saveNow written tabCount=\(tabsCopy.count) connId=\(connId, privacy: .public) ms=\(Int(Date().timeIntervalSince(t0) * 1_000))"
+                    )
             } catch is CancellationError {
                 return
             } catch {
-                Self.logger.fault("Failed to save tab state for connection \(connId, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                Self.logger
+                    .fault(
+                        "Failed to save tab state for connection \(connId, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                    )
             }
         }
     }

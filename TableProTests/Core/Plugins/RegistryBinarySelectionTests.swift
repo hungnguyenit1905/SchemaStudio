@@ -4,12 +4,11 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("RegistryPlugin.resolvedBinary v2 selection")
 struct RegistryBinarySelectionTests {
-
     private func makePlugin(binaries: [RegistryBinary]) -> RegistryPlugin {
         let payload: [String: Any] = [
             "id": "com.example.driver",

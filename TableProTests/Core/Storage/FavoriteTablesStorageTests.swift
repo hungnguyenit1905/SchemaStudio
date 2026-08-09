@@ -1,7 +1,7 @@
 import Foundation
 @testable import SchemaStudio
-import Testing
 import TableProSyncTransport
+import Testing
 
 @Suite("FavoriteTablesStorage")
 struct FavoriteTablesStorageTests {
@@ -49,7 +49,12 @@ struct FavoriteTablesStorageTests {
     func withoutSyncDoesNotTrackChanges() throws {
         let (storage, metadata) = try makeStorage()
         let connId = UUID()
-        let entry = FavoriteTablesStorage.FavoriteEntry(connectionId: connId, database: nil, schema: nil, name: "orders")
+        let entry = FavoriteTablesStorage.FavoriteEntry(
+            connectionId: connId,
+            database: nil,
+            schema: nil,
+            name: "orders"
+        )
         storage.addFavoriteWithoutSync(entry)
         storage.removeFavoriteWithoutSync(entry)
 

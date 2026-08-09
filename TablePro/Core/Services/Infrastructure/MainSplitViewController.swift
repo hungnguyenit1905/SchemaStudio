@@ -317,7 +317,6 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
         }
     }
 
-    @ViewBuilder
     private func sidebarBody(
         currentSession: ConnectionSession,
         sessionState: SessionStateFactory.SessionState
@@ -325,16 +324,6 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
         SidebarView(
             sidebarState: SharedSidebarState.forConnection(currentSession.connection.id),
             windowState: sessionState.coordinator.windowSidebarState,
-            onDoubleClick: { [weak self] table in
-                guard let coordinator = self?.sessionState?.coordinator else { return }
-                let activeTab = coordinator.tabManager.selectedTab
-                if activeTab?.tabType == .table, activeTab?.tableContext.tableName == table.name {
-                    coordinator.promotePreviewTab()
-                    coordinator.requestGridFocus()
-                } else {
-                    coordinator.openTableTab(table, forceNonPreview: true, activateGridFocus: true)
-                }
-            },
             pendingTruncates: sessionPendingTruncatesBinding,
             pendingDeletes: sessionPendingDeletesBinding,
             tableOperationOptions: sessionTableOperationOptionsBinding,
@@ -432,7 +421,11 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
     }
 
     private var sessionTableOperationOptionsBinding: Binding<[String: TableOperationOptions]> {
-        createSessionBinding(get: { $0.tableOperationOptions }, set: { $0.tableOperationOptions = $1 }, defaultValue: [:])
+        createSessionBinding(
+            get: { $0.tableOperationOptions },
+            set: { $0.tableOperationOptions = $1 },
+            defaultValue: [:]
+        )
     }
 
     private var windowTitleBinding: Binding<String> {
@@ -467,7 +460,8 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
         recomputeWindowMinSize()
     }
 
-    @objc override func toggleInspector(_ sender: Any?) {
+    @objc
+    override func toggleInspector(_ sender: Any?) {
         toggleInspector()
     }
 

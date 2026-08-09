@@ -19,14 +19,18 @@ enum ValueDisplayDetector {
     ) -> [ValueDisplayFormat?] {
         var results = [ValueDisplayFormat?](repeating: nil, count: columns.count)
 
-        for i in 0..<columns.count {
+        for i in 0 ..< columns.count {
             let columnType = i < columnTypes.count ? columnTypes[i] : nil
             let columnName = columns[i]
             let sampleValue = firstNonNilSample(at: i, from: sampleValues)
 
             if let format = detectUuid(columnType: columnType, columnName: columnName) {
                 results[i] = format
-            } else if let format = detectTimestamp(columnType: columnType, columnName: columnName, sampleValue: sampleValue) {
+            } else if let format = detectTimestamp(
+                columnType: columnType,
+                columnName: columnName,
+                sampleValue: sampleValue
+            ) {
                 results[i] = format
             }
         }
@@ -46,14 +50,14 @@ enum ValueDisplayDetector {
         case .blob(let rawType):
             // BINARY(16) requires name hint to avoid false positives on arbitrary 16-byte data
             guard let raw = rawType?.uppercased() else { return nil }
-            if raw.contains("BINARY") && raw.contains("(16)") && nameHint {
+            if raw.contains("BINARY"), raw.contains("(16)"), nameHint {
                 return .uuid
             }
         case .text(let rawType):
             guard let raw = rawType?.uppercased() else { return nil }
             let isCharLike = (raw.contains("CHAR") || raw.contains("VARCHAR"))
                 && (raw.contains("(32)") || raw.contains("(36)"))
-            if isCharLike && (nameLower.contains("uuid") || nameLower.contains("guid")) {
+            if isCharLike, nameLower.contains("uuid") || nameLower.contains("guid") {
                 return .uuid
             }
         default:
@@ -94,10 +98,10 @@ enum ValueDisplayDetector {
             // Millisecond timestamps are > 10 billion
             if numericValue > 10_000_000_000 {
                 let seconds = numericValue / 1_000
-                guard seconds >= 946_684_800 && seconds <= 4_102_444_800 else { return nil }
+                guard seconds >= 946_684_800, seconds <= 4_102_444_800 else { return nil }
                 return .unixTimestampMillis
             }
-            guard numericValue >= 946_684_800 && numericValue <= 4_102_444_800 else { return nil }
+            guard numericValue >= 946_684_800, numericValue <= 4_102_444_800 else { return nil }
             return .unixTimestamp
         }
 

@@ -215,7 +215,9 @@ extension RowEditingCoordinator {
                     if !deletedTables.isEmpty {
                         let tabIdsToRemove = Set(
                             parent.tabManager.tabs
-                                .filter { $0.tabType == .table && deletedTables.contains($0.tableContext.tableName ?? "") }
+                                .filter {
+                                    $0.tabType == .table && deletedTables.contains($0.tableContext.tableName ?? "")
+                                }
                                 .map(\.id)
                         )
 
@@ -238,7 +240,7 @@ extension RowEditingCoordinator {
                     Task { [parent] in await parent.refreshTables() }
                 }
 
-                if parent.tabManager.selectedTabIndex != nil && !parent.tabManager.tabs.isEmpty {
+                if parent.tabManager.selectedTabIndex != nil, !parent.tabManager.tabs.isEmpty {
                     parent.runQuery()
                 }
 
@@ -327,7 +329,10 @@ extension RowEditingCoordinator {
                 do {
                     _ = try await driver.execute(query: statement)
                 } catch {
-                    saveChangesLogger.warning("Failed to re-enable foreign key checks with statement '\(statement, privacy: .public)': \(error.localizedDescription, privacy: .public)")
+                    saveChangesLogger
+                        .warning(
+                            "Failed to re-enable foreign key checks with statement '\(statement, privacy: .public)': \(error.localizedDescription, privacy: .public)"
+                        )
                 }
             }
             throw error

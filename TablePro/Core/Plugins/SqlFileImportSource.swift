@@ -43,7 +43,10 @@ final class SqlFileImportSource: PluginImportSource, @unchecked Sendable {
             let attrs = try FileManager.default.attributesOfItem(atPath: targetURL.path(percentEncoded: false))
             return attrs[.size] as? Int64 ?? 0
         } catch {
-            Self.logger.warning("Failed to get file size for \(targetURL.path(percentEncoded: false)): \(error.localizedDescription)")
+            Self.logger
+                .warning(
+                    "Failed to get file size for \(targetURL.path(percentEncoded: false)): \(error.localizedDescription)"
+                )
             return 0
         }
     }

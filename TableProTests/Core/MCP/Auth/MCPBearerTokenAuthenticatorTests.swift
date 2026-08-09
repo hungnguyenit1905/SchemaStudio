@@ -1,6 +1,6 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 actor FakeMCPTokenStore: MCPTokenStoreProtocol {
@@ -163,7 +163,7 @@ struct MCPBearerTokenAuthenticatorTests {
         let authenticator = MCPBearerTokenAuthenticator(tokenStore: store, rateLimiter: limiter)
 
         let badToken = "tp_unknown"
-        for _ in 0..<5 {
+        for _ in 0 ..< 5 {
             _ = await authenticator.authenticate(
                 authorizationHeader: "Bearer \(badToken)",
                 clientAddress: .loopback
@@ -190,7 +190,7 @@ struct MCPBearerTokenAuthenticatorTests {
         let authenticator = MCPBearerTokenAuthenticator(tokenStore: store, rateLimiter: limiter)
 
         let goodHeader = "Bearer \(plaintext)"
-        for _ in 0..<3 {
+        for _ in 0 ..< 3 {
             _ = await authenticator.authenticate(
                 authorizationHeader: goodHeader,
                 clientAddress: .loopback
@@ -211,7 +211,7 @@ struct MCPBearerTokenAuthenticatorTests {
         let limiter = MCPRateLimiter(clock: clock)
         let authenticator = MCPBearerTokenAuthenticator(tokenStore: store, rateLimiter: limiter)
 
-        for _ in 0..<5 {
+        for _ in 0 ..< 5 {
             _ = await authenticator.authenticate(
                 authorizationHeader: "Bearer wrong",
                 clientAddress: .loopback

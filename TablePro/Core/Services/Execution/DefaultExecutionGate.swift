@@ -10,17 +10,20 @@ internal actor DefaultExecutionGate: ExecutionGate {
     private let authenticating: OperationAuthenticating
     private let safeModeLevelResolver: @Sendable (UUID) async -> SafeModeLevel
     private let forcesWriteResolver: @Sendable (DatabaseType) async -> Bool
+    private let affectedRowEstimator: @Sendable (UUID, String, DatabaseType) async -> AffectedRowEstimate
 
     init(
         confirming: OperationConfirming,
         authenticating: OperationAuthenticating,
         safeModeLevelResolver: @escaping @Sendable (UUID) async -> SafeModeLevel,
-        forcesWriteResolver: @escaping @Sendable (DatabaseType) async -> Bool
+        forcesWriteResolver: @escaping @Sendable (DatabaseType) async -> Bool,
+        affectedRowEstimator: @escaping @Sendable (UUID, String, DatabaseType) async -> AffectedRowEstimate
     ) {
         self.confirming = confirming
         self.authenticating = authenticating
         self.safeModeLevelResolver = safeModeLevelResolver
         self.forcesWriteResolver = forcesWriteResolver
+        self.affectedRowEstimator = affectedRowEstimator
     }
 
     func authorize(_ request: OperationRequest) async -> OperationDecision {
@@ -28,7 +31,8 @@ internal actor DefaultExecutionGate: ExecutionGate {
         let caps = request.capabilities
 
         let tier = request.sql.map { QueryClassifier.classifyTier($0, databaseType: request.databaseType) }
-        let isDangerous = request.sql.map { QueryClassifier.isDangerousQuery($0, databaseType: request.databaseType) } ?? false
+        let isDangerous = request.sql
+            .map { QueryClassifier.isDangerousQuery($0, databaseType: request.databaseType) } ?? false
         let isDestructive = request.kind.declaresDestructive || tier == .destructive || isDangerous
         let isMultiStatement = request.sql.map {
             QueryClassifier.isMultiStatement($0, databaseType: request.databaseType)
@@ -57,11 +61,13 @@ internal actor DefaultExecutionGate: ExecutionGate {
             if caps.contains(.cannotPrompt) {
                 return .denied(reason: String(localized: "Confirmation is required for this operation"))
             }
+            let affectedRows = await estimateAffectedRows(request)
             let confirmed = await confirming.confirm(
                 sql: request.sql ?? "",
                 operationDescription: request.operationDescription,
                 connectionId: request.connectionId,
-                isDestructive: isDestructive
+                isDestructive: isDestructive,
+                affectedRows: affectedRows
             )
             guard confirmed else {
                 return .denied(reason: String(localized: "Operation cancelled by user"))
@@ -91,6 +97,12 @@ internal actor DefaultExecutionGate: ExecutionGate {
                 token: UUID()
             )
         )
+    }
+
+    private func estimateAffectedRows(_ request: OperationRequest) async -> AffectedRowEstimate {
+        guard request.previewsAffectedRows else { return .undetermined(.notACountableStatement) }
+        guard let sql = request.sql, !sql.isEmpty else { return .undetermined(.notACountableStatement) }
+        return await affectedRowEstimator(request.connectionId, sql, request.databaseType)
     }
 
     private func resolveEffectiveWrite(_ request: OperationRequest, tier: QueryTier?) async -> Bool {

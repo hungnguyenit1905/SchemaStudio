@@ -15,7 +15,7 @@ enum QuackConnectBuilder {
     static func normalizedPort(_ raw: String) -> Int? {
         let trimmed = raw.trimmingCharacters(in: .whitespaces)
         if trimmed.isEmpty { return defaultPort }
-        guard let port = Int(trimmed), (1...65_535).contains(port) else { return nil }
+        guard let port = Int(trimmed), (1 ... 65_535).contains(port) else { return nil }
         return port
     }
 

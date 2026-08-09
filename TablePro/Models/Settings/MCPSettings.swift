@@ -45,7 +45,7 @@ struct MCPSettings: Codable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? false
         let rawPort = try container.decodeIfPresent(Int.self, forKey: .port) ?? 23_508
-        port = (1...65_535).contains(rawPort) ? rawPort : 23_508
+        port = (1 ... 65_535).contains(rawPort) ? rawPort : 23_508
         defaultRowLimit = try container.decodeIfPresent(Int.self, forKey: .defaultRowLimit) ?? 500
         maxRowLimit = try container.decodeIfPresent(Int.self, forKey: .maxRowLimit) ?? 10_000
         queryTimeoutSeconds = try container.decodeIfPresent(Int.self, forKey: .queryTimeoutSeconds) ?? 30
@@ -75,6 +75,6 @@ struct MCPSettings: Codable, Equatable {
     }
 
     var requestableRowLimitRange: ClosedRange<Int> {
-        SettingsValidationRules.mcpRowLimitRange.lowerBound...validatedMaxRowLimit
+        SettingsValidationRules.mcpRowLimitRange.lowerBound ... validatedMaxRowLimit
     }
 }

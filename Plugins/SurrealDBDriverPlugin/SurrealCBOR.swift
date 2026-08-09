@@ -66,7 +66,7 @@ public enum SurrealCBOR {
         mutating func next(_ count: Int) throws -> [UInt8] {
             guard count >= 0, count <= bytes.count - index else { throw SurrealCBORError.truncatedInput }
             defer { index += count }
-            return Array(bytes[index..<(index + count)])
+            return Array(bytes[index ..< (index + count)])
         }
     }
 
@@ -74,10 +74,10 @@ public enum SurrealCBOR {
 
     private static func readArgument(_ cursor: inout Cursor, info: UInt8) throws -> UInt64 {
         switch info {
-        case 0...23:
+        case 0 ... 23:
             return UInt64(info)
         case 24:
-            return UInt64(try cursor.nextByte())
+            return try UInt64(cursor.nextByte())
         case 25:
             return try readUInt(&cursor, byteCount: 2)
         case 26:
@@ -117,27 +117,27 @@ public enum SurrealCBOR {
             guard let magnitude = Int64(exactly: argument) else { return .double(-1 - Double(argument)) }
             return .int(-1 - magnitude)
         case 2:
-            let count = try checkedCount(try readArgument(&cursor, info: info))
-            return .bytes(Data(try cursor.next(count)))
+            let count = try checkedCount(readArgument(&cursor, info: info))
+            return try .bytes(Data(cursor.next(count)))
         case 3:
-            let count = try checkedCount(try readArgument(&cursor, info: info))
-            guard let text = String(bytes: try cursor.next(count), encoding: .utf8) else {
+            let count = try checkedCount(readArgument(&cursor, info: info))
+            guard let text = try String(bytes: cursor.next(count), encoding: .utf8) else {
                 throw SurrealCBORError.invalidUTF8
             }
             return .string(text)
         case 4:
-            let count = try checkedCount(try readArgument(&cursor, info: info))
+            let count = try checkedCount(readArgument(&cursor, info: info))
             var items: [SurrealValue] = []
-            items.reserveCapacity(min(count, 1024))
-            for _ in 0..<count {
-                items.append(try decodeItem(&cursor, depth: depth + 1))
+            items.reserveCapacity(min(count, 1_024))
+            for _ in 0 ..< count {
+                try items.append(decodeItem(&cursor, depth: depth + 1))
             }
             return .array(items)
         case 5:
-            let count = try checkedCount(try readArgument(&cursor, info: info))
+            let count = try checkedCount(readArgument(&cursor, info: info))
             var pairs: [(key: String, value: SurrealValue)] = []
-            pairs.reserveCapacity(min(count, 1024))
-            for _ in 0..<count {
+            pairs.reserveCapacity(min(count, 1_024))
+            for _ in 0 ..< count {
                 let key = try decodeItem(&cursor, depth: depth + 1)
                 let value = try decodeItem(&cursor, depth: depth + 1)
                 pairs.append((key: key.stringValue ?? Self.fallbackKey(key), value: value))
@@ -156,9 +156,9 @@ public enum SurrealCBOR {
 
     private static func fallbackKey(_ value: SurrealValue) -> String {
         switch value {
-        case let .int(number):
+        case .int(let number):
             return String(number)
-        case let .bool(flag):
+        case .bool(let flag):
             return String(flag)
         default:
             return ""
@@ -176,9 +176,9 @@ public enum SurrealCBOR {
         case 23:
             return .none
         case 25:
-            return .double(halfToDouble(UInt16(try readUInt(&cursor, byteCount: 2))))
+            return try .double(halfToDouble(UInt16(readUInt(&cursor, byteCount: 2))))
         case 26:
-            let raw = UInt32(try readUInt(&cursor, byteCount: 4))
+            let raw = try UInt32(readUInt(&cursor, byteCount: 4))
             return .double(Double(Float(bitPattern: raw)))
         case 27:
             let raw = try readUInt(&cursor, byteCount: 8)
@@ -194,12 +194,12 @@ public enum SurrealCBOR {
         let fraction = Double(raw & 0x03FF)
 
         if exponent == 0 {
-            return sign * pow(2.0, -14) * (fraction / 1024)
+            return sign * pow(2.0, -14) * (fraction / 1_024)
         }
         if exponent == 0x1F {
             return fraction == 0 ? sign * Double.infinity : Double.nan
         }
-        return sign * pow(2.0, Double(exponent - 15)) * (1 + fraction / 1024)
+        return sign * pow(2.0, Double(exponent - 15)) * (1 + fraction / 1_024)
     }
 
     private static func interpret(tag: UInt64, inner: SurrealValue) throws -> SurrealValue {
@@ -237,7 +237,7 @@ public enum SurrealCBOR {
             return try decodeRange(inner, tag: tag)
         case SurrealCBORTag.boundIncluded, SurrealCBORTag.boundExcluded:
             return .tagged(tag: tag, value: inner)
-        case SurrealCBORTag.geometryPoint...SurrealCBORTag.geometryCollection:
+        case SurrealCBORTag.geometryPoint ... SurrealCBORTag.geometryCollection:
             return .tagged(tag: tag, value: inner)
         default:
             return inner
@@ -255,7 +255,7 @@ public enum SurrealCBOR {
         if let text = inner.stringValue, let value = UUID(uuidString: text) {
             return .uuid(value)
         }
-        guard case let .bytes(data) = inner, data.count == 16 else {
+        guard case .bytes(let data) = inner, data.count == 16 else {
             throw SurrealCBORError.malformedTag(tag)
         }
         let bytes = [UInt8](data)
@@ -282,7 +282,7 @@ public enum SurrealCBOR {
     }
 
     private static func bound(from value: SurrealValue) -> SurrealBound? {
-        guard case let .tagged(tag, inner) = value else { return nil }
+        guard case .tagged(let tag, let inner) = value else { return nil }
         switch tag {
         case SurrealCBORTag.boundIncluded:
             return SurrealBound(value: inner, isInclusive: true)
@@ -302,53 +302,53 @@ public enum SurrealCBOR {
         case .none:
             encodeHead(major: 6, argument: SurrealCBORTag.none, into: &out)
             out.append(0xF6)
-        case let .bool(flag):
+        case .bool(let flag):
             out.append(flag ? 0xF5 : 0xF4)
-        case let .int(number):
+        case .int(let number):
             encodeInt(number, into: &out)
-        case let .double(number):
+        case .double(let number):
             out.append(0xFB)
             appendBigEndian(number.bitPattern, byteCount: 8, into: &out)
-        case let .string(text):
+        case .string(let text):
             let utf8 = Array(text.utf8)
             encodeHead(major: 3, argument: UInt64(utf8.count), into: &out)
             out.append(contentsOf: utf8)
-        case let .bytes(data):
+        case .bytes(let data):
             encodeHead(major: 2, argument: UInt64(data.count), into: &out)
             out.append(data)
-        case let .array(items):
+        case .array(let items):
             encodeHead(major: 4, argument: UInt64(items.count), into: &out)
             for item in items {
                 encodeItem(item, into: &out)
             }
-        case let .object(pairs):
+        case .object(let pairs):
             encodeHead(major: 5, argument: UInt64(pairs.count), into: &out)
             for pair in pairs {
                 encodeItem(.string(pair.key), into: &out)
                 encodeItem(pair.value, into: &out)
             }
-        case let .recordId(record):
+        case .recordId(let record):
             encodeHead(major: 6, argument: SurrealCBORTag.recordId, into: &out)
             encodeItem(.array([.string(record.table), record.id]), into: &out)
-        case let .table(name):
+        case .table(let name):
             encodeHead(major: 6, argument: SurrealCBORTag.table, into: &out)
             encodeItem(.string(name), into: &out)
-        case let .uuid(value):
+        case .uuid(let value):
             encodeHead(major: 6, argument: SurrealCBORTag.uuidString, into: &out)
             encodeItem(.string(value.uuidString.lowercased()), into: &out)
-        case let .decimal(text):
+        case .decimal(let text):
             encodeHead(major: 6, argument: SurrealCBORTag.decimal, into: &out)
             encodeItem(.string(text), into: &out)
-        case let .datetime(seconds, nanoseconds):
+        case .datetime(let seconds, let nanoseconds):
             encodeHead(major: 6, argument: SurrealCBORTag.datetimeCompact, into: &out)
             encodeItem(.array([.int(seconds), .int(Int64(nanoseconds))]), into: &out)
-        case let .duration(seconds, nanoseconds):
+        case .duration(let seconds, let nanoseconds):
             encodeHead(major: 6, argument: SurrealCBORTag.durationCompact, into: &out)
             encodeItem(.array([.int(seconds), .int(Int64(nanoseconds))]), into: &out)
-        case let .tagged(tag, inner):
+        case .tagged(let tag, let inner):
             encodeHead(major: 6, argument: tag, into: &out)
             encodeItem(inner, into: &out)
-        case let .range(from, to):
+        case .range(let from, let to):
             encodeHead(major: 6, argument: SurrealCBORTag.range, into: &out)
             encodeHead(major: 4, argument: 2, into: &out)
             encodeBound(from, into: &out)
@@ -378,15 +378,15 @@ public enum SurrealCBOR {
     private static func encodeHead(major: UInt8, argument: UInt64, into out: inout Data) {
         let prefix = major << 5
         switch argument {
-        case 0...23:
+        case 0 ... 23:
             out.append(prefix | UInt8(argument))
-        case 24...UInt64(UInt8.max):
+        case 24 ... UInt64(UInt8.max):
             out.append(prefix | 24)
             out.append(UInt8(argument))
-        case (UInt64(UInt8.max) + 1)...UInt64(UInt16.max):
+        case (UInt64(UInt8.max) + 1) ... UInt64(UInt16.max):
             out.append(prefix | 25)
             appendBigEndian(argument, byteCount: 2, into: &out)
-        case (UInt64(UInt16.max) + 1)...UInt64(UInt32.max):
+        case (UInt64(UInt16.max) + 1) ... UInt64(UInt32.max):
             out.append(prefix | 26)
             appendBigEndian(argument, byteCount: 4, into: &out)
         default:

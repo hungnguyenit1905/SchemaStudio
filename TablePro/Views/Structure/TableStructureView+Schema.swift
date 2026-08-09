@@ -32,7 +32,8 @@ extension TableStructureView {
             return
         }
 
-        guard let pluginDriver = (DatabaseManager.shared.driver(for: connection.id) as? PluginDriverAdapter)?.schemaPluginDriver else {
+        guard let pluginDriver = (DatabaseManager.shared.driver(for: connection.id) as? PluginDriverAdapter)?
+            .schemaPluginDriver else {
             toolbarState.previewStatements = ["-- Error: no plugin driver available for DDL generation"]
             coordinator?.activeSheet = .sqlPreview
             return
@@ -74,7 +75,9 @@ extension TableStructureView {
         if !destructiveChanges.isEmpty {
             let descriptions = destructiveChanges.map { $0.description }
             let message = String(
-                format: String(localized: "The following changes may cause data loss:\n\n%@\n\nDo you want to proceed?"),
+                format: String(
+                    localized: "The following changes may cause data loss:\n\n%@\n\nDo you want to proceed?"
+                ),
                 descriptions.joined(separator: "\n")
             )
 

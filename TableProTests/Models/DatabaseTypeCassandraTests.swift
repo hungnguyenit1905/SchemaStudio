@@ -1,6 +1,6 @@
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("DatabaseType Cassandra Properties")
 struct DatabaseTypeCassandraTests {

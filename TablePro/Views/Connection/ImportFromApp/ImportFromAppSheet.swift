@@ -118,11 +118,11 @@ struct ImportFromAppSheet: View {
         let count = importer.connectionCount()
         let template = String(
             localized: """
-                Importing passwords from %1$@ reads up to %2$d keychain items. \
-                macOS prompts for your login password once per item because each is owned by %1$@. \
-                Click Always Allow on each prompt to grant TablePro permanent access. \
-                Cancel any prompt to skip the rest.
-                """
+            Importing passwords from %1$@ reads up to %2$d keychain items. \
+            macOS prompts for your login password once per item because each is owned by %1$@. \
+            Click Always Allow on each prompt to grant TablePro permanent access. \
+            Cancel any prompt to skip the rest.
+            """
         )
         let alert = NSAlert()
         alert.messageText = String(localized: "macOS will ask for your login password")

@@ -10,22 +10,51 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @MainActor
 struct WindowSidebarStateTests {
+    private func makeRef(
+        connectionId: UUID,
+        database: String = "shop",
+        schema: String? = "public",
+        name: String = "users"
+    ) -> DatabaseTreeTableRef {
+        DatabaseTreeTableRef(
+            connectionId: connectionId,
+            database: database,
+            schema: schema,
+            table: TestFixtures.makeTableInfo(name: name)
+        )
+    }
+
     @Test
     func twoInstancesHoldIndependentSelection() {
         let windowA = WindowSidebarState()
         let windowB = WindowSidebarState()
 
-        let users = TestFixtures.makeTableInfo(name: "users")
+        let users = makeRef(connectionId: UUID())
         windowA.selectedTables = [users]
 
         #expect(windowA.selectedTables == [users])
         #expect(windowB.selectedTables.isEmpty)
+    }
+
+    @Test("Two connections holding the same schema.table stay distinct in the selection")
+    func selectionSeparatesConnectionsWithIdenticalTableNames() {
+        let first = UUID()
+        let second = UUID()
+        let state = WindowSidebarState()
+
+        let inFirst = makeRef(connectionId: first)
+        let inSecond = makeRef(connectionId: second)
+        state.selectedTables = [inFirst]
+
+        #expect(state.selectedTables.contains(inFirst))
+        #expect(!state.selectedTables.contains(inSecond))
+        #expect(inFirst != inSecond)
     }
 
     private func makeDefaults() throws -> UserDefaults {
@@ -36,16 +65,33 @@ struct WindowSidebarStateTests {
     func persistsAndRestores() throws {
         let defaults = try makeDefaults()
         let connectionId = UUID()
+        let database = ConnectionDatabaseKey(connectionId: connectionId, database: "shop")
+        let schema = ConnectionSchemaKey(connectionId: connectionId, database: "shop", schema: "public")
 
         let state = WindowSidebarState(connectionId: connectionId, defaults: defaults)
-        state.expandedTreeDatabases.insert("shop")
+        state.expandedTreeDatabases.insert(database)
         state.expandedTreeSchemas.insert("public")
-        state.expandedTreeDatabaseSchemas.insert(DatabaseSchemaKey(database: "shop", schema: "public"))
+        state.expandedTreeDatabaseSchemas.insert(schema)
 
         let restored = WindowSidebarState(connectionId: connectionId, defaults: defaults)
-        #expect(restored.expandedTreeDatabases == ["shop"])
+        #expect(restored.expandedTreeDatabases == [database])
         #expect(restored.expandedTreeSchemas == ["public"])
-        #expect(restored.expandedTreeDatabaseSchemas.contains(DatabaseSchemaKey(database: "shop", schema: "public")))
+        #expect(restored.expandedTreeDatabaseSchemas.contains(schema))
+    }
+
+    @Test("Two connections expanding the same database name keep separate expansion keys")
+    func expansionKeysCarryConnectionIdentity() throws {
+        let defaults = try makeDefaults()
+        let windowConnection = UUID()
+        let other = UUID()
+        let mine = ConnectionDatabaseKey(connectionId: windowConnection, database: "shop")
+        let theirs = ConnectionDatabaseKey(connectionId: other, database: "shop")
+
+        let state = WindowSidebarState(connectionId: windowConnection, defaults: defaults)
+        state.expandedTreeDatabases.insert(mine)
+
+        #expect(state.expandedTreeDatabases.contains(mine))
+        #expect(!state.expandedTreeDatabases.contains(theirs))
     }
 
     @Test("Different connections keep independent expansion")
@@ -54,7 +100,8 @@ struct WindowSidebarStateTests {
         let first = UUID()
         let second = UUID()
 
-        WindowSidebarState(connectionId: first, defaults: defaults).expandedTreeDatabases.insert("a")
+        WindowSidebarState(connectionId: first, defaults: defaults)
+            .expandedTreeDatabases.insert(ConnectionDatabaseKey(connectionId: first, database: "a"))
 
         let secondState = WindowSidebarState(connectionId: second, defaults: defaults)
         #expect(secondState.expandedTreeDatabases.isEmpty)
@@ -66,7 +113,7 @@ struct WindowSidebarStateTests {
         let connectionId = UUID()
 
         let state = WindowSidebarState(connectionId: connectionId, defaults: defaults)
-        state.expandedTreeDatabases.insert("shop")
+        state.expandedTreeDatabases.insert(ConnectionDatabaseKey(connectionId: connectionId, database: "shop"))
         state.expandedTreeDatabases.removeAll()
 
         let restored = WindowSidebarState(connectionId: connectionId, defaults: defaults)
@@ -77,7 +124,9 @@ struct WindowSidebarStateTests {
     func persistsExpandedPartitionedTables() throws {
         let defaults = try makeDefaults()
         let connectionId = UUID()
-        let orders = DatabaseTableKey(database: "shop", schema: "public", table: "orders")
+        let orders = ConnectionTableKey(
+            connectionId: connectionId, database: "shop", schema: "public", table: "orders"
+        )
 
         let state = WindowSidebarState(connectionId: connectionId, defaults: defaults)
         state.expandedTreeTables.insert(orders)
@@ -90,8 +139,12 @@ struct WindowSidebarStateTests {
     func partitionedTableKeysDistinguishSchema() throws {
         let defaults = try makeDefaults()
         let connectionId = UUID()
-        let qualified = DatabaseTableKey(database: "shop", schema: "public", table: "orders")
-        let unqualified = DatabaseTableKey(database: "shop", schema: nil, table: "orders")
+        let qualified = ConnectionTableKey(
+            connectionId: connectionId, database: "shop", schema: "public", table: "orders"
+        )
+        let unqualified = ConnectionTableKey(
+            connectionId: connectionId, database: "shop", schema: nil, table: "orders"
+        )
 
         let state = WindowSidebarState(connectionId: connectionId, defaults: defaults)
         state.expandedTreeTables = [qualified, unqualified]
@@ -102,18 +155,18 @@ struct WindowSidebarStateTests {
         #expect(restored.expandedTreeTables.contains(unqualified))
     }
 
-    @Test("Expansion saved before partitions shipped still decodes")
-    func decodesExpansionWrittenBeforePartitionSupport() throws {
+    @Test("Expansion stored in the connection-less format is dropped instead of misread")
+    func discardsExpansionWrittenWithoutConnectionIdentity() throws {
         let defaults = try makeDefaults()
         let connectionId = UUID()
-        let legacy = """
-            {"schemas":["public"],"databases":["shop"],"databaseSchemas":[{"database":"shop","schema":"public"}]}
-            """
-        defaults.set(Data(legacy.utf8), forKey: "com.SchemaStudio.sidebar.treeExpansion.\(connectionId.uuidString)")
+        let stale = """
+        {"schemas":["public"],"databases":["shop"],"databaseSchemas":[{"database":"shop","schema":"public"}]}
+        """
+        defaults.set(Data(stale.utf8), forKey: "com.SchemaStudio.sidebar.treeExpansion.\(connectionId.uuidString)")
 
         let restored = WindowSidebarState(connectionId: connectionId, defaults: defaults)
-        #expect(restored.expandedTreeDatabases == ["shop"])
-        #expect(restored.expandedTreeSchemas == ["public"])
+        #expect(restored.expandedTreeDatabases.isEmpty)
+        #expect(restored.expandedTreeDatabaseSchemas.isEmpty)
         #expect(restored.expandedTreeTables.isEmpty)
     }
 
@@ -123,7 +176,9 @@ struct WindowSidebarStateTests {
         let connectionId = UUID()
 
         let state = WindowSidebarState(connectionId: connectionId, defaults: defaults)
-        state.expandedTreeTables.insert(DatabaseTableKey(database: "shop", schema: "public", table: "orders"))
+        state.expandedTreeTables.insert(ConnectionTableKey(
+            connectionId: connectionId, database: "shop", schema: "public", table: "orders"
+        ))
         state.expandedTreeTables.removeAll()
 
         let restored = WindowSidebarState(connectionId: connectionId, defaults: defaults)
@@ -133,8 +188,10 @@ struct WindowSidebarStateTests {
     @Test("A window without a connection does not persist")
     func nilConnectionDoesNotPersist() throws {
         let defaults = try makeDefaults()
+        let connectionId = UUID()
+        let key = ConnectionDatabaseKey(connectionId: connectionId, database: "x")
         let state = WindowSidebarState(connectionId: nil, defaults: defaults)
-        state.expandedTreeDatabases.insert("x")
-        #expect(state.expandedTreeDatabases == ["x"])
+        state.expandedTreeDatabases.insert(key)
+        #expect(state.expandedTreeDatabases == [key])
     }
 }

@@ -74,7 +74,8 @@ enum CSVPropertyOptions {
             delimiter: delimiters.indices.contains(delimiterIndex) ? delimiters[delimiterIndex].byte : base.delimiter,
             quoteChar: quotes.indices.contains(quoteIndex) ? quotes[quoteIndex].byte : base.quoteChar,
             encoding: encodings.indices.contains(encodingIndex) ? encodings[encodingIndex].encoding : base.encoding,
-            lineEnding: lineEndings.indices.contains(lineEndingIndex) ? lineEndings[lineEndingIndex].value : base.lineEnding,
+            lineEnding: lineEndings.indices.contains(lineEndingIndex) ? lineEndings[lineEndingIndex].value : base
+                .lineEnding,
             hasBom: base.hasBom
         )
         dialect.escapeChar = escapeIndex == backslashEscapeIndex

@@ -33,7 +33,12 @@ struct PluginInstallModifier: ViewModifier {
                 }
             } message: {
                 if let conn = connection {
-                    Text(String(format: String(localized: "The %@ plugin is not installed. Would you like to download it from the plugin marketplace?"), conn.type.rawValue))
+                    Text(String(
+                        format: String(
+                            localized: "The %@ plugin is not installed. Would you like to download it from the plugin marketplace?"
+                        ),
+                        conn.type.rawValue
+                    ))
                 }
             }
             .alert(
@@ -109,7 +114,12 @@ struct PluginInstallTypeModifier: ViewModifier {
                 }
             } message: {
                 if let t = type {
-                    Text(String(format: String(localized: "The %@ plugin is not installed. Would you like to download it from the plugin marketplace?"), t.rawValue))
+                    Text(String(
+                        format: String(
+                            localized: "The %@ plugin is not installed. Would you like to download it from the plugin marketplace?"
+                        ),
+                        t.rawValue
+                    ))
                 }
             }
             .alert(

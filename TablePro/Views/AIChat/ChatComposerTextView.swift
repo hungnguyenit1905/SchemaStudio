@@ -245,9 +245,13 @@ final class ChatComposerNSTextView: NSTextView {
             return
         }
         if let urls = pasteboard.readObjects(forClasses: [NSURL.self]) as? [URL],
-           let fileURL = urls.first(where: { (try? $0.resourceValues(forKeys: [.contentTypeKey]))?.contentType?.conforms(to: .image) ?? false }),
+           let fileURL = urls
+           .first(where: {
+               (try? $0.resourceValues(forKeys: [.contentTypeKey]))?.contentType?.conforms(to: .image) ?? false
+           }),
            let data = try? Data(contentsOf: fileURL) {
-            let uti = (try? fileURL.resourceValues(forKeys: [.contentTypeKey]))?.contentType?.identifier ?? UTType.image.identifier
+            let uti = (try? fileURL.resourceValues(forKeys: [.contentTypeKey]))?.contentType?.identifier ?? UTType.image
+                .identifier
             onPasteImageData(data, uti)
             return
         }
@@ -291,11 +295,9 @@ final class ChatComposerScrollView: NSScrollView {
     }
 
     override var intrinsicContentSize: NSSize {
-        guard
-            let textView = documentView as? NSTextView,
-            let layoutManager = textView.layoutManager,
-            let container = textView.textContainer
-        else {
+        guard let textView = documentView as? NSTextView,
+              let layoutManager = textView.layoutManager,
+              let container = textView.textContainer else {
             return super.intrinsicContentSize
         }
         let font = textView.font ?? .systemFont(ofSize: NSFont.systemFontSize)

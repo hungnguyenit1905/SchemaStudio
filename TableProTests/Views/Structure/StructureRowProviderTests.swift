@@ -125,13 +125,36 @@ struct StructureRowProviderChangeStateTests {
         manager.loadSchema(
             tableName: "users",
             columns: [
-                ColumnInfo(name: "id", dataType: "INT", isNullable: false, isPrimaryKey: true,
-                           defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil),
-                ColumnInfo(name: "email", dataType: "VARCHAR(255)", isNullable: true, isPrimaryKey: false,
-                           defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil)
+                ColumnInfo(
+                    name: "id",
+                    dataType: "INT",
+                    isNullable: false,
+                    isPrimaryKey: true,
+                    defaultValue: nil,
+                    extra: nil,
+                    charset: nil,
+                    collation: nil,
+                    comment: nil
+                ),
+                ColumnInfo(
+                    name: "email",
+                    dataType: "VARCHAR(255)",
+                    isNullable: true,
+                    isPrimaryKey: false,
+                    defaultValue: nil,
+                    extra: nil,
+                    charset: nil,
+                    collation: nil,
+                    comment: nil
+                )
             ],
-            indexes: [IndexInfo(name: "idx_email", columns: ["email"], isUnique: false,
-                                isPrimary: false, type: "BTREE")],
+            indexes: [IndexInfo(
+                name: "idx_email",
+                columns: ["email"],
+                isUnique: false,
+                isPrimary: false,
+                type: "BTREE"
+            )],
             foreignKeys: [],
             primaryKey: ["id"]
         )

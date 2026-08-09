@@ -5,8 +5,8 @@
 //  Tests for composite primary key support in UPDATE and DELETE generation.
 //
 
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("SQL Statement Generator — Composite Primary Key")
@@ -138,9 +138,9 @@ struct SQLStatementGeneratorCompositePKTests {
 
         #expect(stmts.count == 1)
         let params = stmts[0].parameters
-        #expect(params[0] as? String == "10")  // SET quantity = ?
-        #expect(params[1] as? String == "1")   // WHERE order_id = ?
-        #expect(params[2] as? String == "42")  // AND product_id = ?
+        #expect(params[0] as? String == "10") // SET quantity = ?
+        #expect(params[1] as? String == "1") // WHERE order_id = ?
+        #expect(params[2] as? String == "42") // AND product_id = ?
     }
 
     @Test("UPDATE multiple columns on same row with composite PK")
@@ -179,9 +179,9 @@ struct SQLStatementGeneratorCompositePKTests {
         #expect(stmts.count == 1)
         let params = stmts[0].parameters
         // SET product_id = 99 (new), WHERE order_id = 1, product_id = 42 (original)
-        #expect(params[0] as? String == "99")  // SET
-        #expect(params[1] as? String == "1")   // WHERE order_id (from originalRow)
-        #expect(params[2] as? String == "42")  // WHERE product_id (from originalRow)
+        #expect(params[0] as? String == "99") // SET
+        #expect(params[1] as? String == "1") // WHERE order_id (from originalRow)
+        #expect(params[2] as? String == "42") // WHERE product_id (from originalRow)
     }
 
     @Test("Multiple UPDATE changes generate separate statements")

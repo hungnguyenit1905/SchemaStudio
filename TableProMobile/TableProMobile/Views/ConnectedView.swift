@@ -79,8 +79,10 @@ struct ConnectedView: View {
     private var connectingView: some View {
         VStack(spacing: 16) {
             ProgressView {
-                Text(String(format: String(localized: "Connecting to %@..."),
-                             connection.name.isEmpty ? connection.host : connection.name))
+                Text(String(
+                    format: String(localized: "Connecting to %@..."),
+                    connection.name.isEmpty ? connection.host : connection.name
+                ))
             }
             Button(String(localized: "Cancel"), role: .cancel) {
                 dismiss()
@@ -201,7 +203,7 @@ struct ConnectedView: View {
                     .font(.caption)
             }
         }
-        if coordinator.supportsDatabaseSwitching && coordinator.databases.count > 1 {
+        if coordinator.supportsDatabaseSwitching, coordinator.databases.count > 1 {
             ToolbarItem(placement: .topBarLeading) {
                 Menu {
                     ForEach(coordinator.databases, id: \.self) { db in
@@ -232,7 +234,7 @@ struct ConnectedView: View {
                 .disabled(coordinator.isSwitching)
             }
         }
-        if coordinator.supportsSchemas && coordinator.schemas.count > 1 {
+        if coordinator.supportsSchemas, coordinator.schemas.count > 1 {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     ForEach(coordinator.schemas, id: \.self) { schema in

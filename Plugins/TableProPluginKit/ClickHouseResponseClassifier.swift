@@ -112,7 +112,7 @@ public enum ClickHouseResponseClassifier {
 
         var rows: [[PluginCellValue]] = []
         var isTruncated = false
-        for index in 2..<lines.count {
+        for index in 2 ..< lines.count {
             let line = lines[index]
             if line.isEmpty { continue }
 
@@ -137,7 +137,7 @@ public enum ClickHouseResponseClassifier {
     }
 
     private static func decodedText(_ data: Data) -> String {
-        for suffixLength in 0...3 where data.count >= suffixLength {
+        for suffixLength in 0 ... 3 where data.count >= suffixLength {
             if let text = String(bytes: data.dropLast(suffixLength), encoding: .utf8) {
                 return text
             }

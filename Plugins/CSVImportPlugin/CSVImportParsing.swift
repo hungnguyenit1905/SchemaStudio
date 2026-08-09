@@ -35,7 +35,7 @@ enum CSVImportParsing {
         var names: [String] = []
         names.reserveCapacity(columnCount)
         var used = Set<String>()
-        for index in 0..<columnCount {
+        for index in 0 ..< columnCount {
             let raw = header.flatMap { index < $0.count ? $0[index] : nil } ?? ""
             let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
             let base = trimmed.isEmpty ? defaultColumnName(index) : trimmed
@@ -129,7 +129,7 @@ enum CSVImportParsing {
                 if sampled >= limit { break }
                 let fields = parser.parseRow(buffer, range: range)
                 if isBlank(fields) { continue }
-                for column in 0..<columnCount {
+                for column in 0 ..< columnCount {
                     let raw = column < fields.count ? fields[column] : ""
                     guard let value = sampleText(from: raw, options: options) else { continue }
                     samples[column].append(value)
@@ -138,7 +138,7 @@ enum CSVImportParsing {
                 sampled += 1
             }
 
-            return (0..<columnCount).map { column in
+            return (0 ..< columnCount).map { column in
                 PluginImportField(
                     name: names[column],
                     sampleValue: firstValues[column].map { String($0.prefix(80)) },

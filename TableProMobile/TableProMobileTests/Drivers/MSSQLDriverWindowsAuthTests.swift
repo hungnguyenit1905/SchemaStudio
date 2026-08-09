@@ -1,7 +1,7 @@
-import XCTest
 import TableProDatabase
-import TableProModels
 @testable import TableProMobile
+import TableProModels
+import XCTest
 
 /// Deterministic tests for how the iOS MSSQL driver treats Windows Authentication.
 /// Kerberos is macOS only; the iOS FreeTDS build has no GSS support, so the driver must
@@ -12,7 +12,7 @@ final class MSSQLDriverWindowsAuthTests: XCTestCase {
             name: "kerberos",
             type: .mssql,
             host: "sql.contoso.com",
-            port: 1433,
+            port: 1_433,
             username: "",
             database: "master",
             additionalFields: ["mssqlAuthMethod": authMethod]

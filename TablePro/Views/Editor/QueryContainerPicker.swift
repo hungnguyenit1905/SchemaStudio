@@ -23,8 +23,6 @@ struct QueryContainerPicker: View {
             menu
         } else if !selectedName.isEmpty {
             indicatorLabel
-        } else {
-            EmptyView()
         }
     }
 

@@ -59,7 +59,10 @@ extension WelcomeWindowView {
                     vm.publishToTeamCatalog(connections)
                 } label: {
                     Label(
-                        String(format: String(localized: "Publish %d Connections to Team Catalog..."), connections.count),
+                        String(
+                            format: String(localized: "Publish %d Connections to Team Catalog..."),
+                            connections.count
+                        ),
                         systemImage: "person.2.fill"
                     )
                 }
@@ -70,7 +73,10 @@ extension WelcomeWindowView {
                     vm.publishConnectionsToTeamLibrary(connections)
                 } label: {
                     Label(
-                        String(format: String(localized: "Publish %d Connections to Team Library..."), connections.count),
+                        String(
+                            format: String(localized: "Publish %d Connections to Team Library..."),
+                            connections.count
+                        ),
                         systemImage: "books.vertical.fill"
                     )
                 }
@@ -290,8 +296,7 @@ extension WelcomeWindowView {
         }
     }
 
-    @ViewBuilder
-    var newConnectionContextMenu: some View {
+    @ViewBuilder var newConnectionContextMenu: some View {
         Button(action: { WindowOpener.shared.openConnectionForm() }) {
             Label("New Connection...", systemImage: "plus")
         }

@@ -59,15 +59,17 @@ final class GeminiProvider: ChatTransport {
         do {
             (data, response) = try await session.data(for: request)
         } catch {
-            Self.logger.warning("Gemini model fetch failed; using known models: \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .warning(
+                    "Gemini model fetch failed; using known models: \(error.localizedDescription, privacy: .public)"
+                )
             return Self.knownModels
         }
 
         guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200,
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let models = json["models"] as? [[String: Any]]
-        else {
+              let models = json["models"] as? [[String: Any]] else {
             Self.logger.warning("Gemini model fetch returned unexpected response; using known models")
             return Self.knownModels
         }
@@ -75,8 +77,7 @@ final class GeminiProvider: ChatTransport {
         let fetched = models.compactMap { model -> String? in
             guard let name = model["name"] as? String,
                   let methods = model["supportedGenerationMethods"] as? [String],
-                  methods.contains("generateContent")
-            else { return nil }
+                  methods.contains("generateContent") else { return nil }
             if name.hasPrefix("models/") {
                 return String(name.dropFirst(7))
             }
@@ -125,8 +126,8 @@ final class GeminiProvider: ChatTransport {
     ) throws -> URLRequest {
         guard let encodedModel = options.model.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let url = URL(
-            string: "\(endpoint)/v1beta/models/\(encodedModel):streamGenerateContent?alt=sse"
-        ) else {
+                  string: "\(endpoint)/v1beta/models/\(encodedModel):streamGenerateContent?alt=sse"
+              ) else {
             throw AIProviderError.invalidEndpoint(endpoint)
         }
 
@@ -238,8 +239,7 @@ final class GeminiProvider: ChatTransport {
         guard line.hasPrefix("data: ") else { return nil }
         let jsonString = String(line.dropFirst(6))
         guard let data = jsonString.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else { return nil }
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
         return json
     }
 
@@ -292,14 +292,17 @@ final class GeminiProvider: ChatTransport {
 
     static func encodeArgsToJSONString(_ args: Any) -> String {
         guard JSONSerialization.isValidJSONObject(args) else {
-            Self.logger.warning("Gemini functionCall args was not a valid JSON object; falling back to empty input")
+            logger.warning("Gemini functionCall args was not a valid JSON object; falling back to empty input")
             return "{}"
         }
         do {
             let data = try JSONSerialization.data(withJSONObject: args)
             return String(data: data, encoding: .utf8) ?? "{}"
         } catch {
-            Self.logger.warning("Gemini functionCall args serialization failed: \(error.localizedDescription, privacy: .public)")
+            logger
+                .warning(
+                    "Gemini functionCall args serialization failed: \(error.localizedDescription, privacy: .public)"
+                )
             return "{}"
         }
     }

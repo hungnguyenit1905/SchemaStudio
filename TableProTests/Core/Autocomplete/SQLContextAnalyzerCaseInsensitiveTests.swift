@@ -6,8 +6,8 @@
 //  after removal of uppercased() normalization.
 //
 
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("SQLContextAnalyzer Case-Insensitive Clause Detection")

@@ -291,7 +291,7 @@ extension ShortcutAction {
             (.character("=", command: true), String(localized: "Zoom In")),
             (.character("-", command: true), String(localized: "Zoom Out"))
         ]
-        for number in 1...9 {
+        for number in 1 ... 9 {
             shortcuts.append((
                 .character(Character(String(number)), command: true),
                 String(format: String(localized: "Select Tab %d"), number)

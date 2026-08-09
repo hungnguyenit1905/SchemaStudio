@@ -133,12 +133,12 @@ final class DateFormattingService {
         // (format, hasTimezone) — formats with timezone markers parse UTC/offset;
         // naive formats use user's local timezone so display matches the raw value.
         let formats: [(String, Bool)] = [
-            ("yyyy-MM-dd HH:mm:ss", false),        // MySQL/PostgreSQL timestamp (most common)
-            ("yyyy-MM-dd'T'HH:mm:ss", false),       // ISO 8601 (no timezone)
-            ("yyyy-MM-dd'T'HH:mm:ssZ", true),       // ISO 8601 with timezone
-            ("yyyy-MM-dd'T'HH:mm:ss.SSSZ", true),   // ISO 8601 with milliseconds and timezone
-            ("yyyy-MM-dd", false),                   // Date only (MySQL DATE, PostgreSQL DATE)
-            ("HH:mm:ss", false),                     // Time only (MySQL TIME)
+            ("yyyy-MM-dd HH:mm:ss", false), // MySQL/PostgreSQL timestamp (most common)
+            ("yyyy-MM-dd'T'HH:mm:ss", false), // ISO 8601 (no timezone)
+            ("yyyy-MM-dd'T'HH:mm:ssZ", true), // ISO 8601 with timezone
+            ("yyyy-MM-dd'T'HH:mm:ss.SSSZ", true), // ISO 8601 with milliseconds and timezone
+            ("yyyy-MM-dd", false), // Date only (MySQL DATE, PostgreSQL DATE)
+            ("HH:mm:ss", false), // Time only (MySQL TIME)
         ]
 
         return formats.map { format, hasTimezone in

@@ -17,7 +17,7 @@ enum SQLTokenBoundary {
 
     static func isIdentifierChar(_ ch: UInt16) -> Bool {
         if (ch >= 0x41 && ch <= 0x5A) || (ch >= 0x61 && ch <= 0x7A) { return true }
-        if ch >= 0x30 && ch <= 0x39 { return true }
+        if ch >= 0x30, ch <= 0x39 { return true }
         return ch == underscore
     }
 

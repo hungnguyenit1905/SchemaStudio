@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
-import SwiftUI
 @testable import SchemaStudio
+import SwiftUI
 import Testing
 
 @MainActor

@@ -29,7 +29,7 @@ struct SQLStatementGeneratorBatchDeleteScaleTests {
     }
 
     private func deleteChanges(count: Int, columns: [String]) -> [RowChange] {
-        (0..<count).map { index in
+        (0 ..< count).map { index in
             RowChange(
                 rowIndex: index,
                 type: .delete,
@@ -49,7 +49,7 @@ struct SQLStatementGeneratorBatchDeleteScaleTests {
         let statements = generator.generateStatements(
             from: changes,
             insertedRowData: [:],
-            deletedRowIndices: Set(0..<5_000),
+            deletedRowIndices: Set(0 ..< 5_000),
             insertedRowIndices: []
         )
 
@@ -68,7 +68,7 @@ struct SQLStatementGeneratorBatchDeleteScaleTests {
         let statements = generator.generateStatements(
             from: changes,
             insertedRowData: [:],
-            deletedRowIndices: Set(0..<(cap + 1)),
+            deletedRowIndices: Set(0 ..< (cap + 1)),
             insertedRowIndices: []
         )
 
@@ -88,7 +88,7 @@ struct SQLStatementGeneratorBatchDeleteScaleTests {
         let statements = generator.generateStatements(
             from: changes,
             insertedRowData: [:],
-            deletedRowIndices: Set(0..<cap),
+            deletedRowIndices: Set(0 ..< cap),
             insertedRowIndices: []
         )
 
@@ -106,7 +106,7 @@ struct SQLStatementGeneratorBatchDeleteScaleTests {
         let statements = generator.generateStatements(
             from: changes,
             insertedRowData: [:],
-            deletedRowIndices: Set(0..<1_000),
+            deletedRowIndices: Set(0 ..< 1_000),
             insertedRowIndices: []
         )
 
@@ -129,7 +129,7 @@ struct SQLStatementGeneratorBatchDeleteScaleTests {
         let statements = generator.generateStatements(
             from: changes,
             insertedRowData: [:],
-            deletedRowIndices: Set(0..<rowCount),
+            deletedRowIndices: Set(0 ..< rowCount),
             insertedRowIndices: []
         )
 

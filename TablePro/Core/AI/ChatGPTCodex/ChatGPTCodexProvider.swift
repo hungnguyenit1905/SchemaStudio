@@ -76,7 +76,8 @@ final class ChatGPTCodexProvider: ChatTransport {
         }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        for (field, value) in Self.requestHeaders(accessToken: accessToken, accountID: accountID, sessionID: sessionID) {
+        for (field, value) in Self
+            .requestHeaders(accessToken: accessToken, accountID: accountID, sessionID: sessionID) {
             request.setValue(value, forHTTPHeaderField: field)
         }
         let body = try Self.requestBody(turns: turns, options: options, stream: stream)
@@ -103,9 +104,9 @@ final class ChatGPTCodexProvider: ChatTransport {
         options: ChatTransportOptions,
         stream: Bool
     ) throws -> [String: Any] {
-        var body: [String: Any] = [
+        var body: [String: Any] = try [
             "model": options.model,
-            "input": try OpenAIResponsesProvider.encodeInput(turns: turns),
+            "input": OpenAIResponsesProvider.encodeInput(turns: turns),
             "store": false,
             "stream": stream,
             "instructions": instructions(for: options)

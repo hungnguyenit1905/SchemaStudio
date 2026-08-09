@@ -1,7 +1,7 @@
 import Foundation
-import TableProPluginKit
 import Network
 @testable import SchemaStudio
+import TableProPluginKit
 import XCTest
 
 final class MCPBridgeIntegrationTests: XCTestCase {
@@ -713,41 +713,42 @@ private final class BadHttpServer: @unchecked Sendable {
     }
 
     private func readLoop(connection: NWConnection, accumulated: Data) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1_024) { [weak self] data, _, isComplete, _ in
-            guard let self else { return }
-            var buffer = accumulated
-            if let data {
-                buffer.append(data)
-            }
+        connection
+            .receive(minimumIncompleteLength: 1, maximumLength: 64 * 1_024) { [weak self] data, _, isComplete, _ in
+                guard let self else { return }
+                var buffer = accumulated
+                if let data {
+                    buffer.append(data)
+                }
 
-            if let bodyStart = Self.findHeaderEnd(buffer) {
-                let contentLength = Self.contentLength(buffer.prefix(bodyStart))
-                let bodyAvailable = buffer.count - bodyStart
-                if bodyAvailable < contentLength {
-                    if isComplete {
-                        connection.cancel()
+                if let bodyStart = Self.findHeaderEnd(buffer) {
+                    let contentLength = Self.contentLength(buffer.prefix(bodyStart))
+                    let bodyAvailable = buffer.count - bodyStart
+                    if bodyAvailable < contentLength {
+                        if isComplete {
+                            connection.cancel()
+                            return
+                        }
+                        self.readLoop(connection: connection, accumulated: buffer)
                         return
                     }
-                    self.readLoop(connection: connection, accumulated: buffer)
+                    let body = buffer.subdata(in: bodyStart ..< (bodyStart + contentLength))
+                    Task {
+                        let response = await self.state.respond(body)
+                        let raw = Self.serialize(response)
+                        connection.send(content: raw, completion: .contentProcessed { _ in
+                            connection.cancel()
+                        })
+                    }
                     return
                 }
-                let body = buffer.subdata(in: bodyStart..<(bodyStart + contentLength))
-                Task {
-                    let response = await self.state.respond(body)
-                    let raw = Self.serialize(response)
-                    connection.send(content: raw, completion: .contentProcessed { _ in
-                        connection.cancel()
-                    })
-                }
-                return
-            }
 
-            if isComplete {
-                connection.cancel()
-                return
+                if isComplete {
+                    connection.cancel()
+                    return
+                }
+                self.readLoop(connection: connection, accumulated: buffer)
             }
-            self.readLoop(connection: connection, accumulated: buffer)
-        }
     }
 
     private static func findHeaderEnd(_ data: Data) -> Int? {
@@ -759,7 +760,7 @@ private final class BadHttpServer: @unchecked Sendable {
         guard let headerString = String(data: headerData, encoding: .utf8) else { return 0 }
         for line in headerString.components(separatedBy: "\r\n") {
             guard let colon = line.firstIndex(of: ":") else { continue }
-            let key = line[line.startIndex..<colon].lowercased()
+            let key = line[line.startIndex ..< colon].lowercased()
             if key == "content-length" {
                 let value = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
                 return Int(value) ?? 0

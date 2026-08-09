@@ -38,6 +38,7 @@ struct PluginCellValueSortKeyTests {
     }
 
     // MARK: - asText contract
+
     //
     // `asText` MUST return nil for `.bytes` so callers cannot accidentally treat
     // binary cells as editable text. Returning empty string instead would cause

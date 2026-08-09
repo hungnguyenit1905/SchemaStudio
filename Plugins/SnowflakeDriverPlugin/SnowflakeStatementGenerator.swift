@@ -82,7 +82,10 @@ struct SnowflakeStatementGenerator {
     private func updateStatement(for change: PluginRowChange) -> (statement: String, parameters: [PluginCellValue])? {
         guard !change.cellChanges.isEmpty else { return nil }
         guard let condition = whereClause(for: change) else {
-            Self.logger.error("Skipping UPDATE for \(qualifiedTable, privacy: .public): no identifying columns to build a WHERE clause")
+            Self.logger
+                .error(
+                    "Skipping UPDATE for \(qualifiedTable, privacy: .public): no identifying columns to build a WHERE clause"
+                )
             return nil
         }
 
@@ -100,7 +103,10 @@ struct SnowflakeStatementGenerator {
 
     private func deleteStatement(for change: PluginRowChange) -> (statement: String, parameters: [PluginCellValue])? {
         guard let condition = whereClause(for: change) else {
-            Self.logger.error("Skipping DELETE for \(qualifiedTable, privacy: .public): no identifying columns to build a WHERE clause")
+            Self.logger
+                .error(
+                    "Skipping DELETE for \(qualifiedTable, privacy: .public): no identifying columns to build a WHERE clause"
+                )
             return nil
         }
         return ("DELETE FROM \(qualifiedTable) WHERE \(condition.sql)", condition.parameters)

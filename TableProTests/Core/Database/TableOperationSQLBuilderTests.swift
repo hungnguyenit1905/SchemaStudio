@@ -106,7 +106,12 @@ struct TableOperationSQLBuilderTests {
     func cascadeAppliesToMaterializedView() {
         let builder = makeBuilder(tables: [TableInfo(name: "daily_sales", type: .materializedView, rowCount: nil)])
         let options = ["daily_sales": TableOperationOptions(cascade: true)]
-        let stmts = builder.generate(truncates: [], deletes: ["daily_sales"], options: options, includeFKHandling: false)
+        let stmts = builder.generate(
+            truncates: [],
+            deletes: ["daily_sales"],
+            options: options,
+            includeFKHandling: false
+        )
         #expect(stmts == ["DROP MATERIALIZED VIEW \"daily_sales\" CASCADE"])
     }
 

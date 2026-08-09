@@ -36,21 +36,30 @@ struct StatusBarSnapshotTests {
 
     @Test("Single page with unknown total hides pagination")
     func hidesPaginationOnSinglePage() {
-        let snapshot = makeSnapshot(rowCount: 10, pagination: PaginationState(totalRowCount: nil, pageSize: 50, currentPage: 1))
+        let snapshot = makeSnapshot(
+            rowCount: 10,
+            pagination: PaginationState(totalRowCount: nil, pageSize: 50, currentPage: 1)
+        )
         #expect(!snapshot.isPagedWithUnknownTotal)
         #expect(!snapshot.showsPaginationControls)
     }
 
     @Test("Page beyond the first is treated as paged with unknown total")
     func pagedWhenBeyondFirstPage() {
-        let snapshot = makeSnapshot(rowCount: 50, pagination: PaginationState(totalRowCount: nil, pageSize: 50, currentPage: 2, currentOffset: 50))
+        let snapshot = makeSnapshot(
+            rowCount: 50,
+            pagination: PaginationState(totalRowCount: nil, pageSize: 50, currentPage: 2, currentOffset: 50)
+        )
         #expect(snapshot.isPagedWithUnknownTotal)
         #expect(snapshot.showsPaginationControls)
     }
 
     @Test("A full first page with unknown total is treated as paged")
     func pagedWhenFirstPageIsFull() {
-        let snapshot = makeSnapshot(rowCount: 50, pagination: PaginationState(totalRowCount: nil, pageSize: 50, currentPage: 1))
+        let snapshot = makeSnapshot(
+            rowCount: 50,
+            pagination: PaginationState(totalRowCount: nil, pageSize: 50, currentPage: 1)
+        )
         #expect(snapshot.isPagedWithUnknownTotal)
     }
 
@@ -69,7 +78,11 @@ struct StatusBarSnapshotTests {
     @Test("Selecting some rows reports the partial-selection text")
     func rowInfoPartialSelection() {
         let snapshot = makeSnapshot(rowCount: 5)
-        #expect(snapshot.rowInfoText(selectedCount: 2) == String(format: String(localized: "%d of %d rows selected"), 2, 5))
+        #expect(snapshot.rowInfoText(selectedCount: 2) == String(
+            format: String(localized: "%d of %d rows selected"),
+            2,
+            5
+        ))
     }
 
     @Test("A table with a known total reports the offset range")

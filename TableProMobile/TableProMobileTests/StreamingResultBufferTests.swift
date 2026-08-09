@@ -1,12 +1,11 @@
 import Foundation
-import Testing
-import TableProModels
 @testable import TableProMobile
+import TableProModels
+import Testing
 
 @MainActor
 @Suite("StreamingResultBuffer")
 struct StreamingResultBufferTests {
-
     @Test("flush appends pending rows and apply records columns")
     func flushAppends() {
         let buffer = StreamingResultBuffer(capacity: 100)
@@ -24,7 +23,7 @@ struct StreamingResultBufferTests {
     @Test("shrink keeps window and legacy rows in lockstep")
     func shrinkLockstep() {
         let buffer = StreamingResultBuffer(capacity: 100)
-        for index in 0..<10 {
+        for index in 0 ..< 10 {
             buffer.apply(.row(Row(cells: [.text("\(index)")])))
         }
         buffer.flush()

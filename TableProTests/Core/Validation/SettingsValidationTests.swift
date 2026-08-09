@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("Settings Validation")
@@ -137,35 +137,35 @@ struct SettingsValidationTests {
     @Test("Int clamping clamps below range")
     func intClampingClampsBelowRange() {
         let value = 5
-        let result = value.clamped(to: 10...20)
+        let result = value.clamped(to: 10 ... 20)
         #expect(result == 10)
     }
 
     @Test("Int clamping clamps above range")
     func intClampingClampsAboveRange() {
         let value = 25
-        let result = value.clamped(to: 10...20)
+        let result = value.clamped(to: 10 ... 20)
         #expect(result == 20)
     }
 
     @Test("Int clamping preserves value within range")
     func intClampingPreservesValueWithinRange() {
         let value = 15
-        let result = value.clamped(to: 10...20)
+        let result = value.clamped(to: 10 ... 20)
         #expect(result == 15)
     }
 
     @Test("Int clamping preserves value at lower bound")
     func intClampingPreservesValueAtLowerBound() {
         let value = 10
-        let result = value.clamped(to: 10...20)
+        let result = value.clamped(to: 10 ... 20)
         #expect(result == 10)
     }
 
     @Test("Int clamping preserves value at upper bound")
     func intClampingPreservesValueAtUpperBound() {
         let value = 20
-        let result = value.clamped(to: 10...20)
+        let result = value.clamped(to: 10 ... 20)
         #expect(result == 20)
     }
 
@@ -174,7 +174,7 @@ struct SettingsValidationTests {
     @Test("Int validation succeeds for value in range")
     func intValidationSucceeds() {
         let value = 15
-        let result = value.validated(in: 10...20)
+        let result = value.validated(in: 10 ... 20)
         guard case .success(let validated) = result else {
             Issue.record("Expected success")
             return
@@ -185,7 +185,7 @@ struct SettingsValidationTests {
     @Test("Int validation fails for value below range")
     func intValidationFailsBelowRange() {
         let value = 5
-        let result = value.validated(in: 10...20)
+        let result = value.validated(in: 10 ... 20)
         guard case .failure(let error) = result else {
             Issue.record("Expected failure")
             return
@@ -201,7 +201,7 @@ struct SettingsValidationTests {
     @Test("Int validation fails for value above range")
     func intValidationFailsAboveRange() {
         let value = 25
-        let result = value.validated(in: 10...20)
+        let result = value.validated(in: 10 ... 20)
         guard case .failure(let error) = result else {
             Issue.record("Expected failure")
             return

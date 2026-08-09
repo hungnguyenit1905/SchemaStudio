@@ -35,7 +35,7 @@ internal actor LinkedSQLIndex {
     }
 
     deinit {
-        if let db = db {
+        if let db {
             sqlite3_close_v2(db)
         }
         if removeDatabaseOnDeinit {
@@ -106,7 +106,7 @@ internal actor LinkedSQLIndex {
         var statement: OpaquePointer?
         if sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK {
             let result = sqlite3_step(statement)
-            if result != SQLITE_DONE && result != SQLITE_ROW {
+            if result != SQLITE_DONE, result != SQLITE_ROW {
                 Self.logger.error("sqlite3_step failed (\(result)): \(String(cString: sqlite3_errmsg(self.db)))")
             }
         } else {
@@ -236,7 +236,12 @@ internal actor LinkedSQLIndex {
         return results
     }
 
-    func fetchKeywordRows(folderIds: Set<UUID>) -> [(folderId: UUID, relativePath: String, keyword: String, name: String)] {
+    func fetchKeywordRows(folderIds: Set<UUID>) -> [(
+        folderId: UUID,
+        relativePath: String,
+        keyword: String,
+        name: String
+    )] {
         guard !folderIds.isEmpty else { return [] }
 
         let placeholders = folderIds.map { _ in "?" }.joined(separator: ",")

@@ -4,10 +4,10 @@
 //
 
 import Foundation
-import TableProPluginKit
-import Testing
-import TableProSyncTransport
 @testable import SchemaStudio
+import TableProPluginKit
+import TableProSyncTransport
+import Testing
 
 @Suite("ConnectionStorage Additional Fields")
 @MainActor

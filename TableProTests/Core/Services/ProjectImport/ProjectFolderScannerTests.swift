@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("Project Folder Scanner")
 struct ProjectFolderScannerTests {
@@ -118,7 +118,7 @@ struct ProjectFolderScannerTests {
 
         let result = try scan()
         let candidate = result.candidates.first { $0.parsedURL.database == "composedb" }
-        #expect(candidate?.parsedURL.port == 15432)
+        #expect(candidate?.parsedURL.port == 15_432)
     }
 
     @Test("An empty project produces no candidates and no error")

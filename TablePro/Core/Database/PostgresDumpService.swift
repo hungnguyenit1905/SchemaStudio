@@ -41,7 +41,9 @@ enum PostgresDumpError: LocalizedError, Equatable {
         switch self {
         case .binaryNotFound(let name):
             return String(
-                format: String(localized: "%@ was not found on this system. Install it with `brew install libpq` and link it."),
+                format: String(
+                    localized: "%@ was not found on this system. Install it with `brew install libpq` and link it."
+                ),
                 name
             )
         case .unsupportedDatabase:
@@ -234,7 +236,7 @@ final class PostgresDumpService {
         fileURL: URL,
         password: String?
     ) -> PostgresDumpCommand {
-        var args: [String] = ["--no-password"]
+        var args = ["--no-password"]
         args.append(contentsOf: ["-h", effective.host.isEmpty ? "127.0.0.1" : effective.host])
         args.append(contentsOf: ["-p", String(effective.port)])
         if !effective.username.isEmpty {
@@ -313,13 +315,19 @@ final class PostgresDumpService {
                 try? FileManager.default.removeItem(at: fileURL)
             }
             setState(.cancelled)
-            Self.logger.notice("\(self.kind == .backup ? "pg_dump" : "pg_restore", privacy: .public) cancelled db=\(database, privacy: .public)")
+            Self.logger
+                .notice(
+                    "\(self.kind == .backup ? "pg_dump" : "pg_restore", privacy: .public) cancelled db=\(database, privacy: .public)"
+                )
             return
         }
 
         if result.exitCode == 0 {
             setState(.finished(database: database, fileURL: fileURL, bytesProcessed: writtenBytes))
-            Self.logger.info("\(self.kind == .backup ? "pg_dump" : "pg_restore", privacy: .public) finished bytes=\(writtenBytes) db=\(database, privacy: .public)")
+            Self.logger
+                .info(
+                    "\(self.kind == .backup ? "pg_dump" : "pg_restore", privacy: .public) finished bytes=\(writtenBytes) db=\(database, privacy: .public)"
+                )
             return
         }
 
@@ -330,7 +338,10 @@ final class PostgresDumpService {
             ? String(format: String(localized: "Process exited with code %d"), Int(result.exitCode))
             : result.stderr
         setState(.failed(message: summary))
-        Self.logger.error("\(self.kind == .backup ? "pg_dump" : "pg_restore", privacy: .public) failed code=\(result.exitCode) db=\(database, privacy: .public) stderr=\(result.stderr, privacy: .public)")
+        Self.logger
+            .error(
+                "\(self.kind == .backup ? "pg_dump" : "pg_restore", privacy: .public) failed code=\(result.exitCode) db=\(database, privacy: .public) stderr=\(result.stderr, privacy: .public)"
+            )
     }
 
     private func startByteSizePolling(url: URL, database: String, totalBytes: Int64?) {

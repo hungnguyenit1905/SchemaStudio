@@ -10,8 +10,12 @@ public enum CassandraClientKeyClassifier {
             return .clientKeyInvalid(serverMessage: "The client key at \(keyPath) is not a valid private key")
         }
         if hasPassphrase {
-            return .clientKeyPassphraseIncorrect(serverMessage: "The passphrase for the client key at \(keyPath) is incorrect")
+            return .clientKeyPassphraseIncorrect(
+                serverMessage: "The passphrase for the client key at \(keyPath) is incorrect"
+            )
         }
-        return .clientKeyPassphraseRequired(serverMessage: "The client key at \(keyPath) is encrypted. Enter its passphrase.")
+        return .clientKeyPassphraseRequired(
+            serverMessage: "The client key at \(keyPath) is encrypted. Enter its passphrase."
+        )
     }
 }

@@ -6,9 +6,9 @@
 //  Bug reference: https://github.com/TableProApp/TablePro/issues/1222
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineJoinTests: XCTestCase {
@@ -32,7 +32,9 @@ final class VimEngineJoinTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func escape() { _ = engine.process("\u{1B}", shift: false) }
@@ -44,8 +46,11 @@ final class VimEngineJoinTests: XCTestCase {
     func testJJoinsCurrentLineWithNextWithSingleSpace() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "hello world\n",
-            "J should join the next line onto the current one with a single space")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\n",
+            "J should join the next line onto the current one with a single space"
+        )
     }
 
     func testJCursorMovesToJoinPosition() {
@@ -91,8 +96,11 @@ final class VimEngineJoinTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "hello world\n",
-            "J must strip leading whitespace from the next line before joining")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\n",
+            "J must strip leading whitespace from the next line before joining"
+        )
     }
 
     func testJStripsLeadingTabsFromNextLine() {
@@ -100,8 +108,11 @@ final class VimEngineJoinTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "hello world\n",
-            "J must strip leading tabs from the next line")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\n",
+            "J must strip leading tabs from the next line"
+        )
     }
 
     func testJDoesNotAddSpaceWhenCurrentLineEndsWithSpace() {
@@ -109,8 +120,11 @@ final class VimEngineJoinTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "hello world\n",
-            "J should not insert an extra space when current line already ends with one")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\n",
+            "J should not insert an extra space when current line already ends with one"
+        )
     }
 
     func testJDoesNotAddSpaceBeforeClosingParen() {
@@ -119,8 +133,11 @@ final class VimEngineJoinTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "func(arg)\n",
-            "J should not insert a space before a closing parenthesis")
+        XCTAssertEqual(
+            buffer.text,
+            "func(arg)\n",
+            "J should not insert a space before a closing parenthesis"
+        )
     }
 
     func testJOnEmptyNextLineRemovesNewline() {
@@ -129,8 +146,11 @@ final class VimEngineJoinTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "hello\nworld\n",
-            "J with an empty next line removes the newline; no space inserted")
+        XCTAssertEqual(
+            buffer.text,
+            "hello\nworld\n",
+            "J with an empty next line removes the newline; no space inserted"
+        )
     }
 
     func testJOnEmptyCurrentLineKeepsNextLineContent() {
@@ -139,8 +159,11 @@ final class VimEngineJoinTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "world\n",
-            "J on an empty current line should leave the next line content with no leading space")
+        XCTAssertEqual(
+            buffer.text,
+            "world\n",
+            "J on an empty current line should leave the next line content with no leading space"
+        )
     }
 
     // MARK: - J: Count Prefix
@@ -152,8 +175,11 @@ final class VimEngineJoinTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("2")
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "one two\nthree\n",
-            "2J should join 2 lines (same as plain J)")
+        XCTAssertEqual(
+            buffer.text,
+            "one two\nthree\n",
+            "2J should join 2 lines (same as plain J)"
+        )
     }
 
     func testJWithCountThreeJoinsThreeLines() {
@@ -162,8 +188,11 @@ final class VimEngineJoinTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("3")
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "one two three\n",
-            "3J should join the current line plus the next two lines")
+        XCTAssertEqual(
+            buffer.text,
+            "one two three\n",
+            "3J should join the current line plus the next two lines"
+        )
     }
 
     func testJWithCountClampsAtLastLine() {
@@ -173,8 +202,11 @@ final class VimEngineJoinTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("5")
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "one two three\n",
-            "Count larger than remaining lines should clamp at the last line")
+        XCTAssertEqual(
+            buffer.text,
+            "one two three\n",
+            "Count larger than remaining lines should clamp at the last line"
+        )
     }
 
     func testJWithCountOneIsSameAsJ() {
@@ -184,8 +216,11 @@ final class VimEngineJoinTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("1")
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "one two\nthree\n",
-            "1J behaves like J (minimum two lines joined)")
+        XCTAssertEqual(
+            buffer.text,
+            "one two\nthree\n",
+            "1J behaves like J (minimum two lines joined)"
+        )
     }
 
     func testJWithCountClearsCountAfter() {
@@ -208,8 +243,11 @@ final class VimEngineJoinTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("gJ")
-        XCTAssertEqual(buffer.text, "helloworld\n",
-            "gJ should join lines without inserting a space")
+        XCTAssertEqual(
+            buffer.text,
+            "helloworld\n",
+            "gJ should join lines without inserting a space"
+        )
     }
 
     func testGJPreservesLeadingWhitespaceOfNextLine() {
@@ -218,8 +256,11 @@ final class VimEngineJoinTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("gJ")
-        XCTAssertEqual(buffer.text, "hello    world\n",
-            "gJ should preserve leading whitespace on the joined line")
+        XCTAssertEqual(
+            buffer.text,
+            "hello    world\n",
+            "gJ should preserve leading whitespace on the joined line"
+        )
     }
 
     func testGJCursorAtOriginalLineEnd() {
@@ -229,8 +270,11 @@ final class VimEngineJoinTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("gJ")
-        XCTAssertEqual(cursorPos, 5,
-            "Cursor should land at the start of what was the next line after gJ")
+        XCTAssertEqual(
+            cursorPos,
+            5,
+            "Cursor should land at the start of what was the next line after gJ"
+        )
     }
 
     func testGJWithCount() {
@@ -238,8 +282,11 @@ final class VimEngineJoinTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("3gJ")
-        XCTAssertEqual(buffer.text, "onetwothree\n",
-            "3gJ should join 3 lines without any spaces")
+        XCTAssertEqual(
+            buffer.text,
+            "onetwothree\n",
+            "3gJ should join 3 lines without any spaces"
+        )
     }
 
     func testGJOnLastLineIsNoOp() {
@@ -260,8 +307,11 @@ final class VimEngineJoinTests: XCTestCase {
         process("V", shift: true)
         keys("j")
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "one two\nthree\n",
-            "Visual-line J should join all selected lines with single spaces")
+        XCTAssertEqual(
+            buffer.text,
+            "one two\nthree\n",
+            "Visual-line J should join all selected lines with single spaces"
+        )
     }
 
     func testVisualJJoinsThreeSelectedLines() {
@@ -271,8 +321,11 @@ final class VimEngineJoinTests: XCTestCase {
         process("V", shift: true)
         keys("jj")
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "one two three\nfour\n",
-            "Visual J across three lines should join all three with spaces")
+        XCTAssertEqual(
+            buffer.text,
+            "one two three\nfour\n",
+            "Visual J across three lines should join all three with spaces"
+        )
     }
 
     func testVisualJReturnsToNormalMode() {
@@ -282,8 +335,11 @@ final class VimEngineJoinTests: XCTestCase {
         process("V", shift: true)
         keys("j")
         process("J", shift: true)
-        XCTAssertEqual(engine.mode, .normal,
-            "After visual J, the engine should return to normal mode")
+        XCTAssertEqual(
+            engine.mode,
+            .normal,
+            "After visual J, the engine should return to normal mode"
+        )
     }
 
     func testVisualJStripsLeadingWhitespace() {
@@ -293,8 +349,11 @@ final class VimEngineJoinTests: XCTestCase {
         process("V", shift: true)
         keys("jj")
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "one two three\n",
-            "Visual J should strip leading whitespace from each joined line")
+        XCTAssertEqual(
+            buffer.text,
+            "one two three\n",
+            "Visual J should strip leading whitespace from each joined line"
+        )
     }
 
     func testVisualCharacterwiseJJoinsCoveredLines() {
@@ -305,8 +364,11 @@ final class VimEngineJoinTests: XCTestCase {
         keys("v")
         keys("j")
         process("J", shift: true)
-        XCTAssertEqual(buffer.text, "one two\n",
-            "Characterwise visual J should still join the lines covered by the selection")
+        XCTAssertEqual(
+            buffer.text,
+            "one two\n",
+            "Characterwise visual J should still join the lines covered by the selection"
+        )
     }
 
     // MARK: - gJ in Visual Mode
@@ -318,8 +380,11 @@ final class VimEngineJoinTests: XCTestCase {
         process("V", shift: true)
         keys("jj")
         keys("gJ")
-        XCTAssertEqual(buffer.text, "onetwothree\n",
-            "Visual gJ should concatenate without inserting spaces")
+        XCTAssertEqual(
+            buffer.text,
+            "onetwothree\n",
+            "Visual gJ should concatenate without inserting spaces"
+        )
     }
 
     func testVisualGJReturnsToNormalMode() {

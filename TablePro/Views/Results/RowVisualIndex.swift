@@ -25,7 +25,7 @@ final class RowVisualIndex {
             sortedIDs: sortedIDs
         )
 
-        if !changeManager.hasChanges && insertedRowIndices.isEmpty {
+        if !changeManager.hasChanges, insertedRowIndices.isEmpty {
             return
         }
 

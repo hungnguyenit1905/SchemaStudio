@@ -38,7 +38,11 @@ struct SectionHeaderView<Actions: View>: View {
                 headerContent
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(String(format: String(localized: "%@, %@"), title, isExpanded ? String(localized: "collapse") : String(localized: "expand")))
+            .accessibilityLabel(String(
+                format: String(localized: "%@, %@"),
+                title,
+                isExpanded ? String(localized: "collapse") : String(localized: "expand")
+            ))
         } else {
             headerContent
         }
@@ -54,7 +58,7 @@ struct SectionHeaderView<Actions: View>: View {
                     .animation(.easeInOut(duration: 0.15), value: isExpanded)
             }
 
-            if let icon = icon {
+            if let icon {
                 Image(systemName: icon)
                     .font(.body)
                     .foregroundStyle(ThemeEngine.shared.colors.ui.secondaryTextSwiftUI)
@@ -64,7 +68,7 @@ struct SectionHeaderView<Actions: View>: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(ThemeEngine.shared.colors.ui.primaryTextSwiftUI)
 
-            if let count = count {
+            if let count {
                 Text("(\(count))")
                     .font(.subheadline)
                     .foregroundStyle(ThemeEngine.shared.colors.ui.tertiaryTextSwiftUI)
@@ -102,6 +106,6 @@ extension SectionHeaderView where Actions == EmptyView {
             count: count,
             isCollapsible: isCollapsible,
             isExpanded: isExpanded
-        )               { EmptyView() }
+        ) { EmptyView() }
     }
 }

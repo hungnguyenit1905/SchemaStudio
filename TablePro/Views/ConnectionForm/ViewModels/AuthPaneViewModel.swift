@@ -97,8 +97,7 @@ final class AuthPaneViewModel {
     func resetForType(_ newType: DatabaseType) {
         var values: [String: String] = [:]
         for field in PluginManager.shared.additionalConnectionFields(for: newType)
-            where field.section == .authentication
-        {
+            where field.section == .authentication {
             if let defaultValue = field.defaultValue {
                 values[field.id] = defaultValue
             }

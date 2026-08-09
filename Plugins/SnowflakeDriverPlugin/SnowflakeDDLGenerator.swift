@@ -133,7 +133,7 @@ struct SnowflakeDDLGenerator {
             return (upper, [])
         }
         let base = String(upper[..<parenIndex])
-        let inner = upper[upper.index(after: parenIndex)..<upper.index(before: upper.endIndex)]
+        let inner = upper[upper.index(after: parenIndex) ..< upper.index(before: upper.endIndex)]
         let arguments = inner.components(separatedBy: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
         return (base, arguments)
     }

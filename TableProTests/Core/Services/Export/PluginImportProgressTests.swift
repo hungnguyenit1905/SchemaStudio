@@ -19,7 +19,9 @@ struct PluginImportProgressTests {
     func batchedIncrementsCountExactly() {
         let progress = PluginImportProgress(progress: Progress(totalUnitCount: 0))
         progress.setEstimatedTotal(3_503)
-        for _ in 0..<7 { progress.incrementStatement(by: 500) }
+        for _ in 0 ..< 7 {
+            progress.incrementStatement(by: 500)
+        }
         progress.incrementStatement(by: 3)
         #expect(progress.processedStatements == 3_503)
         #expect(progress.processedStatements == progress.estimatedTotalStatements)

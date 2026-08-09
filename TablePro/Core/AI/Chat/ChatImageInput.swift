@@ -38,7 +38,9 @@ struct ChatImageInput: Codable, Equatable, Sendable {
 }
 
 enum DetailHint: String, Codable, Sendable, CaseIterable, Identifiable {
-    case auto, low, high
+    case auto
+    case low
+    case high
 
     var id: String { rawValue }
 }

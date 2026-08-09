@@ -118,9 +118,10 @@ extension MainContentCoordinator {
     func editViewDefinition(_ viewName: String) {
         Task {
             do {
-                let definition = try await DatabaseManager.shared.withBrowseMetadataDriver(connectionId: self.connection.id) { driver in
-                    try await driver.fetchViewDefinition(view: viewName)
-                }
+                let definition = try await DatabaseManager.shared
+                    .withBrowseMetadataDriver(connectionId: self.connection.id) { driver in
+                        try await driver.fetchViewDefinition(view: viewName)
+                    }
 
                 let payload = EditorTabPayload(
                     connectionId: connection.id,
@@ -151,6 +152,14 @@ extension MainContentCoordinator {
         activeSheet = .exportDialog
     }
 
+    /// The wizard picks its own source and target, so the scope only
+    /// prefills the first step. It comes from the clicked node, which can
+    /// belong to a different connection than this window.
+    func openDataTransferWizard(preselectedScope: DatabaseScope? = nil) {
+        dataTransferPreselectedScope = preselectedScope
+        activeSheet = .dataTransfer
+    }
+
     func openExportQueryResultsDialog() {
         guard let tab = tabManager.selectedTab,
               !tabSessionRegistry.tableRows(for: tab.id).rows.isEmpty else { return }
@@ -162,7 +171,10 @@ extension MainContentCoordinator {
         guard PluginManager.shared.supportsImport(for: connection.type) else {
             AlertHelper.showErrorSheet(
                 title: String(localized: "Import Not Supported"),
-                message: String(format: String(localized: "Import is not supported for %@ connections."), connection.type.rawValue),
+                message: String(
+                    format: String(localized: "Import is not supported for %@ connections."),
+                    connection.type.rawValue
+                ),
                 window: nil
             )
             return

@@ -4,16 +4,15 @@
 //
 
 import Foundation
-import Testing
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import Testing
 
 @Suite("executeUserQuery applies row cap and respects user SQL")
 struct ExecuteUserQueryTests {
-
     @Test("Caps result at rowCap and marks isTruncated when there are more rows than the cap")
     func capsAndMarksTruncated() async throws {
-        let rows = (1...100).map { ["row_\($0)"] }
+        let rows = (1 ... 100).map { ["row_\($0)"] }
         let driver = StubPluginDriver(rows: rows)
 
         let result = try await driver.executeUserQuery(query: "SELECT * FROM t", rowCap: 5, parameters: nil)
@@ -26,7 +25,7 @@ struct ExecuteUserQueryTests {
 
     @Test("Returns full result without truncation flag when row count is below cap")
     func belowCapNotTruncated() async throws {
-        let rows = (1...3).map { ["row_\($0)"] }
+        let rows = (1 ... 3).map { ["row_\($0)"] }
         let driver = StubPluginDriver(rows: rows)
 
         let result = try await driver.executeUserQuery(query: "SELECT * FROM t", rowCap: 5, parameters: nil)
@@ -37,7 +36,7 @@ struct ExecuteUserQueryTests {
 
     @Test("Returns full result when rowCap is nil")
     func unlimitedCap() async throws {
-        let rows = (1...100).map { ["row_\($0)"] }
+        let rows = (1 ... 100).map { ["row_\($0)"] }
         let driver = StubPluginDriver(rows: rows)
 
         let result = try await driver.executeUserQuery(query: "SELECT * FROM t", rowCap: nil, parameters: nil)
@@ -48,7 +47,7 @@ struct ExecuteUserQueryTests {
 
     @Test("Treats rowCap of 0 as unlimited and returns the full result")
     func zeroCapMeansUnlimited() async throws {
-        let rows = (1...100).map { ["row_\($0)"] }
+        let rows = (1 ... 100).map { ["row_\($0)"] }
         let driver = StubPluginDriver(rows: rows)
 
         let result = try await driver.executeUserQuery(query: "SELECT * FROM t", rowCap: 0, parameters: nil)
@@ -81,7 +80,7 @@ struct ExecuteUserQueryTests {
 
     @Test("Passes SQL with an app-appended LIMIT through byte-for-byte and still caps post-fetch")
     func passesInjectedLimitSqlUnchanged() async throws {
-        let rows = (1...6).map { ["row_\($0)"] }
+        let rows = (1 ... 6).map { ["row_\($0)"] }
         let driver = StubPluginDriver(rows: rows)
         let injectedSql = "SELECT * FROM t LIMIT 6"
 
@@ -105,7 +104,7 @@ struct ExecuteUserQueryTests {
 
     @Test("Preserves status message and execution metadata when truncating")
     func preservesMetadata() async throws {
-        let rows = (1...10).map { ["row_\($0)"] }
+        let rows = (1 ... 10).map { ["row_\($0)"] }
         let driver = StubPluginDriver(rows: rows, statusMessage: "warning: cache miss")
 
         let result = try await driver.executeUserQuery(query: "SELECT * FROM t", rowCap: 3, parameters: nil)
@@ -165,6 +164,7 @@ private final class StubPluginDriver: PluginDatabaseDriver, @unchecked Sendable 
     func fetchTableMetadata(table: String, schema: String?) async throws -> PluginTableMetadata {
         PluginTableMetadata(tableName: table)
     }
+
     func fetchDatabases() async throws -> [String] { [] }
     func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
         PluginDatabaseMetadata(name: database)

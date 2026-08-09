@@ -78,7 +78,7 @@ final class CSVImportPlugin: ImportFormatPlugin, SettablePlugin {
             let batch = self.parseBatch(
                 in: data,
                 parser: parser,
-                ranges: dataRanges[cursor..<end],
+                ranges: dataRanges[cursor ..< end],
                 startIndex: cursor,
                 lineOffset: lineOffset,
                 columnNames: columnNames

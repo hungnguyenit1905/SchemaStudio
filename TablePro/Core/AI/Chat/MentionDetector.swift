@@ -49,8 +49,10 @@ enum MentionDetector {
         return CharacterSet.letters.contains(scalar)
     }
 
-    private static func isBoundary(before index: String.UnicodeScalarView.Index,
-                                   in scalars: String.UnicodeScalarView) -> Bool {
+    private static func isBoundary(
+        before index: String.UnicodeScalarView.Index,
+        in scalars: String.UnicodeScalarView
+    ) -> Bool {
         guard index > scalars.startIndex else { return true }
         let scalar = scalars[scalars.index(before: index)]
         return !isQueryCharacter(scalar)

@@ -63,7 +63,7 @@ final class LibPQDriverCore: @unchecked Sendable {
         }
 
         if let selectedSchema,
-           (try? await pqConn.executeQuery(PostgreSQLSchemaQueries.setSearchPath(toSchema: selectedSchema))) != nil {
+           await (try? pqConn.executeQuery(PostgreSQLSchemaQueries.setSearchPath(toSchema: selectedSchema))) != nil {
             currentSchema = selectedSchema
         }
 

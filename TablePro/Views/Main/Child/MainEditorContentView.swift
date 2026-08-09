@@ -65,7 +65,6 @@ struct MainEditorContentView: View {
 
     // MARK: - Environment
 
-
     /// Returns the cached AnyChangeManager, creating it on first access.
     private var currentChangeManager: AnyChangeManager {
         if let existing = cachedChangeManager {
@@ -223,7 +222,6 @@ struct MainEditorContentView: View {
 
     // MARK: - Users & Roles Tab Content
 
-    @ViewBuilder
     private func usersRolesContent(tab: QueryTab) -> some View {
         Group {
             if let vm = usersRolesViewModels[tab.id] {
@@ -246,7 +244,6 @@ struct MainEditorContentView: View {
 
     // MARK: - Server Dashboard Tab Content
 
-    @ViewBuilder
     private func serverDashboardContent(tab: QueryTab) -> some View {
         Group {
             if let vm = serverDashboardViewModels[tab.id] {
@@ -269,7 +266,6 @@ struct MainEditorContentView: View {
 
     // MARK: - ER Diagram Tab Content
 
-    @ViewBuilder
     private func erDiagramContent(tab: QueryTab) -> some View {
         Group {
             if let vm = erDiagramViewModels[tab.id] {
@@ -363,7 +359,8 @@ struct MainEditorContentView: View {
                         schemaProvider: SchemaProviderRegistry.shared.getOrCreate(for: coordinator.connection.id),
                         databaseType: coordinator.connection.type,
                         connectionId: coordinator.connection.id,
-                        connectionAIPolicy: coordinator.connection.aiPolicy ?? AppSettingsManager.shared.ai.defaultConnectionPolicy,
+                        connectionAIPolicy: coordinator.connection.aiPolicy ?? AppSettingsManager.shared.ai
+                            .defaultConnectionPolicy,
                         tabID: tab.id,
                         claimFocusOnAppear: claimFocus,
                         onCloseTab: {
@@ -495,7 +492,6 @@ struct MainEditorContentView: View {
 
     // MARK: - Table Tab Content
 
-    @ViewBuilder
     private func tableTabContent(tab: QueryTab) -> some View {
         resultsSection(tab: tab)
     }
@@ -526,7 +522,6 @@ struct MainEditorContentView: View {
         coordinator.scope(for: tab)
     }
 
-    @ViewBuilder
     private func resultsSection(tab: QueryTab) -> some View {
         VStack(spacing: 0) {
             executionErrorBanner(tab: tab)
@@ -554,23 +549,25 @@ struct MainEditorContentView: View {
                 )
             case .data:
                 if let explainText = tab.display.explainText {
-                    ExplainResultView(text: explainText, executionTime: tab.display.explainExecutionTime, plan: tab.display.explainPlan)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    ExplainResultView(
+                        text: explainText,
+                        executionTime: tab.display.explainExecutionTime,
+                        plan: tab.display.explainPlan
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     resultTabBarSection(tab: tab)
 
                     let resolvedRows = resolvedTableRows(for: tab)
                     if let rs = tab.display.activeResultSet, rs.resultColumns.isEmpty,
-                       rs.errorMessage == nil, tab.execution.lastExecutedAt != nil, !tab.execution.isExecuting
-                    {
+                       rs.errorMessage == nil, tab.execution.lastExecutedAt != nil, !tab.execution.isExecuting {
                         ResultSuccessView(
                             rowsAffected: rs.rowsAffected,
                             executionTime: rs.executionTime,
                             statusMessage: rs.statusMessage
                         )
-                    } else if resolvedRows.columns.isEmpty && tab.execution.errorMessage == nil
-                        && tab.execution.lastExecutedAt != nil && !tab.execution.isExecuting
-                    {
+                    } else if resolvedRows.columns.isEmpty, tab.execution.errorMessage == nil,
+                              tab.execution.lastExecutedAt != nil, !tab.execution.isExecuting {
                         if tab.display.resultSets.isEmpty {
                             Spacer()
                         } else {
@@ -581,7 +578,7 @@ struct MainEditorContentView: View {
                             )
                         }
                     } else {
-                        if tab.filterState.isVisible && tab.tabType == .table {
+                        if tab.filterState.isVisible, tab.tabType == .table {
                             if let descriptor = coordinator.browseFilterDescriptor {
                                 KeyPatternSearchBar(coordinator: coordinator, descriptor: descriptor)
                             } else {
@@ -598,11 +595,11 @@ struct MainEditorContentView: View {
                             Divider()
                         }
 
-                        if tab.tabType == .query && !resolvedRows.columns.isEmpty
-                            && resolvedRows.rows.isEmpty && tab.execution.lastExecutedAt != nil
-                            && !tab.execution.isExecuting && !tab.filterState.hasAppliedFilters
-                        {
-                            emptyResultView(executionTime: tab.display.activeResultSet?.executionTime ?? tab.execution.executionTime)
+                        if tab.tabType == .query, !resolvedRows.columns.isEmpty,
+                           resolvedRows.rows.isEmpty, tab.execution.lastExecutedAt != nil,
+                           !tab.execution.isExecuting, !tab.filterState.hasAppliedFilters {
+                            emptyResultView(executionTime: tab.display.activeResultSet?.executionTime ?? tab.execution
+                                .executionTime)
                         } else {
                             dataGridView(tab: tab)
                         }
@@ -658,7 +655,8 @@ struct MainEditorContentView: View {
 
     @ViewBuilder
     private func dataGridView(tab: QueryTab) -> some View {
-        let isEditable = tab.tableContext.isEditable && !tab.tableContext.isView && !coordinator.safeModeLevel.blocksAllWrites
+        let isEditable = tab.tableContext.isEditable && !tab.tableContext.isView && !coordinator.safeModeLevel
+            .blocksAllWrites
 
         let tabId = tab.id
         DataGridView(
@@ -690,6 +688,7 @@ struct MainEditorContentView: View {
             sortedIDs: nil,
             displayFormats: displayFormats(for: tab),
             delegate: dataTabDelegate,
+            onAggregatesChange: { @MainActor @Sendable in selectionState.aggregates = $0 },
             selectedRowIndices: Binding(
                 get: { selectionState.indices },
                 set: { selectionState.indices = $0 }
@@ -751,7 +750,9 @@ struct MainEditorContentView: View {
            let overrides = ValueDisplayFormatStorage.shared.load(for: scope) {
             for (i, colName) in columns.enumerated() {
                 if let overrideFormat = overrides[colName] {
-                    while merged.count <= i { merged.append(nil) }
+                    while merged.count <= i {
+                        merged.append(nil)
+                    }
                     merged[i] = overrideFormat
                 }
             }
@@ -800,6 +801,7 @@ struct MainEditorContentView: View {
             snapshot: StatusBarSnapshot(tab: tab, tableRows: resolvedRows),
             filterState: tab.filterState,
             selectedRowIndices: selectionState.indices,
+            selectionAggregates: selectionState.aggregates,
             viewMode: resultsViewModeBinding(for: tab),
             paginationCallbacks: PaginationCallbacks(
                 onFirst: onFirstPage,

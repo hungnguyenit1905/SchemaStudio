@@ -6,9 +6,9 @@
 //  count repetition, and cursor positioning rules.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEnginePasteTests: XCTestCase {
@@ -28,7 +28,9 @@ final class VimEnginePasteTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {
@@ -61,8 +63,11 @@ final class VimEnginePasteTests: XCTestCase {
         // Now at offset 0 ('e'), move to end of line first
         keys("$")
         keys("p")
-        XCTAssertEqual(buffer.text, "ello worldh\nsecond line\nthird line\n",
-            "Characterwise p at end of line should insert just before the newline")
+        XCTAssertEqual(
+            buffer.text,
+            "ello worldh\nsecond line\nthird line\n",
+            "Characterwise p at end of line should insert just before the newline"
+        )
     }
 
     // MARK: - P: Paste Before (Characterwise)
@@ -71,8 +76,11 @@ final class VimEnginePasteTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 6, length: 0)) // 'w' in 'world'
         keys("x") // delete 'w', register: "w"
         key("P", shift: true)
-        XCTAssertEqual(buffer.text, "hello world\nsecond line\nthird line\n",
-            "P should restore deleted char before cursor")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nsecond line\nthird line\n",
+            "P should restore deleted char before cursor"
+        )
     }
 
     func testCapitalPCursorLandsOnLastPastedChar() {
@@ -130,16 +138,22 @@ final class VimEnginePasteTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("yw")
         keys("3p")
-        XCTAssertEqual(buffer.text, "hhello hello hello ello world\nsecond line\nthird line\n",
-            "3p should paste the register 3 times")
+        XCTAssertEqual(
+            buffer.text,
+            "hhello hello hello ello world\nsecond line\nthird line\n",
+            "3p should paste the register 3 times"
+        )
     }
 
     func testLinewisePasteWithCount() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("yy")
         keys("2p")
-        XCTAssertEqual(buffer.text, "hello world\nhello world\nhello world\nsecond line\nthird line\n",
-            "2p with linewise register should insert two copies after current line")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nhello world\nhello world\nsecond line\nthird line\n",
+            "2p with linewise register should insert two copies after current line"
+        )
     }
 
     // MARK: - Empty Register
@@ -147,8 +161,11 @@ final class VimEnginePasteTests: XCTestCase {
     func testPasteWithEmptyRegisterIsNoOp() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("p")
-        XCTAssertEqual(buffer.text, "hello world\nsecond line\nthird line\n",
-            "Pasting an empty register should not modify the buffer")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nsecond line\nthird line\n",
+            "Pasting an empty register should not modify the buffer"
+        )
     }
 
     // MARK: - Cross-Operator Register Use
@@ -159,11 +176,17 @@ final class VimEnginePasteTests: XCTestCase {
         keys("yy")
         keys("j")
         keys("dd")
-        XCTAssertEqual(buffer.text, "hello world\nthird line\n",
-            "dd should delete the second line")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nthird line\n",
+            "dd should delete the second line"
+        )
         keys("p")
-        XCTAssertEqual(buffer.text, "hello world\nthird line\nsecond line\n",
-            "After dd overwrites register, p should paste the deleted second line")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nthird line\nsecond line\n",
+            "After dd overwrites register, p should paste the deleted second line"
+        )
     }
 
     func testXThenPasteRoundTrips() {
@@ -171,8 +194,11 @@ final class VimEnginePasteTests: XCTestCase {
         keys("x") // delete 'h'
         XCTAssertEqual(buffer.text, "ello world\nsecond line\nthird line\n")
         key("P", shift: true)
-        XCTAssertEqual(buffer.text, "hello world\nsecond line\nthird line\n",
-            "x stores into the register; P should restore")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nsecond line\nthird line\n",
+            "x stores into the register; P should restore"
+        )
     }
 
     // MARK: - Visual Selection Paste Replaces Selection
@@ -185,8 +211,11 @@ final class VimEnginePasteTests: XCTestCase {
         keys("v")
         keys("ll")
         keys("p")
-        XCTAssertEqual(buffer.text, "hello hello ld\nsecond line\nthird line\n",
-            "Paste over a visual selection should replace the selection with the register")
+        XCTAssertEqual(
+            buffer.text,
+            "hello hello ld\nsecond line\nthird line\n",
+            "Paste over a visual selection should replace the selection with the register"
+        )
         XCTAssertEqual(engine.mode, .normal)
     }
 }

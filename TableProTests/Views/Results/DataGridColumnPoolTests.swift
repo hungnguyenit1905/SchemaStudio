@@ -232,7 +232,8 @@ struct DataGridColumnPoolTests {
         )
 
         let columns = dataColumns(in: tableView)
-        let hiddenStateByName = Dictionary(uniqueKeysWithValues: columns.map { ($0.headerCell.stringValue, $0.isHidden) })
+        let hiddenStateByName = Dictionary(uniqueKeysWithValues: columns
+            .map { ($0.headerCell.stringValue, $0.isHidden) })
         #expect(hiddenStateByName["id"] == false)
         #expect(hiddenStateByName["name"] == true)
         #expect(hiddenStateByName["email"] == false)
@@ -255,7 +256,8 @@ struct DataGridColumnPoolTests {
         )
 
         let columns = dataColumns(in: tableView)
-        let hiddenStateByName = Dictionary(uniqueKeysWithValues: columns.map { ($0.headerCell.stringValue, $0.isHidden) })
+        let hiddenStateByName = Dictionary(uniqueKeysWithValues: columns
+            .map { ($0.headerCell.stringValue, $0.isHidden) })
         #expect(hiddenStateByName["id"] == false)
         #expect(hiddenStateByName["name"] == false)
         #expect(hiddenStateByName["email"] == true)
@@ -297,7 +299,10 @@ struct DataGridColumnPoolTests {
             widthCalculator: { name, _ in name == "id" ? 50 : 200 }
         )
 
-        let widthsByName = Dictionary(uniqueKeysWithValues: dataColumns(in: tableView).map { ($0.headerCell.stringValue, $0.width) })
+        let widthsByName = Dictionary(uniqueKeysWithValues: dataColumns(in: tableView).map { (
+            $0.headerCell.stringValue,
+            $0.width
+        ) })
         #expect(widthsByName["id"] == 50)
         #expect(widthsByName["name"] == 200)
     }
@@ -321,7 +326,10 @@ struct DataGridColumnPoolTests {
             widthCalculator: { _, _ in 9_999 }
         )
 
-        let widthsByName = Dictionary(uniqueKeysWithValues: dataColumns(in: tableView).map { ($0.headerCell.stringValue, $0.width) })
+        let widthsByName = Dictionary(uniqueKeysWithValues: dataColumns(in: tableView).map { (
+            $0.headerCell.stringValue,
+            $0.width
+        ) })
         #expect(widthsByName["id"] == 75)
         #expect(widthsByName["name"] == 250)
     }
@@ -345,7 +353,10 @@ struct DataGridColumnPoolTests {
             widthCalculator: defaultWidthCalculator
         )
 
-        let widthsByName = Dictionary(uniqueKeysWithValues: dataColumns(in: tableView).map { ($0.headerCell.stringValue, $0.width) })
+        let widthsByName = Dictionary(uniqueKeysWithValues: dataColumns(in: tableView).map { (
+            $0.headerCell.stringValue,
+            $0.width
+        ) })
         #expect(widthsByName["id"] == 75)
         #expect(widthsByName["payload"] == DataGridMetrics.dataColumnMaxWidth)
     }

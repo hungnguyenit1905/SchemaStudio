@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("SortDirection")
@@ -48,7 +48,6 @@ struct SortDirectionTests {
         dir.toggle()
         #expect(dir == .ascending)
     }
-
 }
 
 @Suite("SortColumn")

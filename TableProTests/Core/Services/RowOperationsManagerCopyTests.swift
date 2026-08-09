@@ -54,7 +54,11 @@ struct RowOperationsManagerCopyTests {
     private func makeTableRows(rows: [[String?]], columns: [String]? = nil) -> TableRows {
         let cols = columns ?? Self.defaultColumns
         let columnTypes: [ColumnType] = Array(repeating: .text(rawType: nil), count: cols.count)
-        return TableRows.from(queryRows: rows.map { row in row.map(PluginCellValue.fromOptional) }, columns: cols, columnTypes: columnTypes)
+        return TableRows.from(
+            queryRows: rows.map { row in row.map(PluginCellValue.fromOptional) },
+            columns: cols,
+            columnTypes: columnTypes
+        )
     }
 
     private func copyAndCapture(
@@ -146,13 +150,13 @@ struct RowOperationsManagerCopyTests {
     func largeRowCount() {
         let (manager, _) = makeManager()
         let count = 1_000
-        let rows: [[String?]] = (0..<count).map { i in
+        let rows: [[String?]] = (0 ..< count).map { i in
             ["\(i)", "name_\(i)", "email_\(i)"]
         }
 
         let result = copyAndCapture(
             manager: manager,
-            indices: Set(0..<count),
+            indices: Set(0 ..< count),
             rows: rows
         )
 

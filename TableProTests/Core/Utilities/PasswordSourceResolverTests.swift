@@ -129,7 +129,7 @@ struct PasswordSourceResolverTests {
             _ = try await PasswordSourceResolver.resolveCommand(shell: "echo boom >&2; exit 7", timeoutSeconds: 30)
             Issue.record("Expected resolveCommand to throw")
         } catch let error as PasswordSourceResolver.ResolutionError {
-            guard case let .commandFailed(exitCode, stderr) = error else {
+            guard case .commandFailed(let exitCode, let stderr) = error else {
                 Issue.record("Expected commandFailed, got \(error)")
                 return
             }
@@ -224,7 +224,8 @@ struct PasswordSourceResolverTests {
         let command = PasswordSourceResolver.externalCommand(
             for: .awsSecretsManager(secretId: "prod/db", jsonKey: "password")
         )
-        #expect(command == "aws secretsmanager get-secret-value --secret-id 'prod/db' --query SecretString --output text")
+        #expect(command ==
+            "aws secretsmanager get-secret-value --secret-id 'prod/db' --query SecretString --output text")
     }
 
     @Test("Shell quoting neutralizes injection attempts")

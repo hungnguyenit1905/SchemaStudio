@@ -77,7 +77,7 @@ struct TableProMobileApp: App {
             case .active:
                 MemoryPressureMonitor.shared.start()
                 appState.retryLoadIfFailed()
-                if AppPreferences.isCloudSyncEnabled && appState.loadStatus == .ready {
+                if AppPreferences.isCloudSyncEnabled, appState.loadStatus == .ready {
                     syncTask?.cancel()
                     syncTask = Task {
                         await appState.syncCoordinator.sync(
@@ -118,7 +118,8 @@ struct TableProMobileApp: App {
         do {
             try BGTaskScheduler.shared.submit(request)
         } catch {
-            Self.backgroundLogger.warning("Failed to schedule background sync: \(error.localizedDescription, privacy: .public)")
+            Self.backgroundLogger
+                .warning("Failed to schedule background sync: \(error.localizedDescription, privacy: .public)")
         }
     }
 

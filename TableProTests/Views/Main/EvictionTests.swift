@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("Cross-Window Tab Eviction")
@@ -38,7 +38,11 @@ struct EvictionTests {
         let tabId = tabManager.tabs[index].id
         let columns = ["id", "name", "email"]
         let columnTypes: [ColumnType] = Array(repeating: .text(rawType: nil), count: columns.count)
-        let tableRows = TableRows.from(queryRows: rows.map { row in row.map(PluginCellValue.fromOptional) }, columns: columns, columnTypes: columnTypes)
+        let tableRows = TableRows.from(
+            queryRows: rows.map { row in row.map(PluginCellValue.fromOptional) },
+            columns: columns,
+            columnTypes: columnTypes
+        )
         coordinator.setActiveTableRows(tableRows, for: tabId)
         tabManager.tabs[index].execution.lastExecutedAt = Date()
     }

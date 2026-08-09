@@ -27,7 +27,7 @@ public enum EnumValueParser {
               let closeParen = typeString.lastIndex(of: ")") else {
             return nil
         }
-        let inner = typeString[typeString.index(after: openParen)..<closeParen]
+        let inner = typeString[typeString.index(after: openParen) ..< closeParen]
         let scalars = Array(inner)
 
         var values: [String] = []

@@ -82,8 +82,7 @@ public actor MCPAuthPolicy {
         }
 
         if snapshot.policy == .askEachTime,
-           !(sessionApprovals[sessionId]?.contains(connectionId) ?? false)
-        {
+           !(sessionApprovals[sessionId]?.contains(connectionId) ?? false) {
             return .requiresUserApproval(
                 reason: String(
                     format: String(localized: "An MCP client wants to access '%@' (%@). Allow?"),

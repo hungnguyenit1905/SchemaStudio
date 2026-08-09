@@ -14,8 +14,8 @@ struct DatabaseTreeOutlineView: NSViewRepresentable {
     let windowState: WindowSidebarState
     let sidebarState: SharedSidebarState
     let viewModel: SidebarViewModel
-    let pendingTruncates: Set<String>
-    let pendingDeletes: Set<String>
+    let pendingTruncates: [UUID: Set<String>]
+    let pendingDeletes: [UUID: Set<String>]
     let searchText: String
     let connectionToken: String
     let activeDatabase: String?

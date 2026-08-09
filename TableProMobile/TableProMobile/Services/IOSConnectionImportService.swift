@@ -198,7 +198,8 @@ enum IOSConnectionImportService {
         for exportTag in envelope.tags ?? [] {
             let exists = appState.tags.contains { normalizedKey($0.name) == normalizedKey(exportTag.name) }
             guard !exists, !exportTag.name.isEmpty else { continue }
-            if let preset = ConnectionTag.presets.first(where: { normalizedKey($0.name) == normalizedKey(exportTag.name) }) {
+            if let preset = ConnectionTag.presets
+                .first(where: { normalizedKey($0.name) == normalizedKey(exportTag.name) }) {
                 appState.addTag(preset)
             } else {
                 let color = exportTag.color.flatMap { ConnectionColor(rawValue: $0) } ?? .gray

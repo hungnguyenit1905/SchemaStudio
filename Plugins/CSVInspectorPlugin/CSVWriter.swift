@@ -12,7 +12,10 @@ struct CSVWriter {
                 return String(localized: "Could not encode CSV content")
             case .writeFailed(let underlying):
                 if let underlying {
-                    return String(format: String(localized: "Failed to write CSV file: %@"), underlying.localizedDescription)
+                    return String(
+                        format: String(localized: "Failed to write CSV file: %@"),
+                        underlying.localizedDescription
+                    )
                 }
                 return String(localized: "Failed to write CSV file")
             }
@@ -46,7 +49,7 @@ struct CSVWriter {
                 }
             }
 
-            for row in 0..<store.rowCount {
+            for row in 0 ..< store.rowCount {
                 append(store.rowSource(at: row), from: store, into: &buffer)
                 if buffer.count >= Self.flushThreshold {
                     try handle.write(contentsOf: buffer)

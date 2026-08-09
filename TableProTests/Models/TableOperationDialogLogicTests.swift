@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("TableOperationDialog Logic")
 struct TableOperationDialogLogicTests {
-
     // MARK: - Dialog Logic Helper
 
     private enum DialogLogic {
@@ -38,7 +37,7 @@ struct TableOperationDialogLogicTests {
         }
 
         static func cascadeDisabled(operationType: TableOperationType, databaseType: DatabaseType) -> Bool {
-            if operationType == .truncate && (databaseType == .mysql || databaseType == .mariadb) {
+            if operationType == .truncate, databaseType == .mysql || databaseType == .mariadb {
                 return true
             }
             return !cascadeSupported(databaseType: databaseType)

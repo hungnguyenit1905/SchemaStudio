@@ -208,7 +208,7 @@ final class SortableHeaderView: NSTableHeaderView {
     }
 
     func updateColumnSelectionIndicators(selectedColumns: IndexSet, dirtyColumns: IndexSet) {
-        guard let tableView = tableView, let coordinator = coordinator else { return }
+        guard let tableView, let coordinator else { return }
         for (columnIndex, column) in tableView.tableColumns.enumerated() {
             guard let cell = column.headerCell as? SortableHeaderCell,
                   let dataIndex = coordinator.dataColumnIndex(from: column.identifier) else { continue }
@@ -278,8 +278,8 @@ final class SortableHeaderView: NSTableHeaderView {
     }
 
     override func mouseDown(with event: NSEvent) {
-        guard let tableView = tableView,
-              let coordinator = coordinator else {
+        guard let tableView,
+              let coordinator else {
             super.mouseDown(with: event)
             return
         }
@@ -330,7 +330,7 @@ final class SortableHeaderView: NSTableHeaderView {
             return
         }
 
-        if modifierFlags.contains(.command) && !modifierFlags.contains(.shift) {
+        if modifierFlags.contains(.command), !modifierFlags.contains(.shift) {
             coordinator.extendColumnSelection(dataIndex)
             return
         }

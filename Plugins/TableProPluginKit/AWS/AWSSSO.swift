@@ -60,17 +60,23 @@ public enum AWSSSOError: Error, LocalizedError, Equatable {
             return String(format: String(localized: "Profile \"%@\" not found in ~/.aws/config."), profile)
         case .profileMissingFields(let profile):
             return String(
-                format: String(localized: "Profile \"%@\" in ~/.aws/config is missing sso_account_id or sso_role_name."),
+                format: String(
+                    localized: "Profile \"%@\" in ~/.aws/config is missing sso_account_id or sso_role_name."
+                ),
                 profile
             )
         case .sessionNotFound(let profile, let session):
             return String(
-                format: String(localized: "SSO session \"%@\" referenced by profile \"%@\" was not found in ~/.aws/config."),
+                format: String(
+                    localized: "SSO session \"%@\" referenced by profile \"%@\" was not found in ~/.aws/config."
+                ),
                 session, profile
             )
         case .sessionMissingFields(let session):
             return String(
-                format: String(localized: "SSO session \"%@\" in ~/.aws/config is missing sso_start_url or sso_region."),
+                format: String(
+                    localized: "SSO session \"%@\" in ~/.aws/config is missing sso_start_url or sso_region."
+                ),
                 session
             )
         case .profileMissingUrlOrRegion(let profile):
@@ -80,17 +86,23 @@ public enum AWSSSOError: Error, LocalizedError, Equatable {
             )
         case .tokenCacheNotFound(let profile):
             return String(
-                format: String(localized: "SSO token cache not found for profile \"%@\". Run 'aws sso login --profile %@' first."),
+                format: String(
+                    localized: "SSO token cache not found for profile \"%@\". Run 'aws sso login --profile %@' first."
+                ),
                 profile, profile
             )
         case .tokenCacheMalformed(let profile):
             return String(
-                format: String(localized: "SSO token cache for profile \"%@\" is malformed. Run 'aws sso login --profile %@' to refresh."),
+                format: String(
+                    localized: "SSO token cache for profile \"%@\" is malformed. Run 'aws sso login --profile %@' to refresh."
+                ),
                 profile, profile
             )
         case .tokenExpired(let profile), .sessionUnauthorized(let profile):
             return String(
-                format: String(localized: "SSO session for profile \"%@\" has expired. Run 'aws sso login --profile %@' to refresh."),
+                format: String(
+                    localized: "SSO session for profile \"%@\" has expired. Run 'aws sso login --profile %@' to refresh."
+                ),
                 profile, profile
             )
         case .urlBuildFailed(let profile):
@@ -101,10 +113,15 @@ public enum AWSSSOError: Error, LocalizedError, Equatable {
                 profile, underlying
             )
         case .invalidResponse(let profile):
-            return String(format: String(localized: "Unexpected response from the SSO portal for profile \"%@\"."), profile)
+            return String(
+                format: String(localized: "Unexpected response from the SSO portal for profile \"%@\"."),
+                profile
+            )
         case .roleNotAccessible(let role, let account):
             return String(
-                format: String(localized: "Role \"%@\" in account \"%@\" is not accessible via SSO. Check role permissions in IAM Identity Center."),
+                format: String(
+                    localized: "Role \"%@\" in account \"%@\" is not accessible via SSO. Check role permissions in IAM Identity Center."
+                ),
                 role, account
             )
         case .portalError(let profile, let status):
@@ -113,10 +130,15 @@ public enum AWSSSOError: Error, LocalizedError, Equatable {
                 Int64(status), profile
             )
         case .responseDecodeFailed(let profile):
-            return String(format: String(localized: "Failed to decode the SSO portal response for profile \"%@\"."), profile)
+            return String(
+                format: String(localized: "Failed to decode the SSO portal response for profile \"%@\"."),
+                profile
+            )
         case .credentialsAlreadyExpired(let profile):
             return String(
-                format: String(localized: "SSO role credentials for profile \"%@\" were already expired. Run 'aws sso login --profile %@' to refresh."),
+                format: String(
+                    localized: "SSO role credentials for profile \"%@\" were already expired. Run 'aws sso login --profile %@' to refresh."
+                ),
                 profile, profile
             )
         }
@@ -132,7 +154,7 @@ public enum AWSSSO {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty || trimmed.hasPrefix("#") || trimmed.hasPrefix(";") { continue }
 
-            if trimmed.hasPrefix("[") && trimmed.hasSuffix("]") {
+            if trimmed.hasPrefix("["), trimmed.hasSuffix("]") {
                 current = String(trimmed.dropFirst().dropLast()).trimmingCharacters(in: .whitespaces)
                 if sections[current] == nil {
                     sections[current] = [:]
@@ -153,7 +175,10 @@ public enum AWSSSO {
         return sections
     }
 
-    public static func parseProfileSettings(configContent: String, profileName: String) throws -> AWSSSOProfileSettings {
+    public static func parseProfileSettings(
+        configContent: String,
+        profileName: String
+    ) throws -> AWSSSOProfileSettings {
         let sections = parseIniSections(configContent)
         let profileSection = profileName == "default" ? "default" : "profile \(profileName)"
 
@@ -238,7 +263,8 @@ public enum AWSSSO {
         session: URLSession,
         now: Date = Date()
     ) async throws -> AWSSSORoleCredentials {
-        var components = URLComponents(string: "https://portal.sso.\(settings.region).amazonaws.com/federation/credentials")
+        var components =
+            URLComponents(string: "https://portal.sso.\(settings.region).amazonaws.com/federation/credentials")
         components?.queryItems = [
             URLQueryItem(name: "account_id", value: settings.accountId),
             URLQueryItem(name: "role_name", value: settings.roleName)
@@ -282,6 +308,7 @@ public enum AWSSSO {
                 let sessionToken: String
                 let expiration: Int64
             }
+
             let roleCredentials: RoleCredentials
         }
 

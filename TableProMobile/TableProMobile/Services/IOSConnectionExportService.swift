@@ -138,7 +138,13 @@ enum IOSConnectionExportService {
     private static func exportableSSH(_ connection: DatabaseConnection) -> ExportableSSHConfig? {
         guard connection.sshEnabled, let ssh = connection.sshConfiguration else { return nil }
         let jumpHosts: [ExportableJumpHost]? = ssh.jumpHosts.isEmpty ? nil : ssh.jumpHosts.map {
-            ExportableJumpHost(host: $0.host, port: $0.port, username: $0.username, authMethod: "sshAgent", privateKeyPath: "")
+            ExportableJumpHost(
+                host: $0.host,
+                port: $0.port,
+                username: $0.username,
+                authMethod: "sshAgent",
+                privateKeyPath: ""
+            )
         }
         return ExportableSSHConfig(
             enabled: true,

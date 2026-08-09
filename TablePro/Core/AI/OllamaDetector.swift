@@ -50,23 +50,27 @@ enum OllamaDetector {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200
-            else {
+                  httpResponse.statusCode == 200 else {
                 return nil
             }
 
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let models = json["models"] as? [[String: Any]]
-            else {
+                  let models = json["models"] as? [[String: Any]] else {
                 return nil
             }
 
             return models.compactMap { $0["name"] as? String }.sorted()
         } catch let error as URLError {
-            logger.debug("Ollama detection: URLError \(error.code.rawValue, privacy: .public) (\(error.localizedDescription, privacy: .public))")
+            logger
+                .debug(
+                    "Ollama detection: URLError \(error.code.rawValue, privacy: .public) (\(error.localizedDescription, privacy: .public))"
+                )
             return nil
         } catch {
-            logger.debug("Ollama detection: \(String(describing: type(of: error)), privacy: .public) - \(error.localizedDescription, privacy: .public)")
+            logger
+                .debug(
+                    "Ollama detection: \(String(describing: type(of: error)), privacy: .public) - \(error.localizedDescription, privacy: .public)"
+                )
             return nil
         }
     }

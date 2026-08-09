@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("FavoriteNode")
@@ -110,7 +110,7 @@ struct FavoriteNodeTests {
         )
         let nodes: [FavoriteNode] = [.favorite(fav1), folder, .favorite(fav3)]
 
-        let selectedIds: Set<String> = ["fav-\(fav1.id)", "fav-\(fav2.id)"]
+        let selectedIds: Set = ["fav-\(fav1.id)", "fav-\(fav2.id)"]
 
         let allFavorites = nodes.collectFavorites()
         let toDelete = allFavorites.filter { selectedIds.contains("fav-\($0.id)") }
@@ -130,7 +130,7 @@ struct FavoriteNodeTests {
             .folder(folder, children: [])
         ]
 
-        let selectedIds: Set<String> = ["folder-\(folder.id)"]
+        let selectedIds: Set = ["folder-\(folder.id)"]
 
         let allFavorites = nodes.collectFavorites()
         let toDelete = allFavorites.filter { selectedIds.contains("fav-\($0.id)") }
@@ -149,7 +149,7 @@ struct FavoriteNodeTests {
             .folder(folder, children: [.favorite(fav2)])
         ]
 
-        let selectedIds: Set<String> = [
+        let selectedIds: Set = [
             "fav-\(fav1.id)",
             "folder-\(folder.id)",
             "fav-\(fav2.id)"

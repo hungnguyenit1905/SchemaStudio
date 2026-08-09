@@ -164,8 +164,7 @@ internal struct BigQueryStatementGenerator {
 
         if upperType == "INT64" || upperType == "INTEGER" ||
             upperType == "FLOAT64" || upperType == "FLOAT" ||
-            upperType == "NUMERIC" || upperType == "BIGNUMERIC"
-        {
+            upperType == "NUMERIC" || upperType == "BIGNUMERIC" {
             let isNumeric = value.range(
                 of: #"^-?\d+(\.\d+)?([eE][+-]?\d+)?$"#,
                 options: .regularExpression

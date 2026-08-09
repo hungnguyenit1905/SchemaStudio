@@ -27,12 +27,12 @@ internal struct ExternalConnectionAlertPrompt: ExternalConnectionPrompting {
         alert.messageText = String(localized: "Open External Database Connection?")
         alert.informativeText = String(
             format: String(localized: """
-                An external link wants to connect to a %@ database:
+            An external link wants to connect to a %@ database:
 
-                %@
+            %@
 
-                Connect only if you trust the source of this link.
-                """),
+            Connect only if you trust the source of this link.
+            """),
             connection.type.rawValue,
             details(for: connection).joined(separator: "\n")
         )

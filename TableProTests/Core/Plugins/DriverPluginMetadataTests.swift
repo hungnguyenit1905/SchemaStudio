@@ -4,9 +4,9 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 // MARK: - Mock Plugin for Default Verification
 
@@ -19,7 +19,7 @@ private final class MockDefaultPlugin: NSObject, TableProPlugin, DriverPlugin {
     static let databaseTypeId = "MockDB"
     static let databaseDisplayName = "Mock Database"
     static let iconName = "cylinder.fill"
-    static let defaultPort = 9999
+    static let defaultPort = 9_999
 
     func createDriver(config: DriverConnectionConfig) -> any PluginDatabaseDriver {
         fatalError("Not used in tests")

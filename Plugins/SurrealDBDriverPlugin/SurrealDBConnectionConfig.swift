@@ -40,7 +40,7 @@ public struct SurrealDBConnectionConfig: Sendable {
     public init(config: DriverConnectionConfig) {
         let fields = config.additionalFields
         self.host = config.host
-        self.port = config.port > 0 ? config.port : 8000
+        self.port = config.port > 0 ? config.port : 8_000
         self.username = config.username
         self.password = config.password
         self.namespace = config.database

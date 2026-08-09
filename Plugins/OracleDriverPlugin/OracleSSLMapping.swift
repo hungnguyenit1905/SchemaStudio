@@ -13,7 +13,10 @@ enum OracleSSLMapping {
         case .disabled:
             return .disable
         case .preferred:
-            osLogger.warning("Oracle SSL mode 'Preferred' is not supported by OracleNIO; falling back to plain TCP. Use 'Required' to enforce TCPS.")
+            osLogger
+                .warning(
+                    "Oracle SSL mode 'Preferred' is not supported by OracleNIO; falling back to plain TCP. Use 'Required' to enforce TCPS."
+                )
             return .disable
         case .required, .verifyCa, .verifyIdentity:
             var tlsConfiguration = TLSConfiguration.makeClientConfiguration()

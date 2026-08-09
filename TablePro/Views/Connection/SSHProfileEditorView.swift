@@ -54,7 +54,7 @@ struct SSHProfileEditorView: View {
     private var isValid: Bool {
         let nameValid = !profileName.trimmingCharacters(in: .whitespaces).isEmpty
         let hostValid = !host.trimmingCharacters(in: .whitespaces).isEmpty
-        let portValid = port.isEmpty || (Int(port).map { (1...65_535).contains($0) } ?? false)
+        let portValid = port.isEmpty || (Int(port).map { (1 ... 65_535).contains($0) } ?? false)
         let authValid = authMethod == .password || authMethod == .sshAgent
             || authMethod == .keyboardInteractive || authMethod == .none || !privateKeyPath.isEmpty
         let jumpValid = jumpHosts.allSatisfy(\.isValid)
@@ -168,9 +168,11 @@ struct SSHProfileEditorView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else if authMethod == .none {
-                Text("No credentials are sent. Use this when the server handles authentication itself, such as a Tailscale SSH host.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "No credentials are sent. Use this when the server handles authentication itself, such as a Tailscale SSH host."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             } else {
                 LabeledContent(String(localized: "Key File")) {
                     HStack {
@@ -214,9 +216,13 @@ struct SSHProfileEditorView: View {
                     Text("60s").tag(60)
                 }
             } else {
-                Text(String(localized: "If the SSH server asks for a verification code, SchemaStudio prompts you for it when you connect."))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    String(
+                        localized: "If the SSH server asks for a verification code, SchemaStudio prompts you for it when you connect."
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
         }
     }
@@ -229,7 +235,11 @@ struct SSHProfileEditorView: View {
                 ForEach(jumpHosts) { jumpHost in
                     let jumpHostBinding = $jumpHosts.element(jumpHost)
                     DisclosureGroup {
-                        TextField(String(localized: "Host"), text: jumpHostBinding.host, prompt: Text("bastion.example.com"))
+                        TextField(
+                            String(localized: "Host"),
+                            text: jumpHostBinding.host,
+                            prompt: Text("bastion.example.com")
+                        )
                         HStack {
                             TextField(
                                 String(localized: "Port"),
@@ -240,7 +250,11 @@ struct SSHProfileEditorView: View {
                                 prompt: Text("22")
                             )
                             .frame(width: 80)
-                            TextField(String(localized: "Username"), text: jumpHostBinding.username, prompt: Text("admin"))
+                            TextField(
+                                String(localized: "Username"),
+                                text: jumpHostBinding.username,
+                                prompt: Text("admin")
+                            )
                         }
                         Picker(String(localized: "Auth"), selection: jumpHostBinding.authMethod) {
                             ForEach(SSHJumpAuthMethod.allCases) { method in
@@ -290,9 +304,11 @@ struct SSHProfileEditorView: View {
                     Label(String(localized: "Add Jump Host"), systemImage: "plus")
                 }
 
-                Text("Jump hosts are connected in order before reaching the SSH server above. Only key and agent auth are supported for jumps.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Jump hosts are connected in order before reaching the SSH server above. Only key and agent auth are supported for jumps."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
         }
     }
@@ -317,7 +333,9 @@ struct SSHProfileEditorView: View {
                     Button("Cancel", role: .cancel) {}
                 } message: {
                     if connectionsUsingProfile > 0 {
-                        Text("\(connectionsUsingProfile) connection(s) use this profile. They will fall back to no SSH tunnel.")
+                        Text(
+                            "\(connectionsUsingProfile) connection(s) use this profile. They will fall back to no SSH tunnel."
+                        )
                     } else {
                         Text("This profile will be permanently deleted.")
                     }
@@ -421,19 +439,19 @@ struct SSHProfileEditorView: View {
             SSHProfileStorage.shared.addProfile(profile)
         }
 
-        if (authMethod == .password || authMethod == .keyboardInteractive) && !sshPassword.isEmpty {
+        if authMethod == .password || authMethod == .keyboardInteractive, !sshPassword.isEmpty {
             SSHProfileStorage.shared.saveSSHPassword(sshPassword, for: profileId)
         } else {
             SSHProfileStorage.shared.deleteSSHPassword(for: profileId)
         }
 
-        if authMethod == .privateKey && !keyPassphrase.isEmpty {
+        if authMethod == .privateKey, !keyPassphrase.isEmpty {
             SSHProfileStorage.shared.saveKeyPassphrase(keyPassphrase, for: profileId)
         } else {
             SSHProfileStorage.shared.deleteKeyPassphrase(for: profileId)
         }
 
-        if totpMode == .autoGenerate && !totpSecret.isEmpty {
+        if totpMode == .autoGenerate, !totpSecret.isEmpty {
             SSHProfileStorage.shared.saveTOTPSecret(totpSecret, for: profileId)
         } else {
             SSHProfileStorage.shared.deleteTOTPSecret(for: profileId)

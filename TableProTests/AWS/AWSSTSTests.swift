@@ -23,7 +23,10 @@ struct AWSSTSTests {
 
     @Test("Parses credentials and expiration from a valid AssumeRole response")
     func parsesValidResponse() throws {
-        let creds = try AWSSTS.parseAssumeRoleResponse(Data(validResponse.utf8), roleArn: "arn:aws:iam::123456789012:role/demo")
+        let creds = try AWSSTS.parseAssumeRoleResponse(
+            Data(validResponse.utf8),
+            roleArn: "arn:aws:iam::123456789012:role/demo"
+        )
         #expect(creds.accessKeyId == "ASIAEXAMPLE")
         #expect(creds.secretAccessKey == "secretexample")
         #expect(creds.sessionToken == "tokenexample")

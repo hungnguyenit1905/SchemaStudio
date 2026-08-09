@@ -1,7 +1,7 @@
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("PluginManager needsRestart State", .serialized)
 @MainActor

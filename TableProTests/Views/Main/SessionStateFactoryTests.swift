@@ -7,8 +7,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("SessionStateFactory")
@@ -210,7 +210,8 @@ struct SessionStateFactoryTests {
 
         // Equivalent content
         #expect(state1.tabManager.tabs.count == state2.tabManager.tabs.count)
-        #expect(state1.tabManager.tabs.first?.tableContext.tableName == state2.tabManager.tabs.first?.tableContext.tableName)
+        #expect(state1.tabManager.tabs.first?.tableContext.tableName == state2.tabManager.tabs.first?.tableContext
+            .tableName)
     }
 
     @Test("Coordinator receives the factory's tabManager")

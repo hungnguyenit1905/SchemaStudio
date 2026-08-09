@@ -197,7 +197,11 @@ struct ChatTurn: Identifiable {
         blocks.append(ChatContentBlock(id: newUUID, kind: .reasoning(ReasoningBlock()), isStreaming: true))
     }
 
-    mutating func finalizeReasoningBlock(providerBlockID: String, opaque: ReasoningOpaque?, idMap: inout [String: UUID]) {
+    mutating func finalizeReasoningBlock(
+        providerBlockID: String,
+        opaque: ReasoningOpaque?,
+        idMap: inout [String: UUID]
+    ) {
         guard let blockUUID = idMap.removeValue(forKey: providerBlockID),
               let block = blocks.first(where: { $0.id == blockUUID }) else { return }
         block.setReasoningOpaque(opaque)
@@ -267,33 +271,47 @@ struct ChatContentBlockWire: Codable, Equatable, Sendable, Identifiable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case blockId, kind, text, toolUse, toolResult, attachment, reasoning, image, sqlWalkthrough
+        case blockId
+        case kind
+        case text
+        case toolUse
+        case toolResult
+        case attachment
+        case reasoning
+        case image
+        case sqlWalkthrough
     }
 
     private enum KindMarker: String, Codable {
-        case text, toolUse, toolResult, attachment, reasoning, image, sqlWalkthrough
+        case text
+        case toolUse
+        case toolResult
+        case attachment
+        case reasoning
+        case image
+        case sqlWalkthrough
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let resolvedID = (try container.decodeIfPresent(UUID.self, forKey: .blockId)) ?? UUID()
+        let resolvedID = try (container.decodeIfPresent(UUID.self, forKey: .blockId)) ?? UUID()
         let marker = try container.decode(KindMarker.self, forKey: .kind)
         let resolvedKind: ChatContentBlockKind
         switch marker {
         case .text:
-            resolvedKind = .text(try container.decode(String.self, forKey: .text))
+            resolvedKind = try .text(container.decode(String.self, forKey: .text))
         case .toolUse:
-            resolvedKind = .toolUse(try container.decode(ToolUseBlock.self, forKey: .toolUse))
+            resolvedKind = try .toolUse(container.decode(ToolUseBlock.self, forKey: .toolUse))
         case .toolResult:
-            resolvedKind = .toolResult(try container.decode(ToolResultBlock.self, forKey: .toolResult))
+            resolvedKind = try .toolResult(container.decode(ToolResultBlock.self, forKey: .toolResult))
         case .attachment:
-            resolvedKind = .attachment(try container.decode(ContextItem.self, forKey: .attachment))
+            resolvedKind = try .attachment(container.decode(ContextItem.self, forKey: .attachment))
         case .reasoning:
-            resolvedKind = .reasoning(try container.decode(ReasoningBlock.self, forKey: .reasoning))
+            resolvedKind = try .reasoning(container.decode(ReasoningBlock.self, forKey: .reasoning))
         case .image:
-            resolvedKind = .image(try container.decode(ChatImageInput.self, forKey: .image))
+            resolvedKind = try .image(container.decode(ChatImageInput.self, forKey: .image))
         case .sqlWalkthrough:
-            resolvedKind = .sqlWalkthrough(try container.decode(SqlWalkthroughBlock.self, forKey: .sqlWalkthrough))
+            resolvedKind = try .sqlWalkthrough(container.decode(SqlWalkthroughBlock.self, forKey: .sqlWalkthrough))
         }
         self.init(id: resolvedID, kind: resolvedKind)
     }
@@ -397,7 +415,13 @@ struct ChatTurnWire: Codable, Equatable, Sendable, Identifiable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, role, blocks, timestamp, usage, modelId, providerId
+        case id
+        case role
+        case blocks
+        case timestamp
+        case usage
+        case modelId
+        case providerId
     }
 
     private enum LegacyKeys: String, CodingKey {
@@ -448,7 +472,11 @@ struct ToolUseBlock: Codable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, input, approvalState, providerMetadata
+        case id
+        case name
+        case input
+        case approvalState
+        case providerMetadata
     }
 }
 

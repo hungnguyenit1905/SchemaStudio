@@ -4,13 +4,12 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("PluginInstallTracker staged phase", .serialized)
 @MainActor
 struct PluginInstallTrackerStagedTests {
-
     private let pluginId = "com.example.staged.test"
 
     private func cleanup() {

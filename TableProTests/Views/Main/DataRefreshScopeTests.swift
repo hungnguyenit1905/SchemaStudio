@@ -45,7 +45,7 @@ struct DataRefreshScopeTests {
     }
 
     @Test("A scoped refresh is ignored by a window browsing another database")
-    func scopedRefreshSkipsAWindowBrowsingElsewhere() throws {
+    func scopedRefreshSkipsAWindowBrowsingElsewhere() {
         let connection = TestFixtures.makeConnection(database: "saved_default")
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
         let (coordinator, _) = Self.makeCoordinator(
@@ -119,7 +119,7 @@ struct DataRefreshScopeTests {
     }
 
     @Test("A refresh for another connection never matches this window")
-    func refreshForAnotherConnectionIsIgnored() throws {
+    func refreshForAnotherConnectionIsIgnored() {
         let connection = TestFixtures.makeConnection(database: "saved_default")
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
         let (coordinator, _) = Self.makeCoordinator(

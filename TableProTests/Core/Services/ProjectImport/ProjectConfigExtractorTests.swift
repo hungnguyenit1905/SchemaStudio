@@ -4,12 +4,11 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("Scanned URL Normalizer")
 struct ScannedURLNormalizerTests {
-
     @Test("A raw at sign in the password is encoded using the last separator")
     func testRawAtSignEncoded() {
         let normalized = ScannedURLNormalizer.normalize("postgresql://user:p@ss@host:5432/db")
@@ -57,31 +56,45 @@ struct ScannedURLNormalizerTests {
 
 @Suite("Scanned Production Heuristic")
 struct ScannedProductionHeuristicTests {
-
     @Test("Production markers are detected in the file name, host, and database")
     func testMarkersDetected() {
         #expect(ScannedProductionHeuristic.isProduction(relativePath: ".env.production", host: "", database: ""))
-        #expect(ScannedProductionHeuristic.isProduction(relativePath: ".env", host: "db.prod.example.com", database: ""))
+        #expect(ScannedProductionHeuristic.isProduction(
+            relativePath: ".env",
+            host: "db.prod.example.com",
+            database: ""
+        ))
         #expect(ScannedProductionHeuristic.isProduction(relativePath: ".env", host: "", database: "live"))
     }
 
     @Test("A marker embedded in a longer word does not count")
     func testNoSubstringFalsePositives() {
-        #expect(!ScannedProductionHeuristic.isProduction(relativePath: ".env", host: "products.example.com", database: ""))
+        #expect(!ScannedProductionHeuristic.isProduction(
+            relativePath: ".env",
+            host: "products.example.com",
+            database: ""
+        ))
         #expect(!ScannedProductionHeuristic.isProduction(relativePath: ".env", host: "productivity.io", database: ""))
-        #expect(!ScannedProductionHeuristic.isProduction(relativePath: ".env.local", host: "localhost", database: "appdb"))
+        #expect(!ScannedProductionHeuristic.isProduction(
+            relativePath: ".env.local",
+            host: "localhost",
+            database: "appdb"
+        ))
     }
 
     @Test("A separated marker counts, so the safer default wins")
     func testSeparatedMarkerCounts() {
         #expect(ScannedProductionHeuristic.isProduction(relativePath: ".env", host: "", database: "production_orders"))
-        #expect(ScannedProductionHeuristic.isProduction(relativePath: ".env", host: "app-prod-01.internal", database: ""))
+        #expect(ScannedProductionHeuristic.isProduction(
+            relativePath: ".env",
+            host: "app-prod-01.internal",
+            database: ""
+        ))
     }
 }
 
 @Suite("YAML Mapping Support")
 struct YamlMappingSupportTests {
-
     @Test("Merge keys are expanded with the owning mapping winning")
     func testMergeKeyExpansion() throws {
         let contents = """
@@ -118,7 +131,6 @@ struct YamlMappingSupportTests {
 
 @Suite("WordPress Config Extractor")
 struct WordPressConfigExtractorTests {
-
     @Test("Standard define calls produce a MySQL candidate")
     func testStandardDefines() {
         let contents = """
@@ -133,7 +145,7 @@ struct WordPressConfigExtractorTests {
         #expect(candidate?.parsedURL.database == "wordpress")
         #expect(candidate?.parsedURL.username == "wpuser")
         #expect(candidate?.parsedURL.host == "localhost")
-        #expect(candidate?.parsedURL.port == 3306)
+        #expect(candidate?.parsedURL.port == 3_306)
     }
 
     @Test("Commented out defines are ignored")
@@ -152,7 +164,7 @@ struct WordPressConfigExtractorTests {
     func testHostWithPort() {
         let result = WordPressConfigExtractor.splitHost("db.example.com:3307")
         #expect(result.host == "db.example.com")
-        #expect(result.port == 3307)
+        #expect(result.port == 3_307)
     }
 
     @Test("A socket host is kept whole and flagged")
@@ -248,7 +260,6 @@ struct PrismaSchemaExtractorTests {
 
 @Suite("Spring Properties Extractor")
 struct SpringPropertiesExtractorTests {
-
     @Test("A JDBC datasource URL is parsed with its credentials")
     func testDatasourceURL() {
         let contents = """
@@ -303,7 +314,6 @@ struct SpringPropertiesExtractorTests {
 
 @Suite("App Settings JSON Extractor")
 struct AppSettingsJsonExtractorTests {
-
     private func candidate(_ connectionString: String) -> ScannedConnectionCandidate? {
         AppSettingsJsonExtractor.candidate(
             name: "Default",
@@ -325,7 +335,7 @@ struct AppSettingsJsonExtractorTests {
         let result = candidate("Data Source=localhost;Initial Catalog=appdb;User Id=sa;Password=pass")
         #expect(result?.parsedURL.type == .mssql)
         #expect(result?.parsedURL.database == "appdb")
-        #expect(result?.parsedURL.port == 1433)
+        #expect(result?.parsedURL.port == 1_433)
     }
 
     @Test("A MySqlConnector connection string maps to MySQL")

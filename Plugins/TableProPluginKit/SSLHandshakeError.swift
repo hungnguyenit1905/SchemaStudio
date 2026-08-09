@@ -31,9 +31,13 @@ public enum SSLHandshakeError: Error, LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case .serverRejectedPlaintext:
-            return String(localized: "The server requires an encrypted connection but TablePro is configured to connect in plain text.")
+            return String(
+                localized: "The server requires an encrypted connection but TablePro is configured to connect in plain text."
+            )
         case .serverRequiresPlaintext:
-            return String(localized: "The server does not accept encrypted connections but TablePro is configured to require TLS.")
+            return String(
+                localized: "The server does not accept encrypted connections but TablePro is configured to require TLS."
+            )
         case .untrustedCertificate:
             return String(localized: "The server's TLS certificate could not be verified against any trusted root.")
         case .hostnameMismatch:
@@ -45,7 +49,9 @@ public enum SSLHandshakeError: Error, LocalizedError, Sendable {
         case .clientKeyPassphraseIncorrect:
             return String(localized: "The passphrase for the client private key is incorrect.")
         case .clientKeyInvalid:
-            return String(localized: "The client private key could not be read. It may be malformed or in an unsupported format.")
+            return String(
+                localized: "The client private key could not be read. It may be malformed or in an unsupported format."
+            )
         case .cipherMismatch:
             return String(localized: "The server and TablePro could not agree on a TLS cipher or protocol version.")
         case .unknown:
@@ -72,13 +78,26 @@ public enum SSLHandshakeError: Error, LocalizedError, Sendable {
         var redacted = message
         let userInfo = try? NSRegularExpression(pattern: "://[^/@\\s]+:[^/@\\s]+@", options: [])
         if let userInfo {
-            let range = NSRange(redacted.startIndex..<redacted.endIndex, in: redacted)
-            redacted = userInfo.stringByReplacingMatches(in: redacted, options: [], range: range, withTemplate: "://[redacted]@")
+            let range = NSRange(redacted.startIndex ..< redacted.endIndex, in: redacted)
+            redacted = userInfo.stringByReplacingMatches(
+                in: redacted,
+                options: [],
+                range: range,
+                withTemplate: "://[redacted]@"
+            )
         }
-        let kvPattern = try? NSRegularExpression(pattern: "(password|passwd|pwd)\\s*=\\s*\\S+", options: [.caseInsensitive])
+        let kvPattern = try? NSRegularExpression(
+            pattern: "(password|passwd|pwd)\\s*=\\s*\\S+",
+            options: [.caseInsensitive]
+        )
         if let kvPattern {
-            let range = NSRange(redacted.startIndex..<redacted.endIndex, in: redacted)
-            redacted = kvPattern.stringByReplacingMatches(in: redacted, options: [], range: range, withTemplate: "$1=[redacted]")
+            let range = NSRange(redacted.startIndex ..< redacted.endIndex, in: redacted)
+            redacted = kvPattern.stringByReplacingMatches(
+                in: redacted,
+                options: [],
+                range: range,
+                withTemplate: "$1=[redacted]"
+            )
         }
         return redacted
     }
@@ -86,26 +105,34 @@ public enum SSLHandshakeError: Error, LocalizedError, Sendable {
     public var recoverySuggestion: String? {
         switch self {
         case .serverRejectedPlaintext:
-            return String(localized: "Open the connection editor, switch to the SSL tab, and set Mode to Required (or stricter).")
+            return String(
+                localized: "Open the connection editor, switch to the SSL tab, and set Mode to Required (or stricter)."
+            )
         case .serverRequiresPlaintext:
             return String(localized: "Open the connection editor, switch to the SSL tab, and set Mode to Disabled.")
         case .untrustedCertificate:
             return String(localized: """
-                Switch SSL Mode to Verify CA and provide the server's CA certificate path. \
-                Required mode also connects, but does not validate the certificate chain.
-                """)
+            Switch SSL Mode to Verify CA and provide the server's CA certificate path. \
+            Required mode also connects, but does not validate the certificate chain.
+            """)
         case .hostnameMismatch:
-            return String(localized: "Switch SSL Mode to Verify CA (validates the CA chain but skips hostname check), or update the host field to match the certificate.")
+            return String(
+                localized: "Switch SSL Mode to Verify CA (validates the CA chain but skips hostname check), or update the host field to match the certificate."
+            )
         case .clientCertRequired:
             return String(localized: "Provide the client certificate and key paths in the SSL tab.")
         case .clientKeyPassphraseRequired:
             return String(localized: "Open the connection editor, switch to the SSL tab, and enter the Key Passphrase.")
         case .clientKeyPassphraseIncorrect:
-            return String(localized: "Open the connection editor, switch to the SSL tab, and correct the Key Passphrase.")
+            return String(
+                localized: "Open the connection editor, switch to the SSL tab, and correct the Key Passphrase."
+            )
         case .clientKeyInvalid:
             return String(localized: "Check that the Client Key path points to a valid PEM private key.")
         case .cipherMismatch:
-            return String(localized: "Update the server's TLS configuration or use a newer database server version that supports modern ciphers.")
+            return String(
+                localized: "Update the server's TLS configuration or use a newer database server version that supports modern ciphers."
+            )
         case .unknown:
             return nil
         }

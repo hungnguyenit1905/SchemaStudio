@@ -33,13 +33,13 @@ extension String {
 
         while offset < displayCount {
             let lineEnd = min(offset + bytesPerLine, displayCount)
-            let lineBytes = bytesArray[offset..<lineEnd]
+            let lineBytes = bytesArray[offset ..< lineEnd]
 
             // Offset column (8-digit hex)
             var line = String(format: "%08X  ", offset)
 
             // Hex columns: two groups of 8 bytes
-            for i in 0..<bytesPerLine {
+            for i in 0 ..< bytesPerLine {
                 if i == 8 { line += " " }
                 if offset + i < lineEnd {
                     line += String(format: "%02X ", lineBytes[offset + i])

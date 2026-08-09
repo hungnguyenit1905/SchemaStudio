@@ -9,7 +9,7 @@ final class EditorAutocompleteFocusUITests: XCTestCase {
         XCUIApplication().terminate()
     }
 
-    func testTypingInNewTabKeepsEditorFocusWhileAutocompleteAppears() throws {
+    func testTypingInNewTabKeepsEditorFocusWhileAutocompleteAppears() {
         let app = XCUIApplication()
         app.launchEnvironment["TABLEPRO_UI_TESTING"] = "1"
         app.launch()

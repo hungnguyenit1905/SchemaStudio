@@ -36,7 +36,10 @@ public enum SurrealQueryBuilder {
         limit: Int,
         offset: Int
     ) -> String {
-        compose(scope: scope, statement: select(table: table, where: nil, sortColumns: sortColumns, limit: limit, offset: offset))
+        compose(
+            scope: scope,
+            statement: select(table: table, where: nil, sortColumns: sortColumns, limit: limit, offset: offset)
+        )
     }
 
     public static func filtered(
@@ -230,7 +233,7 @@ public enum SurrealQueryBuilder {
 
     private static func looksLikeRecordId(_ value: String) -> Bool {
         guard let colon = value.firstIndex(of: ":"), colon != value.startIndex else { return false }
-        let table = value[value.startIndex..<colon]
+        let table = value[value.startIndex ..< colon]
         guard let first = table.unicodeScalars.first,
               CharacterSet.letters.contains(first) || first == "_" else { return false }
         return table.unicodeScalars.allSatisfy {

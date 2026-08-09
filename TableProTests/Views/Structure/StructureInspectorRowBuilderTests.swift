@@ -15,10 +15,28 @@ struct StructureInspectorRowBuilderTests {
         manager.loadSchema(
             tableName: "users",
             columns: [
-                ColumnInfo(name: "id", dataType: "INT", isNullable: false, isPrimaryKey: true,
-                           defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil),
-                ColumnInfo(name: "email", dataType: "VARCHAR(255)", isNullable: true, isPrimaryKey: false,
-                           defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil)
+                ColumnInfo(
+                    name: "id",
+                    dataType: "INT",
+                    isNullable: false,
+                    isPrimaryKey: true,
+                    defaultValue: nil,
+                    extra: nil,
+                    charset: nil,
+                    collation: nil,
+                    comment: nil
+                ),
+                ColumnInfo(
+                    name: "email",
+                    dataType: "VARCHAR(255)",
+                    isNullable: true,
+                    isPrimaryKey: false,
+                    defaultValue: nil,
+                    extra: nil,
+                    charset: nil,
+                    collation: nil,
+                    comment: nil
+                )
             ],
             indexes: [],
             foreignKeys: [],

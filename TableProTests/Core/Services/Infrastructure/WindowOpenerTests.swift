@@ -78,8 +78,7 @@ final class WindowOpenerTests: XCTestCase {
     }
 
     func testTheStagedURLReachesTheWindowOpenedForIt() {
-        guard case .success(let parsed) = ConnectionURLParser.parse("mysql://sam:secret@shop.example.com:3306/shop")
-        else {
+        guard case .success(let parsed) = ConnectionURLParser.parse("mysql://sam:secret@shop.example.com:3306/shop") else {
             return XCTFail("The fixture URL must parse")
         }
 

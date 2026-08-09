@@ -182,11 +182,11 @@ struct ConnectionURLFormatter {
             params.append("name=\(encoded)")
         }
 
-        if ssh.enabled && ssh.authMethod == .privateKey {
+        if ssh.enabled, ssh.authMethod == .privateKey {
             params.append("usePrivateKey=true")
         }
 
-        if ssh.enabled && ssh.authMethod == .sshAgent {
+        if ssh.enabled, ssh.authMethod == .sshAgent {
             params.append("useSSHAgent=true")
             if !ssh.agentSocketPath.isEmpty {
                 let encoded = ssh.agentSocketPath
@@ -195,7 +195,7 @@ struct ConnectionURLFormatter {
             }
         }
 
-        if ssh.enabled && ssh.authMethod == .none {
+        if ssh.enabled, ssh.authMethod == .none {
             params.append("sshNoAuth=true")
         }
 

@@ -42,7 +42,8 @@ final class MSSQLDriver: DatabaseDriver, @unchecked Sendable {
                 sslEnabled: connection.sslEnabled,
                 configuration: connection.sslConfiguration
             ).freetdsEncryptionFlag,
-            loginTimeoutSeconds: Int(connection.additionalFields["mssqlLoginTimeout"] ?? "") ?? MSSQLConnectionOptions.defaultLoginTimeoutSeconds,
+            loginTimeoutSeconds: Int(connection.additionalFields["mssqlLoginTimeout"] ?? "") ?? MSSQLConnectionOptions
+                .defaultLoginTimeoutSeconds,
             authMethod: authMethod
         )
         self.conn = FreeTDSConnection(options: options)
@@ -59,7 +60,11 @@ final class MSSQLDriver: DatabaseDriver, @unchecked Sendable {
 
     func connect() async throws {
         guard authMethod != .windows else {
-            throw DatabaseError(message: String(localized: "Windows Authentication (Kerberos) isn't supported on iOS yet. Use SQL Server Authentication, or connect from the Mac app."))
+            throw DatabaseError(
+                message: String(
+                    localized: "Windows Authentication (Kerberos) isn't supported on iOS yet. Use SQL Server Authentication, or connect from the Mac app."
+                )
+            )
         }
         try await LocalNetworkPermission.shared.ensureAccess(for: host)
         do {
@@ -262,8 +267,12 @@ final class MSSQLDriver: DatabaseDriver, @unchecked Sendable {
         let result = try await runQuery(MSSQLSchemaQueries.foreignKeys(schema: schema ?? effectiveSchema, table: table))
         return result.rows.compactMap { row in
             MSSQLSchemaQueries.parseForeignKeyRow(row).map {
-                ForeignKeyInfo(name: $0.constraintName, column: $0.columnName,
-                               referencedTable: $0.referencedTable, referencedColumn: $0.referencedColumn)
+                ForeignKeyInfo(
+                    name: $0.constraintName,
+                    column: $0.columnName,
+                    referencedTable: $0.referencedTable,
+                    referencedColumn: $0.referencedColumn
+                )
             }
         }
     }

@@ -27,7 +27,7 @@ func naturalSortKey(_ raw: String) -> String {
             result.unicodeScalars.append(Unicode.Scalar(UInt8(truncatingIfNeeded: 0x30 + (length / 100) % 10)))
             result.unicodeScalars.append(Unicode.Scalar(UInt8(truncatingIfNeeded: 0x30 + (length / 10) % 10)))
             result.unicodeScalars.append(Unicode.Scalar(UInt8(truncatingIfNeeded: 0x30 + length % 10)))
-            for j in sigStart..<runEnd {
+            for j in sigStart ..< runEnd {
                 result.unicodeScalars.append(scalars[j])
             }
             i = runEnd

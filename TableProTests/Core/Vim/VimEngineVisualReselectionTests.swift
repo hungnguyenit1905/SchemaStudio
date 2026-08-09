@@ -6,9 +6,9 @@
 //  the most recent visual selection.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineVisualReselectionTests: XCTestCase {
@@ -28,7 +28,9 @@ final class VimEngineVisualReselectionTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {
@@ -52,12 +54,21 @@ final class VimEngineVisualReselectionTests: XCTestCase {
         keys("j")
         // gv should restore the original visual selection.
         keys("gv")
-        XCTAssertEqual(engine.mode, .visual(linewise: false),
-            "gv should re-enter visual mode")
-        XCTAssertEqual(buffer.selectedRange().location, originalSel.location,
-            "gv should restore the original selection location")
-        XCTAssertEqual(buffer.selectedRange().length, originalSel.length,
-            "gv should restore the original selection length")
+        XCTAssertEqual(
+            engine.mode,
+            .visual(linewise: false),
+            "gv should re-enter visual mode"
+        )
+        XCTAssertEqual(
+            buffer.selectedRange().location,
+            originalSel.location,
+            "gv should restore the original selection location"
+        )
+        XCTAssertEqual(
+            buffer.selectedRange().length,
+            originalSel.length,
+            "gv should restore the original selection length"
+        )
     }
 
     func testGVReselectsLastLinewiseVisual() {
@@ -68,8 +79,11 @@ final class VimEngineVisualReselectionTests: XCTestCase {
         escape()
         keys("G")
         keys("gv")
-        XCTAssertEqual(engine.mode, .visual(linewise: true),
-            "gv after V should re-enter linewise visual mode")
+        XCTAssertEqual(
+            engine.mode,
+            .visual(linewise: true),
+            "gv after V should re-enter linewise visual mode"
+        )
         XCTAssertEqual(buffer.selectedRange().location, originalSel.location)
         XCTAssertEqual(buffer.selectedRange().length, originalSel.length)
     }
@@ -83,8 +97,11 @@ final class VimEngineVisualReselectionTests: XCTestCase {
         keys("d")
         XCTAssertEqual(engine.mode, .normal)
         keys("gv")
-        XCTAssertEqual(engine.mode, .visual(linewise: false),
-            "gv should still enter visual mode after a delete operation")
+        XCTAssertEqual(
+            engine.mode,
+            .visual(linewise: false),
+            "gv should still enter visual mode after a delete operation"
+        )
     }
 
     // MARK: - '< and '> Jump Marks
@@ -97,8 +114,11 @@ final class VimEngineVisualReselectionTests: XCTestCase {
         escape()
         keys("G")
         keys("`<")
-        XCTAssertEqual(buffer.selectedRange().location, start,
-            "`< should jump to the start of the last visual selection")
+        XCTAssertEqual(
+            buffer.selectedRange().location,
+            start,
+            "`< should jump to the start of the last visual selection"
+        )
     }
 
     func testJumpToLastSelectionEnd() {
@@ -110,8 +130,11 @@ final class VimEngineVisualReselectionTests: XCTestCase {
         escape()
         keys("G")
         keys("`>")
-        XCTAssertEqual(buffer.selectedRange().location, inclusiveEnd,
-            "`> should jump to the inclusive-end of the last visual selection")
+        XCTAssertEqual(
+            buffer.selectedRange().location,
+            inclusiveEnd,
+            "`> should jump to the inclusive-end of the last visual selection"
+        )
     }
 
     // MARK: - gv Without Prior Selection
@@ -120,7 +143,10 @@ final class VimEngineVisualReselectionTests: XCTestCase {
         // Fresh engine, no previous visual selection.
         buffer.setSelectedRange(NSRange(location: 5, length: 0))
         keys("gv")
-        XCTAssertEqual(engine.mode, .normal,
-            "gv with no prior selection should remain in normal mode (no-op)")
+        XCTAssertEqual(
+            engine.mode,
+            .normal,
+            "gv with no prior selection should remain in normal mode (no-op)"
+        )
     }
 }

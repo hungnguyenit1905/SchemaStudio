@@ -22,11 +22,14 @@ struct LibPQPluginError: Error {
     let detail: String?
 
     static let notConnected = LibPQPluginError(
-        message: String(localized: "Not connected to database"), sqlState: nil, detail: nil)
+        message: String(localized: "Not connected to database"), sqlState: nil, detail: nil
+    )
     static let connectionFailed = LibPQPluginError(
-        message: String(localized: "Failed to establish connection"), sqlState: nil, detail: nil)
+        message: String(localized: "Failed to establish connection"), sqlState: nil, detail: nil
+    )
     static let connectionTimedOut = LibPQPluginError(
-        message: String(localized: "Timed out while connecting to the server"), sqlState: nil, detail: nil)
+        message: String(localized: "Timed out while connecting to the server"), sqlState: nil, detail: nil
+    )
 }
 
 // MARK: - Query Result
@@ -153,7 +156,7 @@ final class LibPQPluginConnection: @unchecked Sendable {
         let handle = conn
         let cleanupQueue = queue
         conn = nil
-        if let handle = handle {
+        if let handle {
             cleanupQueue.async {
                 PQfinish(handle)
             }
@@ -287,7 +290,7 @@ final class LibPQPluginConnection: @unchecked Sendable {
     private func buildConnectionString() -> String {
         func escapeConnParam(_ value: String) -> String {
             value.replacingOccurrences(of: "\\", with: "\\\\")
-                 .replacingOccurrences(of: "'", with: "\\'")
+                .replacingOccurrences(of: "'", with: "\\'")
         }
 
         var connStr = "host='\(escapeConnParam(host))' port='\(port)' dbname='\(escapeConnParam(database))'"
@@ -382,7 +385,10 @@ final class LibPQPluginConnection: @unchecked Sendable {
         }
     }
 
-    func executeParameterizedQuery(_ query: String, parameters: [PluginCellValue]) async throws -> LibPQPluginQueryResult {
+    func executeParameterizedQuery(
+        _ query: String,
+        parameters: [PluginCellValue]
+    ) async throws -> LibPQPluginQueryResult {
         let queryToRun = String(query)
         let params = parameters
 
@@ -425,7 +431,7 @@ final class LibPQPluginConnection: @unchecked Sendable {
             PQexec(conn, queryPtr)
         }
 
-        guard let result = result else {
+        guard let result else {
             throw getError(from: conn)
         }
 
@@ -458,7 +464,10 @@ final class LibPQPluginConnection: @unchecked Sendable {
         }
     }
 
-    private func executeParameterizedQuerySync(_ query: String, parameters: [PluginCellValue]) throws -> LibPQPluginQueryResult {
+    private func executeParameterizedQuerySync(
+        _ query: String,
+        parameters: [PluginCellValue]
+    ) throws -> LibPQPluginQueryResult {
         stateLock.lock()
         let conn = self.conn
         stateLock.unlock()
@@ -532,7 +541,7 @@ final class LibPQPluginConnection: @unchecked Sendable {
             }
         }
 
-        guard let result = result else {
+        guard let result else {
             throw getError(from: conn)
         }
 
@@ -576,7 +585,9 @@ final class LibPQPluginConnection: @unchecked Sendable {
                 PQfreeCancel(cancelObj)
             }
         }
-        while let res = PQgetResult(conn) { PQclear(res) }
+        while let res = PQgetResult(conn) {
+            PQclear(res)
+        }
     }
 
     func streamQuery(_ query: String) -> AsyncThrowingStream<PluginStreamElement, Error> {
@@ -621,7 +632,9 @@ final class LibPQPluginConnection: @unchecked Sendable {
                 let generation = cancellationGate.beginQuery()
                 defer { cancellationGate.endQuery(generation) }
 
-                while let res = PQgetResult(conn) { PQclear(res) }
+                while let res = PQgetResult(conn) {
+                    PQclear(res)
+                }
 
                 let sendOk = queryToRun.withCString { queryPtr in
                     PQsendQuery(conn, queryPtr)
@@ -636,12 +649,15 @@ final class LibPQPluginConnection: @unchecked Sendable {
                 }
 
                 if PQsetSingleRowMode(conn) == 0 {
-                    while let res = PQgetResult(conn) { PQclear(res) }
+                    while let res = PQgetResult(conn) {
+                        PQclear(res)
+                    }
                     streamState.lock.lock()
                     streamState.drained = true
                     streamState.lock.unlock()
                     continuation.finish(throwing: LibPQPluginError(
-                        message: "Failed to enter single-row mode", sqlState: nil, detail: nil))
+                        message: "Failed to enter single-row mode", sqlState: nil, detail: nil
+                    ))
                     return
                 }
 
@@ -663,7 +679,7 @@ final class LibPQPluginConnection: @unchecked Sendable {
                             columnOids.reserveCapacity(numFields)
                             columnTypeNames.reserveCapacity(numFields)
 
-                            for i in 0..<numFields {
+                            for i in 0 ..< numFields {
                                 if let namePtr = PQfname(result, Int32(i)) {
                                     columns.append(String(cString: namePtr))
                                 } else {
@@ -686,7 +702,7 @@ final class LibPQPluginConnection: @unchecked Sendable {
                         var row: [PluginCellValue] = []
                         row.reserveCapacity(numFields)
 
-                        for colIndex in 0..<numFields {
+                        for colIndex in 0 ..< numFields {
                             row.append(Self.decodeCell(
                                 from: result,
                                 row: 0,
@@ -722,7 +738,9 @@ final class LibPQPluginConnection: @unchecked Sendable {
                     } else {
                         let error = getResultError(from: result)
                         PQclear(result)
-                        while let res = PQgetResult(conn) { PQclear(res) }
+                        while let res = PQgetResult(conn) {
+                            PQclear(res)
+                        }
                         streamState.lock.lock()
                         streamState.drained = true
                         streamState.lock.unlock()
@@ -762,7 +780,10 @@ final class LibPQPluginConnection: @unchecked Sendable {
         let oidMap = postgisOidMap
         guard !oidMap.isEmpty else { return parsed }
 
-        let spatialColumns = metadata.columnOids.enumerated().compactMap { index, oid -> (index: Int, typeName: String)? in
+        let spatialColumns = metadata.columnOids.enumerated().compactMap { index, oid -> (
+            index: Int,
+            typeName: String
+        )? in
             guard let typeName = oidMap[oid] else { return nil }
             return (index, typeName)
         }
@@ -786,7 +807,7 @@ final class LibPQPluginConnection: @unchecked Sendable {
         columnOids.reserveCapacity(numFields)
         columnTypeNames.reserveCapacity(numFields)
 
-        for i in 0..<numFields {
+        for i in 0 ..< numFields {
             if let namePtr = PQfname(result, Int32(i)) {
                 columns.append(String(cString: namePtr))
             } else {
@@ -814,7 +835,7 @@ final class LibPQPluginConnection: @unchecked Sendable {
             guard let query = PostGISSpatialRewrite.conversionQuery(forTypeName: column.typeName) else { continue }
 
             let hexValues: [String?] = rows.map { row in
-                guard column.index < row.count, case let .text(hex) = row[column.index] else { return nil }
+                guard column.index < row.count, case .text(let hex) = row[column.index] else { return nil }
                 return hex
             }
             guard hexValues.contains(where: { $0 != nil }) else { continue }
@@ -866,7 +887,7 @@ final class LibPQPluginConnection: @unchecked Sendable {
         let rowCount = Int(PQntuples(result))
         var converted: [PluginCellValue] = []
         converted.reserveCapacity(rowCount)
-        for rowIndex in 0..<rowCount {
+        for rowIndex in 0 ..< rowCount {
             if PQgetisnull(result, Int32(rowIndex), 0) == 1 {
                 converted.append(.null)
             } else if let valuePtr = PQgetvalue(result, Int32(rowIndex), 0) {
@@ -926,7 +947,7 @@ final class LibPQPluginConnection: @unchecked Sendable {
         var rows: [[PluginCellValue]] = []
         rows.reserveCapacity(effectiveRowCount)
 
-        for rowIndex in 0..<effectiveRowCount {
+        for rowIndex in 0 ..< effectiveRowCount {
             if cancellationGate.isCancelled(generation) {
                 throw CancellationError()
             }
@@ -934,7 +955,7 @@ final class LibPQPluginConnection: @unchecked Sendable {
             var row: [PluginCellValue] = []
             row.reserveCapacity(numFields)
 
-            for colIndex in 0..<numFields {
+            for colIndex in 0 ..< numFields {
                 row.append(Self.decodeCell(
                     from: result,
                     row: Int32(rowIndex),

@@ -23,7 +23,7 @@ enum HranaValue: Decodable {
         case .integer(let s):
             return s
         case .float(let d):
-            if d.isFinite && d == d.rounded() && abs(d) <= 9_007_199_254_740_992 {
+            if d.isFinite, d == d.rounded(), abs(d) <= 9_007_199_254_740_992 {
                 return String(Int64(d))
             }
             return String(d)
@@ -35,7 +35,9 @@ enum HranaValue: Decodable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case type, value, base64
+        case type
+        case value
+        case base64
     }
 
     init(from decoder: Decoder) throws {
@@ -79,7 +81,8 @@ struct HranaExecuteResult: Decodable {
     let lastInsertRowid: String?
 
     private enum CodingKeys: String, CodingKey {
-        case cols, rows
+        case cols
+        case rows
         case affectedRowCount = "affected_row_count"
         case lastInsertRowid = "last_insert_rowid"
     }

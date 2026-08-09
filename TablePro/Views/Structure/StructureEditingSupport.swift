@@ -53,7 +53,7 @@ enum StructureEditingSupport {
                 let trimmed = part.trimmingCharacters(in: .whitespaces)
                 if let parenStart = trimmed.firstIndex(of: "("),
                    let parenEnd = trimmed.firstIndex(of: ")"),
-                   let prefix = Int(trimmed[trimmed.index(after: parenStart)..<parenEnd]) {
+                   let prefix = Int(trimmed[trimmed.index(after: parenStart) ..< parenEnd]) {
                     let name = String(trimmed[..<parenStart])
                     prefixes[name] = prefix
                     return name
@@ -92,12 +92,12 @@ enum StructureEditingSupport {
 
     // MARK: - Field-Level Diff
 
-    /// Per-cell modified-column tinting needs to know which display columns of
-    /// a row actually changed. Each helper compares two entity values and
-    /// returns the set of grid column indices whose value differs. Using these
-    /// in `dataGridVisualState(forRow:)` lets the structure tab tint only the
-    /// edited cells, mirroring the data tab's per-cell tinting instead of
-    /// flagging the whole row when one field changed.
+    // Per-cell modified-column tinting needs to know which display columns of
+    // a row actually changed. Each helper compares two entity values and
+    // returns the set of grid column indices whose value differs. Using these
+    // in `dataGridVisualState(forRow:)` lets the structure tab tint only the
+    // edited cells, mirroring the data tab's per-cell tinting instead of
+    // flagging the whole row when one field changed.
 
     static func columnModifiedIndices(
         old: EditableColumnDefinition,

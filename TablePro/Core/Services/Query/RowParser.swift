@@ -107,7 +107,7 @@ struct CSVRowParser: RowDataParser {
 
         var parsedRows: [ParsedRow] = []
 
-        for recordIndex in startIndex..<records.count {
+        for recordIndex in startIndex ..< records.count {
             let lineNumber = recordIndex + 1
             var values = records[recordIndex].map { normalizeValue($0) }
 
@@ -151,7 +151,7 @@ struct CSVRowParser: RowDataParser {
             if inQuotes {
                 if c == "\"" {
                     // Check for escaped quote ("")
-                    if i + 1 < chars.count && chars[i + 1] == "\"" {
+                    if i + 1 < chars.count, chars[i + 1] == "\"" {
                         currentField.append("\"")
                         i += 2
                         continue
@@ -165,7 +165,7 @@ struct CSVRowParser: RowDataParser {
                 currentField.unicodeScalars.append(c)
                 i += 1
             } else {
-                if c == "\"" && currentField.isEmpty {
+                if c == "\"", currentField.isEmpty {
                     // Start of quoted field
                     inQuotes = true
                     i += 1
@@ -183,7 +183,7 @@ struct CSVRowParser: RowDataParser {
                     }
                     currentRecord = []
                     // Skip \n after \r
-                    if i + 1 < chars.count && chars[i + 1] == "\n" {
+                    if i + 1 < chars.count, chars[i + 1] == "\n" {
                         i += 1
                     }
                     i += 1

@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("PendingChanges - record")
@@ -238,5 +238,4 @@ struct PendingChangesLifecycleTests {
         #expect(!pending.isRowDeleted(5))
         #expect(!pending.isCellModified(rowIndex: 0, columnIndex: 1))
     }
-
 }

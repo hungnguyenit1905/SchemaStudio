@@ -58,7 +58,11 @@ enum SQLStatementScanner {
         return result
     }
 
-    static func locatedStatementAtCursor(in sql: String, cursorPosition: Int, dialect: SqlDialect = .generic) -> LocatedStatement {
+    static func locatedStatementAtCursor(
+        in sql: String,
+        cursorPosition: Int,
+        dialect: SqlDialect = .generic
+    ) -> LocatedStatement {
         var result = LocatedStatement(sql: "", offset: 0)
         scan(sql: sql, cursorPosition: cursorPosition, dialect: dialect) { rawSQL, offset, _ in
             result = LocatedStatement(sql: rawSQL, offset: offset)
@@ -121,7 +125,7 @@ enum SQLStatementScanner {
             }
 
             if inBlockComment {
-                if ch == star && i + 1 < length && nsQuery.character(at: i + 1) == slash {
+                if ch == star, i + 1 < length, nsQuery.character(at: i + 1) == slash {
                     inBlockComment = false
                     i += 2
                     continue
@@ -149,7 +153,7 @@ enum SQLStatementScanner {
             }
 
             if !inString && ch == slash && i + 1 < length && nsQuery.character(at: i + 1) == star {
-                if i + 2 < length && nsQuery.character(at: i + 2) == exclamationMark {
+                if i + 2 < length, nsQuery.character(at: i + 2) == exclamationMark {
                     hasStatementContent = true
                 }
                 inBlockComment = true
@@ -167,7 +171,7 @@ enum SQLStatementScanner {
                     inString = true
                     stringCharVal = ch
                 } else if ch == stringCharVal {
-                    if i + 1 < length && nsQuery.character(at: i + 1) == stringCharVal {
+                    if i + 1 < length, nsQuery.character(at: i + 1) == stringCharVal {
                         i += 1
                     } else {
                         inString = false
@@ -184,11 +188,11 @@ enum SQLStatementScanner {
                 continue
             }
 
-            if ch == semicolonChar && !inString {
+            if ch == semicolonChar, !inString {
                 let stmtEnd = i + 1
 
                 if let cursor = safePosition {
-                    if cursor >= currentStart && cursor <= stmtEnd {
+                    if cursor >= currentStart, cursor <= stmtEnd {
                         let stmtRange = NSRange(location: currentStart, length: stmtEnd - currentStart)
                         _ = onStatement(nsQuery.substring(with: stmtRange), currentStart, hasStatementContent)
                         return

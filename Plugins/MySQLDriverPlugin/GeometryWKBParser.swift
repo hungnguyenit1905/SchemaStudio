@@ -247,11 +247,10 @@ enum GeometryWKBParser {
     }
 
     private static func formatCoord(_ value: Double) -> String {
-        if value == value.rounded() && abs(value) < 1e15 {
+        if value == value.rounded(), abs(value) < 1e15 {
             return String(format: "%.1f", value)
         }
-        let formatted = String(format: "%.15g", value)
-        return formatted
+        return String(format: "%.15g", value)
     }
 
     static func hexString(_ data: Data) -> String {

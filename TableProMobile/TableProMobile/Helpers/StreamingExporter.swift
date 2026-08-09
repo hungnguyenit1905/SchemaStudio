@@ -79,7 +79,13 @@ actor StreamingExporter {
         }
     }
 
-    private func formatRow(format: ExportFormat, columns: [String], values: [String?], tableName: String, isFirst: Bool) -> String {
+    private func formatRow(
+        format: ExportFormat,
+        columns: [String],
+        values: [String?],
+        tableName: String,
+        isFirst: Bool
+    ) -> String {
         switch format {
         case .csv:
             let cells = columns.indices.map { i in

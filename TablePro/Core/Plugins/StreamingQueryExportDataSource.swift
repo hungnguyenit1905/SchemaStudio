@@ -29,7 +29,9 @@ final class StreamingQueryExportDataSource: PluginExportDataSource, @unchecked S
 
     func streamRows(table: String, databaseName: String) -> AsyncThrowingStream<PluginStreamElement, Error> {
         guard let pluginDriver = (driver as? PluginDriverAdapter)?.schemaPluginDriver else {
-            return AsyncThrowingStream { $0.finish(throwing: PluginExportError.exportFailed("No plugin driver available")) }
+            return AsyncThrowingStream {
+                $0.finish(throwing: PluginExportError.exportFailed("No plugin driver available"))
+            }
         }
         return pluginDriver.streamRows(query: query)
     }

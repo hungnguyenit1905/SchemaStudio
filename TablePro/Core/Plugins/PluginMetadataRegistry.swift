@@ -508,7 +508,8 @@ final class PluginMetadataRegistry: @unchecked Sendable {
                 requiresAuthentication: true, supportsForeignKeys: true, supportsSchemaEditing: true,
                 isDownloadable: false, primaryUrlScheme: "mysql", parameterStyle: .questionMark,
                 navigationModel: .standard, explainVariants: [], pathFieldRole: .database,
-                supportsHealthMonitor: true, urlSchemes: ["mysql"], postConnectActions: [.selectDatabaseFromLastSession],
+                supportsHealthMonitor: true, urlSchemes: ["mysql"],
+                postConnectActions: [.selectDatabaseFromLastSession],
                 brandColorHex: "#FF9500",
                 queryLanguageName: "SQL", editorLanguage: .sql,
                 connectionMode: .network, supportsDatabaseSwitching: true,
@@ -563,7 +564,8 @@ final class PluginMetadataRegistry: @unchecked Sendable {
                 requiresAuthentication: true, supportsForeignKeys: true, supportsSchemaEditing: true,
                 isDownloadable: false, primaryUrlScheme: "mariadb", parameterStyle: .questionMark,
                 navigationModel: .standard, explainVariants: [], pathFieldRole: .database,
-                supportsHealthMonitor: true, urlSchemes: ["mariadb"], postConnectActions: [.selectDatabaseFromLastSession],
+                supportsHealthMonitor: true, urlSchemes: ["mariadb"],
+                postConnectActions: [.selectDatabaseFromLastSession],
                 brandColorHex: "#00B4D8",
                 queryLanguageName: "SQL", editorLanguage: .sql,
                 connectionMode: .network, supportsDatabaseSwitching: true,
@@ -1154,27 +1156,27 @@ final class PluginMetadataRegistry: @unchecked Sendable {
 
     static func fallbackTagline(forTypeId typeId: String) -> String {
         switch typeId {
-        case "MySQL":          return String(localized: "Most popular open-source SQL database")
-        case "MariaDB":        return String(localized: "Open-source fork of MySQL")
-        case "PostgreSQL":     return String(localized: "Advanced object-relational SQL")
-        case "Redshift":       return String(localized: "Amazon's columnar warehouse on Postgres")
-        case "SQLite":         return String(localized: "Embedded zero-config SQL database")
-        case "MSSQL":          return String(localized: "Microsoft's enterprise SQL database")
-        case "Oracle":         return String(localized: "Enterprise SQL with PL/SQL")
-        case "MongoDB":        return String(localized: "JSON-style document database")
-        case "Elasticsearch":  return String(localized: "Search and analytics engine")
-        case "Redis":          return String(localized: "In-memory data store and cache")
-        case "ClickHouse":     return String(localized: "Column-oriented OLAP for big data")
-        case "DuckDB":         return String(localized: "Embedded analytical SQL")
-        case "Cassandra":      return String(localized: "Distributed wide-column store")
-        case "ScyllaDB":       return String(localized: "C++ rewrite of Cassandra, faster")
-        case "etcd", "Etcd":   return String(localized: "Distributed key-value store for service discovery")
-        case "Cloudflare D1":  return String(localized: "Serverless SQLite at the edge")
-        case "libSQL":         return String(localized: "Distributed SQLite by Turso")
-        case "DynamoDB":       return String(localized: "AWS managed key-value/document store")
-        case "BigQuery":       return String(localized: "Google Cloud serverless data warehouse")
-        case "SurrealDB":      return String(localized: "Multi-model database with SurrealQL")
-        default:               return ""
+        case "MySQL": return String(localized: "Most popular open-source SQL database")
+        case "MariaDB": return String(localized: "Open-source fork of MySQL")
+        case "PostgreSQL": return String(localized: "Advanced object-relational SQL")
+        case "Redshift": return String(localized: "Amazon's columnar warehouse on Postgres")
+        case "SQLite": return String(localized: "Embedded zero-config SQL database")
+        case "MSSQL": return String(localized: "Microsoft's enterprise SQL database")
+        case "Oracle": return String(localized: "Enterprise SQL with PL/SQL")
+        case "MongoDB": return String(localized: "JSON-style document database")
+        case "Elasticsearch": return String(localized: "Search and analytics engine")
+        case "Redis": return String(localized: "In-memory data store and cache")
+        case "ClickHouse": return String(localized: "Column-oriented OLAP for big data")
+        case "DuckDB": return String(localized: "Embedded analytical SQL")
+        case "Cassandra": return String(localized: "Distributed wide-column store")
+        case "ScyllaDB": return String(localized: "C++ rewrite of Cassandra, faster")
+        case "etcd", "Etcd": return String(localized: "Distributed key-value store for service discovery")
+        case "Cloudflare D1": return String(localized: "Serverless SQLite at the edge")
+        case "libSQL": return String(localized: "Distributed SQLite by Turso")
+        case "DynamoDB": return String(localized: "AWS managed key-value/document store")
+        case "BigQuery": return String(localized: "Google Cloud serverless data warehouse")
+        case "SurrealDB": return String(localized: "Multi-model database with SurrealQL")
+        default: return ""
         }
     }
 

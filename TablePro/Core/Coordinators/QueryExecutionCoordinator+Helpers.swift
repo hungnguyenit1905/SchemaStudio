@@ -15,8 +15,7 @@ extension QueryExecutionCoordinator {
         guard !bypassLimit,
               let cap = QueryExecutor.resolveRowCap(
                   sql: sql, tabType: tabType, databaseType: parent.connection.type
-              )
-        else {
+              ) else {
             return nil
         }
         guard !SQLLimitDetector.hasExplicitRowLimit(
@@ -328,7 +327,8 @@ extension QueryExecutionCoordinator {
 
     private func applySchemaMetadata(_ schema: FetchedTableSchema, tabId: UUID, tableName: String) {
         guard tabShowsTable(tabId, tableName) else {
-            helpersLogger.info("[fk] phase2 apply skipped, tab closed or table changed table=\(tableName, privacy: .public)")
+            helpersLogger
+                .info("[fk] phase2 apply skipped, tab closed or table changed table=\(tableName, privacy: .public)")
             return
         }
         applyPhase2Metadata(parsed: QueryExecutor.parseSchemaMetadata(schema), tabId: tabId)
@@ -432,7 +432,7 @@ extension QueryExecutionCoordinator {
                     approximateRowCount: tab.pagination.totalRowCount,
                     threshold: AppSettingsManager.shared.dataGrid.countRowsIfEstimateLessThan
                 )
-                guard case let .exactCount(filtered) = plan else { return (plan, nil, scope) }
+                guard case .exactCount(let filtered) = plan else { return (plan, nil, scope) }
                 let buffer = parent.tabSessionRegistry.tableRows(for: tabId)
                 let sql = parent.queryBuilder.buildFilteredCountQuery(
                     tableName: tableName,
@@ -461,10 +461,14 @@ extension QueryExecutionCoordinator {
                 } else {
                     outcome = nil
                 }
-            case let .filteredNonSQL(filters, logicMode):
-                if let count = try? await DatabaseManager.shared.withMetadataDriver(scope: countScope, workload: .bulk, { driver in
-                    try await driver.fetchFilteredRowCount(table: tableName, filters: filters, logicMode: logicMode)
-                }) {
+            case .filteredNonSQL(let filters, let logicMode):
+                if let count = try? await DatabaseManager.shared.withMetadataDriver(
+                    scope: countScope,
+                    workload: .bulk,
+                    { driver in
+                        try await driver.fetchFilteredRowCount(table: tableName, filters: filters, logicMode: logicMode)
+                    }
+                ) {
                     outcome = .count(count, isApproximate: false)
                 } else {
                     outcome = .clear
@@ -473,11 +477,12 @@ extension QueryExecutionCoordinator {
                 let count: Int?
                 if let sql = prepared.sql {
                     do {
-                        count = try await DatabaseManager.shared.withMetadataDriver(scope: countScope, workload: .bulk) { driver in
-                            let result = try await driver.execute(query: sql)
-                            guard let countStr = result.rows.first?.first?.asText else { return Int?.none }
-                            return Int(countStr)
-                        }
+                        count = try await DatabaseManager.shared
+                            .withMetadataDriver(scope: countScope, workload: .bulk) { driver in
+                                let result = try await driver.execute(query: sql)
+                                guard let countStr = result.rows.first?.first?.asText else { return Int?.none }
+                                return Int(countStr)
+                            }
                     } catch {
                         helpersLogger.warning("COUNT query failed for \(tableName): \(error.localizedDescription)")
                         count = nil
@@ -569,7 +574,7 @@ enum RowCountOutcome: Equatable {
     /// An estimate of zero or less means "unknown", never "this table is empty": an un-analyzed
     /// table reports 0 or -1 while holding millions of rows. An exact zero is trustworthy.
     var appliedTotal: (total: Int?, isApproximate: Bool) {
-        guard case let .count(value, isApproximate) = self else { return (nil, false) }
+        guard case .count(let value, let isApproximate) = self else { return (nil, false) }
         guard value > 0 || (value == 0 && !isApproximate) else { return (nil, false) }
         return (value, isApproximate)
     }

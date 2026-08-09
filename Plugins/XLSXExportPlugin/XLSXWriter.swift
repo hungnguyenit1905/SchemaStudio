@@ -52,7 +52,7 @@ final class XLSXWriter {
 
         let maxCols = max(columns.count, columnLetterCache.count)
         if maxCols > columnLetterCache.count {
-            for i in columnLetterCache.count..<maxCols {
+            for i in columnLetterCache.count ..< maxCols {
                 columnLetterCache.append(columnLetter(i))
             }
         }
@@ -135,7 +135,13 @@ final class XLSXWriter {
 
     /// Add a complete worksheet with all rows at once (legacy compatibility).
     /// For better memory usage, prefer `beginSheet` / `addRows` / `finishSheet`.
-    func addSheet(name: String, columns: [String], rows: [[PluginCellValue]], includeHeader: Bool, convertNullToEmpty: Bool) {
+    func addSheet(
+        name: String,
+        columns: [String],
+        rows: [[PluginCellValue]],
+        includeHeader: Bool,
+        convertNullToEmpty: Bool
+    ) {
         beginSheet(name: name, columns: columns, includeHeader: includeHeader, convertNullToEmpty: convertNullToEmpty)
         addRows(rows, convertNullToEmpty: convertNullToEmpty)
         finishSheet()
@@ -207,12 +213,24 @@ final class XLSXWriter {
         var d = Data()
         d.appendUTF8("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n")
         d.appendUTF8("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">")
-        d.appendUTF8("<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>")
+        d
+            .appendUTF8(
+                "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>"
+            )
         d.appendUTF8("<Default Extension=\"xml\" ContentType=\"application/xml\"/>")
-        d.appendUTF8("<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>")
-        d.appendUTF8("<Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>")
+        d
+            .appendUTF8(
+                "<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>"
+            )
+        d
+            .appendUTF8(
+                "<Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>"
+            )
         for index in sheets.indices {
-            d.appendUTF8("<Override PartName=\"/xl/worksheets/sheet\(index + 1).xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>")
+            d
+                .appendUTF8(
+                    "<Override PartName=\"/xl/worksheets/sheet\(index + 1).xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>"
+                )
         }
         d.appendUTF8("</Types>")
         return d
@@ -222,7 +240,10 @@ final class XLSXWriter {
         var d = Data()
         d.appendUTF8("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n")
         d.appendUTF8("<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">")
-        d.appendUTF8("<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"xl/workbook.xml\"/>")
+        d
+            .appendUTF8(
+                "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"xl/workbook.xml\"/>"
+            )
         d.appendUTF8("</Relationships>")
         return d
     }
@@ -230,7 +251,10 @@ final class XLSXWriter {
     private func workbookXML() -> Data {
         var d = Data()
         d.appendUTF8("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n")
-        d.appendUTF8("<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">")
+        d
+            .appendUTF8(
+                "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">"
+            )
         d.appendUTF8("<sheets>")
         for (index, sheet) in sheets.enumerated() {
             d.appendUTF8("<sheet name=\"")
@@ -246,10 +270,16 @@ final class XLSXWriter {
         d.appendUTF8("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n")
         d.appendUTF8("<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">")
         for index in sheets.indices {
-            d.appendUTF8("<Relationship Id=\"rId\(index + 1)\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet\(index + 1).xml\"/>")
+            d
+                .appendUTF8(
+                    "<Relationship Id=\"rId\(index + 1)\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet\(index + 1).xml\"/>"
+                )
         }
         let nextId = sheets.count + 1
-        d.appendUTF8("<Relationship Id=\"rId\(nextId)\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/>")
+        d
+            .appendUTF8(
+                "<Relationship Id=\"rId\(nextId)\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/>"
+            )
         d.appendUTF8("</Relationships>")
         return d
     }
@@ -262,9 +292,15 @@ final class XLSXWriter {
         d.appendUTF8("<font><sz val=\"11\"/><name val=\"Calibri\"/></font>")
         d.appendUTF8("<font><b/><sz val=\"11\"/><name val=\"Calibri\"/></font>")
         d.appendUTF8("</fonts>")
-        d.appendUTF8("<fills count=\"2\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill></fills>")
+        d
+            .appendUTF8(
+                "<fills count=\"2\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill></fills>"
+            )
         d.appendUTF8("<borders count=\"1\"><border><left/><right/><top/><bottom/><diagonal/></border></borders>")
-        d.appendUTF8("<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>")
+        d
+            .appendUTF8(
+                "<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>"
+            )
         d.appendUTF8("<cellXfs count=\"2\">")
         d.appendUTF8("<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/>")
         d.appendUTF8("<xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyFont=\"1\"/>")
@@ -332,7 +368,7 @@ private extension Data {
                 append(contentsOf: [0x26, 0x61, 0x70, 0x6F, 0x73, 0x3B]) // &apos;
             case 0x09, 0x0A, 0x0D: // Tab, LF, CR — allowed in XML 1.0
                 append(byte)
-            case 0x00...0x08, 0x0B, 0x0C, 0x0E...0x1F: // Illegal XML 1.0 control chars
+            case 0x00 ... 0x08, 0x0B, 0x0C, 0x0E ... 0x1F: // Illegal XML 1.0 control chars
                 break // Strip silently
             default:
                 append(byte)

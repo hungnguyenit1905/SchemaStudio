@@ -24,8 +24,7 @@ enum ERDiagramEdgeRenderer {
             guard let fromId = nodeIndex[edge.fromTable],
                   let toId = nodeIndex[edge.toTable],
                   let fromRect = nodeRects[fromId],
-                  let toRect = nodeRects[toId]
-            else { return nil }
+                  let toRect = nodeRects[toId] else { return nil }
             return ResolvedEdge(edge: edge, fromId: fromId, toId: toId, fromRect: fromRect, toRect: toRect)
         }
 
@@ -79,8 +78,20 @@ enum ERDiagramEdgeRenderer {
             let (path, cp1, cp2) = bezierPath(from: srcPort, to: dstPort, verticalPorts: verticalPorts)
 
             context.stroke(path, with: .color(strokeColor), style: strokeStyle)
-            drawSourceMarker(context: context, cardinality: item.edge.cardinality, at: srcPort, toward: cp1, color: strokeColor)
-            drawDestinationMarker(context: context, cardinality: item.edge.cardinality, at: dstPort, toward: cp2, color: strokeColor)
+            drawSourceMarker(
+                context: context,
+                cardinality: item.edge.cardinality,
+                at: srcPort,
+                toward: cp1,
+                color: strokeColor
+            )
+            drawDestinationMarker(
+                context: context,
+                cardinality: item.edge.cardinality,
+                at: dstPort,
+                toward: cp2,
+                color: strokeColor
+            )
         }
     }
 
@@ -95,17 +106,52 @@ enum ERDiagramEdgeRenderer {
     ) {
         switch cardinality {
         case .oneToOne:
-            drawCompoundEndMarker(context: context, at: point, toward: target, isMany: false, isMandatory: true, color: color)
+            drawCompoundEndMarker(
+                context: context,
+                at: point,
+                toward: target,
+                isMany: false,
+                isMandatory: true,
+                color: color
+            )
         case .zeroOrOneToOne:
-            drawCompoundEndMarker(context: context, at: point, toward: target, isMany: false, isMandatory: false, color: color)
+            drawCompoundEndMarker(
+                context: context,
+                at: point,
+                toward: target,
+                isMany: false,
+                isMandatory: false,
+                color: color
+            )
         case .manyToOne:
-            drawCompoundEndMarker(context: context, at: point, toward: target, isMany: true, isMandatory: true, color: color)
+            drawCompoundEndMarker(
+                context: context,
+                at: point,
+                toward: target,
+                isMany: true,
+                isMandatory: true,
+                color: color
+            )
         case .zeroOrManyToOne:
-            drawCompoundEndMarker(context: context, at: point, toward: target, isMany: true, isMandatory: false, color: color)
+            drawCompoundEndMarker(
+                context: context,
+                at: point,
+                toward: target,
+                isMany: true,
+                isMandatory: false,
+                color: color
+            )
         case .manyToMany:
             drawCrowFoot(context: context, at: point, toward: target, color: color)
         default:
-            drawCompoundEndMarker(context: context, at: point, toward: target, isMany: true, isMandatory: true, color: color)
+            drawCompoundEndMarker(
+                context: context,
+                at: point,
+                toward: target,
+                isMany: true,
+                isMandatory: true,
+                color: color
+            )
         }
     }
 
@@ -211,7 +257,11 @@ enum ERDiagramEdgeRenderer {
 
     // MARK: - Bezier Path
 
-    private static func bezierPath(from src: CGPoint, to dst: CGPoint, verticalPorts: Bool) -> (Path, CGPoint, CGPoint) {
+    private static func bezierPath(
+        from src: CGPoint,
+        to dst: CGPoint,
+        verticalPorts: Bool
+    ) -> (Path, CGPoint, CGPoint) {
         let cp1: CGPoint
         let cp2: CGPoint
 
@@ -235,7 +285,12 @@ enum ERDiagramEdgeRenderer {
 
     // MARK: - Crow's Foot (Many Side)
 
-    private static func drawCrowFoot(context: GraphicsContext, at point: CGPoint, toward target: CGPoint, color: Color) {
+    private static func drawCrowFoot(
+        context: GraphicsContext,
+        at point: CGPoint,
+        toward target: CGPoint,
+        color: Color
+    ) {
         let length: CGFloat = 12
         let spread: CGFloat = 8
         let angle = atan2(target.y - point.y, target.x - point.x)

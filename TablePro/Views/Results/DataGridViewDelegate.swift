@@ -60,7 +60,11 @@ extension DataGridViewDelegate {
     func dataGridColumnStructureMenuItems(forColumn dataColumnIndex: Int) -> [NSMenuItem] { [] }
     func dataGridRowStructureMenuItems(forRow displayRow: Int) -> [NSMenuItem] { [] }
     func dataGridVisualState(forRow row: Int) -> RowVisualState? { nil }
-    func dataGridRowView(for tableView: NSTableView, row: Int, coordinator: TableViewCoordinator) -> NSTableRowView? { nil }
+    func dataGridRowView(
+        for tableView: NSTableView,
+        row: Int,
+        coordinator: TableViewCoordinator
+    ) -> NSTableRowView? { nil }
     func dataGridEmptySpaceMenu() -> NSMenu? { nil }
     func dataGridDidInsertRows(at indices: IndexSet) {}
     func dataGridDidRemoveRows(at indices: IndexSet) {}

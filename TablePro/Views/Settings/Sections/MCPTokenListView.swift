@@ -50,7 +50,12 @@ struct MCPTokenListView: View {
                 deleteCandidate = nil
             }
         } message: { token in
-            Text(String(format: String(localized: "“%@” will be permanently deleted. External clients using this token will lose access immediately."), token.name))
+            Text(String(
+                format: String(
+                    localized: "“%@” will be permanently deleted. External clients using this token will lose access immediately."
+                ),
+                token.name
+            ))
         }
     }
 
@@ -153,8 +158,8 @@ private struct MCPTokenRow: View {
                 .help(tokenStatus == .active
                     ? String(localized: "Active")
                     : tokenStatus == .expired
-                        ? String(localized: "Expired")
-                        : String(localized: "Revoked"))
+                    ? String(localized: "Expired")
+                    : String(localized: "Revoked"))
         }
         .padding(.vertical, 2)
     }

@@ -8,8 +8,8 @@
 
 import AppKit
 import Foundation
-import SwiftUI
 @testable import SchemaStudio
+import SwiftUI
 import TableProPluginKit
 import Testing
 
@@ -25,7 +25,7 @@ struct CommandActionsBulkCloseTests {
         let state = SessionStateFactory.create(connection: connection, payload: nil)
         let coordinator = state.coordinator
 
-        var selectedTables: Set<TableInfo> = []
+        var selectedTables: Set<DatabaseTreeTableRef> = []
         var pendingTruncates: Set<String> = []
         var pendingDeletes: Set<String> = []
         var tableOperationOptions: [String: TableOperationOptions] = [:]

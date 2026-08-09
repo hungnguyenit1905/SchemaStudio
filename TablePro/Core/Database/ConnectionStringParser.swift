@@ -36,7 +36,7 @@ enum ConnectionStringParser {
         guard let schemeRange = trimmed.range(of: "://") else {
             throw ConnectionStringParserError.malformedURL
         }
-        let rawScheme = String(trimmed[trimmed.startIndex..<schemeRange.lowerBound]).lowercased()
+        let rawScheme = String(trimmed[trimmed.startIndex ..< schemeRange.lowerBound]).lowercased()
 
         guard let descriptor = SchemeDescriptor.match(rawScheme: rawScheme) else {
             throw ConnectionStringParserError.unsupportedScheme(rawScheme)
@@ -53,7 +53,7 @@ enum ConnectionStringParser {
         }
         let port: Int
         if let explicit = components.port {
-            guard (1...65_535).contains(explicit) else {
+            guard (1 ... 65_535).contains(explicit) else {
                 throw ConnectionStringParserError.malformedURL
             }
             port = explicit

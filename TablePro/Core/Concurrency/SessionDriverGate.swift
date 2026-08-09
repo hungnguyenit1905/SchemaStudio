@@ -73,8 +73,7 @@ final class SessionDriverGate {
     /// can only ever find one of them.
     private func failWaiter(ticket: UUID, connectionId: UUID) {
         guard var pending = waiters[connectionId],
-              let index = pending.firstIndex(where: { $0.ticket == ticket })
-        else {
+              let index = pending.firstIndex(where: { $0.ticket == ticket }) else {
             return
         }
         let waiter = pending.remove(at: index)

@@ -18,7 +18,7 @@ final class EtcdPlugin: NSObject, TableProPlugin, DriverPlugin {
     static let databaseTypeId = "etcd"
     static let databaseDisplayName = "etcd"
     static let iconName = "etcd-icon"
-    static let defaultPort = 2379
+    static let defaultPort = 2_379
     static let isDownloadable = true
 
     static let navigationModel: NavigationModel = .standard

@@ -6,9 +6,9 @@
 //  including doublings (dd/cc/yy), shortcuts (D/C/Y/x/X), and operator+motion combos.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 // swiftlint:disable file_length type_body_length
 
@@ -30,7 +30,9 @@ final class VimEngineOperatorsTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {
@@ -58,8 +60,11 @@ final class VimEngineOperatorsTests: XCTestCase {
     func testXDoesNotCrossNewline() {
         buffer.setSelectedRange(NSRange(location: 10, length: 0))
         keys("5x")
-        XCTAssertEqual(buffer.text, "hello worl\nsecond line\nthird line\n",
-            "x with count should clamp at the line-terminating newline")
+        XCTAssertEqual(
+            buffer.text,
+            "hello worl\nsecond line\nthird line\n",
+            "x with count should clamp at the line-terminating newline"
+        )
     }
 
     func testXOnEmptyLineIsNoOp() {
@@ -82,8 +87,11 @@ final class VimEngineOperatorsTests: XCTestCase {
     func testCapitalXDeletesCharBeforeCursor() {
         buffer.setSelectedRange(NSRange(location: 5, length: 0))
         key("X", shift: true)
-        XCTAssertEqual(buffer.text, "hell world\nsecond line\nthird line\n",
-            "X should delete the char to the left of the cursor")
+        XCTAssertEqual(
+            buffer.text,
+            "hell world\nsecond line\nthird line\n",
+            "X should delete the char to the left of the cursor"
+        )
     }
 
     func testCapitalXWithCount() {
@@ -96,8 +104,11 @@ final class VimEngineOperatorsTests: XCTestCase {
     func testCapitalXAtLineStartIsNoOp() {
         buffer.setSelectedRange(NSRange(location: 12, length: 0))
         key("X", shift: true)
-        XCTAssertEqual(buffer.text, "hello world\nsecond line\nthird line\n",
-            "X must not cross line boundary backward")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nsecond line\nthird line\n",
+            "X must not cross line boundary backward"
+        )
     }
 
     func testCapitalXAtBufferStartIsNoOp() {
@@ -152,8 +163,11 @@ final class VimEngineOperatorsTests: XCTestCase {
     func testDEDeletesToWordEndInclusive() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("de")
-        XCTAssertEqual(buffer.text, " world\nsecond line\nthird line\n",
-            "de should delete inclusive of the word-end character")
+        XCTAssertEqual(
+            buffer.text,
+            " world\nsecond line\nthird line\n",
+            "de should delete inclusive of the word-end character"
+        )
     }
 
     func testDBDeletesBackwardWord() {
@@ -193,29 +207,41 @@ final class VimEngineOperatorsTests: XCTestCase {
     func testDGGFromMidBufferDeletesToTop() {
         buffer.setSelectedRange(NSRange(location: 14, length: 0))
         keys("dgg")
-        XCTAssertEqual(buffer.text, "third line\n",
-            "dgg should delete from current line to first line (linewise)")
+        XCTAssertEqual(
+            buffer.text,
+            "third line\n",
+            "dgg should delete from current line to first line (linewise)"
+        )
     }
 
     func testDJDeletesTwoLines() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("dj")
-        XCTAssertEqual(buffer.text, "third line\n",
-            "dj should delete current line and the line below (linewise)")
+        XCTAssertEqual(
+            buffer.text,
+            "third line\n",
+            "dj should delete current line and the line below (linewise)"
+        )
     }
 
     func testDKDeletesTwoLines() {
         buffer.setSelectedRange(NSRange(location: 12, length: 0))
         keys("dk")
-        XCTAssertEqual(buffer.text, "third line\n",
-            "dk should delete current line and the line above (linewise)")
+        XCTAssertEqual(
+            buffer.text,
+            "third line\n",
+            "dk should delete current line and the line above (linewise)"
+        )
     }
 
     func testDCountWordsDeletesMultipleWords() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("d3w")
-        XCTAssertEqual(buffer.text, "line\nthird line\n",
-            "d3w from offset 0 should delete 'hello world\\nsecond '")
+        XCTAssertEqual(
+            buffer.text,
+            "line\nthird line\n",
+            "d3w from offset 0 should delete 'hello world\\nsecond '"
+        )
     }
 
     // MARK: - D: Delete to End of Line
@@ -223,8 +249,11 @@ final class VimEngineOperatorsTests: XCTestCase {
     func testCapitalDDeletesToEndOfLine() {
         buffer.setSelectedRange(NSRange(location: 5, length: 0))
         key("D", shift: true)
-        XCTAssertEqual(buffer.text, "hello\nsecond line\nthird line\n",
-            "D is shorthand for d$ and deletes through end-of-line content")
+        XCTAssertEqual(
+            buffer.text,
+            "hello\nsecond line\nthird line\n",
+            "D is shorthand for d$ and deletes through end-of-line content"
+        )
     }
 
     func testCapitalDOnEmptyLineIsNoOp() {
@@ -253,8 +282,11 @@ final class VimEngineOperatorsTests: XCTestCase {
     func testYYWithCount() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("2yyp")
-        XCTAssertEqual(buffer.text, "hello world\nhello world\nsecond line\nsecond line\nthird line\n",
-            "2yy should yank two lines, p pastes them after current line")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nhello world\nsecond line\nsecond line\nthird line\n",
+            "2yy should yank two lines, p pastes them after current line"
+        )
     }
 
     func testYYCursorStaysAtLineStart() {
@@ -270,22 +302,31 @@ final class VimEngineOperatorsTests: XCTestCase {
     func testYWYanksWordIntoRegister() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("yw")
-        XCTAssertEqual(buffer.text, "hello world\nsecond line\nthird line\n",
-            "yw must not modify the buffer")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nsecond line\nthird line\n",
+            "yw must not modify the buffer"
+        )
     }
 
     func testYWThenPasteInsertsWord() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("ywp")
-        XCTAssertEqual(buffer.text, "hhello ello world\nsecond line\nthird line\n",
-            "After yw, p pastes 'hello ' after the cursor at offset 0")
+        XCTAssertEqual(
+            buffer.text,
+            "hhello ello world\nsecond line\nthird line\n",
+            "After yw, p pastes 'hello ' after the cursor at offset 0"
+        )
     }
 
     func testYDollarYanksToLineEnd() {
         buffer.setSelectedRange(NSRange(location: 5, length: 0))
         keys("y$p")
-        XCTAssertEqual(buffer.text, "hello  worldworld\nsecond line\nthird line\n",
-            "y$ from offset 5 yanks ' world', p pastes it after cursor")
+        XCTAssertEqual(
+            buffer.text,
+            "hello  worldworld\nsecond line\nthird line\n",
+            "y$ from offset 5 yanks ' world', p pastes it after cursor"
+        )
     }
 
     // MARK: - Y: Yank Line (synonym of yy)
@@ -294,8 +335,11 @@ final class VimEngineOperatorsTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         key("Y", shift: true)
         keys("p")
-        XCTAssertEqual(buffer.text, "hello world\nhello world\nsecond line\nthird line\n",
-            "Y is a synonym for yy and yanks the whole line linewise")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nhello world\nsecond line\nthird line\n",
+            "Y is a synonym for yy and yanks the whole line linewise"
+        )
     }
 
     // MARK: - cc: Change Line
@@ -312,8 +356,11 @@ final class VimEngineOperatorsTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("2cc")
         XCTAssertEqual(engine.mode, .insert)
-        XCTAssertEqual(buffer.text, "\nthird line\n",
-            "2cc should clear two lines' content and leave one newline")
+        XCTAssertEqual(
+            buffer.text,
+            "\nthird line\n",
+            "2cc should clear two lines' content and leave one newline"
+        )
     }
 
     // MARK: - c + Motion
@@ -335,8 +382,11 @@ final class VimEngineOperatorsTests: XCTestCase {
     func testCEChangesToWordEndInclusive() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("ce")
-        XCTAssertEqual(buffer.text, " world\nsecond line\nthird line\n",
-            "ce should delete through the word-end character")
+        XCTAssertEqual(
+            buffer.text,
+            " world\nsecond line\nthird line\n",
+            "ce should delete through the word-end character"
+        )
     }
 
     // MARK: - C: Change to End of Line
@@ -345,8 +395,11 @@ final class VimEngineOperatorsTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 5, length: 0))
         key("C", shift: true)
         XCTAssertEqual(engine.mode, .insert)
-        XCTAssertEqual(buffer.text, "hello\nsecond line\nthird line\n",
-            "C is shorthand for c$")
+        XCTAssertEqual(
+            buffer.text,
+            "hello\nsecond line\nthird line\n",
+            "C is shorthand for c$"
+        )
     }
 
     // MARK: - Pending Operator Cancellation
@@ -357,8 +410,11 @@ final class VimEngineOperatorsTests: XCTestCase {
         escape()
         keys("l")
         XCTAssertEqual(pos, 1)
-        XCTAssertEqual(buffer.text, "hello world\nsecond line\nthird line\n",
-            "Escape should cancel the pending operator without modifying the buffer")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nsecond line\nthird line\n",
+            "Escape should cancel the pending operator without modifying the buffer"
+        )
     }
 
     func testPendingCCancelledByEscape() {
@@ -375,8 +431,11 @@ final class VimEngineOperatorsTests: XCTestCase {
         keys("y")
         escape()
         keys("p")
-        XCTAssertEqual(buffer.text, "hello world\nsecond line\nthird line\n",
-            "Cancelled yank should leave the register untouched")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nsecond line\nthird line\n",
+            "Cancelled yank should leave the register untouched"
+        )
     }
 
     func testPendingOperatorCancelledByUnknownKey() {
@@ -403,8 +462,11 @@ final class VimEngineOperatorsTests: XCTestCase {
         keys("dw")
         XCTAssertEqual(buffer.text, "world\nsecond line\nthird line\n")
         key("P", shift: true)
-        XCTAssertEqual(buffer.text, "hello world\nsecond line\nthird line\n",
-            "Deleted text should round-trip through P")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nsecond line\nthird line\n",
+            "Deleted text should round-trip through P"
+        )
     }
 }
 

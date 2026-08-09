@@ -15,11 +15,6 @@ internal enum SidebarTab: String, CaseIterable {
     case favorites
 }
 
-internal enum SidebarLayout: String, CaseIterable, Sendable {
-    case flat
-    case tree
-}
-
 @MainActor @Observable
 final class SharedSidebarState {
     var redisKeyTreeViewModel: RedisKeyTreeViewModel?
@@ -94,15 +89,6 @@ final class SharedSidebarState {
         }
     }
 
-    var sidebarLayout: SidebarLayout {
-        didSet {
-            UserDefaults.standard.set(
-                sidebarLayout.rawValue,
-                forKey: SidebarPersistenceKey.layout(connectionId: connectionId)
-            )
-        }
-    }
-
     var databaseFilterSelected: Set<String> {
         didSet {
             DatabaseTreeFilterStorage.shared.setSelectedDatabases(
@@ -124,19 +110,6 @@ final class SharedSidebarState {
         }
     }
 
-    static var defaultLayout: SidebarLayout {
-        get {
-            guard let raw = UserDefaults.standard.string(forKey: SidebarPersistenceKey.defaultLayout),
-                  let layout = SidebarLayout(rawValue: raw) else {
-                return .flat
-            }
-            return layout
-        }
-        set {
-            UserDefaults.standard.set(newValue.rawValue, forKey: SidebarPersistenceKey.defaultLayout)
-        }
-    }
-
     let connectionId: UUID
 
     private init(connectionId: UUID) {
@@ -147,13 +120,6 @@ final class SharedSidebarState {
             self.selectedSidebarTab = tab
         } else {
             self.selectedSidebarTab = .tables
-        }
-        let layoutKey = SidebarPersistenceKey.layout(connectionId: connectionId)
-        if let raw = UserDefaults.standard.string(forKey: layoutKey),
-           let layout = SidebarLayout(rawValue: raw) {
-            self.sidebarLayout = layout
-        } else {
-            self.sidebarLayout = SharedSidebarState.defaultLayout
         }
         self.databaseFilterSelected = DatabaseTreeFilterStorage.shared.selectedDatabases(connectionId: connectionId)
         self.selectedFavorite = UserDefaults.standard.string(
@@ -168,7 +134,6 @@ final class SharedSidebarState {
     init() {
         self.connectionId = UUID()
         self.selectedSidebarTab = .tables
-        self.sidebarLayout = .flat
         self.databaseFilterSelected = []
         self.selectedFavorite = nil
     }
@@ -184,6 +149,13 @@ final class SharedSidebarState {
         let state = SharedSidebarState(connectionId: id)
         registry[id] = state
         return state
+    }
+
+    /// The registered state, without creating one. Teardown must use this:
+    /// `forConnection` creates on demand, so a late disconnect running after the
+    /// connection was deleted would re-register state under a dead id.
+    static func existing(_ id: UUID) -> SharedSidebarState? {
+        registry[id]
     }
 
     static func removeConnection(_ id: UUID) {

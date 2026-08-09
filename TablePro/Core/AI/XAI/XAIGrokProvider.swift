@@ -92,9 +92,9 @@ final class XAIGrokProvider: ChatTransport {
         options: ChatTransportOptions,
         stream: Bool
     ) throws -> [String: Any] {
-        var body: [String: Any] = [
+        var body: [String: Any] = try [
             "model": options.model,
-            "input": try OpenAIResponsesProvider.encodeInput(turns: turns),
+            "input": OpenAIResponsesProvider.encodeInput(turns: turns),
             "store": false,
             "stream": stream,
             "instructions": instructions(for: options)

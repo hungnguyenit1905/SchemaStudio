@@ -7,9 +7,9 @@
 //  empty buffers, single-char buffers, unicode, very long content.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 // swiftlint:disable file_length type_body_length
 
@@ -31,7 +31,9 @@ final class VimEngineEdgeCasesTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {
@@ -157,13 +159,13 @@ final class VimEngineEdgeCasesTests: XCTestCase {
         let payload = String(repeating: "a", count: 10_000)
         make(payload + "\n", at: 0)
         keys("$")
-        XCTAssertEqual(pos, 9999, "$ on a 10k-char line should land on the last content char")
+        XCTAssertEqual(pos, 9_999, "$ on a 10k-char line should land on the last content char")
         keys("0")
         XCTAssertEqual(pos, 0)
         // Word motion across long content
         keys("w")
         // Single contiguous word, should land at end-of-content per the clamp rule.
-        XCTAssertEqual(pos, 9999)
+        XCTAssertEqual(pos, 9_999)
     }
 
     // MARK: - Unicode
@@ -203,7 +205,9 @@ final class VimEngineEdgeCasesTests: XCTestCase {
     func testExtremeCountDoesNotOverflowOrCrash() {
         make("hello\n", at: 0)
         // Type a million-digit count then a motion; engine must cap and execute safely.
-        for _ in 0..<200 { _ = engine.process("9", shift: false) }
+        for _ in 0 ..< 200 {
+            _ = engine.process("9", shift: false)
+        }
         keys("l")
         XCTAssertEqual(pos, 4, "Count beyond the cap should still produce a clamped motion")
     }
@@ -225,7 +229,7 @@ final class VimEngineEdgeCasesTests: XCTestCase {
     func testRapidModeSwitchesPreserveState() {
         make("hello\n", at: 0)
         // i → Esc → i → Esc many times. Cursor should remain stable.
-        for _ in 0..<10 {
+        for _ in 0 ..< 10 {
             keys("i")
             escape()
         }

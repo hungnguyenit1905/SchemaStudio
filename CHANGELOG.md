@@ -9,11 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The sidebar lists every saved connection, grouped into the same folders as the welcome window. Expanding a connection connects it and loads its databases. A connect that fails shows the reason on the connection with a retry button, and reopening the app connects nothing until you expand something yourself.
+- Right-clicking a connection in the sidebar offers Connect, Disconnect, Refresh, New Query, and Edit Connection.
+- Adding, editing, or deleting a connection or folder in the welcome window now shows up in the sidebar right away, with no restart.
+- Closing the last tab of a connection that is still expanded in the sidebar keeps it connected. Collapse it first, or use Disconnect, to end the session.
+- Disconnecting a connection keeps its recent tables and sidebar search text, so reconnecting picks up where you left off.
+- Opening a table under a different connection in the sidebar creates a tab for that connection next to the tabs already open, instead of a separate window. The tools below the sidebar follow the connection selected in the tree.
 - The app is now SchemaStudio, a fork of TablePro. Stored settings, connections, and window state start fresh because the app now uses its own storage location and no data is migrated from TablePro.
 - New app icon, with light, dark, and tinted variants.
+- Sidebar connection rows no longer show the database type logo before the name.
 
 ### Removed
 
+- The "Sidebar as List" and "Sidebar as Tree" options, along with the default layout setting. Every connection now uses one tree.
 - Automatic updates. The app no longer checks for or installs updates, and the "Check for Updates" command is gone.
 - Anonymous usage reporting, along with the "Share anonymous usage data" setting. The app sends no telemetry.
 - License activation and Team Library sync. Both required a service this fork does not run, so Pro features report as unavailable.
@@ -22,11 +30,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Selecting a range of cells in a number column shows the count, sum, average, smallest, and largest value in the status bar. Cells that are empty are counted separately and left out of the totals.
+- Confirming an UPDATE or DELETE written in the editor now says how many rows currently match its WHERE clause, or says the number could not be worked out for that statement. A statement with no WHERE clause is called out as affecting the whole table.
+- Data Transfer, a tool that copies tables, indexes and foreign keys between two connections of the same database type. Preparing a target table turns foreign key checks off first, so emptying a table that other tables point at no longer fails. Open it from the Tools menu or by right-clicking a database in the sidebar.
 - Redshift external schemas now list their tables. Spectrum, federated query, cross-database, and datashare schemas showed up empty because their tables are not in the standard catalog.
 - External schemas are marked in the sidebar, and their tables show an external icon. External tables open read-only, because Redshift rejects `UPDATE` and `DELETE` on them.
 
 ### Fixed
 
+- A table opened from the sidebar now joins the tab group of the window it was opened from. With two windows open it could land in the other one.
+- The schema picker, database filter, and new-object menu below the sidebar now follow the connection selected in that window. Selecting a connection in one window retargeted them in every other window.
 - An open tab now keeps running against the database it was opened on, so changing the database in the sidebar no longer breaks it with a "table doesn't exist" error. (#2026)
 - Saving a table structure change no longer moves the sidebar and toolbar to that tab's database. (#2026)
 - Row edits, fetch all rows, and multi-statement scripts now write to the database the tab is bound to, not whichever database another tab last used. (#2026)

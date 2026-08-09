@@ -98,14 +98,19 @@ struct LicenseTierTests {
 
     @Test("unlicensed and other inactive statuses report unlicensed")
     func inactiveStatusesReportUnlicensed() {
-        #expect(LicenseManager.resolveAccess(status: .unlicensed, tier: .starter, requiredTier: .starter) == .unlicensed)
+        #expect(LicenseManager
+            .resolveAccess(status: .unlicensed, tier: .starter, requiredTier: .starter) == .unlicensed)
         #expect(LicenseManager.resolveAccess(status: .suspended, tier: .team, requiredTier: .team) == .unlicensed)
         #expect(LicenseManager.resolveAccess(status: .deactivated, tier: .team, requiredTier: .team) == .unlicensed)
     }
 
     @Test("an unrecognized future tier grants team features when active")
     func unknownTierGrantsTeamFeature() {
-        let access = LicenseManager.resolveAccess(status: .active, tier: LicenseTier(rawValue: "enterprise"), requiredTier: .team)
+        let access = LicenseManager.resolveAccess(
+            status: .active,
+            tier: LicenseTier(rawValue: "enterprise"),
+            requiredTier: .team
+        )
         #expect(access == .available)
     }
 

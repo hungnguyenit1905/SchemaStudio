@@ -76,14 +76,12 @@ struct CustomSlashCommandsSection: View {
         }
     }
 
-    @ViewBuilder
     private var emptyState: some View {
         Text(String(localized: "No custom commands yet."))
             .font(.caption)
             .foregroundStyle(.secondary)
     }
 
-    @ViewBuilder
     private func row(for command: CustomSlashCommand) -> some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
@@ -155,10 +153,10 @@ struct CustomSlashCommandEditorSheet: View {
                     Text(String(localized: "Prompt template"))
                 } footer: {
                     Text(String(localized: """
-                        Use {{query}} for the current editor query, {{schema}} for the active schema, \
-                        {{database}} for the active database name, and {{body}} for any text typed \
-                        after the command.
-                        """))
+                    Use {{query}} for the current editor query, {{schema}} for the active schema, \
+                    {{database}} for the active database name, and {{body}} for any text typed \
+                    after the command.
+                    """))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }

@@ -13,7 +13,6 @@ import Testing
 
 @Suite("MongoDB Shell Parser")
 struct MongoShellParserTests {
-
     // MARK: - Find Operations
 
     @Test("find with empty filter")
@@ -243,7 +242,8 @@ struct MongoShellParserTests {
 
     @Test("findOneAndReplace operation")
     func testFindOneAndReplace() throws {
-        let op = try MongoShellParser.parse("db.users.findOneAndReplace({\"_id\": 1}, {\"name\": \"Jane\", \"age\": 30})")
+        let op = try MongoShellParser
+            .parse("db.users.findOneAndReplace({\"_id\": 1}, {\"name\": \"Jane\", \"age\": 30})")
         if case .findOneAndReplace(let collection, let filter, let replacement) = op {
             #expect(collection == "users")
             #expect(filter == "{\"_id\": 1}")

@@ -118,7 +118,11 @@ struct CSVImportPluginTests {
 
     @Test("Extra fields beyond the column count are ignored")
     func testRaggedLongRow() {
-        let row = CSVImportParsing.row(fields: ["1", "Alice", "extra"], columnNames: ["id", "name"], options: CSVImportOptions())
+        let row = CSVImportParsing.row(
+            fields: ["1", "Alice", "extra"],
+            columnNames: ["id", "name"],
+            options: CSVImportOptions()
+        )
         #expect(row.count == 2)
         #expect(row["name"] == .text("Alice"))
     }

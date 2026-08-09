@@ -125,7 +125,9 @@ extension EmptyStateView {
         EmptyStateView(
             icon: "bolt",
             title: String(localized: "No Triggers"),
-            description: String(localized: "This table has no triggers. Triggers run automatically when rows are inserted, updated, or deleted.")
+            description: String(
+                localized: "This table has no triggers. Triggers run automatically when rows are inserted, updated, or deleted."
+            )
         )
     }
 

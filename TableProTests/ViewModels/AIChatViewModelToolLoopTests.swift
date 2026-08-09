@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("AIChatViewModel tool roundtrip loop", .serialized)
@@ -60,7 +60,7 @@ struct AIChatViewModelToolLoopTests {
     }
 
     private static func toolRounds(count: Int) -> [[ChatStreamEvent]] {
-        (1...count).map { toolRound(id: "u\($0)") }
+        (1 ... count).map { toolRound(id: "u\($0)") }
     }
 
     private static func makeSettings(limit: Int?, enabled: Bool) -> AISettings {
@@ -239,7 +239,7 @@ struct AIChatViewModelToolLoopTests {
         let viewModel = AIChatViewModel()
         viewModel.messages.append(ChatTurn(role: .user, blocks: [.text("typed first")]))
 
-        for _ in 0..<10 {
+        for _ in 0 ..< 10 {
             await Task.yield()
         }
 

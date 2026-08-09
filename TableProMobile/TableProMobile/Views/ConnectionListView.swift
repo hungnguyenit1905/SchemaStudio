@@ -75,7 +75,7 @@ struct ConnectionListView: View {
                     ToolbarItemGroup(placement: .topBarTrailing) {
                         moreMenu
                         filterMenu
-                        if filterTagId == nil && !appState.connections.isEmpty {
+                        if filterTagId == nil, !appState.connections.isEmpty {
                             Button(editMode == .active ? "Done" : "Edit") {
                                 editMode = editMode == .active ? .inactive : .active
                             }
@@ -118,21 +118,24 @@ struct ConnectionListView: View {
                         .accessibilityLabel(Text("Settings"))
                     }
                 }
-            .onChange(of: appState.pendingConnectionId) { _, newId in
-                navigateToPendingConnection(newId)
-            }
-            .onChange(of: filterTagIdString) {
-                editMode = .inactive
-            }
-            .onChange(of: groupByGroup) {
-                editMode = .inactive
-            }
-            .onAppear {
-                navigateToPendingConnection(appState.pendingConnectionId)
-            }
+                .onChange(of: appState.pendingConnectionId) { _, newId in
+                    navigateToPendingConnection(newId)
+                }
+                .onChange(of: filterTagIdString) {
+                    editMode = .inactive
+                }
+                .onChange(of: groupByGroup) {
+                    editMode = .inactive
+                }
+                .onAppear {
+                    navigateToPendingConnection(appState.pendingConnectionId)
+                }
         } detail: {
             if let connection = selectedConnection {
-                ConnectedView(connection: connection, cachedCoordinator: coordinatorCache[connection.id]) { coordinator in
+                ConnectedView(
+                    connection: connection,
+                    cachedCoordinator: coordinatorCache[connection.id]
+                ) { coordinator in
                     coordinatorCache[connection.id] = coordinator
                 }
                 .id(connection.id)
@@ -242,8 +245,7 @@ struct ConnectionListView: View {
             : String(format: String(localized: "%d connections imported."), count)
     }
 
-    @ViewBuilder
-    private var connectionList: some View {
+    @ViewBuilder private var connectionList: some View {
         let list = List(selection: selectedConnectionId) {
             if groupByGroup {
                 groupedContent
@@ -268,9 +270,8 @@ struct ConnectionListView: View {
         }
     }
 
-    @ViewBuilder
-    private var sidebar: some View {
-        if appState.connections.isEmpty && !isSyncing {
+    @ViewBuilder private var sidebar: some View {
+        if appState.connections.isEmpty, !isSyncing {
             ContentUnavailableView {
                 Label("No Connections", systemImage: "server.rack")
             } description: {
@@ -281,46 +282,48 @@ struct ConnectionListView: View {
                 }
                 .buttonStyle(.borderedProminent)
             }
-        } else if appState.connections.isEmpty && isSyncing {
+        } else if appState.connections.isEmpty, isSyncing {
             ProgressView("Syncing from iCloud...")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             connectionList
-            .overlay {
-                if !appState.connections.isEmpty && displayedConnections.isEmpty {
-                    ContentUnavailableView(
-                        "No Matching Connections",
-                        systemImage: "line.3.horizontal.decrease.circle",
-                        description: Text("No connections match the selected filter.")
-                    )
-                }
-            }
-            .environment(\.editMode, $editMode)
-            .refreshable {
-                guard cloudSyncEnabled else { return }
-                await appState.syncCoordinator.sync(
-                    localConnections: appState.connections,
-                    localGroups: appState.groups,
-                    localTags: appState.tags
-                )
-            }
-            .confirmationDialog(
-                String(localized: "Delete Connection"),
-                isPresented: showDeleteConfirmation,
-                titleVisibility: .visible
-            ) {
-                Button(String(localized: "Delete"), role: .destructive) {
-                    if let connection = connectionToDelete {
-                        if selectedConnectionUUID == connection.id {
-                            selectedConnectionIdString = nil
-                        }
-                        coordinatorCache.removeValue(forKey: connection.id)
-                        appState.removeConnection(connection)
+                .overlay {
+                    if !appState.connections.isEmpty, displayedConnections.isEmpty {
+                        ContentUnavailableView(
+                            "No Matching Connections",
+                            systemImage: "line.3.horizontal.decrease.circle",
+                            description: Text("No connections match the selected filter.")
+                        )
                     }
                 }
-            } message: {
-                Text("Are you sure you want to delete this connection? Saved credentials will be permanently removed.")
-            }
+                .environment(\.editMode, $editMode)
+                .refreshable {
+                    guard cloudSyncEnabled else { return }
+                    await appState.syncCoordinator.sync(
+                        localConnections: appState.connections,
+                        localGroups: appState.groups,
+                        localTags: appState.tags
+                    )
+                }
+                .confirmationDialog(
+                    String(localized: "Delete Connection"),
+                    isPresented: showDeleteConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button(String(localized: "Delete"), role: .destructive) {
+                        if let connection = connectionToDelete {
+                            if selectedConnectionUUID == connection.id {
+                                selectedConnectionIdString = nil
+                            }
+                            coordinatorCache.removeValue(forKey: connection.id)
+                            appState.removeConnection(connection)
+                        }
+                    }
+                } message: {
+                    Text(
+                        "Are you sure you want to delete this connection? Saved credentials will be permanently removed."
+                    )
+                }
         }
     }
 
@@ -377,8 +380,7 @@ struct ConnectionListView: View {
         }
     }
 
-    @ViewBuilder
-    private var groupedContent: some View {
+    @ViewBuilder private var groupedContent: some View {
         let sortedGroups = appState.groups.sorted { $0.sortOrder < $1.sortOrder }
 
         ForEach(sortedGroups) { group in

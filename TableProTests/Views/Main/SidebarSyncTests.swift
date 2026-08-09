@@ -7,13 +7,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("SidebarSyncAction")
 struct SidebarSyncTests {
-
     @Test("Tables load, selection empty, current tab has table name — sync")
     func syncsWhenTablesLoadAndSelectionEmpty() {
         let tables = [
@@ -45,7 +44,7 @@ struct SidebarSyncTests {
             TestFixtures.makeTableInfo(name: "users"),
             TestFixtures.makeTableInfo(name: "orders")
         ]
-        let selected: Set<TableInfo> = [TestFixtures.makeTableInfo(name: "users")]
+        let selected: Set<DatabaseTreeTableRef> = [TestFixtures.makeTableRef(name: "users")]
         let result = SidebarSyncAction.resolveOnTablesLoad(
             newTables: tables,
             selectedTables: selected,

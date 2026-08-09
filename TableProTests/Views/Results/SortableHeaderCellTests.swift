@@ -90,7 +90,7 @@ struct SortableHeaderCellTests {
         let comment = heapAllocatedComment()
         let header = makeHeader(comment: comment)
 
-        for _ in 0..<3 {
+        for _ in 0 ..< 3 {
             autoreleasepool {
                 _ = header.cell.copy()
             }

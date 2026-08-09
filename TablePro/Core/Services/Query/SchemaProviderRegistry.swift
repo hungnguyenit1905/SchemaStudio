@@ -67,9 +67,10 @@ final class SchemaProviderRegistry {
                 }
             },
             fetchAllColumns: {
-                try await DatabaseManager.shared.withBrowseMetadataDriver(connectionId: connectionId, workload: .bulk) { driver in
-                    try await driver.fetchAllColumns()
-                }
+                try await DatabaseManager.shared
+                    .withBrowseMetadataDriver(connectionId: connectionId, workload: .bulk) { driver in
+                        try await driver.fetchAllColumns()
+                    }
             },
             fetchSchemaTables: { schema in
                 try await DatabaseManager.shared.withBrowseMetadataDriver(connectionId: connectionId) { driver in

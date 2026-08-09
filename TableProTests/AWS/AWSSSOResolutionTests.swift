@@ -234,14 +234,14 @@ private final class AWSSSOStubProtocol: URLProtocol, @unchecked Sendable {
         }
         guard let url = request.url,
               let resp = HTTPURLResponse(
-                url: url, statusCode: Self.status, httpVersion: "HTTP/1.1",
-                headerFields: ["Content-Type": "application/json"]
-              )
-        else { return }
+                  url: url, statusCode: Self.status, httpVersion: "HTTP/1.1",
+                  headerFields: ["Content-Type": "application/json"]
+              ) else { return }
         client?.urlProtocol(self, didReceive: resp, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: Self.body)
         client?.urlProtocolDidFinishLoading(self)
     }
+
     override func stopLoading() {}
 
     static func reset() {

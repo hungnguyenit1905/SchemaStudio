@@ -315,8 +315,7 @@ struct RoleMembershipSheet: View {
     }
 
     private func apply() {
-        guard let info = viewModel.changeManager.principals.first(where: { $0.ref == principal })
-        else { return }
+        guard let info = viewModel.changeManager.principals.first(where: { $0.ref == principal }) else { return }
 
         let current = viewModel.changeManager.pendingAlters[principal]
             ?? PrincipalChangeManager.definition(from: info)

@@ -24,6 +24,7 @@ final class ConnectionFormViewModel {
     var type: DatabaseType = .mysql {
         didSet { onTypeChange(from: oldValue) }
     }
+
     var host = "127.0.0.1"
     var port = "3306"
     var username = ""
@@ -55,6 +56,7 @@ final class ConnectionFormViewModel {
     var duckDBInMemory = false {
         didSet { onDuckDBInMemoryChange() }
     }
+
     private var pendingBookmark: Data?
     private let bookmarkStore = FileBookmarkStore()
 
@@ -135,10 +137,12 @@ final class ConnectionFormViewModel {
         if let stored = try? secureStore.retrieve(forKey: connKey), !stored.isEmpty {
             password = stored
         }
-        if let sshPwd = try? secureStore.retrieve(forKey: "com.TablePro.sshpassword.\(conn.id.uuidString)"), !sshPwd.isEmpty {
+        if let sshPwd = try? secureStore.retrieve(forKey: "com.TablePro.sshpassword.\(conn.id.uuidString)"),
+           !sshPwd.isEmpty {
             sshPassword = sshPwd
         }
-        if let passphrase = try? secureStore.retrieve(forKey: "com.TablePro.keypassphrase.\(conn.id.uuidString)"), !passphrase.isEmpty {
+        if let passphrase = try? secureStore.retrieve(forKey: "com.TablePro.keypassphrase.\(conn.id.uuidString)"),
+           !passphrase.isEmpty {
             sshKeyPassphrase = passphrase
         }
     }
@@ -269,13 +273,13 @@ final class ConnectionFormViewModel {
         if !password.isEmpty {
             try? appState.connectionManager.storePassword(password, for: tempId)
         }
-        if sshEnabled && !sshPassword.isEmpty {
+        if sshEnabled, !sshPassword.isEmpty {
             try? secureStore.store(sshPassword, forKey: "com.TablePro.sshpassword.\(tempId.uuidString)")
         }
-        if sshEnabled && !sshKeyPassphrase.isEmpty {
+        if sshEnabled, !sshKeyPassphrase.isEmpty {
             try? secureStore.store(sshKeyPassphrase, forKey: "com.TablePro.keypassphrase.\(tempId.uuidString)")
         }
-        if sshEnabled && !sshKeyContent.isEmpty {
+        if sshEnabled, !sshKeyContent.isEmpty {
             try? secureStore.store(sshKeyContent, forKey: "com.TablePro.sshkeydata.\(tempId.uuidString)")
         }
 
@@ -342,9 +346,13 @@ final class ConnectionFormViewModel {
             }
             if !sshKeyPassphrase.isEmpty {
                 do {
-                    try secureStore.store(sshKeyPassphrase, forKey: "com.TablePro.keypassphrase.\(connection.id.uuidString)")
+                    try secureStore.store(
+                        sshKeyPassphrase,
+                        forKey: "com.TablePro.keypassphrase.\(connection.id.uuidString)"
+                    )
                 } catch {
-                    Self.logger.error("Failed to store SSH key passphrase: \(error.localizedDescription, privacy: .public)")
+                    Self.logger
+                        .error("Failed to store SSH key passphrase: \(error.localizedDescription, privacy: .public)")
                     storageFailed = true
                 }
             }
@@ -359,7 +367,10 @@ final class ConnectionFormViewModel {
         }
 
         if storageFailed {
-            credentialError = String(localized: "Some credentials could not be saved to the keychain. You may need to re-enter them later.")
+            credentialError =
+                String(
+                    localized: "Some credentials could not be saved to the keychain. You may need to re-enter them later."
+                )
             return nil
         }
 
@@ -376,7 +387,7 @@ final class ConnectionFormViewModel {
             name: name.isEmpty ? (selectedFileURL?.lastPathComponent ?? host) : name,
             type: type,
             host: host,
-            port: Int(port) ?? 3306,
+            port: Int(port) ?? 3_306,
             username: username,
             database: database,
             sshEnabled: sshEnabled,

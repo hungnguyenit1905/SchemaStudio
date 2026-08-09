@@ -47,12 +47,12 @@ internal enum DatabaseWriteRejectionDiagnosis: LocalizedError, Equatable {
         String(
             format: String(
                 localized: """
-                    The database server enforced this, not TablePro's Safe Mode. \
-                    You are most likely connected to a read replica, or the server sets new transactions to read-only. \
-                    Connect to the primary server to write.
+                The database server enforced this, not TablePro's Safe Mode. \
+                You are most likely connected to a read replica, or the server sets new transactions to read-only. \
+                Connect to the primary server to write.
 
-                    Server response: %@
-                    """
+                Server response: %@
+                """
             ),
             serverMessage
         )

@@ -40,7 +40,7 @@ public struct CSVTypeInferrer {
     public static func inferColumns(rows: [[String]], columnCount: Int) -> [InferredType] {
         var result: [InferredType] = []
         result.reserveCapacity(columnCount)
-        for col in 0..<columnCount {
+        for col in 0 ..< columnCount {
             var columnSample: [String] = []
             columnSample.reserveCapacity(min(rows.count, sampleSize))
             for row in rows where col < row.count {

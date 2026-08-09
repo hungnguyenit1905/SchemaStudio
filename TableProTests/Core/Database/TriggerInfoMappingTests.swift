@@ -26,7 +26,11 @@ private final class StubTriggerDriver: PluginDatabaseDriver {
     var throwOnQueryContaining: String?
 
     func createTriggerTemplate(table: String, schema: String?) -> String? { templateToReturn }
-    func fetchTriggerDefinition(name: String, table: String, schema: String?) async throws -> String? { definitionToReturn }
+    func fetchTriggerDefinition(
+        name: String,
+        table: String,
+        schema: String?
+    ) async throws -> String? { definitionToReturn }
     func generateDropTriggerSQL(name: String, table: String, schema: String?) -> String? { dropToReturn }
     var triggerEditUsesReplace: Bool { editUsesReplace }
     var supportsTransactionalDDL: Bool { transactionalDDL }
@@ -134,23 +138,27 @@ struct StructureTabTriggersTests {
 struct TriggerApplyStrategyTests {
     @Test("MySQL edit drops then recreates (no replace, non-transactional)")
     func mysqlEdit() {
-        #expect(TriggerApplyStrategy.resolve(isEdit: true, usesReplace: false, transactionalDDL: false) == .dropThenCreate)
+        #expect(TriggerApplyStrategy
+            .resolve(isEdit: true, usesReplace: false, transactionalDDL: false) == .dropThenCreate)
     }
 
     @Test("Create is always direct or transactional, never drop-first")
     func createNeverDropsFirst() {
         #expect(TriggerApplyStrategy.resolve(isEdit: false, usesReplace: false, transactionalDDL: false) == .direct)
-        #expect(TriggerApplyStrategy.resolve(isEdit: false, usesReplace: false, transactionalDDL: true) == .transactional(dropFirst: false))
+        #expect(TriggerApplyStrategy
+            .resolve(isEdit: false, usesReplace: false, transactionalDDL: true) == .transactional(dropFirst: false))
     }
 
     @Test("SQLite edit drops first inside a transaction")
     func sqliteEdit() {
-        #expect(TriggerApplyStrategy.resolve(isEdit: true, usesReplace: false, transactionalDDL: true) == .transactional(dropFirst: true))
+        #expect(TriggerApplyStrategy
+            .resolve(isEdit: true, usesReplace: false, transactionalDDL: true) == .transactional(dropFirst: true))
     }
 
     @Test("PostgreSQL and SQL Server edits replace in a transaction without a drop")
     func replaceTransactionalEdit() {
-        #expect(TriggerApplyStrategy.resolve(isEdit: true, usesReplace: true, transactionalDDL: true) == .transactional(dropFirst: false))
+        #expect(TriggerApplyStrategy
+            .resolve(isEdit: true, usesReplace: true, transactionalDDL: true) == .transactional(dropFirst: false))
     }
 
     @Test("Oracle edit replaces directly (no transactional DDL)")
@@ -228,7 +236,12 @@ struct TriggerApplyExecutionTests {
     @Test("Drop-then-create runs drop then create on success")
     func dropThenCreateSuccess() async throws {
         let (stub, adapter) = makeStubAndAdapter()
-        try await TriggerEditing.runDropThenCreate(driver: adapter, dropSQL: "DROP TRIGGER t", sql: "CREATE TRIGGER t", rollback: "RESTORE t")
+        try await TriggerEditing.runDropThenCreate(
+            driver: adapter,
+            dropSQL: "DROP TRIGGER t",
+            sql: "CREATE TRIGGER t",
+            rollback: "RESTORE t"
+        )
         #expect(stub.executedQueries == ["DROP TRIGGER t", "CREATE TRIGGER t"])
     }
 
@@ -237,7 +250,12 @@ struct TriggerApplyExecutionTests {
         let (stub, adapter) = makeStubAndAdapter()
         stub.throwOnQueryContaining = "CREATE TRIGGER"
         await #expect(throws: (any Error).self) {
-            try await TriggerEditing.runDropThenCreate(driver: adapter, dropSQL: "DROP TRIGGER t", sql: "CREATE TRIGGER t", rollback: "RESTORE t")
+            try await TriggerEditing.runDropThenCreate(
+                driver: adapter,
+                dropSQL: "DROP TRIGGER t",
+                sql: "CREATE TRIGGER t",
+                rollback: "RESTORE t"
+            )
         }
         #expect(stub.executedQueries == ["DROP TRIGGER t", "CREATE TRIGGER t", "RESTORE t"])
     }

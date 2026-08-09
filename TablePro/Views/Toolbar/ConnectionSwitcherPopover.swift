@@ -103,8 +103,7 @@ struct ConnectionSwitcherPopover: View {
         .padding(.vertical, 6)
     }
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         if orderedIds.isEmpty {
             emptyState
         } else {

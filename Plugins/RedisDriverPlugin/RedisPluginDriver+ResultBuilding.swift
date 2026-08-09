@@ -134,13 +134,15 @@ extension RedisPluginDriver {
         case .string:
             return stringCell(from: reply)
         case .hash:
-            return .fromOptional(RedisKeySummary.jsonObject(flatPairs: scanElements(from: reply).map(redisReplyToString)))
+            return .fromOptional(RedisKeySummary
+                .jsonObject(flatPairs: scanElements(from: reply).map(redisReplyToString)))
         case .list:
             return .fromOptional(RedisKeySummary.jsonArray(elements: (reply.arrayValue ?? []).map(redisReplyToString)))
         case .set:
             return .fromOptional(RedisKeySummary.jsonArray(elements: scanElements(from: reply).map(redisReplyToString)))
         case .zset:
-            return .fromOptional(RedisKeySummary.jsonScorePairs(flatPairs: (reply.arrayValue ?? []).map(redisReplyToString)))
+            return .fromOptional(RedisKeySummary
+                .jsonScorePairs(flatPairs: (reply.arrayValue ?? []).map(redisReplyToString)))
         case .stream:
             return .fromOptional(RedisKeySummary.jsonStreamEntries(streamEntries(from: reply)))
         }

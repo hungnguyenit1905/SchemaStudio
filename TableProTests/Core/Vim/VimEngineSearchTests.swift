@@ -6,9 +6,9 @@
 //  * search word forward, # search word backward.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineSearchTests: XCTestCase {
@@ -31,7 +31,9 @@ final class VimEngineSearchTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func enter() { _ = engine.process("\r", shift: false) }

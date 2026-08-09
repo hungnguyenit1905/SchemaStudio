@@ -137,10 +137,14 @@ struct GeminiProviderSchemaSanitizationTests {
             ])
         ])
         let output = GeminiProvider.sanitizeSchemaForGemini(input)
-        guard case .object(let root) = output else { Issue.record("expected object"); return }
+        guard case .object(let root) = output else { Issue.record("expected object")
+            return
+        }
         #expect(root["additionalProperties"] == nil)
         guard case .object(let props) = root["properties"],
-              case .object(let nested) = props["nested"] else { Issue.record("expected nested"); return }
+              case .object(let nested) = props["nested"] else { Issue.record("expected nested")
+            return
+        }
         #expect(nested["additionalProperties"] == nil)
     }
 
@@ -151,7 +155,9 @@ struct GeminiProviderSchemaSanitizationTests {
             "description": .string("optional field")
         ])
         let output = GeminiProvider.sanitizeSchemaForGemini(input)
-        guard case .object(let fields) = output else { Issue.record("expected object"); return }
+        guard case .object(let fields) = output else { Issue.record("expected object")
+            return
+        }
         #expect(fields["type"] == .string("string"))
         #expect(fields["nullable"] == .bool(true))
         #expect(fields["description"] == .string("optional field"))
@@ -164,7 +170,9 @@ struct GeminiProviderSchemaSanitizationTests {
             "description": .string("count")
         ])
         let output = GeminiProvider.sanitizeSchemaForGemini(input)
-        guard case .object(let fields) = output else { Issue.record("expected object"); return }
+        guard case .object(let fields) = output else { Issue.record("expected object")
+            return
+        }
         #expect(fields["type"] == .string("integer"))
         #expect(fields["nullable"] == nil)
     }
@@ -180,7 +188,9 @@ struct GeminiProviderSchemaSanitizationTests {
         ])
         let output = GeminiProvider.sanitizeSchemaForGemini(input)
         guard case .object(let root) = output,
-              case .object(let items) = root["items"] else { Issue.record("expected items object"); return }
+              case .object(let items) = root["items"] else { Issue.record("expected items object")
+            return
+        }
         #expect(items["type"] == .string("string"))
         #expect(items["nullable"] == .bool(true))
         #expect(items["additionalProperties"] == nil)
@@ -199,10 +209,14 @@ struct GeminiProviderSchemaSanitizationTests {
             ])
         ])
         let output = GeminiProvider.sanitizeSchemaForGemini(input)
-        guard case .object(let root) = output else { Issue.record("expected object"); return }
+        guard case .object(let root) = output else { Issue.record("expected object")
+            return
+        }
         #expect(root["required"] == .array([.string("id")]))
         guard case .object(let props) = root["properties"],
-              case .object(let id) = props["id"] else { Issue.record("expected id"); return }
+              case .object(let id) = props["id"] else { Issue.record("expected id")
+            return
+        }
         #expect(id["enum"] == .array([.string("a"), .string("b")]))
     }
 }

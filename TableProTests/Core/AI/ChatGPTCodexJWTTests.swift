@@ -26,7 +26,7 @@ struct ChatGPTCodexJWTTests {
         ]
         if let exp { payload["exp"] = exp }
         let header = ChatGPTCodexBase64URL.encode(Data(#"{"alg":"none"}"#.utf8))
-        let body = ChatGPTCodexBase64URL.encode(try JSONSerialization.data(withJSONObject: payload))
+        let body = try ChatGPTCodexBase64URL.encode(JSONSerialization.data(withJSONObject: payload))
         return "\(header).\(body).signature"
     }
 

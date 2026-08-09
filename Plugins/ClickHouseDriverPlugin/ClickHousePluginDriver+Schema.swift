@@ -12,10 +12,10 @@ extension ClickHousePluginDriver {
 
     func fetchTables(schema: String?) async throws -> [PluginTableInfo] {
         let sql = """
-            SELECT name, engine FROM system.tables
-            WHERE database = currentDatabase() AND name NOT LIKE '.%'
-            ORDER BY name
-            """
+        SELECT name, engine FROM system.tables
+        WHERE database = currentDatabase() AND name NOT LIKE '.%'
+        ORDER BY name
+        """
         let result = try await execute(query: sql)
         return result.rows.compactMap { row -> PluginTableInfo? in
             guard let name = row[safe: 0]?.asText else { return nil }
@@ -29,9 +29,9 @@ extension ClickHousePluginDriver {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
 
         let pkSql = """
-            SELECT primary_key, sorting_key FROM system.tables
-            WHERE database = currentDatabase() AND name = '\(escapedTable)'
-            """
+        SELECT primary_key, sorting_key FROM system.tables
+        WHERE database = currentDatabase() AND name = '\(escapedTable)'
+        """
         let pkResult = try await execute(query: pkSql)
         let primaryKey = pkResult.rows.first.flatMap { $0[safe: 0]?.asText } ?? ""
         let sortingKey = pkResult.rows.first.flatMap { $0[safe: 1]?.asText } ?? ""
@@ -39,11 +39,11 @@ extension ClickHousePluginDriver {
         let pkColumns = Set(keyString.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) })
 
         let sql = """
-            SELECT name, type, default_kind, default_expression, comment
-            FROM system.columns
-            WHERE database = currentDatabase() AND table = '\(escapedTable)'
-            ORDER BY position
-            """
+        SELECT name, type, default_kind, default_expression, comment
+        FROM system.columns
+        WHERE database = currentDatabase() AND table = '\(escapedTable)'
+        ORDER BY position
+        """
         let result = try await execute(query: sql)
         return result.rows.compactMap { row -> PluginColumnInfo? in
             guard let name = row[safe: 0]?.asText else { return nil }
@@ -73,7 +73,8 @@ extension ClickHousePluginDriver {
                 extra: extra,
                 comment: (comment?.isEmpty == false) ? comment : nil,
                 isGenerated: clickhouseColumnIsGenerated(defaultKind: defaultKind),
-                allowedValues: EnumValueParser.parseClickHouseEnum(from: ClickHousePluginDriver.unwrapTypeWrappers(dataType))
+                allowedValues: EnumValueParser
+                    .parseClickHouseEnum(from: ClickHousePluginDriver.unwrapTypeWrappers(dataType))
             )
         }
     }
@@ -83,9 +84,9 @@ extension ClickHousePluginDriver {
         // primary_key is empty (MergeTree without explicit PRIMARY KEY clause).
         // Note: expression-based keys like toDate(col) won't match bare column names.
         let pkSql = """
-            SELECT name, primary_key, sorting_key FROM system.tables
-            WHERE database = currentDatabase()
-            """
+        SELECT name, primary_key, sorting_key FROM system.tables
+        WHERE database = currentDatabase()
+        """
         let pkResult = try await execute(query: pkSql)
         var pkLookup: [String: Set<String>] = [:]
         for row in pkResult.rows {
@@ -99,11 +100,11 @@ extension ClickHousePluginDriver {
         }
 
         let sql = """
-            SELECT table, name, type, default_kind, default_expression, comment
-            FROM system.columns
-            WHERE database = currentDatabase()
-            ORDER BY table, position
-            """
+        SELECT table, name, type, default_kind, default_expression, comment
+        FROM system.columns
+        WHERE database = currentDatabase()
+        ORDER BY table, position
+        """
         let result = try await execute(query: sql)
         var columnsByTable: [String: [PluginColumnInfo]] = [:]
         for row in result.rows {
@@ -135,7 +136,8 @@ extension ClickHousePluginDriver {
                 extra: extra,
                 comment: (comment?.isEmpty == false) ? comment : nil,
                 isGenerated: clickhouseColumnIsGenerated(defaultKind: defaultKind),
-                allowedValues: EnumValueParser.parseClickHouseEnum(from: ClickHousePluginDriver.unwrapTypeWrappers(dataType))
+                allowedValues: EnumValueParser
+                    .parseClickHouseEnum(from: ClickHousePluginDriver.unwrapTypeWrappers(dataType))
             )
             columnsByTable[tableName, default: []].append(colInfo)
         }
@@ -147,7 +149,7 @@ extension ClickHousePluginDriver {
             if value.hasPrefix(prefix), value.hasSuffix(")") {
                 let start = value.index(value.startIndex, offsetBy: prefix.count)
                 let end = value.index(before: value.endIndex)
-                return unwrapTypeWrappers(String(value[start..<end]))
+                return unwrapTypeWrappers(String(value[start ..< end]))
             }
         }
         return value
@@ -158,9 +160,9 @@ extension ClickHousePluginDriver {
         var indexes: [PluginIndexInfo] = []
 
         let sortingKeySql = """
-            SELECT sorting_key FROM system.tables
-            WHERE database = currentDatabase() AND name = '\(escapedTable)'
-            """
+        SELECT sorting_key FROM system.tables
+        WHERE database = currentDatabase() AND name = '\(escapedTable)'
+        """
         let sortingResult = try await execute(query: sortingKeySql)
         if let row = sortingResult.rows.first,
            let sortingKey = row[safe: 0]?.asText, !sortingKey.isEmpty {
@@ -179,9 +181,9 @@ extension ClickHousePluginDriver {
         let caps = ClickHouseCapabilities.parse(serverVersion)
         guard caps.hasDataSkippingIndicesTable else { return indexes }
         let skippingSql = """
-            SELECT name, expr FROM system.data_skipping_indices
-            WHERE database = currentDatabase() AND table = '\(escapedTable)'
-            """
+        SELECT name, expr FROM system.data_skipping_indices
+        WHERE database = currentDatabase() AND table = '\(escapedTable)'
+        """
         let skippingResult = try await execute(query: skippingSql)
         for row in skippingResult.rows {
             guard let idxName = row[safe: 0]?.asText else { continue }
@@ -208,9 +210,9 @@ extension ClickHousePluginDriver {
     func fetchApproximateRowCount(table: String, schema: String?) async throws -> Int? {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
         let sql = """
-            SELECT sum(rows) FROM system.parts
-            WHERE database = currentDatabase() AND table = '\(escapedTable)' AND active = 1
-            """
+        SELECT sum(rows) FROM system.parts
+        WHERE database = currentDatabase() AND table = '\(escapedTable)' AND active = 1
+        """
         let result = try await execute(query: sql)
         if let row = result.rows.first, let cell = row.first, let str = cell.asText {
             return Int(str)
@@ -228,9 +230,9 @@ extension ClickHousePluginDriver {
     func fetchViewDefinition(view: String, schema: String?) async throws -> String {
         let escapedView = view.replacingOccurrences(of: "'", with: "''")
         let sql = """
-            SELECT as_select FROM system.tables
-            WHERE database = currentDatabase() AND name = '\(escapedView)'
-            """
+        SELECT as_select FROM system.tables
+        WHERE database = currentDatabase() AND name = '\(escapedView)'
+        """
         let result = try await execute(query: sql)
         return result.rows.first?.first?.asText ?? ""
     }
@@ -239,18 +241,18 @@ extension ClickHousePluginDriver {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
 
         let engineSql = """
-            SELECT engine, comment FROM system.tables
-            WHERE database = currentDatabase() AND name = '\(escapedTable)'
-            """
+        SELECT engine, comment FROM system.tables
+        WHERE database = currentDatabase() AND name = '\(escapedTable)'
+        """
         let engineResult = try await execute(query: engineSql)
         let engine = engineResult.rows.first.flatMap { $0[safe: 0]?.asText }
         let tableComment = engineResult.rows.first.flatMap { $0[safe: 1]?.asText }
 
         let partsSql = """
-            SELECT sum(rows), sum(bytes_on_disk)
-            FROM system.parts
-            WHERE database = currentDatabase() AND table = '\(escapedTable)' AND active = 1
-            """
+        SELECT sum(rows), sum(bytes_on_disk)
+        FROM system.parts
+        WHERE database = currentDatabase() AND table = '\(escapedTable)' AND active = 1
+        """
         let partsResult = try await execute(query: partsSql)
         if let row = partsResult.rows.first {
             let rowCount = (row[safe: 0]?.asText).flatMap { Int64($0) }
@@ -276,9 +278,9 @@ extension ClickHousePluginDriver {
     func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
         let escapedDb = database.replacingOccurrences(of: "'", with: "''")
         let sql = """
-            SELECT count() AS table_count, sum(total_bytes) AS size_bytes
-            FROM system.tables WHERE database = '\(escapedDb)'
-            """
+        SELECT count() AS table_count, sum(total_bytes) AS size_bytes
+        FROM system.tables WHERE database = '\(escapedDb)'
+        """
         let result = try await execute(query: sql)
         if let row = result.rows.first {
             let tableCount = (row[safe: 0]?.asText).flatMap { Int($0) } ?? 0
@@ -294,11 +296,11 @@ extension ClickHousePluginDriver {
 
     func fetchAllDatabaseMetadata() async throws -> [PluginDatabaseMetadata] {
         let sql = """
-            SELECT database, count() AS table_count, sum(total_bytes) AS size_bytes
-            FROM system.tables
-            GROUP BY database
-            ORDER BY database
-            """
+        SELECT database, count() AS table_count, sum(total_bytes) AS size_bytes
+        FROM system.tables
+        GROUP BY database
+        ORDER BY database
+        """
         let result = try await execute(query: sql)
         return result.rows.compactMap { row -> PluginDatabaseMetadata? in
             guard let name = row[safe: 0]?.asText else { return nil }
@@ -338,5 +340,4 @@ extension ClickHousePluginDriver {
         ORDER BY name
         """
     }
-
 }

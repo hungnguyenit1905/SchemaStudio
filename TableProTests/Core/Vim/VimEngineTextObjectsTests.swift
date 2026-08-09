@@ -6,9 +6,9 @@
 //  i(/a(, i{/a{, i[/a[, i</a<, it/at. Used with operators (d/c/y) and in visual mode.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineTextObjectsTests: XCTestCase {
@@ -28,7 +28,9 @@ final class VimEngineTextObjectsTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     // MARK: - iw / aw (inner word / a word)
@@ -37,8 +39,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         // cursor on 'w' in 'world' (offset 6). ciw should delete just 'world' (no spaces).
         buffer.setSelectedRange(NSRange(location: 6, length: 0))
         keys("ciw")
-        XCTAssertEqual(buffer.text, "hello  foo bar\n",
-            "ciw should delete the word at cursor without surrounding whitespace")
+        XCTAssertEqual(
+            buffer.text,
+            "hello  foo bar\n",
+            "ciw should delete the word at cursor without surrounding whitespace"
+        )
         XCTAssertEqual(engine.mode, .insert)
     }
 
@@ -46,22 +51,31 @@ final class VimEngineTextObjectsTests: XCTestCase {
         // caw on 'w' in 'world' should delete 'world ' (word + trailing space).
         buffer.setSelectedRange(NSRange(location: 6, length: 0))
         keys("caw")
-        XCTAssertEqual(buffer.text, "hello foo bar\n",
-            "caw should delete the word with one surrounding whitespace")
+        XCTAssertEqual(
+            buffer.text,
+            "hello foo bar\n",
+            "caw should delete the word with one surrounding whitespace"
+        )
     }
 
     func testDIWDeletesInnerWord() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("diw")
-        XCTAssertEqual(buffer.text, " world foo bar\n",
-            "diw on 'h' should delete 'hello' (no surrounding whitespace)")
+        XCTAssertEqual(
+            buffer.text,
+            " world foo bar\n",
+            "diw on 'h' should delete 'hello' (no surrounding whitespace)"
+        )
     }
 
     func testDAWDeletesAroundWord() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("daw")
-        XCTAssertEqual(buffer.text, "world foo bar\n",
-            "daw on 'h' should delete 'hello ' (word + trailing whitespace)")
+        XCTAssertEqual(
+            buffer.text,
+            "world foo bar\n",
+            "daw on 'h' should delete 'hello ' (word + trailing whitespace)"
+        )
     }
 
     func testYIWYanksInnerWord() {
@@ -69,8 +83,10 @@ final class VimEngineTextObjectsTests: XCTestCase {
         keys("yiw")
         // After yank, paste before cursor at offset 6 to verify register.
         keys("P")
-        XCTAssertTrue(buffer.text.contains("worldworld"),
-            "yiw should yank just the word — paste should duplicate it inline")
+        XCTAssertTrue(
+            buffer.text.contains("worldworld"),
+            "yiw should yank just the word — paste should duplicate it inline"
+        )
     }
 
     func testIWOnPunctuationSelectsPunctRun() {
@@ -79,8 +95,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 5, length: 0))
         keys("diw")
-        XCTAssertEqual(buffer.text, "helloworld\n",
-            "iw on punctuation should select the run of punctuation chars")
+        XCTAssertEqual(
+            buffer.text,
+            "helloworld\n",
+            "iw on punctuation should select the run of punctuation chars"
+        )
     }
 
     func testIWOnWhitespaceSelectsWhitespace() {
@@ -89,8 +108,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 6, length: 0))
         keys("diw")
-        XCTAssertEqual(buffer.text, "helloworld\n",
-            "iw on whitespace should select the run of whitespace")
+        XCTAssertEqual(
+            buffer.text,
+            "helloworld\n",
+            "iw on whitespace should select the run of whitespace"
+        )
     }
 
     // MARK: - iW / aW (inner WORD / a WORD)
@@ -114,8 +136,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 7, length: 0))
         keys("di\"")
-        XCTAssertEqual(buffer.text, "foo \"\" qux\n",
-            "di\" should delete only what's between the quotes")
+        XCTAssertEqual(
+            buffer.text,
+            "foo \"\" qux\n",
+            "di\" should delete only what's between the quotes"
+        )
     }
 
     func testDAQuoteDeletesIncludingQuotes() {
@@ -123,8 +148,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 7, length: 0))
         keys("da\"")
-        XCTAssertEqual(buffer.text, "foo qux\n",
-            "da\" should delete the quoted text including both quotes and one trailing space")
+        XCTAssertEqual(
+            buffer.text,
+            "foo qux\n",
+            "da\" should delete the quoted text including both quotes and one trailing space"
+        )
     }
 
     // MARK: - i' / a' (inside / around single-quoted string)
@@ -144,8 +172,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 8, length: 0))
         keys("di(")
-        XCTAssertEqual(buffer.text, "func() {}\n",
-            "di( should delete what's inside the parens, keeping the parens")
+        XCTAssertEqual(
+            buffer.text,
+            "func() {}\n",
+            "di( should delete what's inside the parens, keeping the parens"
+        )
     }
 
     func testDAParenDeletesIncludingParentheses() {
@@ -153,8 +184,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 8, length: 0))
         keys("da(")
-        XCTAssertEqual(buffer.text, "func {}\n",
-            "da( should delete the parens and their contents")
+        XCTAssertEqual(
+            buffer.text,
+            "func {}\n",
+            "da( should delete the parens and their contents"
+        )
     }
 
     func testDIBIsSynonymOfDIParen() {
@@ -162,8 +196,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 7, length: 0))
         keys("dib")
-        XCTAssertEqual(buffer.text, "func() bar\n",
-            "dib should be a synonym of di(")
+        XCTAssertEqual(
+            buffer.text,
+            "func() bar\n",
+            "dib should be a synonym of di("
+        )
     }
 
     // MARK: - i{ i} iB (inside / around braces)
@@ -173,8 +210,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 12, length: 0))
         keys("di{")
-        XCTAssertEqual(buffer.text, "if (x) {}\n",
-            "di{ should delete what's between the braces")
+        XCTAssertEqual(
+            buffer.text,
+            "if (x) {}\n",
+            "di{ should delete what's between the braces"
+        )
     }
 
     func testDIBigBIsSynonymOfDIBrace() {
@@ -214,8 +254,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 7, length: 0))
         keys("dit")
-        XCTAssertEqual(buffer.text, "<div></div>\n",
-            "dit should delete the content between matching tags")
+        XCTAssertEqual(
+            buffer.text,
+            "<div></div>\n",
+            "dit should delete the content between matching tags"
+        )
     }
 
     func testDATDeletesIncludingTags() {
@@ -223,8 +266,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 7, length: 0))
         keys("dat")
-        XCTAssertEqual(buffer.text, "\n",
-            "dat should delete the entire tag pair and contents")
+        XCTAssertEqual(
+            buffer.text,
+            "\n",
+            "dat should delete the entire tag pair and contents"
+        )
     }
 
     // MARK: - ip / ap (inner / a paragraph)
@@ -234,8 +280,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 3, length: 0))
         keys("dip")
-        XCTAssertEqual(buffer.text, "\n\npara two\n",
-            "dip should delete the paragraph at cursor (without surrounding blank lines)")
+        XCTAssertEqual(
+            buffer.text,
+            "\n\npara two\n",
+            "dip should delete the paragraph at cursor (without surrounding blank lines)"
+        )
     }
 
     func testDAPDeletesAroundParagraph() {
@@ -243,8 +292,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 3, length: 0))
         keys("dap")
-        XCTAssertEqual(buffer.text, "para two\n",
-            "dap should delete the paragraph plus the trailing blank line")
+        XCTAssertEqual(
+            buffer.text,
+            "para two\n",
+            "dap should delete the paragraph plus the trailing blank line"
+        )
     }
 
     // MARK: - Text Objects in Visual Mode
@@ -253,8 +305,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 6, length: 0))
         keys("viw")
         let sel = buffer.selectedRange()
-        XCTAssertEqual(buffer.string(in: sel), "world",
-            "viw should select just the word at cursor")
+        XCTAssertEqual(
+            buffer.string(in: sel),
+            "world",
+            "viw should select just the word at cursor"
+        )
     }
 
     func testVisualIQSelectsInsideQuotes() {
@@ -263,8 +318,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 6, length: 0))
         keys("vi\"")
         let sel = buffer.selectedRange()
-        XCTAssertEqual(buffer.string(in: sel), "hello",
-            "vi\" should select the contents of the quotes")
+        XCTAssertEqual(
+            buffer.string(in: sel),
+            "hello",
+            "vi\" should select the contents of the quotes"
+        )
     }
 
     // MARK: - Nested Brackets
@@ -274,8 +332,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 4, length: 0))
         keys("di(")
-        XCTAssertEqual(buffer.text, "f(g())\n",
-            "di( should select the INNERMOST enclosing pair, not the outermost")
+        XCTAssertEqual(
+            buffer.text,
+            "f(g())\n",
+            "di( should select the INNERMOST enclosing pair, not the outermost"
+        )
     }
 
     // MARK: - Cursor on Bracket Itself
@@ -285,8 +346,11 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 1, length: 0))
         keys("di(")
-        XCTAssertEqual(buffer.text, "f()\n",
-            "di( with cursor on the opening paren should still work")
+        XCTAssertEqual(
+            buffer.text,
+            "f()\n",
+            "di( with cursor on the opening paren should still work"
+        )
     }
 
     func testDIParenWithCursorOnCloseParen() {
@@ -294,7 +358,10 @@ final class VimEngineTextObjectsTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 5, length: 0))
         keys("di(")
-        XCTAssertEqual(buffer.text, "f()\n",
-            "di( with cursor on the closing paren should still work")
+        XCTAssertEqual(
+            buffer.text,
+            "f()\n",
+            "di( with cursor on the closing paren should still work"
+        )
     }
 }

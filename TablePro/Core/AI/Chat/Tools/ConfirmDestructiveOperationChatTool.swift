@@ -10,9 +10,9 @@ struct ConfirmDestructiveOperationChatTool: ChatTool {
 
     let name = "confirm_destructive_operation"
     let description = String(localized: """
-        Execute a destructive DDL query (DROP, TRUNCATE, ALTER...DROP) after explicit confirmation.\
-         Pass confirmation_phrase exactly as: I understand this is irreversible
-        """)
+    Execute a destructive DDL query (DROP, TRUNCATE, ALTER...DROP) after explicit confirmation.\
+     Pass confirmation_phrase exactly as: I understand this is irreversible
+    """)
     let inputSchema: JsonValue = ChatToolSchemaBuilder.object(
         properties: [
             "connection_id": ChatToolSchemaBuilder.connectionId,

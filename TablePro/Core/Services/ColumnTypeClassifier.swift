@@ -38,7 +38,7 @@ struct ColumnTypeClassifier {
             if value.hasPrefix(prefix), value.hasSuffix(")") {
                 let startIndex = value.index(value.startIndex, offsetBy: prefix.count)
                 let endIndex = value.index(before: value.endIndex)
-                let inner = String(value[startIndex..<endIndex])
+                let inner = String(value[startIndex ..< endIndex])
                 return stripWrappers(inner)
             }
         }
@@ -51,12 +51,12 @@ struct ColumnTypeClassifier {
         guard let parenIndex = value.firstIndex(of: "(") else {
             return (value, nil)
         }
-        let base = String(value[value.startIndex..<parenIndex])
+        let base = String(value[value.startIndex ..< parenIndex])
         guard let lastParen = value.lastIndex(of: ")") else {
             return (value, nil)
         }
         let paramsStart = value.index(after: parenIndex)
-        let params = String(value[paramsStart..<lastParen]).trimmingCharacters(in: .whitespaces)
+        let params = String(value[paramsStart ..< lastParen]).trimmingCharacters(in: .whitespaces)
         return (base, params)
     }
 

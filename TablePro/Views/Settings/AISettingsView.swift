@@ -264,9 +264,11 @@ struct AISettingsView: View {
         } header: {
             Text("Agent")
         } footer: {
-            Text("Agent mode calls tools in a loop until it finishes or hits this limit, then pauses so you can continue. Raising it costs more tokens per reply.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(
+                "Agent mode calls tools in a loop until it finishes or hits this limit, then pauses so you can continue. Raising it costs more tokens per reply."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
     }
 
@@ -280,7 +282,7 @@ struct AISettingsView: View {
             Stepper(
                 String(format: String(localized: "Max schema tables: %d"), settings.maxSchemaTables),
                 value: $settings.maxSchemaTables,
-                in: 1...100
+                in: 1 ... 100
             )
         } header: {
             Text("Context")

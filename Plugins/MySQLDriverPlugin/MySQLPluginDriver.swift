@@ -108,7 +108,11 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         try await executeWithReconnect(query: query, isRetry: false)
     }
 
-    func executeUserQuery(query: String, rowCap: Int?, parameters: [PluginCellValue]?) async throws -> PluginQueryResult {
+    func executeUserQuery(
+        query: String,
+        rowCap: Int?,
+        parameters: [PluginCellValue]?
+    ) async throws -> PluginQueryResult {
         let cap = rowCap.flatMap { $0 > 0 ? $0 : nil }
         guard let parameters else {
             return try await executeWithReconnect(query: query, isRetry: false, rowCap: cap)
@@ -152,7 +156,11 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         mariadbConnection?.cancelCurrentQuery()
     }
 
-    private func executeWithReconnect(query: String, isRetry: Bool, rowCap: Int? = nil) async throws -> PluginQueryResult {
+    private func executeWithReconnect(
+        query: String,
+        isRetry: Bool,
+        rowCap: Int? = nil
+    ) async throws -> PluginQueryResult {
         let startTime = Date()
 
         guard let conn = mariadbConnection else {
@@ -162,7 +170,7 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         do {
             let result = try await conn.executeQuery(query, rowCap: rowCap)
 
-            if result.columns.isEmpty && result.rows.isEmpty {
+            if result.columns.isEmpty, result.rows.isEmpty {
                 let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
                 let isSelect = trimmed.uppercased().hasPrefix("SELECT")
                 if isSelect, let tableName = extractTableName(from: query) {
@@ -230,8 +238,7 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         return result.rows.compactMap { row in
             guard let name = row[safe: 0]?.asText,
-                  let dataType = row[safe: 1]?.asText
-            else { return nil }
+                  let dataType = row[safe: 1]?.asText else { return nil }
 
             let collation = row[safe: 2]?.asText
             let isNullable = (row[safe: 3]?.asText) == "YES"
@@ -270,13 +277,13 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let dbName = _activeDatabase
         let escapedDb = dbName.replacingOccurrences(of: "'", with: "''")
         let query = """
-            SELECT
-                TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, COLLATION_NAME,
-                IS_NULLABLE, COLUMN_KEY, COLUMN_DEFAULT, EXTRA, COLUMN_COMMENT
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = '\(escapedDb)'
-            ORDER BY TABLE_NAME, ORDINAL_POSITION
-            """
+        SELECT
+            TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, COLLATION_NAME,
+            IS_NULLABLE, COLUMN_KEY, COLUMN_DEFAULT, EXTRA, COLUMN_COMMENT
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = '\(escapedDb)'
+        ORDER BY TABLE_NAME, ORDINAL_POSITION
+        """
 
         let result = try await execute(query: query)
 
@@ -284,8 +291,7 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         for row in result.rows {
             guard let tableName = row[safe: 0]?.asText,
                   let name = row[safe: 1]?.asText,
-                  let dataType = row[safe: 2]?.asText
-            else { continue }
+                  let dataType = row[safe: 2]?.asText else { continue }
 
             let collation = row[safe: 3]?.asText
             let isNullable = (row[safe: 4]?.asText) == "YES"
@@ -332,8 +338,7 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         for row in result.rows {
             guard let indexName = row[safe: 2]?.asText,
-                  let columnName = row[safe: 4]?.asText
-            else { continue }
+                  let columnName = row[safe: 4]?.asText else { continue }
 
             let nonUnique = (row[safe: 1]?.asText) == "1"
             let indexType = (row[safe: 10]?.asText) ?? "BTREE"
@@ -371,23 +376,23 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
 
         let query = """
-            SELECT
-                kcu.CONSTRAINT_NAME,
-                kcu.COLUMN_NAME,
-                kcu.REFERENCED_TABLE_NAME,
-                kcu.REFERENCED_COLUMN_NAME,
-                kcu.REFERENCED_TABLE_SCHEMA,
-                rc.DELETE_RULE,
-                rc.UPDATE_RULE
-            FROM information_schema.KEY_COLUMN_USAGE kcu
-            JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
-                ON kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
-                AND kcu.CONSTRAINT_SCHEMA = rc.CONSTRAINT_SCHEMA
-            WHERE kcu.TABLE_SCHEMA = '\(escapedDb)'
-                AND kcu.TABLE_NAME = '\(escapedTable)'
-                AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
-            ORDER BY kcu.CONSTRAINT_NAME
-            """
+        SELECT
+            kcu.CONSTRAINT_NAME,
+            kcu.COLUMN_NAME,
+            kcu.REFERENCED_TABLE_NAME,
+            kcu.REFERENCED_COLUMN_NAME,
+            kcu.REFERENCED_TABLE_SCHEMA,
+            rc.DELETE_RULE,
+            rc.UPDATE_RULE
+        FROM information_schema.KEY_COLUMN_USAGE kcu
+        JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
+            ON kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+            AND kcu.CONSTRAINT_SCHEMA = rc.CONSTRAINT_SCHEMA
+        WHERE kcu.TABLE_SCHEMA = '\(escapedDb)'
+            AND kcu.TABLE_NAME = '\(escapedTable)'
+            AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
+        ORDER BY kcu.CONSTRAINT_NAME
+        """
 
         let result = try await execute(query: query)
 
@@ -395,8 +400,7 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             guard let name = row[safe: 0]?.asText,
                   let column = row[safe: 1]?.asText,
                   let refTable = row[safe: 2]?.asText,
-                  let refColumn = row[safe: 3]?.asText
-            else { return nil }
+                  let refColumn = row[safe: 3]?.asText else { return nil }
 
             return PluginForeignKeyInfo(
                 name: name, column: column,
@@ -406,7 +410,10 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                 onUpdate: (row[safe: 6]?.asText) ?? "NO ACTION"
             )
         }
-        Self.logger.info("[fk] mysql fetchForeignKeys db=\(dbName, privacy: .public) table=\(table, privacy: .public) rows=\(result.rows.count) parsed=\(foreignKeys.count)")
+        Self.logger
+            .info(
+                "[fk] mysql fetchForeignKeys db=\(dbName, privacy: .public) table=\(table, privacy: .public) rows=\(result.rows.count) parsed=\(foreignKeys.count)"
+            )
         return foreignKeys
     }
 
@@ -416,12 +423,12 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
 
         let query = """
-            SELECT TRIGGER_NAME, ACTION_TIMING, EVENT_MANIPULATION, ACTION_STATEMENT
-            FROM information_schema.TRIGGERS
-            WHERE EVENT_OBJECT_SCHEMA = '\(escapedDb)'
-                AND EVENT_OBJECT_TABLE = '\(escapedTable)'
-            ORDER BY TRIGGER_NAME
-            """
+        SELECT TRIGGER_NAME, ACTION_TIMING, EVENT_MANIPULATION, ACTION_STATEMENT
+        FROM information_schema.TRIGGERS
+        WHERE EVENT_OBJECT_SCHEMA = '\(escapedDb)'
+            AND EVENT_OBJECT_TABLE = '\(escapedTable)'
+        ORDER BY TRIGGER_NAME
+        """
 
         let result = try await execute(query: query)
 
@@ -429,14 +436,13 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             guard let name = row[safe: 0]?.asText,
                   let timing = row[safe: 1]?.asText,
                   let event = row[safe: 2]?.asText,
-                  let body = row[safe: 3]?.asText
-            else { return nil }
+                  let body = row[safe: 3]?.asText else { return nil }
 
             let statement = """
-                CREATE TRIGGER \(quoteIdentifier(name)) \(timing) \(event)
-                ON \(quoteIdentifier(table)) FOR EACH ROW
-                \(body)
-                """
+            CREATE TRIGGER \(quoteIdentifier(name)) \(timing) \(event)
+            ON \(quoteIdentifier(table)) FOR EACH ROW
+            \(body)
+            """
 
             return PluginTriggerInfo(
                 name: name,
@@ -445,7 +451,10 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                 statement: statement
             )
         }
-        Self.logger.info("[trigger] mysql fetchTriggers db=\(dbName, privacy: .public) table=\(table, privacy: .public) rows=\(result.rows.count) parsed=\(triggers.count)")
+        Self.logger
+            .info(
+                "[trigger] mysql fetchTriggers db=\(dbName, privacy: .public) table=\(table, privacy: .public) rows=\(result.rows.count) parsed=\(triggers.count)"
+            )
         return triggers
     }
 
@@ -468,23 +477,23 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let escapedDb = dbName.replacingOccurrences(of: "'", with: "''")
 
         let query = """
-            SELECT
-                kcu.TABLE_NAME,
-                kcu.CONSTRAINT_NAME,
-                kcu.COLUMN_NAME,
-                kcu.REFERENCED_TABLE_NAME,
-                kcu.REFERENCED_COLUMN_NAME,
-                kcu.REFERENCED_TABLE_SCHEMA,
-                rc.DELETE_RULE,
-                rc.UPDATE_RULE
-            FROM information_schema.KEY_COLUMN_USAGE kcu
-            JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
-                ON kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
-                AND kcu.CONSTRAINT_SCHEMA = rc.CONSTRAINT_SCHEMA
-            WHERE kcu.TABLE_SCHEMA = '\(escapedDb)'
-                AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
-            ORDER BY kcu.TABLE_NAME, kcu.CONSTRAINT_NAME
-            """
+        SELECT
+            kcu.TABLE_NAME,
+            kcu.CONSTRAINT_NAME,
+            kcu.COLUMN_NAME,
+            kcu.REFERENCED_TABLE_NAME,
+            kcu.REFERENCED_COLUMN_NAME,
+            kcu.REFERENCED_TABLE_SCHEMA,
+            rc.DELETE_RULE,
+            rc.UPDATE_RULE
+        FROM information_schema.KEY_COLUMN_USAGE kcu
+        JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
+            ON kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+            AND kcu.CONSTRAINT_SCHEMA = rc.CONSTRAINT_SCHEMA
+        WHERE kcu.TABLE_SCHEMA = '\(escapedDb)'
+            AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
+        ORDER BY kcu.TABLE_NAME, kcu.CONSTRAINT_NAME
+        """
         let result = try await execute(query: query)
 
         var grouped: [String: [PluginForeignKeyInfo]] = [:]
@@ -493,8 +502,7 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                   let name = row[safe: 1]?.asText,
                   let column = row[safe: 2]?.asText,
                   let refTable = row[safe: 3]?.asText,
-                  let refColumn = row[safe: 4]?.asText
-            else { continue }
+                  let refColumn = row[safe: 4]?.asText else { continue }
 
             let fk = PluginForeignKeyInfo(
                 name: name, column: column,
@@ -514,17 +522,16 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let escapedTable = table.replacingOccurrences(of: "'", with: "''")
 
         let query = """
-            SELECT TABLE_ROWS
-            FROM information_schema.TABLES
-            WHERE TABLE_SCHEMA = '\(escapedDb)'
-              AND TABLE_NAME = '\(escapedTable)'
-            """
+        SELECT TABLE_ROWS
+        FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA = '\(escapedDb)'
+          AND TABLE_NAME = '\(escapedTable)'
+        """
 
         let result = try await execute(query: query)
         guard let firstRow = result.rows.first,
               let value = firstRow[safe: 0]?.asText,
-              let count = Int(value)
-        else { return nil }
+              let count = Int(value) else { return nil }
 
         return count
     }
@@ -534,8 +541,7 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let result = try await execute(query: "SHOW CREATE TABLE `\(safeTable)`")
 
         guard let firstRow = result.rows.first,
-              let ddl = firstRow[safe: 1]?.asText
-        else {
+              let ddl = firstRow[safe: 1]?.asText else {
             throw MariaDBPluginError(code: 0, message: "Failed to fetch DDL for table '\(table)'", sqlState: nil)
         }
 
@@ -547,8 +553,7 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let result = try await execute(query: "SHOW CREATE VIEW `\(safeView)`")
 
         guard let firstRow = result.rows.first,
-              let ddl = firstRow[safe: 1]?.asText
-        else {
+              let ddl = firstRow[safe: 1]?.asText else {
             throw MariaDBPluginError(code: 0, message: "Failed to fetch definition for view '\(view)'", sqlState: nil)
         }
 
@@ -689,7 +694,12 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         ["OPTIMIZE TABLE", "ANALYZE TABLE", "CHECK TABLE", "REPAIR TABLE"]
     }
 
-    func maintenanceStatements(operation: String, table: String?, schema: String?, options: [String: String]) -> [String]? {
+    func maintenanceStatements(
+        operation: String,
+        table: String?,
+        schema: String?,
+        options: [String: String]
+    ) -> [String]? {
         guard let table else { return nil }
         let quoted = quoteIdentifier(table)
         switch operation {
@@ -834,7 +844,11 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         "ALTER TABLE \(quoteIdentifier(table)) ADD COLUMN \(buildColumnDefinitionSQL(column))"
     }
 
-    func generateModifyColumnSQL(table: String, oldColumn: PluginColumnDefinition, newColumn: PluginColumnDefinition) -> String? {
+    func generateModifyColumnSQL(
+        table: String,
+        oldColumn: PluginColumnDefinition,
+        newColumn: PluginColumnDefinition
+    ) -> String? {
         let tableName = quoteIdentifier(table)
         if oldColumn.name != newColumn.name {
             return "ALTER TABLE \(tableName) CHANGE COLUMN \(quoteIdentifier(oldColumn.name)) \(buildColumnDefinitionSQL(newColumn))"
@@ -862,7 +876,12 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         "ALTER TABLE \(quoteIdentifier(table)) DROP FOREIGN KEY \(quoteIdentifier(constraintName))"
     }
 
-    func generateModifyPrimaryKeySQL(table: String, oldColumns: [String], newColumns: [String], constraintName: String?) -> [String]? {
+    func generateModifyPrimaryKeySQL(
+        table: String,
+        oldColumns: [String],
+        newColumns: [String],
+        constraintName: String?
+    ) -> [String]? {
         let tableName = quoteIdentifier(table)
         var stmts: [String] = []
         if !oldColumns.isEmpty {
@@ -946,8 +965,7 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     private func extractTableName(from query: String) -> String? {
         guard let regex = Self.tableNameRegex,
               let match = regex.firstMatch(in: query, range: NSRange(query.startIndex..., in: query)),
-              let range = Range(match.range(at: 1), in: query)
-        else { return nil }
+              let range = Range(match.range(at: 1), in: query) else { return nil }
         return String(query[range])
     }
 

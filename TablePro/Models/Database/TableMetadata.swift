@@ -16,14 +16,14 @@ struct TableMetadata {
     let avgRowLength: Int64?
     let rowCount: Int64?
     let comment: String?
-    let engine: String?          // MySQL/MariaDB only
-    let collation: String?       // MySQL/MariaDB only
+    let engine: String? // MySQL/MariaDB only
+    let collation: String? // MySQL/MariaDB only
     let createTime: Date?
     let updateTime: Date?
 
     /// Format a size in bytes to human readable format
     static func formatSize(_ bytes: Int64?) -> String {
-        guard let bytes = bytes else { return "—" }
+        guard let bytes else { return "—" }
         if bytes == 0 { return "0 B" }
 
         let units = ["B", "KB", "MB", "GB", "TB"]

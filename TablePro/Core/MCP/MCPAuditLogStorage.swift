@@ -47,11 +47,9 @@ actor MCPAuditLogStorage {
 
     private func setupDatabase() {
         let fileManager = FileManager.default
-        guard
-            let appSupport = fileManager.urls(
-                for: .applicationSupportDirectory, in: .userDomainMask
-            ).first
-        else {
+        guard let appSupport = fileManager.urls(
+            for: .applicationSupportDirectory, in: .userDomainMask
+        ).first else {
             Self.logger.error("Unable to access application support directory")
             return
         }
@@ -78,18 +76,18 @@ actor MCPAuditLogStorage {
 
     private func createTables() {
         execute("""
-            CREATE TABLE IF NOT EXISTS audit_entries (
-                id TEXT PRIMARY KEY,
-                timestamp REAL NOT NULL,
-                category TEXT NOT NULL,
-                token_id TEXT,
-                token_name TEXT,
-                connection_id TEXT,
-                action TEXT NOT NULL,
-                outcome TEXT NOT NULL,
-                details TEXT
-            );
-            """)
+        CREATE TABLE IF NOT EXISTS audit_entries (
+            id TEXT PRIMARY KEY,
+            timestamp REAL NOT NULL,
+            category TEXT NOT NULL,
+            token_id TEXT,
+            token_name TEXT,
+            connection_id TEXT,
+            action TEXT NOT NULL,
+            outcome TEXT NOT NULL,
+            details TEXT
+        );
+        """)
         execute("CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_entries(timestamp DESC);")
         execute("CREATE INDEX IF NOT EXISTS idx_audit_token ON audit_entries(token_id, timestamp DESC);")
     }
@@ -105,10 +103,10 @@ actor MCPAuditLogStorage {
     @discardableResult
     func addEntry(_ entry: AuditEntry) -> Bool {
         let sql = """
-            INSERT OR REPLACE INTO audit_entries
-                (id, timestamp, category, token_id, token_name, connection_id, action, outcome, details)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """
+        INSERT OR REPLACE INTO audit_entries
+            (id, timestamp, category, token_id, token_name, connection_id, action, outcome, details)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
 
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
@@ -169,9 +167,9 @@ actor MCPAuditLogStorage {
         if since != nil { conditions.append("timestamp >= ?") }
 
         var sql = """
-            SELECT id, timestamp, category, token_id, token_name, connection_id, action, outcome, details
-            FROM audit_entries
-            """
+        SELECT id, timestamp, category, token_id, token_name, connection_id, action, outcome, details
+        FROM audit_entries
+        """
         if !conditions.isEmpty {
             sql += " WHERE " + conditions.joined(separator: " AND ")
         }
@@ -254,8 +252,7 @@ actor MCPAuditLogStorage {
               let categoryCString = sqlite3_column_text(statement, 2),
               let category = AuditCategory(rawValue: String(cString: categoryCString)),
               let actionCString = sqlite3_column_text(statement, 6),
-              let outcomeCString = sqlite3_column_text(statement, 7)
-        else {
+              let outcomeCString = sqlite3_column_text(statement, 7) else {
             return nil
         }
 

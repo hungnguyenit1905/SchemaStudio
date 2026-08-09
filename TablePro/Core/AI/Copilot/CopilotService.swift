@@ -126,7 +126,7 @@ final class CopilotService {
 
         if let client = lspClient {
             let shutdownCompleted = await withTaskGroup(of: Bool.self, returning: Bool.self) { group in
-                group.addTask { (try? await client.shutdown()) != nil }
+                group.addTask { await (try? client.shutdown()) != nil }
                 group.addTask {
                     try? await Task.sleep(for: .seconds(10))
                     return false

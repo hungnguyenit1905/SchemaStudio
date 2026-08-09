@@ -38,8 +38,7 @@ extension DatabaseManager {
         let databaseType = session.connection.type
         guard pluginManager.supportsDatabaseSwitching(for: databaseType),
               pluginManager.requiresReconnectForDatabaseSwitch(for: databaseType),
-              scope.database != session.resolvedBrowseDatabase
-        else {
+              scope.database != session.resolvedBrowseDatabase else {
             return .sessionDriver
         }
         guard canPool(session) else {
@@ -98,7 +97,7 @@ extension DatabaseManager {
         }
     }
 
-    internal func releaseRunningDriver(_ token: UUID, for connectionId: UUID) {
+    func releaseRunningDriver(_ token: UUID, for connectionId: UUID) {
         runningDrivers[connectionId]?.removeValue(forKey: token)
         if runningDrivers[connectionId]?.isEmpty == true {
             runningDrivers.removeValue(forKey: connectionId)
@@ -183,8 +182,7 @@ extension DatabaseManager {
         }
         guard let schema = scope.schema,
               let schemaDriver = driver as? SchemaSwitchable,
-              schemaDriver.currentSchema != schema
-        else {
+              schemaDriver.currentSchema != schema else {
             return
         }
         try await schemaDriver.switchSchema(to: schema)

@@ -66,7 +66,10 @@ extension MainContentView {
             let type = i < tableRows.columnTypes.count ? tableRows.columnTypes[i].displayName : "string"
 
             if let rawValue = value {
-                let format = service.effectiveFormat(columnName: col, scope: tab.tableContext.scope(connectionId: connId))
+                let format = service.effectiveFormat(
+                    columnName: col,
+                    scope: tab.tableContext.scope(connectionId: connId)
+                )
                 if format != .raw {
                     value = ValueDisplayFormatService.applyFormat(rawValue, format: format)
                 }

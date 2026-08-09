@@ -126,7 +126,9 @@ final class AlertHelper {
     // MARK: - Save Changes Confirmation
 
     enum SaveConfirmationResult {
-        case save, dontSave, cancel
+        case save
+        case dontSave
+        case cancel
     }
 
     static func confirmSaveChanges(

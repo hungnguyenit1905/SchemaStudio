@@ -9,15 +9,21 @@ import TableProPluginKit
 struct DatabaseTreeRowActions {
     let coordinator: MainContentCoordinator?
     let isReadOnly: Bool
-    let selectedTables: () -> Set<TableInfo>
+    let selectedTables: (UUID) -> Set<TableInfo>
     let activate: (DatabaseTreeTableRef) async -> Void
     let setActiveDatabase: (String) -> Void
     let setActiveSchema: (_ database: String, _ schema: String) -> Void
     let refreshDatabase: (String) -> Void
+    let openDataTransfer: (String) -> Void
     let refreshObjects: (_ database: String, _ schema: String?) -> Void
     let showRoutineDDL: (RoutineInfo) -> Void
-    let batchToggleTruncate: ([String]) -> Void
-    let batchToggleDelete: ([String]) -> Void
+    let batchToggleTruncate: (_ connectionId: UUID, _ tableNames: [String]) -> Void
+    let batchToggleDelete: (_ connectionId: UUID, _ tableNames: [String]) -> Void
+    var connect: (DatabaseConnection) -> Void = { _ in }
+    var disconnect: (DatabaseConnection) -> Void = { _ in }
+    var refreshConnection: (DatabaseConnection) -> Void = { _ in }
+    var editConnection: (DatabaseConnection) -> Void = { _ in }
+    var newQuery: (DatabaseConnection) -> Void = { _ in }
     let removeRecent: (DatabaseTreeTableRef) -> Void
     let clearRecents: () -> Void
 }
@@ -27,9 +33,19 @@ struct DatabaseTreeRowContext {
     let activeDatabase: String?
     let activeSchema: String?
     let systemSchemas: Set<String>
-    let pendingTruncates: Set<String>
-    let pendingDeletes: Set<String>
+    let pendingTruncates: [UUID: Set<String>]
+    let pendingDeletes: [UUID: Set<String>]
+    var connectionStatus: ConnectionStatus = .disconnected
+    var connectFailureMessage: String?
     var isExternalSchema: @MainActor (String, String) -> Bool = { _, _ in false }
+
+    func isPendingTruncate(_ ref: DatabaseTreeTableRef) -> Bool {
+        pendingTruncates[ref.connectionId]?.contains(ref.table.name) ?? false
+    }
+
+    func isPendingDelete(_ ref: DatabaseTreeTableRef) -> Bool {
+        pendingDeletes[ref.connectionId]?.contains(ref.table.name) ?? false
+    }
 }
 
 struct DatabaseTreeRowView: View {
@@ -58,10 +74,10 @@ struct DatabaseTreeRowView: View {
         rowContent
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
+            .accessibilityIdentifier(node.accessibilityIdentifier)
     }
 
-    @ViewBuilder
-    private var rowContent: some View {
+    @ViewBuilder private var rowContent: some View {
         switch node.kind {
         case .recentSection:
             header(
@@ -73,18 +89,35 @@ struct DatabaseTreeRowView: View {
         case .recentTable(let ref):
             TableRow(
                 table: ref.table,
-                isPendingTruncate: context.pendingTruncates.contains(ref.table.name),
-                isPendingDelete: context.pendingDeletes.contains(ref.table.name)
+                isPendingTruncate: context.isPendingTruncate(ref),
+                isPendingDelete: context.isPendingDelete(ref)
             )
             .foregroundStyle(isEmphasized ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
-        case .database(let metadata):
+        case .connectionRoot:
+            header(
+                text: String(localized: "My Connections"),
+                systemImage: "rectangle.stack",
+                isActive: false,
+                isSystem: false
+            )
+        case .folder(let group):
+            ConnectionFolderRowView(group: group, isEmphasized: isEmphasized)
+        case .connection(let connection):
+            ConnectionRowView(
+                connection: connection,
+                status: context.connectionStatus,
+                isEmphasized: isEmphasized,
+                failureMessage: context.connectFailureMessage,
+                onRetry: { actions.connect(connection) }
+            )
+        case .database(_, let metadata):
             header(
                 text: metadata.name,
                 systemImage: metadata.isSystemDatabase ? "gearshape" : "cylinder",
                 isActive: metadata.name == context.activeDatabase,
                 isSystem: metadata.isSystemDatabase
             )
-        case .schema(let database, let schema):
+        case .schema(_, let database, let schema):
             header(
                 text: schema,
                 systemImage: context.isExternalSchema(database, schema) ? "folder.badge.gearshape" : "folder",
@@ -95,8 +128,8 @@ struct DatabaseTreeRowView: View {
         case .table(let ref):
             TableRow(
                 table: ref.table,
-                isPendingTruncate: context.pendingTruncates.contains(ref.table.name),
-                isPendingDelete: context.pendingDeletes.contains(ref.table.name)
+                isPendingTruncate: context.isPendingTruncate(ref),
+                isPendingDelete: context.isPendingDelete(ref)
             )
             .foregroundStyle(isEmphasized ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
         case .routine(let ref):
@@ -150,28 +183,42 @@ struct DatabaseTreeRowView: View {
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
+        case .disconnected:
+            Label(String(localized: "Not connected"), systemImage: "bolt.horizontal.circle")
+                .font(.callout)
+                .foregroundStyle(.secondary)
         }
     }
 
     private var hasContextMenu: Bool {
         switch node.kind {
-        case .status, .recentSection: return false
+        case .status, .recentSection, .connectionRoot, .folder: return false
         default: return true
         }
     }
 
-    @ViewBuilder
-    private var menuItems: some View {
+    @ViewBuilder private var menuItems: some View {
         switch node.kind {
-        case .recentSection:
+        case .connectionRoot, .folder, .recentSection:
             EmptyView()
+        case .connection(let connection):
+            ConnectionNodeContextMenu(
+                connection: connection,
+                status: context.connectionStatus,
+                isReadOnly: actions.isReadOnly,
+                onConnect: { actions.connect(connection) },
+                onDisconnect: { actions.disconnect(connection) },
+                onRefresh: { actions.refreshConnection(connection) },
+                onEdit: { actions.editConnection(connection) },
+                onNewQuery: { actions.newQuery(connection) }
+            )
         case .recentTable(let ref):
             SidebarContextMenu(
                 clickedTable: ref.table,
                 selectedTables: [ref.table],
                 isReadOnly: actions.isReadOnly,
-                onBatchToggleTruncate: actions.batchToggleTruncate,
-                onBatchToggleDelete: actions.batchToggleDelete,
+                onBatchToggleTruncate: { actions.batchToggleTruncate(ref.connectionId, $0) },
+                onBatchToggleDelete: { actions.batchToggleDelete(ref.connectionId, $0) },
                 coordinator: actions.coordinator,
                 activateBeforeAction: { await actions.activate(ref) }
             )
@@ -182,7 +229,7 @@ struct DatabaseTreeRowView: View {
             Button(String(localized: "Clear Recent Tables")) {
                 actions.clearRecents()
             }
-        case .database(let metadata):
+        case .database(_, let metadata):
             Button(String(format: String(localized: "Use as Active %@"), containerEntityName)) {
                 actions.setActiveDatabase(metadata.name)
             }
@@ -190,7 +237,11 @@ struct DatabaseTreeRowView: View {
             Button(String(localized: "Refresh")) {
                 actions.refreshDatabase(metadata.name)
             }
-        case .schema(let database, let schema):
+            Divider()
+            Button(String(localized: "Data Transfer\u{2026}")) {
+                actions.openDataTransfer(metadata.name)
+            }
+        case .schema(_, let database, let schema):
             Button(String(format: String(localized: "Use as Active %@"), schemaEntityName)) {
                 actions.setActiveSchema(database, schema)
             }
@@ -201,10 +252,10 @@ struct DatabaseTreeRowView: View {
         case .table(let ref):
             SidebarContextMenu(
                 clickedTable: ref.table,
-                selectedTables: actions.selectedTables(),
+                selectedTables: actions.selectedTables(ref.connectionId),
                 isReadOnly: actions.isReadOnly,
-                onBatchToggleTruncate: actions.batchToggleTruncate,
-                onBatchToggleDelete: actions.batchToggleDelete,
+                onBatchToggleTruncate: { actions.batchToggleTruncate(ref.connectionId, $0) },
+                onBatchToggleDelete: { actions.batchToggleDelete(ref.connectionId, $0) },
                 coordinator: actions.coordinator,
                 activateBeforeAction: { await actions.activate(ref) }
             )

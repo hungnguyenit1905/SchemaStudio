@@ -118,7 +118,8 @@ enum SessionStateFactory {
                                 )
                             }
                         } catch {
-                            sessionStateLogger.error("create tab for table failed: \(error.localizedDescription, privacy: .public)")
+                            sessionStateLogger
+                                .error("create tab for table failed: \(error.localizedDescription, privacy: .public)")
                         }
                         if let index = tabMgr.selectedTabIndex {
                             tabMgr.tabs[index].tableContext.isView = payload.isView

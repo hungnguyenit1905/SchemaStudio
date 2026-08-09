@@ -45,7 +45,8 @@ enum SnowflakeMFATokenStore {
         guard !passcode.isEmpty else { return }
         let key = "\(cacheKey(account: account, user: user)):\(passcode)"
         lock.withLock {
-            rejectedPasscodes = rejectedPasscodes.filter { Date().timeIntervalSince($0.value) < rejectedPasscodeLifetime }
+            rejectedPasscodes = rejectedPasscodes
+                .filter { Date().timeIntervalSince($0.value) < rejectedPasscodeLifetime }
             rejectedPasscodes[key] = Date()
         }
     }

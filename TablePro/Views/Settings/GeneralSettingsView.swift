@@ -12,7 +12,6 @@ struct GeneralSettingsView: View {
 
     @State private var initialLanguage: AppLanguage?
     @State private var showResetConfirmation = false
-    @AppStorage(SidebarPersistenceKey.defaultLayout) private var defaultSidebarLayout: SidebarLayout = .flat
 
     private static let standardTimeouts = [10, 20, 30, 40, 50, 60, 90, 120, 180, 300, 600]
 
@@ -49,21 +48,19 @@ struct GeneralSettingsView: View {
                     .help("Single-clicking a table opens a temporary tab that gets replaced on next click.")
 
                 Toggle("Group all connections in one window", isOn: $tabSettings.groupAllConnectionTabs)
-                    .help("When enabled, tabs from different connections share the same window instead of opening separate windows.")
+                    .help(
+                        "When enabled, tabs from different connections share the same window instead of opening separate windows."
+                    )
             }
 
             Section("Sidebar") {
                 Toggle("Show recent tables", isOn: $settings.showRecentTables)
-                    .help("Adds a Recent section at the top of the Tables sidebar with the last tables you opened per connection and database.")
+                    .help(
+                        "Adds a Recent section at the top of the Tables sidebar with the last tables you opened per connection and database."
+                    )
 
                 Toggle("Show object comments", isOn: $settings.showObjectComments)
                     .help("Shows database object comments next to tables in the sidebar and in grid column headers.")
-
-                Picker("Default layout for new connections:", selection: $defaultSidebarLayout) {
-                    Text("List").tag(SidebarLayout.flat)
-                    Text("Tree").tag(SidebarLayout.tree)
-                }
-                .help(String(localized: "Layout for new connections on servers that support a database tree. Switch the current connection from the View menu."))
             }
 
             Section("Query Execution") {
@@ -73,7 +70,11 @@ struct GeneralSettingsView: View {
                         Text("\(seconds) seconds").tag(seconds)
                     }
                 }
-                .help(String(localized: "Maximum time to wait for a query to complete. Set to 0 for no limit. Applied to new connections."))
+                .help(
+                    String(
+                        localized: "Maximum time to wait for a query to complete. Set to 0 for no limit. Applied to new connections."
+                    )
+                )
             }
 
             CommandLineToolSection()

@@ -46,10 +46,6 @@ private struct MarkdownBlockView: View, Equatable {
     let block: MarkdownBlock
     let prefersLightweightCode: Bool
 
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.block == rhs.block && lhs.prefersLightweightCode == rhs.prefersLightweightCode
-    }
-
     var body: some View {
         switch block.kind {
         case .paragraph(let text):
@@ -180,7 +176,7 @@ private struct MarkdownTableView: View {
         ScrollView(.horizontal) {
             Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 6) {
                 GridRow {
-                    ForEach(0..<columnCount, id: \.self) { col in
+                    ForEach(0 ..< columnCount, id: \.self) { col in
                         cell(text: headers[col], alignment: alignments[safe: col] ?? .left)
                             .fontWeight(.semibold)
                     }
@@ -188,7 +184,7 @@ private struct MarkdownTableView: View {
                 Divider().gridCellColumns(columnCount)
                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                     GridRow {
-                        ForEach(0..<columnCount, id: \.self) { col in
+                        ForEach(0 ..< columnCount, id: \.self) { col in
                             cell(text: row[safe: col] ?? "", alignment: alignments[safe: col] ?? .left)
                         }
                     }
@@ -339,8 +335,7 @@ enum MarkdownBlockParser {
         let hashes = trimmed.prefix { $0 == "#" }.count
         guard hashes <= 6,
               trimmed.count > hashes,
-              trimmed[trimmed.index(trimmed.startIndex, offsetBy: hashes)] == " "
-        else { return nil }
+              trimmed[trimmed.index(trimmed.startIndex, offsetBy: hashes)] == " " else { return nil }
         return hashes
     }
 
@@ -366,7 +361,7 @@ enum MarkdownBlockParser {
     private static func orderedListStart(_ trimmed: String) -> Int? {
         let scanner = Scanner(string: trimmed)
         scanner.charactersToBeSkipped = nil
-        var value: Int = 0
+        var value = 0
         guard scanner.scanInt(&value) else { return nil }
         guard scanner.scanString(".") != nil else { return nil }
         guard scanner.scanString(" ") != nil else { return nil }
@@ -486,7 +481,9 @@ enum MarkdownBlockParser {
         while let line = lines.first, looksLikeTableRow(line, columnCount: headers.count) {
             let row = splitTableRow(line)
             var padded = row
-            while padded.count < headers.count { padded.append("") }
+            while padded.count < headers.count {
+                padded.append("")
+            }
             rows.append(Array(padded.prefix(headers.count)))
             lines.removeFirst()
         }

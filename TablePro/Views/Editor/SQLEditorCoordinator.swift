@@ -127,9 +127,15 @@ final class SQLEditorCoordinator: TextViewCoordinator, TextViewDelegate {
                     } else if window.firstResponder == nil || window.firstResponder === window {
                         made = window.makeFirstResponder(textView)
                     }
-                    Self.logger.debug("Editor focus claim: pending=\(claimPending) isKey=\(window.isKeyWindow) responderBefore=\(responderName, privacy: .public) made=\(made)")
+                    Self.logger
+                        .debug(
+                            "Editor focus claim: pending=\(claimPending) isKey=\(window.isKeyWindow) responderBefore=\(responderName, privacy: .public) made=\(made)"
+                        )
                 } else {
-                    Self.logger.debug("Editor focus claim skipped: hasWindow=\(textView.window != nil) destroyed=\(self.isDestroyed) pending=\(self.focusClaimPending)")
+                    Self.logger
+                        .debug(
+                            "Editor focus claim skipped: hasWindow=\(textView.window != nil) destroyed=\(self.isDestroyed) pending=\(self.focusClaimPending)"
+                        )
                 }
                 if controller.cursorPositions.isEmpty {
                     controller.setCursorPositions([CursorPosition(range: NSRange(location: 0, length: 0))])
@@ -444,9 +450,9 @@ final class SQLEditorCoordinator: TextViewCoordinator, TextViewDelegate {
 
     private func handleVimSettingsChange(controller: TextViewController) {
         let enabled = AppSettingsManager.shared.editor.vimModeEnabled
-        if enabled && vimKeyInterceptor == nil {
+        if enabled, vimKeyInterceptor == nil {
             installVimKeyInterceptor(controller: controller)
-        } else if !enabled && vimKeyInterceptor != nil {
+        } else if !enabled, vimKeyInterceptor != nil {
             uninstallVimKeyInterceptor()
         }
     }

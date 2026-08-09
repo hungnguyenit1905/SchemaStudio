@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("SQL Parameter Inliner")
@@ -278,9 +278,9 @@ struct SQLParameterInlinerTests {
 
     @Test("Large SQL with ? placeholders performs correctly")
     func largeSQL() {
-        let columns = (0..<100).map { "col\($0) = ?" }.joined(separator: " AND ")
+        let columns = (0 ..< 100).map { "col\($0) = ?" }.joined(separator: " AND ")
         let sql = "UPDATE large_table SET \(columns)"
-        let params: [Any?] = (0..<100).map { $0 as Any? }
+        let params: [Any?] = (0 ..< 100).map { $0 as Any? }
         let statement = ParameterizedStatement(sql: sql, parameters: params)
 
         let result = SQLParameterInliner.inline(statement, databaseType: .mysql)

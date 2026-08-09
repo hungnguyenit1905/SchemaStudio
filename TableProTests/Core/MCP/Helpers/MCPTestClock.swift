@@ -1,6 +1,6 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 
 public actor MCPTestClock: MCPClock {
     private var currentDate: Date

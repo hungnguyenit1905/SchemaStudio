@@ -8,13 +8,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("SharedSidebarState")
 struct SharedSidebarStateTests {
-
     // MARK: - Registry
 
     @Test("forConnection returns same instance for same UUID")

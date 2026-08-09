@@ -19,6 +19,7 @@ struct MainStatusBarLayoutTests {
             snapshot: StatusBarSnapshot(tab: nil, tableRows: nil),
             filterState: TabFilterState(),
             selectedRowIndices: [],
+            selectionAggregates: .empty,
             viewMode: .constant(.data),
             paginationCallbacks: PaginationCallbacks(
                 onFirst: {},

@@ -257,9 +257,12 @@ struct FileColumnLayoutPersisterTests {
         persister.save(hr, for: key("users", connectionId, database: "hr", schema: "public"))
         persister.save(authSchema, for: key("users", connectionId, database: "sales", schema: "auth"))
 
-        #expect(persister.load(for: key("users", connectionId, database: "sales", schema: "public"))?.columnWidths == ["id": 60])
-        #expect(persister.load(for: key("users", connectionId, database: "hr", schema: "public"))?.columnWidths == ["id": 200])
-        #expect(persister.load(for: key("users", connectionId, database: "sales", schema: "auth"))?.columnWidths == ["id": 320])
+        #expect(persister.load(for: key("users", connectionId, database: "sales", schema: "public"))?
+            .columnWidths == ["id": 60])
+        #expect(persister.load(for: key("users", connectionId, database: "hr", schema: "public"))?
+            .columnWidths == ["id": 200])
+        #expect(persister.load(for: key("users", connectionId, database: "sales", schema: "auth"))?
+            .columnWidths == ["id": 320])
     }
 
     @Test("Saving overwrites an existing entry instead of merging")

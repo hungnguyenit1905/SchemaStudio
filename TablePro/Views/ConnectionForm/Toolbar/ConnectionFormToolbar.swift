@@ -27,13 +27,13 @@ struct ConnectionFormToolbar: ToolbarContent {
 
         ToolbarItem(placement: .confirmationAction) {
             Button(coordinator.isNew
-                   ? String(localized: "Save & Connect")
-                   : String(localized: "Save")) {
-                coordinator.saveAndConnect()
-            }
-            .keyboardShortcut(.defaultAction)
-            .buttonStyle(.borderedProminent)
-            .disabled(!coordinator.isFormValid || coordinator.isInstallingPlugin)
+                ? String(localized: "Save & Connect")
+                : String(localized: "Save")) {
+                    coordinator.saveAndConnect()
+                }
+                .keyboardShortcut(.defaultAction)
+                .buttonStyle(.borderedProminent)
+                .disabled(!coordinator.isFormValid || coordinator.isInstallingPlugin)
         }
     }
 }

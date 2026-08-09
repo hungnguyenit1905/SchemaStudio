@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Data Change Models")
 struct DataChangeModelsTests {
-
     @Test("ChangeType equality - matching types")
     func changeTypeEquality() {
         #expect(ChangeType.update == ChangeType.update)

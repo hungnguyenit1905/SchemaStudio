@@ -1,6 +1,6 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("ExecuteQueryTool")
@@ -95,7 +95,7 @@ struct ExecuteQueryToolTests {
     }
 
     @Test("Progress notifications fire when progressToken is set")
-    func progressEmittedWhenTokenPresent() async throws {
+    func progressEmittedWhenTokenPresent() async {
         let tool = ExecuteQueryTool()
         let progressSink = StubProgressSink()
         let context = await ExecuteQueryToolTestContext.make(
@@ -122,7 +122,7 @@ struct ExecuteQueryToolTests {
     }
 
     @Test("Progress notifications are skipped when no progressToken")
-    func progressSkippedWithoutToken() async throws {
+    func progressSkippedWithoutToken() async {
         let tool = ExecuteQueryTool()
         let progressSink = StubProgressSink()
         let context = await ExecuteQueryToolTestContext.make(

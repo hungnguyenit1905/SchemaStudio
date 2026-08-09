@@ -48,35 +48,35 @@ public indirect enum SurrealValue: Equatable, Sendable {
         switch (lhs, rhs) {
         case (.null, .null), (.none, .none):
             return true
-        case let (.bool(a), .bool(b)):
+        case (.bool(let a), .bool(let b)):
             return a == b
-        case let (.int(a), .int(b)):
+        case (.int(let a), .int(let b)):
             return a == b
-        case let (.double(a), .double(b)):
+        case (.double(let a), .double(let b)):
             return a == b
-        case let (.string(a), .string(b)):
+        case (.string(let a), .string(let b)):
             return a == b
-        case let (.bytes(a), .bytes(b)):
+        case (.bytes(let a), .bytes(let b)):
             return a == b
-        case let (.array(a), .array(b)):
+        case (.array(let a), .array(let b)):
             return a == b
-        case let (.object(a), .object(b)):
+        case (.object(let a), .object(let b)):
             return a.count == b.count && zip(a, b).allSatisfy { $0.key == $1.key && $0.value == $1.value }
-        case let (.recordId(a), .recordId(b)):
+        case (.recordId(let a), .recordId(let b)):
             return a == b
-        case let (.table(a), .table(b)):
+        case (.table(let a), .table(let b)):
             return a == b
-        case let (.uuid(a), .uuid(b)):
+        case (.uuid(let a), .uuid(let b)):
             return a == b
-        case let (.decimal(a), .decimal(b)):
+        case (.decimal(let a), .decimal(let b)):
             return a == b
-        case let (.datetime(sa, na), .datetime(sb, nb)):
+        case (.datetime(let sa, let na), .datetime(let sb, let nb)):
             return sa == sb && na == nb
-        case let (.duration(sa, na), .duration(sb, nb)):
+        case (.duration(let sa, let na), .duration(let sb, let nb)):
             return sa == sb && na == nb
-        case let (.tagged(ta, va), .tagged(tb, vb)):
+        case (.tagged(let ta, let va), .tagged(let tb, let vb)):
             return ta == tb && va == vb
-        case let (.range(fa, ta), .range(fb, tb)):
+        case (.range(let fa, let ta), .range(let fb, let tb)):
             return fa == fb && ta == tb
         default:
             return false
@@ -86,25 +86,25 @@ public indirect enum SurrealValue: Equatable, Sendable {
 
 public extension SurrealValue {
     subscript(key: String) -> SurrealValue? {
-        guard case let .object(pairs) = self else { return nil }
+        guard case .object(let pairs) = self else { return nil }
         return pairs.first { $0.key == key }?.value
     }
 
     var objectPairs: [(key: String, value: SurrealValue)]? {
-        guard case let .object(pairs) = self else { return nil }
+        guard case .object(let pairs) = self else { return nil }
         return pairs
     }
 
     var arrayValues: [SurrealValue]? {
-        guard case let .array(values) = self else { return nil }
+        guard case .array(let values) = self else { return nil }
         return values
     }
 
     var stringValue: String? {
         switch self {
-        case let .string(value):
+        case .string(let value):
             return value
-        case let .table(name):
+        case .table(let name):
             return name
         default:
             return nil
@@ -113,9 +113,9 @@ public extension SurrealValue {
 
     var intValue: Int64? {
         switch self {
-        case let .int(value):
+        case .int(let value):
             return value
-        case let .double(value):
+        case .double(let value):
             return Int64(exactly: value.rounded())
         default:
             return nil
@@ -123,7 +123,7 @@ public extension SurrealValue {
     }
 
     var boolValue: Bool? {
-        guard case let .bool(value) = self else { return nil }
+        guard case .bool(let value) = self else { return nil }
         return value
     }
 

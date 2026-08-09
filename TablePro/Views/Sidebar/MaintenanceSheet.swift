@@ -73,8 +73,7 @@ struct MaintenanceSheet: View {
 
     // MARK: - Options
 
-    @ViewBuilder
-    private var operationOptions: some View {
+    @ViewBuilder private var operationOptions: some View {
         switch operation {
         case "VACUUM" where databaseType == .postgresql || databaseType == .redshift:
             Toggle(String(localized: "FULL (rewrites entire table, blocks access)"), isOn: $fullVacuum)

@@ -45,7 +45,9 @@ struct FKPreviewView: View {
                     ContentUnavailableView(
                         "No Referenced Row",
                         systemImage: "arrow.right.circle",
-                        description: Text("No row found in \(fk.referencedTable) where \(fk.referencedColumn) = '\(value)'")
+                        description: Text(
+                            "No row found in \(fk.referencedTable) where \(fk.referencedColumn) = '\(value)'"
+                        )
                     )
                 }
             }

@@ -105,7 +105,7 @@ private struct JSONViewerWindowContent: View {
             isEditable: isEditable,
             onDismiss: onDismiss,
             onCommit: isEditable ? { newValue in
-                if newValue.isEmpty && initialValue == nil { return }
+                if newValue.isEmpty, initialValue == nil { return }
                 if newValue != JsonReindenter.normalize(initialValue ?? "") {
                     onCommit?(newValue)
                 }

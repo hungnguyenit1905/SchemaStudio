@@ -99,6 +99,7 @@ final class WelcomeViewModel {
     @ObservationIgnored private var connectionUpdatedCancellable: AnyCancellable?
     @ObservationIgnored private var linkedFoldersCancellable: AnyCancellable?
     @ObservationIgnored private var teamLibraryCancellable: AnyCancellable?
+    @ObservationIgnored private var connectionsDidChangeCancellable: AnyCancellable?
     @ObservationIgnored private var welcomeRouterTask: Task<Void, Never>?
     @ObservationIgnored private var searchDebounceTask: Task<Void, Never>?
     private static let searchDebounceNanoseconds: UInt64 = 150_000_000
@@ -209,6 +210,13 @@ final class WelcomeViewModel {
                 self?.teamLibraryConnections = Self.buildTeamLibraryConnections()
             }
 
+        connectionsDidChangeCancellable = NotificationCenter.default
+            .publisher(for: .connectionsDidChange)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.loadConnections()
+            }
+
         loadConnections()
         linkedConnections = services.linkedFolderWatcher.linkedConnections
         teamLibraryConnections = Self.buildTeamLibraryConnections()
@@ -256,15 +264,15 @@ final class WelcomeViewModel {
         return await withTaskCancellationHandler {
             await withCheckedContinuation { continuation in
                 box.set(continuation)
-                withObservationTracking({
+                withObservationTracking {
                     _ = router.pendingRequest
                     _ = router.pendingImport
                     _ = router.pendingConnectionShare
                     _ = router.pendingError
                     _ = router.pendingPluginInstall
-                }, onChange: {
+                } onChange: {
                     box.resume(with: true)
-                })
+                }
             }
         } onCancel: {
             box.resume(with: false)
@@ -678,7 +686,8 @@ final class WelcomeViewModel {
 
         if !WindowManager.shared.hasOpenWindow(for: connection.id) {
             Self.logger.info(
-                "Connection failed after window was closed: \(error.localizedDescription, privacy: .public)")
+                "Connection failed after window was closed: \(error.localizedDescription, privacy: .public)"
+            )
             return
         }
 

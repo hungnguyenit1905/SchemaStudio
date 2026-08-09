@@ -49,12 +49,14 @@ private final class MockSSEProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) private static var queue: [(status: Int, body: Data)] = []
 
     static func enqueue(_ responses: [(status: Int, body: Data)]) {
-        lock.lock(); defer { lock.unlock() }
+        lock.lock()
+        defer { lock.unlock() }
         queue = responses
     }
 
     private static func next() -> (status: Int, body: Data) {
-        lock.lock(); defer { lock.unlock() }
+        lock.lock()
+        defer { lock.unlock() }
         return queue.isEmpty ? (200, Data()) : queue.removeFirst()
     }
 
@@ -68,8 +70,7 @@ private final class MockSSEProtocol: URLProtocol, @unchecked Sendable {
               let httpResponse = HTTPURLResponse(
                   url: url, statusCode: response.status, httpVersion: "HTTP/1.1",
                   headerFields: ["Content-Type": "text/event-stream"]
-              )
-        else { return }
+              ) else { return }
         client?.urlProtocol(self, didReceive: httpResponse, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: response.body)
         client?.urlProtocolDidFinishLoading(self)

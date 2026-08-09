@@ -59,8 +59,8 @@ internal final class SQLFolderWatcher {
 
         let flags = UInt32(
             kFSEventStreamCreateFlagFileEvents
-            | kFSEventStreamCreateFlagNoDefer
-            | kFSEventStreamCreateFlagWatchRoot
+                | kFSEventStreamCreateFlagNoDefer
+                | kFSEventStreamCreateFlagWatchRoot
         )
 
         guard let stream = FSEventStreamCreate(

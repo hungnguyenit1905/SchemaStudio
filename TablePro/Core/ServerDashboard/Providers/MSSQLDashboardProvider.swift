@@ -11,15 +11,15 @@ struct MSSQLDashboardProvider: ServerDashboardQueryProvider {
 
     func fetchSessions(execute: (String) async throws -> QueryResult) async throws -> [DashboardSession] {
         let sql = """
-            SELECT s.session_id, s.login_name, DB_NAME(s.database_id) AS db_name,
-                   s.status, r.total_elapsed_time AS duration_ms,
-                   r.command, LEFT(t.text, 1000) AS query_text
-            FROM sys.dm_exec_sessions s
-            LEFT JOIN sys.dm_exec_requests r ON s.session_id = r.session_id
-            OUTER APPLY sys.dm_exec_sql_text(r.sql_handle) t
-            WHERE s.is_user_process = 1
-            ORDER BY r.total_elapsed_time DESC
-            """
+        SELECT s.session_id, s.login_name, DB_NAME(s.database_id) AS db_name,
+               s.status, r.total_elapsed_time AS duration_ms,
+               r.command, LEFT(t.text, 1000) AS query_text
+        FROM sys.dm_exec_sessions s
+        LEFT JOIN sys.dm_exec_requests r ON s.session_id = r.session_id
+        OUTER APPLY sys.dm_exec_sql_text(r.sql_handle) t
+        WHERE s.is_user_process = 1
+        ORDER BY r.total_elapsed_time DESC
+        """
         let result = try await execute(sql)
         let col = columnIndex(from: result.columns)
         return result.rows.map { row in
@@ -54,9 +54,9 @@ struct MSSQLDashboardProvider: ServerDashboardQueryProvider {
         }
 
         let uptimeResult = try await execute("""
-            SELECT DATEDIFF(SECOND, sqlserver_start_time, GETDATE()) AS uptime_secs
-            FROM sys.dm_os_sys_info
-            """)
+        SELECT DATEDIFF(SECOND, sqlserver_start_time, GETDATE()) AS uptime_secs
+        FROM sys.dm_os_sys_info
+        """)
         if let row = uptimeResult.rows.first {
             let secs = Int(value(row, at: 0)) ?? 0
             metrics.append(DashboardMetric(
@@ -69,8 +69,8 @@ struct MSSQLDashboardProvider: ServerDashboardQueryProvider {
         }
 
         let sizeResult = try await execute("""
-            SELECT SUM(size * 8 / 1024) AS size_mb FROM sys.database_files
-            """)
+        SELECT SUM(size * 8 / 1024) AS size_mb FROM sys.database_files
+        """)
         if let row = sizeResult.rows.first {
             let sizeMb = value(row, at: 0)
             metrics.append(DashboardMetric(
@@ -87,15 +87,15 @@ struct MSSQLDashboardProvider: ServerDashboardQueryProvider {
 
     func fetchSlowQueries(execute: (String) async throws -> QueryResult) async throws -> [DashboardSlowQuery] {
         let sql = """
-            SELECT s.session_id, s.login_name, DB_NAME(s.database_id) AS db_name,
-                   r.total_elapsed_time AS duration_ms,
-                   LEFT(t.text, 1000) AS query_text
-            FROM sys.dm_exec_sessions s
-            JOIN sys.dm_exec_requests r ON s.session_id = r.session_id
-            OUTER APPLY sys.dm_exec_sql_text(r.sql_handle) t
-            WHERE s.is_user_process = 1 AND r.total_elapsed_time > 1_000
-            ORDER BY r.total_elapsed_time DESC
-            """
+        SELECT s.session_id, s.login_name, DB_NAME(s.database_id) AS db_name,
+               r.total_elapsed_time AS duration_ms,
+               LEFT(t.text, 1000) AS query_text
+        FROM sys.dm_exec_sessions s
+        JOIN sys.dm_exec_requests r ON s.session_id = r.session_id
+        OUTER APPLY sys.dm_exec_sql_text(r.sql_handle) t
+        WHERE s.is_user_process = 1 AND r.total_elapsed_time > 1_000
+        ORDER BY r.total_elapsed_time DESC
+        """
         let result = try await execute(sql)
         let col = columnIndex(from: result.columns)
         return result.rows.map { row in

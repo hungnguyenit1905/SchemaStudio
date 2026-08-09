@@ -7,13 +7,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("SQL Statement Scanner — locatedStatementAtCursor")
 struct SQLStatementScannerLocatedTests {
-
     // MARK: - Offset correctness
 
     @Test("Returns correct offset for each statement in multi-statement string")
@@ -135,7 +134,7 @@ struct SQLStatementScannerLocatedTests {
     @Test("Cursor beyond end of string is clamped")
     func cursorBeyondEnd() {
         let sql = "SELECT 1; SELECT 2"
-        let located = SQLStatementScanner.locatedStatementAtCursor(in: sql, cursorPosition: 9999)
+        let located = SQLStatementScanner.locatedStatementAtCursor(in: sql, cursorPosition: 9_999)
         #expect(located.offset == 9)
         #expect(located.sql == " SELECT 2")
     }
@@ -143,7 +142,7 @@ struct SQLStatementScannerLocatedTests {
     @Test("Handles very large input without crashing")
     func largeInput() {
         var parts: [String] = []
-        for i in 0..<300 {
+        for i in 0 ..< 300 {
             parts.append("SELECT \(i) FROM very_long_table_name_for_testing;")
         }
         let sql = parts.joined(separator: " ")

@@ -88,8 +88,7 @@ struct FilterRowView: View {
         }
     }
 
-    @ViewBuilder
-    private var dragHandle: some View {
+    @ViewBuilder private var dragHandle: some View {
         if isReorderEnabled {
             FilterRowDragHandle()
                 .draggable(FilterRowTransfer(filterID: filter.id)) {
@@ -176,8 +175,7 @@ struct FilterRowView: View {
         .help(String(localized: "Select filter operator"))
     }
 
-    @ViewBuilder
-    private var valueFields: some View {
+    @ViewBuilder private var valueFields: some View {
         if filter.isRawSQL {
             FilterValueTextField(
                 text: Binding(
@@ -255,8 +253,7 @@ struct FilterRowView: View {
         }
     }
 
-    @ViewBuilder
-    private var rowContextMenu: some View {
+    @ViewBuilder private var rowContextMenu: some View {
         Button {
             onApply()
         } label: {

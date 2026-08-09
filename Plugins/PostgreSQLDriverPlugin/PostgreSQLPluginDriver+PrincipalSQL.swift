@@ -104,11 +104,11 @@ extension PostgreSQLPluginDriver {
         switch scope {
         case .server:
             nil
-        case let .database(name):
+        case .database(let name):
             "DATABASE \(quoteIdentifier(name))"
-        case let .schema(_, schema):
+        case .schema(_, let schema):
             "SCHEMA \(quoteIdentifier(schema))"
-        case let .table(_, schema, table), let .column(_, schema, table, _):
+        case .table(_, let schema, let table), .column(_, let schema, let table, _):
             if let schema {
                 "TABLE \(quoteIdentifier(schema)).\(quoteIdentifier(table))"
             } else {

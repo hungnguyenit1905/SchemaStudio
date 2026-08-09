@@ -6,8 +6,8 @@
 import Foundation
 @testable import SchemaStudio
 import TableProPluginKit
-import Testing
 import TableProSyncTransport
+import Testing
 
 @Suite("ConnectionStorage Persistence")
 @MainActor
@@ -28,8 +28,7 @@ struct ConnectionStoragePersistenceTests {
         )
         let suiteName = "com.SchemaStudio.tests.ConnectionStorage.\(unique)"
         guard let defaults = UserDefaults(suiteName: suiteName),
-              let syncDefaults = UserDefaults(suiteName: "com.SchemaStudio.tests.Sync.\(unique)")
-        else {
+              let syncDefaults = UserDefaults(suiteName: "com.SchemaStudio.tests.Sync.\(unique)") else {
             fatalError("Failed to create isolated test user defaults")
         }
         self.defaults = defaults

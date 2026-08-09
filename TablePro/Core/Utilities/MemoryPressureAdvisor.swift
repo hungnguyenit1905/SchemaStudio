@@ -24,9 +24,9 @@ internal enum MemoryPressureAdvisor {
             let event = source.data
             let wasPressured = isUnderPressure
             isUnderPressure = event.contains(.warning) || event.contains(.critical)
-            if isUnderPressure && !wasPressured {
+            if isUnderPressure, !wasPressured {
                 logger.info("Memory pressure detected — reducing tab eviction budget")
-            } else if !isUnderPressure && wasPressured {
+            } else if !isUnderPressure, wasPressured {
                 logger.info("Memory pressure resolved — restoring tab eviction budget")
             }
         }

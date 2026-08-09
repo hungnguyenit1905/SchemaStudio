@@ -78,8 +78,7 @@ enum PluginCodeSignatureVerifier {
         guard infoStatus == errSecSuccess,
               let infoDict = info as? [String: Any],
               let teamId = infoDict[kSecCodeInfoTeamIdentifier as String] as? String,
-              !teamId.isEmpty
-        else { return nil }
+              !teamId.isEmpty else { return nil }
         return teamId
     }
 

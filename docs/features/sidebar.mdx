@@ -1,0 +1,78 @@
+---
+title: "Sidebar"
+description: "Every saved connection in one tree, shared by every window"
+---
+
+The sidebar lists every connection you have saved, grouped into the same folders as the welcome
+window. It is the same tree in every window: expand a connection in one window and it is expanded
+in all of them.
+
+## The tree
+
+```
+My Connections
+├── Production            (folder)
+│   ├── orders-db         (connection)
+│   └── billing-db
+└── local-sqlite
+```
+
+Under a connection, the levels follow whatever the database engine uses. PostgreSQL shows
+databases, then schemas, then tables. MySQL shows databases, then tables. SQLite hangs its tables
+straight off the connection, because it has no container level.
+
+## Connecting
+
+Expanding a connection connects it and loads its databases. A spinner shows while the connect runs.
+
+Reopening the app restores the shape of the tree but connects nothing. Connections you had expanded
+come back showing **Not connected** until you connect them, so launching with a dozen saved
+connections never fires a dozen connects or asks for a dozen passwords.
+
+When a connect fails, the connection shows the reason and a retry button. Point at the button to
+read the full message. Data that had already loaded stays where it is, so a failed refresh never
+empties a tree you were using.
+
+### Connection actions
+
+Right-click a connection:
+
+| Action | What it does |
+|--------|--------------|
+| **Connect** | Connects without expanding |
+| **Disconnect** | Closes the session and collapses the connection |
+| **Refresh** | Reloads the database list |
+| **New Query** | Opens a query tab on that connection |
+| **Edit Connection** | Opens the connection form |
+
+Connect, Disconnect, and Refresh appear according to whether the connection is currently connected.
+
+Collapsing a connection does not disconnect it. Disconnect is its own action, and it keeps the
+connection's recent tables and sidebar search text, so reconnecting picks up where you left off.
+
+## Staying connected
+
+A connection stays connected while either a tab or the sidebar is holding it:
+
+- Close the last tab of a connection that is still expanded in the tree, and it stays connected.
+  The tree is still showing it, so the session stays up.
+- Collapse it first, then close its last tab, and it disconnects.
+- Closing the last window disconnects everything, because no tree is left on screen.
+
+## Opening tables
+
+Click a table to open it. Double-click, or click a table under a connection other than the one the
+window is bound to, and the tab opens beside the tabs you already have, bound to the table's own
+connection. See [Tabs](/features/tabs) for how that interacts with the window grouping setting.
+
+## Adding and removing connections
+
+Connections and folders are created, edited, and deleted from the welcome window. Changes show up
+in the sidebar right away, with no restart. Deleting a connection closes its tabs and disconnects
+it.
+
+## Searching
+
+The filter field matches connection and folder names from your saved list, plus the databases,
+schemas, and tables of connections that are currently expanded. It never connects a connection in
+order to search it, so a collapsed connection matches on its name alone.

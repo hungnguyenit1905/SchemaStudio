@@ -32,7 +32,7 @@ internal func mysqlFractionalSecondsSuffix(forDataType dataType: String) -> Stri
     guard upper.hasPrefix("TIMESTAMP(") || upper.hasPrefix("DATETIME(") else { return "" }
     guard let open = dataType.firstIndex(of: "("),
           let close = dataType[open...].firstIndex(of: ")") else { return "" }
-    return String(dataType[open...close])
+    return String(dataType[open ... close])
 }
 
 internal func mysqlCurrentTimestampExpression(_ value: String, dataType: String) -> String? {

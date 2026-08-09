@@ -26,10 +26,6 @@ enum SidebarPersistenceKey {
 
     static let defaultLayout = "sidebar.defaultLayout"
 
-    static func layout(connectionId: UUID) -> String {
-        "sidebar.layout.\(connectionId.uuidString)"
-    }
-
     static func expanded(connectionId: UUID, kind: SidebarObjectKind) -> String {
         "sidebar.\(connectionId.uuidString).\(kind.rawValue).expanded"
     }

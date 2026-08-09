@@ -38,7 +38,9 @@ final class SchemaColumnStore {
 
     func removeAll() {
         generation += 1
-        for task in loads.values { task.cancel() }
+        for task in loads.values {
+            task.cancel()
+        }
         loads.removeAll()
         entries.removeAll()
     }

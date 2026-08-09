@@ -40,15 +40,30 @@ struct TableViewCoordinatorDisplayCacheTests {
         let column = 0
         let type: ColumnType = .text(rawType: nil)
 
-        let primed = coordinator.displayValue(forID: .existing(0), column: column, rawValue: value("A"), columnType: type)
+        let primed = coordinator.displayValue(
+            forID: .existing(0),
+            column: column,
+            rawValue: value("A"),
+            columnType: type
+        )
         #expect(primed == "A")
 
-        let stale = coordinator.displayValue(forID: .existing(0), column: column, rawValue: value("B"), columnType: type)
+        let stale = coordinator.displayValue(
+            forID: .existing(0),
+            column: column,
+            rawValue: value("B"),
+            columnType: type
+        )
         #expect(stale == "A")
 
         coordinator.invalidateDisplayCache()
 
-        let fresh = coordinator.displayValue(forID: .existing(0), column: column, rawValue: value("B"), columnType: type)
+        let fresh = coordinator.displayValue(
+            forID: .existing(0),
+            column: column,
+            rawValue: value("B"),
+            columnType: type
+        )
         #expect(fresh == "B")
     }
 }

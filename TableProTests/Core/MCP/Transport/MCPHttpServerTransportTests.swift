@@ -1,6 +1,6 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("MCP HTTP Server Transport")
@@ -279,7 +279,8 @@ struct MCPHttpServerTransportTests {
         let http = try #require(response as? HTTPURLResponse)
 
         #expect(http.statusCode == 401)
-        let challenge = http.value(forHTTPHeaderField: "Www-Authenticate") ?? http.value(forHTTPHeaderField: "WWW-Authenticate")
+        let challenge = http.value(forHTTPHeaderField: "Www-Authenticate") ?? http
+            .value(forHTTPHeaderField: "WWW-Authenticate")
         #expect(challenge?.contains("Bearer") == true)
         let parsed = try parseJsonRpcError(data)
         #expect(parsed.code != 0)
@@ -317,7 +318,7 @@ struct MCPHttpServerTransportTests {
 
         let body = try makeRequestBody(method: "initialize", id: 1)
 
-        for _ in 0..<3 {
+        for _ in 0 ..< 3 {
             let request = makePost(port: port, body: body, authorization: "Bearer wrong-token")
             _ = try await URLSession.shared.data(for: request)
         }

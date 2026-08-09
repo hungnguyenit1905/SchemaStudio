@@ -25,14 +25,14 @@ internal struct MarkdownTableConverter {
         result.append(" |\n")
 
         result.append("|")
-        for _ in 0..<columnCount {
+        for _ in 0 ..< columnCount {
             result.append(" --- |")
         }
         result.append("\n")
 
         for row in cappedRows {
             result.append("| ")
-            for idx in 0..<columnCount {
+            for idx in 0 ..< columnCount {
                 if idx > 0 { result.append(" | ") }
 
                 guard row.indices.contains(idx) else {

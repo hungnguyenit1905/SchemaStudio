@@ -8,7 +8,8 @@ struct MCPHttpRequestRouter: Sendable {
         #"{"jsonrpc":"2.0","id":null,"error":{"code":-32603,"message":"internal_error"}}"#.utf8
     )
 
-    typealias InboundEmitter = @Sendable (MCPInboundExchange) -> AsyncStream<MCPInboundExchange>.Continuation.YieldResult
+    typealias InboundEmitter = @Sendable (MCPInboundExchange) -> AsyncStream<MCPInboundExchange>.Continuation
+        .YieldResult
     typealias SseStarter = @Sendable (UUID, MCPSessionId, HttpConnectionContext) async -> Void
     typealias ResponderSinkFactory = @Sendable (HttpConnectionContext) -> any MCPResponderSink
 
@@ -64,7 +65,7 @@ struct MCPHttpRequestRouter: Sendable {
         }
 
         Self.logger.info("Integrations exchange request received (\(body.count, privacy: .public) bytes)")
-        let ip = Self.ipString(for: await context.clientAddress())
+        let ip = await Self.ipString(for: context.clientAddress())
 
         let parsed: ExchangeBody
         do {
@@ -125,7 +126,10 @@ struct MCPHttpRequestRouter: Sendable {
             await context.cancel()
         case .failure(let error):
             let mapped = Self.mapExchangeError(error)
-            Self.logger.warning("Integrations exchange failed: status=\(mapped.status.code, privacy: .public) reason=\(mapped.message, privacy: .public)")
+            Self.logger
+                .warning(
+                    "Integrations exchange failed: status=\(mapped.status.code, privacy: .public) reason=\(mapped.message, privacy: .public)"
+                )
             MCPAuditLogger.logPairingExchange(
                 outcome: .denied,
                 ip: ip,
@@ -407,7 +411,10 @@ struct MCPHttpRequestRouter: Sendable {
         do {
             data = try JSONEncoder().encode(envelope)
         } catch {
-            Self.logger.error("Encode top-level error envelope failed: \(error.localizedDescription, privacy: .public); using static fallback")
+            Self.logger
+                .error(
+                    "Encode top-level error envelope failed: \(error.localizedDescription, privacy: .public); using static fallback"
+                )
             data = Self.staticInternalErrorEnvelope
         }
         await context.writeJsonResponse(
@@ -459,7 +466,7 @@ struct MCPHttpRequestRouter: Sendable {
 
     private func stripQueryString(_ path: String) -> String {
         if let questionIndex = path.firstIndex(of: "?") {
-            return String(path[path.startIndex..<questionIndex])
+            return String(path[path.startIndex ..< questionIndex])
         }
         return path
     }

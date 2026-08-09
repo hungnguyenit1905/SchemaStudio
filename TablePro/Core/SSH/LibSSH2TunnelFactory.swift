@@ -174,7 +174,7 @@ internal enum LibSSH2TunnelFactory {
                 }
 
                 if !resolvedJumps.isEmpty {
-                    for jumpIndex in 0..<resolvedJumps.count {
+                    for jumpIndex in 0 ..< resolvedJumps.count {
                         let nextResolved: ResolvedSSHTarget = jumpIndex + 1 < resolvedJumps.count
                             ? resolvedJumps[jumpIndex + 1]
                             : resolvedPrimary
@@ -349,7 +349,7 @@ internal enum LibSSH2TunnelFactory {
         defer { freeaddrinfo(result) }
 
         var currentAddr: UnsafeMutablePointer<addrinfo>? = firstAddr
-        var lastError: String = "No address found"
+        var lastError = "No address found"
 
         while let addrInfo = currentAddr {
             let fd = socket(addrInfo.pointee.ai_family, addrInfo.pointee.ai_socktype, addrInfo.pointee.ai_protocol)
@@ -364,7 +364,7 @@ internal enum LibSSH2TunnelFactory {
 
             let connectResult = connect(fd, addrInfo.pointee.ai_addr, addrInfo.pointee.ai_addrlen)
 
-            if connectResult != 0 && errno != EINPROGRESS {
+            if connectResult != 0, errno != EINPROGRESS {
                 Darwin.close(fd)
                 lastError = "Connection to \(host):\(port) failed"
                 currentAddr = addrInfo.pointee.ai_next
@@ -634,7 +634,7 @@ internal enum LibSSH2TunnelFactory {
             try retryAuth.authenticate(session: session, username: username)
 
             // Auth succeeded — save to Keychain if user opted in
-            if promptResult.saveToKeychain && useKeychain {
+            if promptResult.saveToKeychain, useKeychain {
                 SSHKeychainLookup.savePassphrase(promptResult.passphrase, forKeyAt: expandedPath)
             }
             addToAgentIfNeeded(path: expandedPath)

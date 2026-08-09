@@ -4,13 +4,12 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("PluginManager reconciliation helpers", .serialized)
 @MainActor
 struct PluginManagerReconciliationTests {
-
     private func makeManifest(pluginIds: [String]) -> RegistryManifest {
         let plugins = pluginIds.map { id -> RegistryPlugin in
             let json = """
@@ -52,7 +51,9 @@ struct PluginManagerReconciliationTests {
     private func makeRegistryPlugin(id: String = "com.example.driver", kitVersions: [Int]) throws -> RegistryPlugin {
         let arch = PluginArchitecture.current.rawValue
         let binaries = kitVersions
-            .map { "{\"architecture\": \"\(arch)\", \"downloadURL\": \"https://x\", \"sha256\": \"deadbeef\", \"pluginKitVersion\": \($0)}" }
+            .map {
+                "{\"architecture\": \"\(arch)\", \"downloadURL\": \"https://x\", \"sha256\": \"deadbeef\", \"pluginKitVersion\": \($0)}"
+            }
             .joined(separator: ",")
         let json = """
         {
@@ -225,7 +226,9 @@ struct PluginManagerReconciliationTests {
         )
         pm.rejectedPlugins.append(rejected)
         defer { pm.removeFromRejected(url: rejected.url) }
-        #expect(pm.outdatedReconcileReason(forTypeId: "TestDriverType") == "A newer version of SchemaStudio is required for this plugin.")
+        #expect(pm
+            .outdatedReconcileReason(forTypeId: "TestDriverType") ==
+            "A newer version of SchemaStudio is required for this plugin.")
         #expect(pm.outdatedReconcileReason(forTypeId: "OtherDriverType") == nil)
     }
 
@@ -234,7 +237,8 @@ struct PluginManagerReconciliationTests {
         #expect(PluginError.noCompatibleBinary.isPermanentReconciliationFailure)
         #expect(PluginError.incompatibleVersion(required: 15, current: 14).isPermanentReconciliationFailure)
         #expect(PluginError.incompatibleWithCurrentApp(minimumRequired: "0.44.0").isPermanentReconciliationFailure)
-        #expect(PluginError.appVersionTooOld(minimumRequired: "0.44.0", currentApp: "0.43.3").isPermanentReconciliationFailure)
+        #expect(PluginError.appVersionTooOld(minimumRequired: "0.44.0", currentApp: "0.43.3")
+            .isPermanentReconciliationFailure)
     }
 
     @Test("transient errors are retried, not surfaced as permanent failures")

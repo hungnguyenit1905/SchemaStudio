@@ -33,9 +33,11 @@ struct IntegrationsActivityLogPane: View {
         .overlay(alignment: .center) { overlay }
         .searchable(text: $searchText, placement: .toolbar, prompt: Text(String(localized: "Search activity")))
         .inspector(isPresented: $showInspector) {
-            ActivityLogInspector(entry: selectedEntry,
-                                 connectionLabel: connectionName)
-                .inspectorColumnWidth(min: 260, ideal: 320, max: 480)
+            ActivityLogInspector(
+                entry: selectedEntry,
+                connectionLabel: connectionName
+            )
+            .inspectorColumnWidth(min: 260, ideal: 320, max: 480)
         }
         .toolbar(content: toolbar)
         .navigationTitle(IntegrationsActivitySection.activityLog.title)
@@ -57,8 +59,7 @@ struct IntegrationsActivityLogPane: View {
         return filteredEntries.first { $0.id == selection }
     }
 
-    @ViewBuilder
-    private var overlay: some View {
+    @ViewBuilder private var overlay: some View {
         if !hasLoaded {
             ProgressView()
         } else if filteredEntries.isEmpty {
@@ -67,8 +68,7 @@ struct IntegrationsActivityLogPane: View {
         }
     }
 
-    @ViewBuilder
-    private var emptyState: some View {
+    @ViewBuilder private var emptyState: some View {
         if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             ContentUnavailableView.search(text: searchText)
         } else if hasNoFilters {
@@ -141,7 +141,6 @@ struct IntegrationsActivityLogPane: View {
         .disabled(filteredEntries.isEmpty)
     }
 
-    @ViewBuilder
     private var refreshButton: some View {
         Button {
             Task { await reload() }
@@ -344,13 +343,11 @@ private struct ActivityLogTable: View {
         }
     }
 
-    @ViewBuilder
     private func timeCell(for entry: AuditEntry) -> some View {
         Text(entry.timestamp, format: .relative(presentation: .named))
             .help(entry.timestamp.formatted(date: .complete, time: .standard))
     }
 
-    @ViewBuilder
     private func actionCell(for entry: AuditEntry) -> some View {
         Text(entry.action)
             .font(.system(.body, design: .monospaced))

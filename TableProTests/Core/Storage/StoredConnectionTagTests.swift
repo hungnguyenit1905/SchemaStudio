@@ -38,7 +38,7 @@ struct StoredConnectionTagTests {
             "id": UUID().uuidString,
             "name": "Local",
             "host": "localhost",
-            "port": 3306,
+            "port": 3_306,
             "database": "",
             "username": "root",
             "type": "mysql",

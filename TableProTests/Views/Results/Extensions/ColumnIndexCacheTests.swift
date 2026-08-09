@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
-import SwiftUI
 @testable import SchemaStudio
+import SwiftUI
 import Testing
 
 @MainActor
@@ -28,7 +28,7 @@ struct ColumnIndexCacheTests {
         tableView.addTableColumn(
             NSTableColumn(identifier: ColumnIdentitySchema.rowNumberIdentifier)
         )
-        for slot in 0..<count {
+        for slot in 0 ..< count {
             tableView.addTableColumn(
                 NSTableColumn(identifier: ColumnIdentitySchema.slotIdentifier(slot))
             )
@@ -69,7 +69,7 @@ struct ColumnIndexCacheTests {
         )
 
         let first = coordinator.tableColumnIndex(for: 1)
-        for _ in 0..<5 {
+        for _ in 0 ..< 5 {
             #expect(coordinator.tableColumnIndex(for: 1) == first)
         }
     }

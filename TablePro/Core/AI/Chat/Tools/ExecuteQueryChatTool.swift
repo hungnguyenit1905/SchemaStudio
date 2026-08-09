@@ -8,10 +8,10 @@ import Foundation
 struct ExecuteQueryChatTool: ChatTool {
     let name = "execute_query"
     let description = String(localized: """
-        Execute a SQL query against a connection. The connection's safe mode policy applies.\
-         Multi-statement queries are rejected. Destructive operations (DROP, TRUNCATE, ALTER...DROP)\
-         are blocked here; use confirm_destructive_operation instead.
-        """)
+    Execute a SQL query against a connection. The connection's safe mode policy applies.\
+     Multi-statement queries are rejected. Destructive operations (DROP, TRUNCATE, ALTER...DROP)\
+     are blocked here; use confirm_destructive_operation instead.
+    """)
     let inputSchema: JsonValue = ChatToolSchemaBuilder.object(
         properties: [
             "connection_id": ChatToolSchemaBuilder.connectionId,

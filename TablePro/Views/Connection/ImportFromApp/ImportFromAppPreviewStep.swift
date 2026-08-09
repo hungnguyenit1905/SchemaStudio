@@ -37,8 +37,12 @@ struct ImportFromAppPreviewStep: View {
 
     private var credentialsAbortedBanner: some View {
         Label {
-            Text(String(localized: "Some passwords were not read. You can enter them in the connection editor after import."))
-                .font(.caption)
+            Text(
+                String(
+                    localized: "Some passwords were not read. You can enter them in the connection editor after import."
+                )
+            )
+            .font(.caption)
         } icon: {
             Image(systemName: "key.slash")
                 .foregroundStyle(.orange)

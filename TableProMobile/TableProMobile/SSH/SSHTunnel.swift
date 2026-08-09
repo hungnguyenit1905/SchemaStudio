@@ -1,5 +1,5 @@
-import Foundation
 import CLibSSH2
+import Foundation
 import os
 
 final class AliveFlag: Sendable {
@@ -9,8 +9,14 @@ final class AliveFlag: Sendable {
     nonisolated init() {}
 
     nonisolated var value: Bool {
-        get { _lock.lock(); defer { _lock.unlock() }; return _value }
-        set { _lock.lock(); _value = newValue; _lock.unlock() }
+        get { _lock.lock()
+            defer { _lock.unlock() }
+            return _value
+        }
+        set { _lock.lock()
+            _value = newValue
+            _lock.unlock()
+        }
     }
 }
 
@@ -69,7 +75,7 @@ actor SSHTunnel {
 
             let connectResult = Darwin.connect(fd, addrInfo.pointee.ai_addr, addrInfo.pointee.ai_addrlen)
 
-            if connectResult != 0 && errno != EINPROGRESS {
+            if connectResult != 0, errno != EINPROGRESS {
                 Darwin.close(fd)
                 lastError = "Connection to \(host):\(port) failed"
                 currentAddr = addrInfo.pointee.ai_next
@@ -214,7 +220,8 @@ actor SSHTunnel {
 
         let authList = libssh2_userauth_list(session, username, UInt32(username.utf8.count))
         guard authList == nil else {
-            throw SSHTunnelError.authenticationFailed("Server requires credentials; passwordless authentication is not permitted")
+            throw SSHTunnelError
+                .authenticationFailed("Server requires credentials; passwordless authentication is not permitted")
         }
 
         guard libssh2_userauth_authenticated(session) != 0 else {
@@ -354,8 +361,8 @@ actor SSHTunnel {
     }
 
     private func bindLocalSocket() throws -> (fd: Int32, port: Int) {
-        for _ in 0..<20 {
-            let candidatePort = Int.random(in: 49152...65535)
+        for _ in 0 ..< 20 {
+            let candidatePort = Int.random(in: 49_152 ... 65_535)
             let fd = socket(AF_INET, SOCK_STREAM, 0)
             guard fd >= 0 else { continue }
 
@@ -405,7 +412,7 @@ actor SSHTunnel {
     }
 
     private func openDirectTcpipChannel(remoteHost: String, remotePort: Int) -> OpaquePointer? {
-        for _ in 0..<30 {
+        for _ in 0 ..< 30 {
             guard isAlive, let session else { return nil }
 
             sessionLock.lock()
@@ -434,9 +441,9 @@ actor SSHTunnel {
         return nil
     }
 
-    // Relay runs outside the actor on a detached thread.
-    // Uses NSLock to serialize libssh2 calls (libssh2 is not thread-safe per-session).
-    // This prevents blocking the actor, which other code (PQexec, keepalive) needs.
+    /// Relay runs outside the actor on a detached thread.
+    /// Uses NSLock to serialize libssh2 calls (libssh2 is not thread-safe per-session).
+    /// This prevents blocking the actor, which other code (PQexec, keepalive) needs.
     private static func relayStatic(
         clientFD: Int32, channel: OpaquePointer, sshFD: Int32,
         aliveFlag: AliveFlag, lock: NSLock
@@ -465,7 +472,9 @@ actor SSHTunnel {
             // Channel -> Client
             if pollFDs[1].revents & Int16(POLLIN) != 0 {
                 lock.lock()
-                guard aliveFlag.value else { lock.unlock(); return }
+                guard aliveFlag.value else { lock.unlock()
+                    return
+                }
                 let readResult = Int(tablepro_libssh2_channel_read(channel, buffer, bufferSize))
                 let eof = libssh2_channel_eof(channel)
                 lock.unlock()
@@ -492,7 +501,9 @@ actor SSHTunnel {
                 var totalWritten = 0
                 while totalWritten < Int(clientRead) {
                     lock.lock()
-                    guard aliveFlag.value else { lock.unlock(); return }
+                    guard aliveFlag.value else { lock.unlock()
+                        return
+                    }
                     let written = Int(tablepro_libssh2_channel_write(
                         channel,
                         buffer.advanced(by: totalWritten),

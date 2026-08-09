@@ -202,7 +202,7 @@ public actor MCPBearerTokenAuthenticator: MCPAuthenticator {
     internal static func parseBearerToken(_ header: String) -> String? {
         let trimmed = header.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let spaceIndex = trimmed.firstIndex(of: " ") else { return nil }
-        let scheme = trimmed[trimmed.startIndex..<spaceIndex]
+        let scheme = trimmed[trimmed.startIndex ..< spaceIndex]
         guard scheme.lowercased() == "bearer" else { return nil }
         let value = trimmed[trimmed.index(after: spaceIndex)...]
             .trimmingCharacters(in: .whitespacesAndNewlines)

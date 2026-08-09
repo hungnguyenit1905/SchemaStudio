@@ -24,7 +24,10 @@ struct SQLImportOptionsView: View {
                 .disabled(plugin.settings.errorHandling == .skipAndContinue)
                 .help(plugin.settings.errorHandling == .skipAndContinue
                     ? String(localized: "Not available in skip-and-continue mode")
-                    : String(localized: "Execute all statements in a single transaction. If any statement fails, all changes are rolled back."))
+                    :
+                    String(
+                        localized: "Execute all statements in a single transaction. If any statement fails, all changes are rolled back."
+                    ))
 
             Toggle("Disable foreign key checks", isOn: Bindable(plugin).settings.disableForeignKeyChecks)
                 .font(.system(size: 13))

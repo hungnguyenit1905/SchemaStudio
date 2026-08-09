@@ -84,7 +84,7 @@ extension RedisPluginDriver {
 
         let pageStart = min(max(0, offset), matchedKeys.count)
         let pageEnd = limit <= 0 ? matchedKeys.count : min(pageStart + limit, matchedKeys.count)
-        let pageKeys = Array(matchedKeys[pageStart..<pageEnd])
+        let pageKeys = Array(matchedKeys[pageStart ..< pageEnd])
 
         return try await buildKeyBrowseResult(
             keys: pageKeys, connection: conn, startTime: startTime, isTruncated: scanWasCapped

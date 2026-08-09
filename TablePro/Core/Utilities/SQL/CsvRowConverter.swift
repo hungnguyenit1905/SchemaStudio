@@ -28,7 +28,7 @@ internal struct CsvRowConverter {
         }
 
         for row in cappedRows {
-            for idx in 0..<columnCount {
+            for idx in 0 ..< columnCount {
                 if idx > 0 { result.append(",") }
                 guard row.indices.contains(idx) else { continue }
 

@@ -70,7 +70,17 @@ Each tab keeps its full state when you switch away: SQL, cursor position, result
 
 ## Windows and Connections
 
-Each connection opens its own window by default. Turn on **Settings > General > Tabs > Group all connections in one window** to keep tabs from different connections in a single window instead. New windows open at 1200x800; size and position are remembered across launches.
+There are two ways to open a tab, and they group differently.
+
+Opening from the welcome window or the menu follows **Settings > General > Tabs > Group all connections in one window**. It is off by default, so each connection opens its own window.
+
+Opening a table from the sidebar always puts the tab beside the ones you are already looking at, whatever that setting says. The sidebar shows every connection at once, so a table you click there belongs next to the tree you clicked it in, not in a window somewhere else. The tab is still bound to its own connection.
+
+So with the setting off, one connection can end up with tabs in two windows: the ones you opened from the sidebar, and the ones you opened from the welcome window. Turn the setting on if you would rather everything share a single window.
+
+New windows open at 1200x800; size and position are remembered across launches.
+
+Closing the last tab of a connection does not disconnect it if that connection is still expanded in the sidebar. See [Sidebar](/features/sidebar#staying-connected).
 
 ## Database Binding
 

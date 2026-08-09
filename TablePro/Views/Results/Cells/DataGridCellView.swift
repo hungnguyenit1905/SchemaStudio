@@ -36,11 +36,31 @@ final class DataGridCellView: NSView {
 
     private var accessoryHitRect: NSRect = .zero
 
-    private static let chevronNormal = makeAccessoryCGImage("chevron.up.chevron.down", pointSize: 10, color: .secondaryLabelColor)
-    private static let chevronEmphasized = makeAccessoryCGImage("chevron.up.chevron.down", pointSize: 10, color: .alternateSelectedControlTextColor)
-    private static let chevronDisabled = makeAccessoryCGImage("chevron.up.chevron.down", pointSize: 10, color: .tertiaryLabelColor)
-    private static let fkArrowNormal = makeAccessoryCGImage("arrow.right.circle.fill", pointSize: 14, color: .secondaryLabelColor)
-    private static let fkArrowEmphasized = makeAccessoryCGImage("arrow.right.circle.fill", pointSize: 14, color: .alternateSelectedControlTextColor)
+    private static let chevronNormal = makeAccessoryCGImage(
+        "chevron.up.chevron.down",
+        pointSize: 10,
+        color: .secondaryLabelColor
+    )
+    private static let chevronEmphasized = makeAccessoryCGImage(
+        "chevron.up.chevron.down",
+        pointSize: 10,
+        color: .alternateSelectedControlTextColor
+    )
+    private static let chevronDisabled = makeAccessoryCGImage(
+        "chevron.up.chevron.down",
+        pointSize: 10,
+        color: .tertiaryLabelColor
+    )
+    private static let fkArrowNormal = makeAccessoryCGImage(
+        "arrow.right.circle.fill",
+        pointSize: 14,
+        color: .secondaryLabelColor
+    )
+    private static let fkArrowEmphasized = makeAccessoryCGImage(
+        "arrow.right.circle.fill",
+        pointSize: 14,
+        color: .alternateSelectedControlTextColor
+    )
 
     private static func makeAccessoryCGImage(_ name: String, pointSize: CGFloat, color: NSColor) -> CGImage? {
         let config = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
@@ -225,7 +245,7 @@ final class DataGridCellView: NSView {
         drawAccessory(in: accessoryRect)
         NSGraphicsContext.current?.restoreGraphicsState()
 
-        if isFocusedCell && onEmphasizedSelection && !hasOverlay {
+        if isFocusedCell, onEmphasizedSelection, !hasOverlay {
             drawFocusBorder()
         }
     }
@@ -251,7 +271,8 @@ final class DataGridCellView: NSView {
             lineToDraw = fullLine
         }
 
-        let baselineY = (bounds.height - textFont.ascender + textFont.descender - textFont.leading) / 2 + textFont.ascender
+        let baselineY = (bounds.height - textFont.ascender + textFont.descender - textFont.leading) / 2 + textFont
+            .ascender
 
         context.saveGState()
         context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
@@ -386,7 +407,7 @@ final class DataGridCellView: NSView {
     private func colorsEqual(_ lhs: NSColor?, _ rhs: NSColor?) -> Bool {
         switch (lhs, rhs) {
         case (nil, nil): return true
-        case let (l?, r?): return l == r
+        case (let l?, let r?): return l == r
         default: return false
         }
     }

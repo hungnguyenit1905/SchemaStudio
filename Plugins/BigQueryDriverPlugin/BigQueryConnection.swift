@@ -384,7 +384,7 @@ internal final class BigQueryConnection: @unchecked Sendable {
         let queryConfig = BQJobRequest.BQQueryConfig(
             query: sql,
             useLegacySql: false,
-            maxResults: 10000,
+            maxResults: 10_000,
             defaultDataset: defaultDataset.map {
                 BQJobRequest.BQDatasetReference(projectId: auth.projectId, datasetId: $0)
             },
@@ -417,8 +417,7 @@ internal final class BigQueryConnection: @unchecked Sendable {
         let jobResponse = try JSONDecoder().decode(BQJobResponse.self, from: data)
 
         guard let jobRef = jobResponse.jobReference,
-              let jobId = jobRef.jobId
-        else {
+              let jobId = jobRef.jobId else {
             throw BigQueryError.invalidResponse("Missing job reference in response")
         }
 
@@ -523,7 +522,7 @@ internal final class BigQueryConnection: @unchecked Sendable {
         let queryConfig = BQJobRequest.BQQueryConfig(
             query: sql,
             useLegacySql: false,
-            maxResults: 10000,
+            maxResults: 10_000,
             defaultDataset: defaultDataset.map {
                 BQJobRequest.BQDatasetReference(projectId: auth.projectId, datasetId: $0)
             },
@@ -556,8 +555,7 @@ internal final class BigQueryConnection: @unchecked Sendable {
         let jobResponse = try JSONDecoder().decode(BQJobResponse.self, from: data)
 
         guard let jobRef = jobResponse.jobReference,
-              let jobId = jobRef.jobId
-        else {
+              let jobId = jobRef.jobId else {
             throw BigQueryError.invalidResponse("Missing job reference in response")
         }
 
@@ -865,7 +863,7 @@ internal final class BigQueryConnection: @unchecked Sendable {
         session: URLSession,
         maxRetries: Int = 3
     ) async throws -> (Data, URLResponse) {
-        for attempt in 0..<maxRetries {
+        for attempt in 0 ..< maxRetries {
             let (data, response) = try await performRequest(request, session: session)
             guard let http = response as? HTTPURLResponse, http.statusCode == 429 else {
                 return (data, response)
@@ -883,13 +881,12 @@ internal final class BigQueryConnection: @unchecked Sendable {
             throw BigQueryError.invalidResponse("Not an HTTP response")
         }
 
-        if httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 {
+        if httpResponse.statusCode >= 200, httpResponse.statusCode < 300 {
             return
         }
 
         if let errorResponse = try? JSONDecoder().decode(BQErrorResponse.self, from: data),
-           let detail = errorResponse.error
-        {
+           let detail = errorResponse.error {
             let code = detail.code ?? httpResponse.statusCode
             let message = detail.message ?? "Unknown error"
 
@@ -952,7 +949,7 @@ internal final class BigQueryConnection: @unchecked Sendable {
                     throw BigQueryError.timeout("Query results not ready after \(effectiveMaxAttempts) attempts")
                 }
                 let attempt = effectiveMaxAttempts - remainingAttempts
-                let backoffNs = UInt64(min(500 * pow(2.0, Double(min(attempt, 4))), 5000)) * 1_000_000
+                let backoffNs = UInt64(min(500 * pow(2.0, Double(min(attempt, 4))), 5_000)) * 1_000_000
                 try await Task.sleep(nanoseconds: backoffNs)
                 continue
             }
@@ -972,7 +969,7 @@ internal final class BigQueryConnection: @unchecked Sendable {
         var attempts = 0
 
         while attempts < maxAttempts {
-            let backoffNs = UInt64(min(500 * pow(2.0, Double(min(attempts, 4))), 5000)) * 1_000_000
+            let backoffNs = UInt64(min(500 * pow(2.0, Double(min(attempts, 4))), 5_000)) * 1_000_000
             try await Task.sleep(nanoseconds: backoffNs)
             attempts += 1
 

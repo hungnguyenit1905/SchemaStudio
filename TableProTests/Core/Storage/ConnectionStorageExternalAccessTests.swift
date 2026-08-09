@@ -4,10 +4,10 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
-import Testing
+import TableProPluginKit
 import TableProSyncTransport
+import Testing
 
 @Suite("ConnectionStorage External Access")
 @MainActor

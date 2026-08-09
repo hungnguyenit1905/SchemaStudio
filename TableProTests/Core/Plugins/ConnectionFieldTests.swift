@@ -157,15 +157,15 @@ struct ConnectionFieldTests {
 
     @Test("IntRange init from ClosedRange")
     func intRangeFromClosedRange() {
-        let range = ConnectionField.IntRange(0...15)
+        let range = ConnectionField.IntRange(0 ... 15)
         #expect(range.lowerBound == 0)
         #expect(range.upperBound == 15)
     }
 
     @Test("IntRange closedRange round-trip")
     func intRangeClosedRangeRoundTrip() {
-        let range = ConnectionField.IntRange(3...42)
-        #expect(range.closedRange == 3...42)
+        let range = ConnectionField.IntRange(3 ... 42)
+        #expect(range.closedRange == 3 ... 42)
     }
 
     @Test("IntRange init from bounds")
@@ -173,7 +173,7 @@ struct ConnectionFieldTests {
         let range = ConnectionField.IntRange(lowerBound: 1, upperBound: 100)
         #expect(range.lowerBound == 1)
         #expect(range.upperBound == 100)
-        #expect(range.closedRange == 1...100)
+        #expect(range.closedRange == 1 ... 100)
     }
 
     @Test("IntRange decoding rejects invalid bounds")
@@ -201,7 +201,7 @@ struct ConnectionFieldTests {
 
     @Test("isSecure is false for .stepper")
     func isSecureForStepper() {
-        let range = ConnectionField.IntRange(0...15)
+        let range = ConnectionField.IntRange(0 ... 15)
         let field = ConnectionField(id: "db", label: "DB", fieldType: .stepper(range: range))
         #expect(field.isSecure == false)
     }
@@ -248,7 +248,7 @@ struct ConnectionFieldTests {
 
     @Test("Codable round-trip for .stepper field with IntRange")
     func codableStepper() throws {
-        let range = ConnectionField.IntRange(0...15)
+        let range = ConnectionField.IntRange(0 ... 15)
         let field = ConnectionField(
             id: "redisDatabase",
             label: "Database Index",
@@ -270,7 +270,7 @@ struct ConnectionFieldTests {
         let plain = ConnectionField(id: "host", label: "Host")
         #expect(plain.dynamicOptions == nil)
 
-        let plainJson = try #require(String(data: try JSONEncoder().encode(plain), encoding: .utf8))
+        let plainJson = try #require(try String(data: JSONEncoder().encode(plain), encoding: .utf8))
         #expect(plainJson.contains("dynamicOptions") == false)
 
         let field = ConnectionField(
@@ -280,7 +280,7 @@ struct ConnectionFieldTests {
         ).withDynamicOptions(.awsProfiles)
         let decoded = try JSONDecoder().decode(
             ConnectionField.self,
-            from: try JSONEncoder().encode(field)
+            from: JSONEncoder().encode(field)
         )
         #expect(decoded.dynamicOptions == .awsProfiles)
     }

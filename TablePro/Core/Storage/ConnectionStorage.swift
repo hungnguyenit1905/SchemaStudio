@@ -89,9 +89,11 @@ final class ConnectionStorage {
             }
 
             // Migration: assign sortOrder from array position for pre-existing data
-            if connections.count > 1 && connections.allSatisfy({ $0.sortOrder == 0 }) {
+            if connections.count > 1, connections.allSatisfy({ $0.sortOrder == 0 }) {
                 var migrated = connections
-                for i in migrated.indices { migrated[i].sortOrder = i }
+                for i in migrated.indices {
+                    migrated[i].sortOrder = i
+                }
                 let migratedStored = migrated.map { StoredConnection(from: $0) }
                 if let data = try? encoder.encode(migratedStored) {
                     try? data.write(to: fileURL, options: .atomic)
@@ -126,6 +128,7 @@ final class ConnectionStorage {
             let data = try encoder.encode(storedConnections)
             try data.write(to: fileURL, options: .atomic)
             cachedConnections = nil
+            NotificationCenter.default.post(name: .connectionsDidChange, object: nil)
             return true
         } catch {
             Self.logger.error("Failed to save connections: \(error)")
@@ -146,11 +149,11 @@ final class ConnectionStorage {
             Self.logger.error("Aborted addConnection: persistence failed for \(connection.id, privacy: .public)")
             return
         }
-        if !connection.localOnly && !connection.isSample {
+        if !connection.localOnly, !connection.isSample {
             syncTracker.markDirty(.connection, id: connection.id.uuidString)
         }
 
-        if let password = password, !password.isEmpty {
+        if let password, !password.isEmpty {
             savePassword(password, for: connection.id)
         }
     }
@@ -164,11 +167,11 @@ final class ConnectionStorage {
                 Self.logger.error("Aborted updateConnection: persistence failed for \(connection.id, privacy: .public)")
                 return
             }
-            if !connection.localOnly && !connection.isSample {
+            if !connection.localOnly, !connection.isSample {
                 syncTracker.markDirty(.connection, id: connection.id.uuidString)
             }
 
-            if let password = password {
+            if let password {
                 if password.isEmpty {
                     deletePassword(for: connection.id)
                 } else {
@@ -234,7 +237,7 @@ final class ConnectionStorage {
         }
 
         let updatedConnection = connections[index]
-        if !updatedConnection.localOnly && !updatedConnection.isSample {
+        if !updatedConnection.localOnly, !updatedConnection.isSample {
             syncTracker.markDirty(.connection, id: updatedConnection.id.uuidString)
         }
 
@@ -249,9 +252,10 @@ final class ConnectionStorage {
             Self.logger.error("Aborted deleteConnection: persistence failed for \(connection.id, privacy: .public)")
             return
         }
-        if !connection.localOnly && !connection.isSample {
+        if !connection.localOnly, !connection.isSample {
             syncTracker.markDeleted(.connection, id: connection.id.uuidString)
         }
+        ConnectionTeardown.removeConnection(connection.id)
         deletePassword(for: connection.id)
         deleteSSHPassword(for: connection.id)
         deleteKeyPassphrase(for: connection.id)
@@ -284,12 +288,16 @@ final class ConnectionStorage {
         var all = loadConnections()
         all.removeAll { idsToDelete.contains($0.id) }
         guard saveConnections(all) else {
-            Self.logger.error("Aborted deleteConnections: persistence failed for \(idsToDelete.count, privacy: .public) connection(s)")
+            Self.logger
+                .error(
+                    "Aborted deleteConnections: persistence failed for \(idsToDelete.count, privacy: .public) connection(s)"
+                )
             return
         }
         for conn in connectionsToDelete where !conn.localOnly && !conn.isSample {
             syncTracker.markDeleted(.connection, id: conn.id.uuidString)
         }
+        ConnectionTeardown.removeConnections(idsToDelete)
         for conn in connectionsToDelete {
             deletePassword(for: conn.id)
             deleteSSHPassword(for: conn.id)
@@ -550,7 +558,10 @@ final class ConnectionStorage {
 
     func loadCloudSQLProxyServiceAccountKey(for connectionId: UUID) -> String? {
         let storageKey = "com.SchemaStudio.cloudsqlproxyserviceaccountkey.\(connectionId.uuidString)"
-        return resolveString(.init(label: "Cloud SQL service account key", connectionId: connectionId), forKey: storageKey)
+        return resolveString(
+            .init(label: "Cloud SQL service account key", connectionId: connectionId),
+            forKey: storageKey
+        )
     }
 
     func deleteCloudSQLProxyServiceAccountKey(for connectionId: UUID) {

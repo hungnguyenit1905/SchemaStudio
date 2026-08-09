@@ -92,13 +92,13 @@ extension PostgreSQLPluginDriver: PluginPrincipalManagement {
         let currentDatabase = try await currentDatabaseName()
 
         switch scope {
-        case let .database(database):
+        case .database(let database):
             guard database == currentDatabase else { return [] }
             return try await schemas(in: database)
-        case let .schema(database, schema):
+        case .schema(let database, let schema):
             guard database == currentDatabase else { return [] }
             return try await tables(in: database, schema: schema)
-        case let .table(database, schema, table):
+        case .table(let database, let schema, let table):
             guard database == currentDatabase, let schema else { return [] }
             return try await columns(in: database, schema: schema, table: table)
         case .server, .column:

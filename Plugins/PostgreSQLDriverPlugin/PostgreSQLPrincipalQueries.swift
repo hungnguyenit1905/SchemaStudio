@@ -90,12 +90,12 @@ enum PostgreSQLPrincipalQueries {
     }
 
     static let schemas = """
-        SELECT n.nspname
-        FROM pg_namespace n
-        WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
-          AND n.nspname NOT LIKE 'pg\\_%'
-        ORDER BY n.nspname
-        """
+    SELECT n.nspname
+    FROM pg_namespace n
+    WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
+      AND n.nspname NOT LIKE 'pg\\_%'
+    ORDER BY n.nspname
+    """
 
     static func tables(schemaLiteral: String) -> String {
         """
@@ -141,29 +141,29 @@ enum PostgreSQLPrincipalQueries {
     static func principals(includeBypassRLS: Bool) -> String {
         let bypassColumn = includeBypassRLS ? "r.rolbypassrls" : "false AS rolbypassrls"
         return """
-            SELECT r.rolname,
-                   r.rolcanlogin,
-                   r.rolsuper,
-                   r.rolcreatedb,
-                   r.rolcreaterole,
-                   r.rolreplication,
-                   \(bypassColumn),
-                   r.rolinherit,
-                   r.rolconnlimit,
-                   pg_catalog.shobj_description(r.oid, 'pg_authid')
-            FROM pg_roles r
-            WHERE r.rolname NOT LIKE 'pg\\_%'
-            ORDER BY r.rolname
-            """
+        SELECT r.rolname,
+               r.rolcanlogin,
+               r.rolsuper,
+               r.rolcreatedb,
+               r.rolcreaterole,
+               r.rolreplication,
+               \(bypassColumn),
+               r.rolinherit,
+               r.rolconnlimit,
+               pg_catalog.shobj_description(r.oid, 'pg_authid')
+        FROM pg_roles r
+        WHERE r.rolname NOT LIKE 'pg\\_%'
+        ORDER BY r.rolname
+        """
     }
 
     static let memberships = """
-        SELECT member.rolname, grantedRole.rolname
-        FROM pg_auth_members m
-        JOIN pg_roles member ON member.oid = m.member
-        JOIN pg_roles grantedRole ON grantedRole.oid = m.roleid
-        ORDER BY member.rolname, grantedRole.rolname
-        """
+    SELECT member.rolname, grantedRole.rolname
+    FROM pg_auth_members m
+    JOIN pg_roles member ON member.oid = m.member
+    JOIN pg_roles grantedRole ON grantedRole.oid = m.roleid
+    ORDER BY member.rolname, grantedRole.rolname
+    """
 
     static func databaseGrants(roleLiteral: String) -> String {
         """

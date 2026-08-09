@@ -6,9 +6,9 @@
 //  entry/exit, motions, operators (d/y/c/x/J/~), and the o swap-anchor command.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 // swiftlint:disable file_length type_body_length
 
@@ -34,7 +34,9 @@ final class VimEngineVisualModeTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {
@@ -307,8 +309,11 @@ final class VimEngineVisualModeTests: XCTestCase {
         keys("vlld")
         // Selection was "hel" — should be in register.
         key("P", shift: true)
-        XCTAssertEqual(buffer.text, "hello world\nsecond line\nthird line\n",
-            "Deleted selection should round-trip through P")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\nsecond line\nthird line\n",
+            "Deleted selection should round-trip through P"
+        )
     }
 
     // MARK: - Linewise Operations
@@ -339,8 +344,11 @@ final class VimEngineVisualModeTests: XCTestCase {
         key("V", shift: true)
         keys("c")
         XCTAssertEqual(engine.mode, .insert)
-        XCTAssertEqual(buffer.text, "\nsecond line\nthird line\n",
-            "Linewise change should delete content but keep one newline")
+        XCTAssertEqual(
+            buffer.text,
+            "\nsecond line\nthird line\n",
+            "Linewise change should delete content but keep one newline"
+        )
     }
 
     // MARK: - ~ Toggle Case in Visual
@@ -349,8 +357,11 @@ final class VimEngineVisualModeTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("ve")
         keys("~")
-        XCTAssertEqual(buffer.text, "HELLO world\nsecond line\nthird line\n",
-            "~ in visual should toggle case of the selection and exit to normal")
+        XCTAssertEqual(
+            buffer.text,
+            "HELLO world\nsecond line\nthird line\n",
+            "~ in visual should toggle case of the selection and exit to normal"
+        )
         XCTAssertEqual(engine.mode, .normal)
     }
 
@@ -360,8 +371,11 @@ final class VimEngineVisualModeTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("v$")
         keys("u")
-        XCTAssertEqual(buffer.text, "hello world\n",
-            "Selecting and pressing u in visual should lowercase the selection")
+        XCTAssertEqual(
+            buffer.text,
+            "hello world\n",
+            "Selecting and pressing u in visual should lowercase the selection"
+        )
     }
 
     func testGUUppercaseSelection() {
@@ -369,8 +383,11 @@ final class VimEngineVisualModeTests: XCTestCase {
         keys("v")
         keys("e")
         key("U", shift: true)
-        XCTAssertEqual(buffer.text, "HELLO world\nsecond line\nthird line\n",
-            "Selecting and pressing U in visual should uppercase the selection")
+        XCTAssertEqual(
+            buffer.text,
+            "HELLO world\nsecond line\nthird line\n",
+            "Selecting and pressing U in visual should uppercase the selection"
+        )
     }
 
     // MARK: - r in Visual
@@ -379,8 +396,11 @@ final class VimEngineVisualModeTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("ve")
         keys("rX")
-        XCTAssertEqual(buffer.text, "XXXXX world\nsecond line\nthird line\n",
-            "r in visual should replace every char in selection with the given char")
+        XCTAssertEqual(
+            buffer.text,
+            "XXXXX world\nsecond line\nthird line\n",
+            "r in visual should replace every char in selection with the given char"
+        )
         XCTAssertEqual(engine.mode, .normal)
     }
 
@@ -418,8 +438,11 @@ final class VimEngineVisualModeTests: XCTestCase {
         keys("v")
         let consumed = engine.process("z", shift: false)
         XCTAssertTrue(consumed)
-        XCTAssertEqual(engine.mode, .visual(linewise: false),
-            "Unknown keys in visual must be consumed but not exit visual mode")
+        XCTAssertEqual(
+            engine.mode,
+            .visual(linewise: false),
+            "Unknown keys in visual must be consumed but not exit visual mode"
+        )
     }
 
     // MARK: - Insert Mode From Visual

@@ -120,13 +120,13 @@ final class SQLiteDriver: DatabaseDriver, @unchecked Sendable {
 
     func fetchTables(schema: String?) async throws -> [TableInfo] {
         let raw = try await actor.execute("""
-            SELECT name, type FROM sqlite_master
-            WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%'
-            ORDER BY name
-            """)
+        SELECT name, type FROM sqlite_master
+        WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%'
+        ORDER BY name
+        """)
 
         return raw.rows.compactMap { row in
-            guard row.count > 0, let name = row[0] else { return nil }
+            guard !row.isEmpty, let name = row[0] else { return nil }
             let kind: TableInfo.TableKind = (row.count > 1 ? row[1] : nil)?.lowercased() == "view" ? .view : .table
             return TableInfo(name: name, type: kind, rowCount: nil, dataSize: nil, comment: nil)
         }
@@ -154,11 +154,11 @@ final class SQLiteDriver: DatabaseDriver, @unchecked Sendable {
     func fetchIndexes(table: String, schema: String?) async throws -> [IndexInfo] {
         let safe = table.replacingOccurrences(of: "'", with: "''")
         let raw = try await actor.execute("""
-            SELECT il.name, il."unique", il.origin, ii.name AS col_name
-            FROM pragma_index_list('\(safe)') il
-            LEFT JOIN pragma_index_info(il.name) ii ON 1=1
-            ORDER BY il.seq, ii.seqno
-            """)
+        SELECT il.name, il."unique", il.origin, ii.name AS col_name
+        FROM pragma_index_list('\(safe)') il
+        LEFT JOIN pragma_index_info(il.name) ii ON 1=1
+        ORDER BY il.seq, ii.seqno
+        """)
 
         var indexMap: [String: (isUnique: Bool, isPrimary: Bool, columns: [String])] = [:]
         var order: [String] = []
@@ -248,7 +248,7 @@ private actor SQLiteActor {
             self.db = nil
             throw SQLiteError.connectionFailed(msg)
         }
-        sqlite3_busy_timeout(db, 5000)
+        sqlite3_busy_timeout(db, 5_000)
     }
 
     func close() {
@@ -277,7 +277,7 @@ private actor SQLiteActor {
         var columns: [String] = []
         var columnTypes: [String] = []
 
-        for i in 0..<colCount {
+        for i in 0 ..< colCount {
             columns.append(sqlite3_column_name(stmt, i).map { String(cString: $0) } ?? "col_\(i)")
             columnTypes.append(sqlite3_column_decltype(stmt, i).map { String(cString: $0) } ?? "")
         }
@@ -287,12 +287,18 @@ private actor SQLiteActor {
 
         while sqlite3_step(stmt) == SQLITE_ROW {
             if rows.count >= maxRows {
-                return RawResult(columns: columns, columnTypes: columnTypes, rows: rows,
-                                 rowsAffected: 0, executionTime: Date().timeIntervalSince(start), isTruncated: true)
+                return RawResult(
+                    columns: columns,
+                    columnTypes: columnTypes,
+                    rows: rows,
+                    rowsAffected: 0,
+                    executionTime: Date().timeIntervalSince(start),
+                    isTruncated: true
+                )
             }
 
             var row: [String?] = []
-            for i in 0..<colCount {
+            for i in 0 ..< colCount {
                 if sqlite3_column_type(stmt, i) == SQLITE_NULL {
                     row.append(nil)
                 } else if sqlite3_column_type(stmt, i) == SQLITE_BLOB {
@@ -312,8 +318,14 @@ private actor SQLiteActor {
         }
 
         let affected = columns.isEmpty ? Int(sqlite3_changes(db)) : 0
-        return RawResult(columns: columns, columnTypes: columnTypes, rows: rows,
-                         rowsAffected: affected, executionTime: Date().timeIntervalSince(start), isTruncated: false)
+        return RawResult(
+            columns: columns,
+            columnTypes: columnTypes,
+            rows: rows,
+            rowsAffected: affected,
+            executionTime: Date().timeIntervalSince(start),
+            isTruncated: false
+        )
     }
 
     // MARK: - Streaming
@@ -348,7 +360,7 @@ private actor SQLiteActor {
         }
 
         var columns: [ColumnInfo] = []
-        for i in 0..<colCount {
+        for i in 0 ..< colCount {
             let name = sqlite3_column_name(stmt, Int32(i)).map { String(cString: $0) } ?? "col_\(i)"
             let typeName = sqlite3_column_decltype(stmt, Int32(i)).map { String(cString: $0) } ?? ""
             columns.append(ColumnInfo(
@@ -374,7 +386,7 @@ private actor SQLiteActor {
 
         var cells: [Cell] = []
         cells.reserveCapacity(columns.count)
-        for i in 0..<columns.count {
+        for i in 0 ..< columns.count {
             let columnIndex = Int32(i)
             let columnType = sqlite3_column_type(stmt, columnIndex)
             switch columnType {
@@ -410,7 +422,12 @@ private actor SQLiteActor {
         }
     }
 
-    private func makeCellRef(column: String, columns: [ColumnInfo], statement: OpaquePointer, options: StreamOptions) -> CellRef? {
+    private func makeCellRef(
+        column: String,
+        columns: [ColumnInfo],
+        statement: OpaquePointer,
+        options: StreamOptions
+    ) -> CellRef? {
         guard let lazyContext = options.lazyContext, !lazyContext.primaryKeyColumns.isEmpty else { return nil }
         var pkComponents: [PrimaryKeyComponent] = []
         for pkColumn in lazyContext.primaryKeyColumns {

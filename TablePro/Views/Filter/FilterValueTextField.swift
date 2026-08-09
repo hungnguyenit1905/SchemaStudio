@@ -414,8 +414,7 @@ struct FilterValueTextField: NSViewRepresentable {
                           self.suggestionPopover != nil,
                           let textField = self.textField,
                           nsEvent.window === textField.window,
-                          nsEvent.window?.firstResponder === textField.currentEditor()
-                    else { return nsEvent }
+                          nsEvent.window?.firstResponder === textField.currentEditor() else { return nsEvent }
 
                     switch FilterValueTextField.suggestionKeyOutcome(
                         for: nsEvent.semanticKeyCode,
@@ -479,8 +478,7 @@ struct FilterValueTextField: NSViewRepresentable {
             guard let textField, let range = latestReplacementRange,
                   let spliced = FilterValueTextField.splice(
                       into: textField.stringValue, range: range, insertText: insertText
-                  )
-            else { return }
+                  ) else { return }
 
             text.wrappedValue = spliced.text
             textField.stringValue = spliced.text

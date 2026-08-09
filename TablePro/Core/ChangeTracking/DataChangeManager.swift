@@ -403,7 +403,12 @@ final class DataChangeManager: ChangeManaging {
                         case .delete: return .delete
                         }
                     }(),
-                    cellChanges: change.cellChanges.map { c -> (columnIndex: Int, columnName: String, oldValue: PluginCellValue, newValue: PluginCellValue) in
+                    cellChanges: change.cellChanges.map { c -> (
+                        columnIndex: Int,
+                        columnName: String,
+                        oldValue: PluginCellValue,
+                        newValue: PluginCellValue
+                    ) in
                         (c.columnIndex, c.columnName, c.oldValue, c.newValue)
                     },
                     originalRow: change.originalRow
@@ -420,7 +425,10 @@ final class DataChangeManager: ChangeManaging {
                 deletedRowIndices: deletedRowIndices,
                 insertedRowIndices: insertedRowIndices
             ) {
-                return statements.map { ParameterizedStatement(sql: $0.statement, parameters: $0.parameters.map { $0.asAny }) }
+                return statements.map { ParameterizedStatement(
+                    sql: $0.statement,
+                    parameters: $0.parameters.map { $0.asAny }
+                ) }
             }
         }
 
@@ -455,7 +463,7 @@ final class DataChangeManager: ChangeManaging {
         let expectedUpdates = changes.count(where: { $0.type == .update })
         let actualUpdates = statements.count(where: { $0.sql.hasPrefix("UPDATE") })
 
-        if expectedUpdates > 0 && actualUpdates < expectedUpdates {
+        if expectedUpdates > 0, actualUpdates < expectedUpdates {
             throw DatabaseError.queryFailed(
                 "Cannot save UPDATE changes to table '\(tableName)'. " +
                     "Some rows could not be identified for updating. Please verify the table data."
@@ -465,7 +473,7 @@ final class DataChangeManager: ChangeManaging {
         let deletableChanges = changes.filter { $0.type == .delete && deletedRowIndices.contains($0.rowIndex) }
         let deletableWithOriginalRow = deletableChanges.filter { $0.originalRow != nil }
 
-        if !deletableChanges.isEmpty && deletableWithOriginalRow.isEmpty {
+        if !deletableChanges.isEmpty, deletableWithOriginalRow.isEmpty {
             throw DatabaseError.queryFailed(
                 "Cannot save DELETE changes to table '\(tableName)'. " +
                     "Some rows could not be identified for deletion. Please verify the table data."
@@ -503,7 +511,12 @@ final class DataChangeManager: ChangeManaging {
         pending.snapshot(primaryKeyColumns: primaryKeyColumns, columns: columns)
     }
 
-    func restoreState(from state: TabChangeSnapshot, tableName: String, schemaName: String? = nil, databaseType: DatabaseType) {
+    func restoreState(
+        from state: TabChangeSnapshot,
+        tableName: String,
+        schemaName: String? = nil,
+        databaseType: DatabaseType
+    ) {
         self.tableName = tableName
         self.schemaName = schemaName
         self.columns = state.columns

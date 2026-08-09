@@ -5,14 +5,13 @@
 //  Tests for SidebarContextMenu computed property logic extracted into SidebarContextMenuLogic.
 //
 
+@testable import SchemaStudio
 import SwiftUI
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("SidebarContextMenuLogicTests")
 struct SidebarContextMenuLogicTests {
-
     // MARK: - hasSelection
 
     @Test("hasSelection false when empty selection and no clicked table")

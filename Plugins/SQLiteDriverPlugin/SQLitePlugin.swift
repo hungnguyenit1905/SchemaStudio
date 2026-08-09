@@ -152,7 +152,7 @@ private actor SQLiteConnectionActor {
         var columns: [String] = []
         var columnTypeNames: [String] = []
 
-        for i in 0..<columnCount {
+        for i in 0 ..< columnCount {
             if let name = sqlite3_column_name(statement, i) {
                 columns.append(String(cString: name))
             } else {
@@ -178,7 +178,7 @@ private actor SQLiteConnectionActor {
 
             var row: [PluginCellValue] = []
 
-            for i in 0..<columnCount {
+            for i in 0 ..< columnCount {
                 let colType = sqlite3_column_type(statement, i)
                 if colType == SQLITE_NULL {
                     row.append(.null)
@@ -215,7 +215,10 @@ private actor SQLiteConnectionActor {
         )
     }
 
-    func streamQuery(_ query: String, continuation: AsyncThrowingStream<PluginStreamElement, Error>.Continuation) throws {
+    func streamQuery(
+        _ query: String,
+        continuation: AsyncThrowingStream<PluginStreamElement, Error>.Continuation
+    ) throws {
         guard let db else {
             throw SQLitePluginError.notConnected
         }
@@ -232,7 +235,7 @@ private actor SQLiteConnectionActor {
         var columns: [String] = []
         var columnTypeNames: [String] = []
 
-        for i in 0..<columnCount {
+        for i in 0 ..< columnCount {
             if let name = sqlite3_column_name(statement, i) {
                 columns.append(String(cString: name))
             } else {
@@ -268,7 +271,7 @@ private actor SQLiteConnectionActor {
 
             var row: [PluginCellValue] = []
 
-            for i in 0..<columnCount {
+            for i in 0 ..< columnCount {
                 let colType = sqlite3_column_type(statement, i)
                 if colType == SQLITE_NULL {
                     row.append(.null)
@@ -350,7 +353,7 @@ private actor SQLiteConnectionActor {
         var columns: [String] = []
         var columnTypeNames: [String] = []
 
-        for i in 0..<columnCount {
+        for i in 0 ..< columnCount {
             if let name = sqlite3_column_name(statement, i) {
                 columns.append(String(cString: name))
             } else {
@@ -376,7 +379,7 @@ private actor SQLiteConnectionActor {
 
             var row: [PluginCellValue] = []
 
-            for i in 0..<columnCount {
+            for i in 0 ..< columnCount {
                 let colType = sqlite3_column_type(statement, i)
                 if colType == SQLITE_NULL {
                     row.append(.null)
@@ -536,7 +539,12 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         ["VACUUM", "ANALYZE", "REINDEX", "Integrity Check"]
     }
 
-    func maintenanceStatements(operation: String, table: String?, schema: String?, options: [String: String]) -> [String]? {
+    func maintenanceStatements(
+        operation: String,
+        table: String?,
+        schema: String?,
+        options: [String: String]
+    ) -> [String]? {
         switch operation {
         case "VACUUM": return ["VACUUM"]
         case "ANALYZE": return table.map { ["ANALYZE \(quoteIdentifier($0))"] } ?? ["ANALYZE"]
@@ -569,7 +577,11 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     // MARK: - User Query
 
-    func executeUserQuery(query: String, rowCap: Int?, parameters: [PluginCellValue]?) async throws -> PluginQueryResult {
+    func executeUserQuery(
+        query: String,
+        rowCap: Int?,
+        parameters: [PluginCellValue]?
+    ) async throws -> PluginQueryResult {
         if let parameters {
             let raw = try await executeParameterized(query: query, parameters: parameters)
             guard let cap = rowCap, cap > 0, raw.rows.count > cap else { return raw }
@@ -673,11 +685,11 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     func fetchAllColumns(schema: String?) async throws -> [String: [PluginColumnInfo]] {
         let query = """
-            SELECT m.name AS tbl, p.cid, p.name, p.type, p."notnull", p.dflt_value, p.pk
-            FROM sqlite_master m, pragma_table_info(m.name) p
-            WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%'
-            ORDER BY m.name, p.cid
-            """
+        SELECT m.name AS tbl, p.cid, p.name, p.type, p."notnull", p.dflt_value, p.pk
+        FROM sqlite_master m, pragma_table_info(m.name) p
+        WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%'
+        ORDER BY m.name, p.cid
+        """
         let result = try await execute(query: query)
 
         var allColumns: [String: [PluginColumnInfo]] = [:]
@@ -712,13 +724,13 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     func fetchAllForeignKeys(schema: String?) async throws -> [String: [PluginForeignKeyInfo]] {
         let query = """
-            SELECT m.name AS table_name, p.id, p."table" AS referenced_table,
-                   p."from" AS column_name, p."to" AS referenced_column,
-                   p.on_update, p.on_delete
-            FROM sqlite_master m, pragma_foreign_key_list(m.name) p
-            WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%'
-            ORDER BY m.name, p.id, p.seq
-            """
+        SELECT m.name AS table_name, p.id, p."table" AS referenced_table,
+               p."from" AS column_name, p."to" AS referenced_column,
+               p.on_update, p.on_delete
+        FROM sqlite_master m, pragma_foreign_key_list(m.name) p
+        WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%'
+        ORDER BY m.name, p.id, p.seq
+        """
         let result = try await execute(query: query)
 
         var allForeignKeys: [String: [PluginForeignKeyInfo]] = [:]
@@ -754,11 +766,11 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func fetchIndexes(table: String, schema: String?) async throws -> [PluginIndexInfo] {
         let safeTable = escapeStringLiteral(table)
         let query = """
-            SELECT il.name, il."unique", il.origin, ii.name AS col_name
-            FROM pragma_index_list('\(safeTable)') il
-            LEFT JOIN pragma_index_info(il.name) ii ON 1=1
-            ORDER BY il.seq, ii.seqno
-            """
+        SELECT il.name, il."unique", il.origin, ii.name AS col_name
+        FROM pragma_index_list('\(safeTable)') il
+        LEFT JOIN pragma_index_info(il.name) ii ON 1=1
+        ORDER BY il.seq, ii.seqno
+        """
         let result = try await execute(query: query)
 
         var indexMap: [(name: String, isUnique: Bool, isPrimary: Bool, columns: [String])] = []
@@ -829,10 +841,10 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func fetchTriggers(table: String, schema: String?) async throws -> [PluginTriggerInfo] {
         let safeTable = escapeStringLiteral(table)
         let query = """
-            SELECT name, sql FROM sqlite_master
-            WHERE type = 'trigger' AND tbl_name = '\(safeTable)'
-            ORDER BY name
-            """
+        SELECT name, sql FROM sqlite_master
+        WHERE type = 'trigger' AND tbl_name = '\(safeTable)'
+        ORDER BY name
+        """
         let result = try await execute(query: query)
 
         return result.rows.compactMap { row -> PluginTriggerInfo? in
@@ -871,9 +883,9 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func fetchTableDDL(table: String, schema: String?) async throws -> String {
         let safeTable = escapeStringLiteral(table)
         let query = """
-            SELECT sql FROM sqlite_master
-            WHERE type = 'table' AND name = '\(safeTable)'
-            """
+        SELECT sql FROM sqlite_master
+        WHERE type = 'table' AND name = '\(safeTable)'
+        """
         let result = try await execute(query: query)
 
         guard let firstRow = result.rows.first,
@@ -888,9 +900,9 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func fetchViewDefinition(view: String, schema: String?) async throws -> String {
         let safeView = escapeStringLiteral(view)
         let query = """
-            SELECT sql FROM sqlite_master
-            WHERE type = 'view' AND name = '\(safeView)'
-            """
+        SELECT sql FROM sqlite_master
+        WHERE type = 'view' AND name = '\(safeView)'
+        """
         let result = try await execute(query: query)
 
         guard let firstRow = result.rows.first,
@@ -999,16 +1011,14 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             parts.append(sqliteForeignKeyDefinition(fk))
         }
 
-        let sql = "CREATE TABLE \(tableName) (\n  " +
+        return "CREATE TABLE \(tableName) (\n  " +
             parts.joined(separator: ",\n  ") +
             "\n);"
-
-        return sql
     }
 
     private func sqliteColumnDefinition(_ col: PluginColumnDefinition, inlinePK: Bool) -> String {
         var def = "\(quoteIdentifier(col.name)) \(col.dataType)"
-        if inlinePK && col.isPrimaryKey {
+        if inlinePK, col.isPrimaryKey {
             def += " PRIMARY KEY"
             if col.autoIncrement {
                 def += " AUTOINCREMENT"
@@ -1052,7 +1062,11 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         return "ALTER TABLE \(quoteIdentifier(table)) ADD COLUMN \(colDef)"
     }
 
-    func generateModifyColumnSQL(table: String, oldColumn: PluginColumnDefinition, newColumn: PluginColumnDefinition) -> String? {
+    func generateModifyColumnSQL(
+        table: String,
+        oldColumn: PluginColumnDefinition,
+        newColumn: PluginColumnDefinition
+    ) -> String? {
         guard oldColumn.name != newColumn.name else { return nil }
         return "ALTER TABLE \(quoteIdentifier(table)) RENAME COLUMN \(quoteIdentifier(oldColumn.name)) TO \(quoteIdentifier(newColumn.name))"
     }
@@ -1098,10 +1112,10 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             } else if char == ")" {
                 depth -= 1
                 result.append(char)
-            } else if char == "," && depth == 1 {
+            } else if char == ",", depth == 1 {
                 result.append(",\n  ")
                 i += 1
-                while i < chars.count && chars[i].isWhitespace {
+                while i < chars.count, chars[i].isWhitespace {
                     i += 1
                 }
                 i -= 1

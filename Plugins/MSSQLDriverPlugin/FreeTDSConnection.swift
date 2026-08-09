@@ -114,9 +114,9 @@ private func freetdsDispatchAsync(
     }
 }
 
-// nonisolated so this file compiles cleanly under TableProMobile's
-// SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor build setting. The class manages its own
-// thread safety via a private serial DispatchQueue and NSLock; no main-actor hop needed.
+/// nonisolated so this file compiles cleanly under TableProMobile's
+/// SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor build setting. The class manages its own
+/// thread safety via a private serial DispatchQueue and NSLock; no main-actor hop needed.
 nonisolated final class FreeTDSConnection: @unchecked Sendable {
     private var dbproc: UnsafeMutablePointer<DBPROCESS>?
     private let queue: DispatchQueue
@@ -126,7 +126,10 @@ nonisolated final class FreeTDSConnection: @unchecked Sendable {
     private var _isCancelled = false
 
     private static let kerberosEnvLock = NSLock()
-    private static let deadlineQueue = DispatchQueue(label: "com.TablePro.freetds.connect-deadline", qos: .userInitiated)
+    private static let deadlineQueue = DispatchQueue(
+        label: "com.TablePro.freetds.connect-deadline",
+        qos: .userInitiated
+    )
     private static let connectDeadlineMarginSeconds = 5
 
     var isConnected: Bool {
@@ -249,7 +252,8 @@ nonisolated final class FreeTDSConnection: @unchecked Sendable {
 
     private func applyMaxTextSize(_ proc: UnsafeMutablePointer<DBPROCESS>) {
         guard dbcmd(proc, "SET TEXTSIZE \(Int32.max)") != FAIL, dbsqlexec(proc) != FAIL else {
-            freetdsLogger.error("Failed to raise TEXTSIZE; large text columns may be truncated to the 2048-byte default")
+            freetdsLogger
+                .error("Failed to raise TEXTSIZE; large text columns may be truncated to the 2048-byte default")
             return
         }
         while true {
@@ -355,7 +359,7 @@ nonisolated final class FreeTDSConnection: @unchecked Sendable {
             if numCols <= 0 { continue }
 
             var descriptors: [MSSQLColumnDescriptor] = []
-            for i in 1...numCols {
+            for i in 1 ... numCols {
                 let name = dbcolname(proc, Int32(i)).map { String(cString: $0) } ?? "col\(i)"
                 let type = Self.columnType(fromFreeTDSToken: dbcoltype(proc, Int32(i)))
                 descriptors.append(MSSQLColumnDescriptor(name: name, type: type))
@@ -380,16 +384,22 @@ nonisolated final class FreeTDSConnection: @unchecked Sendable {
                 }
 
                 var row: [MSSQLRawCell] = []
-                for i in 1...numCols {
+                for i in 1 ... numCols {
                     let len = dbdatlen(proc, Int32(i))
                     let colToken = dbcoltype(proc, Int32(i))
                     let colType = descriptors[Int(i - 1)].type
-                    if len <= 0 && colToken != Int32(SYBBIT) {
+                    if len <= 0, colToken != Int32(SYBBIT) {
                         row.append(.null)
                     } else if let ptr = dbdata(proc, Int32(i)) {
                         if colType.isBinary {
                             row.append(.bytes(Data(bytes: ptr, count: Int(len))))
-                        } else if let str = Self.columnValueAsString(proc: proc, ptr: ptr, srcToken: colToken, srcLen: len, type: colType) {
+                        } else if let str = Self.columnValueAsString(
+                            proc: proc,
+                            ptr: ptr,
+                            srcToken: colToken,
+                            srcLen: len,
+                            type: colType
+                        ) {
                             row.append(.string(str))
                         } else {
                             row.append(.null)
@@ -480,7 +490,7 @@ nonisolated final class FreeTDSConnection: @unchecked Sendable {
 
             if !headerSent {
                 var descriptors: [MSSQLColumnDescriptor] = []
-                for i in 1...numCols {
+                for i in 1 ... numCols {
                     let name = dbcolname(proc, Int32(i)).map { String(cString: $0) } ?? "col\(i)"
                     let type = Self.columnType(fromFreeTDSToken: dbcoltype(proc, Int32(i)))
                     descriptors.append(MSSQLColumnDescriptor(name: name, type: type))
@@ -511,16 +521,22 @@ nonisolated final class FreeTDSConnection: @unchecked Sendable {
                 }
 
                 var row: [MSSQLRawCell] = []
-                for i in 1...numCols {
+                for i in 1 ... numCols {
                     let len = dbdatlen(proc, Int32(i))
                     let colToken = dbcoltype(proc, Int32(i))
                     let colType = currentDescriptors[Int(i - 1)].type
-                    if len <= 0 && colToken != Int32(SYBBIT) {
+                    if len <= 0, colToken != Int32(SYBBIT) {
                         row.append(.null)
                     } else if let ptr = dbdata(proc, Int32(i)) {
                         if colType.isBinary {
                             row.append(.bytes(Data(bytes: ptr, count: Int(len))))
-                        } else if let str = Self.columnValueAsString(proc: proc, ptr: ptr, srcToken: colToken, srcLen: len, type: colType) {
+                        } else if let str = Self.columnValueAsString(
+                            proc: proc,
+                            ptr: ptr,
+                            srcToken: colToken,
+                            srcLen: len,
+                            type: colType
+                        ) {
                             row.append(.string(str))
                         } else {
                             row.append(.null)
@@ -598,8 +614,7 @@ nonisolated final class FreeTDSConnection: @unchecked Sendable {
             dbconvert(proc, srcToken, ptr, srcLen, Int32(SYBCHAR), bufPtr.baseAddress, bufSize)
         }
         guard converted > 0,
-              let raw = String(bytes: buf.prefix(Int(converted)), encoding: .utf8)
-        else { return nil }
+              let raw = String(bytes: buf.prefix(Int(converted)), encoding: .utf8) else { return nil }
         if type.isDateOrTime {
             return MSSQLDatetimeFormatter.reformat(raw, type: type) ?? raw
         }

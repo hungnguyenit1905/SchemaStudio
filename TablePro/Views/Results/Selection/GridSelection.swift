@@ -9,6 +9,10 @@ struct GridSelection: Equatable {
 
     var isEmpty: Bool { rectangles.isEmpty }
 
+    var approximateCellCount: Int {
+        rectangles.reduce(0) { $0 + ($1.rows.count * $1.columns.count) }
+    }
+
     func contains(_ coord: GridCoord) -> Bool {
         rectangles.contains { $0.contains(coord) }
     }
@@ -20,7 +24,7 @@ struct GridSelection: Equatable {
     var affectedRows: IndexSet {
         var set = IndexSet()
         for rect in rectangles {
-            set.insert(integersIn: rect.rows.lowerBound...rect.rows.upperBound)
+            set.insert(integersIn: rect.rows.lowerBound ... rect.rows.upperBound)
         }
         return set
     }
@@ -28,7 +32,7 @@ struct GridSelection: Equatable {
     var affectedColumns: IndexSet {
         var set = IndexSet()
         for rect in rectangles {
-            set.insert(integersIn: rect.columns.lowerBound...rect.columns.upperBound)
+            set.insert(integersIn: rect.columns.lowerBound ... rect.columns.upperBound)
         }
         return set
     }
@@ -45,13 +49,13 @@ struct GridSelection: Equatable {
             minColumn = min(minColumn, rect.columns.lowerBound)
             maxColumn = max(maxColumn, rect.columns.upperBound)
         }
-        return GridRect(rows: minRow...maxRow, columns: minColumn...maxColumn)
+        return GridRect(rows: minRow ... maxRow, columns: minColumn ... maxColumn)
     }
 
     func columns(in row: Int) -> IndexSet {
         var set = IndexSet()
         for rect in rectangles where rect.rows.contains(row) {
-            set.insert(integersIn: rect.columns.lowerBound...rect.columns.upperBound)
+            set.insert(integersIn: rect.columns.lowerBound ... rect.columns.upperBound)
         }
         return set
     }

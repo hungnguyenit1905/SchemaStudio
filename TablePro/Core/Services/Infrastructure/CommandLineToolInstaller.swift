@@ -47,11 +47,11 @@ internal final class CommandLineToolInstaller: CommandLineToolInstalling {
     private static let toolName = "tablepro"
     private static let marker = "# SchemaStudio command line tool"
     private static let scriptContents = """
-        #!/bin/sh
-        \(marker)
-        exec open -b com.SchemaStudio "$@"
+    #!/bin/sh
+    \(marker)
+    exec open -b com.SchemaStudio "$@"
 
-        """
+    """
 
     private let directory: String
     private let fileManager: FileManager
@@ -74,8 +74,7 @@ internal final class CommandLineToolInstaller: CommandLineToolInstalling {
     internal var status: CommandLineToolStatus {
         guard fileManager.fileExists(atPath: toolPath) else { return .notInstalled }
         guard let contents = try? String(contentsOfFile: toolPath, encoding: .utf8),
-              contents.contains(Self.marker)
-        else { return .conflict }
+              contents.contains(Self.marker) else { return .conflict }
         return .installed
     }
 

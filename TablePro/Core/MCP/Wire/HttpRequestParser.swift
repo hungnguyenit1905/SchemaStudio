@@ -51,7 +51,7 @@ public enum HttpRequestParser {
             throw HttpRequestParseError.headerTooLarge
         }
 
-        let headerBytes = Array(bytes[0..<headerEndIndex])
+        let headerBytes = Array(bytes[0 ..< headerEndIndex])
         let bodyStartIndex = headerEndIndex + crlfcrlf.count
 
         let headerLines = try splitStrictCrlf(headerBytes)
@@ -62,7 +62,7 @@ public enum HttpRequestParser {
         let (method, path, httpVersion) = try parseRequestLine(requestLineBytes)
 
         var headerPairs: [(String, String)] = []
-        for index in 1..<headerLines.count {
+        for index in 1 ..< headerLines.count {
             let line = headerLines[index]
             if line.isEmpty { continue }
             let pair = try parseHeaderLine(line)
@@ -89,7 +89,7 @@ public enum HttpRequestParser {
                 return .incomplete
             }
 
-            let body = Data(bytes[bodyStartIndex..<(bodyStartIndex + contentLength)])
+            let body = Data(bytes[bodyStartIndex ..< (bodyStartIndex + contentLength)])
             let consumed = bodyStartIndex + contentLength
             return .complete(head, body: body, consumedBytes: consumed)
         }
@@ -161,7 +161,7 @@ public enum HttpRequestParser {
             throw HttpRequestParseError.malformedHeader
         }
 
-        let nameSlice = line[line.startIndex..<colonIndex]
+        let nameSlice = line[line.startIndex ..< colonIndex]
         let valueSlice = line[line.index(after: colonIndex)...]
 
         let name = String(nameSlice)
@@ -182,7 +182,7 @@ public enum HttpRequestParser {
         var index = 0
         while index <= lastStart {
             var matched = true
-            for offset in 0..<needle.count where haystack[index + offset] != needle[offset] {
+            for offset in 0 ..< needle.count where haystack[index + offset] != needle[offset] {
                 matched = false
                 break
             }

@@ -55,11 +55,23 @@ internal struct EditorTabPayload: Codable, Hashable {
     internal let intent: TabIntent
 
     private enum CodingKeys: String, CodingKey {
-        case id, connectionId, tabType, tableName, databaseName, schemaName
-        case initialQuery, isView, showStructure, skipAutoExecute, isPreview
+        case id
+        case connectionId
+        case tabType
+        case tableName
+        case databaseName
+        case schemaName
+        case initialQuery
+        case isView
+        case showStructure
+        case skipAutoExecute
+        case isPreview
         case tabTitle
-        case initialFilterState, sourceFileURL, erDiagramSchemaKey, intent
-        // Legacy key for backward decoding only
+        case initialFilterState
+        case sourceFileURL
+        case erDiagramSchemaKey
+        case intent
+        /// Legacy key for backward decoding only
         case isNewTab
     }
 

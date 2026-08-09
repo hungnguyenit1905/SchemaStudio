@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import SwiftUI
 @testable import SchemaStudio
+import SwiftUI
 import TableProPluginKit
 import Testing
 

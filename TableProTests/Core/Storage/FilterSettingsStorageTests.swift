@@ -30,7 +30,9 @@ struct FilterSettingsStorageTests {
         storage.saveLastFilters(filters, for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil)
 
         #expect(
-            storage.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil) == filters
+            storage
+                .loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil) ==
+                filters
         )
     }
 
@@ -77,10 +79,13 @@ struct FilterSettingsStorageTests {
         storage.saveLastFilters(filtersA, for: "users", connectionId: connectionA, databaseName: "db", schemaName: nil)
 
         #expect(
-            storage.loadLastFilters(for: "users", connectionId: connectionB, databaseName: "db", schemaName: nil).isEmpty
+            storage.loadLastFilters(for: "users", connectionId: connectionB, databaseName: "db", schemaName: nil)
+                .isEmpty
         )
         #expect(
-            storage.loadLastFilters(for: "users", connectionId: connectionA, databaseName: "db", schemaName: nil) == filtersA
+            storage
+                .loadLastFilters(for: "users", connectionId: connectionA, databaseName: "db", schemaName: nil) ==
+                filtersA
         )
     }
 
@@ -91,10 +96,17 @@ struct FilterSettingsStorageTests {
         let connectionId = UUID()
         let filters = [TestFixtures.makeTableFilter(column: "a")]
 
-        storage.saveLastFilters(filters, for: "users", connectionId: connectionId, databaseName: "db_a", schemaName: nil)
+        storage.saveLastFilters(
+            filters,
+            for: "users",
+            connectionId: connectionId,
+            databaseName: "db_a",
+            schemaName: nil
+        )
 
         #expect(
-            storage.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db_b", schemaName: nil).isEmpty
+            storage.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db_b", schemaName: nil)
+                .isEmpty
         )
     }
 
@@ -105,13 +117,22 @@ struct FilterSettingsStorageTests {
         let connectionId = UUID()
         let filters = [TestFixtures.makeTableFilter(column: "a")]
 
-        storage.saveLastFilters(filters, for: "users", connectionId: connectionId, databaseName: "db", schemaName: "public")
+        storage.saveLastFilters(
+            filters,
+            for: "users",
+            connectionId: connectionId,
+            databaseName: "db",
+            schemaName: "public"
+        )
 
         #expect(
-            storage.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: "app").isEmpty
+            storage.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: "app")
+                .isEmpty
         )
         #expect(
-            storage.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: "public") == filters
+            storage
+                .loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: "public") ==
+                filters
         )
     }
 
@@ -162,7 +183,8 @@ struct FilterSettingsStorageTests {
         storage.waitForPendingDiskWrites()
 
         #expect(storage.loadLastFilters(for: "users", connectionId: first, databaseName: "db", schemaName: nil).isEmpty)
-        #expect(storage.loadLastFilters(for: "users", connectionId: second, databaseName: "db", schemaName: nil).isEmpty)
+        #expect(storage.loadLastFilters(for: "users", connectionId: second, databaseName: "db", schemaName: nil)
+            .isEmpty)
         #expect(
             !storage.loadLastFilters(for: "users", connectionId: kept, databaseName: "db", schemaName: nil).isEmpty
         )
@@ -199,13 +221,15 @@ struct FilterSettingsStorageTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         let connectionId = UUID()
         storage.saveLastFilters(
-            [TestFixtures.makeTableFilter()], for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil
+            [TestFixtures.makeTableFilter()], for: "users", connectionId: connectionId, databaseName: "db",
+            schemaName: nil
         )
         storage.saveLastFilters([], for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil)
         storage.waitForPendingDiskWrites()
 
         #expect(
-            storage.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil).isEmpty
+            storage.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil)
+                .isEmpty
         )
     }
 
@@ -225,7 +249,7 @@ struct FilterSettingsStorageTests {
         defer { try? FileManager.default.removeItem(at: directory) }
 
         let stored = FilterSettings(panelState: .alwaysHide)
-        defaults.set(try JSONEncoder().encode(stored), forKey: "com.SchemaStudio.filter.settings")
+        try defaults.set(JSONEncoder().encode(stored), forKey: "com.SchemaStudio.filter.settings")
 
         let storage = FilterSettingsStorage(filterStateDirectory: directory, defaults: defaults)
 
@@ -250,7 +274,9 @@ struct FilterSettingsStorageTests {
 
         let reader = FilterSettingsStorage(filterStateDirectory: directory, defaults: defaults)
         #expect(
-            reader.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil) == filters
+            reader
+                .loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil) ==
+                filters
         )
     }
 
@@ -266,7 +292,8 @@ struct FilterSettingsStorageTests {
         storage.waitForPendingDiskWrites()
 
         #expect(
-            storage.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil).isEmpty
+            storage.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil)
+                .isEmpty
         )
     }
 
@@ -289,7 +316,8 @@ struct FilterSettingsStorageTests {
 
         let reader = FilterSettingsStorage(filterStateDirectory: directory, defaults: defaults)
         #expect(
-            reader.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil).isEmpty
+            reader.loadLastFilters(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil)
+                .isEmpty
         )
     }
 
@@ -311,7 +339,9 @@ struct FilterSettingsStorageTests {
 
         let reader = FilterSettingsStorage(filterStateDirectory: directory, defaults: defaults)
         #expect(
-            reader.loadBrowseSearch(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil) == state
+            reader
+                .loadBrowseSearch(for: "users", connectionId: connectionId, databaseName: "db", schemaName: nil) ==
+                state
         )
 
         writer.saveBrowseSearch(

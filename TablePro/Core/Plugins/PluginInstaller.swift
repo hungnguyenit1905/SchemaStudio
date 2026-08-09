@@ -188,7 +188,7 @@ actor PluginInstaller {
         await progressHandler(.downloading(fraction: 0))
 
         let (tempDownloadURL, response) = try await context.session.download(from: downloadURL)
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+        guard let http = response as? HTTPURLResponse, (200 ... 299).contains(http.statusCode) else {
             let code = (response as? HTTPURLResponse)?.statusCode ?? 0
             throw PluginError.downloadFailed("HTTP \(code)")
         }
@@ -256,7 +256,8 @@ actor PluginInstaller {
             throw PluginError.installFailed("No .tableplugin bundle found in archive")
         }
         guard contents.count == 1 else {
-            throw PluginError.installFailed("Archive contains \(contents.count) plugins; only single-plugin archives are supported")
+            throw PluginError
+                .installFailed("Archive contains \(contents.count) plugins; only single-plugin archives are supported")
         }
         return contents[0]
     }
@@ -278,13 +279,12 @@ actor PluginInstaller {
         currentInspector: Int
     ) throws {
         guard let bundle = Bundle(url: bundleURL),
-              let info = bundle.infoDictionary
-        else {
+              let info = bundle.infoDictionary else {
             throw PluginError.invalidBundle("Cannot read Info.plist")
         }
         let declaredKit = info["TableProPluginKitVersion"] as? Int
         let declaredInspector = info["TableProInspectorKitVersion"] as? Int
-        if declaredKit == nil && declaredInspector == nil {
+        if declaredKit == nil, declaredInspector == nil {
             throw PluginError.pluginOutdated(pluginVersion: 0, requiredVersion: currentKit)
         }
         if let version = declaredKit {

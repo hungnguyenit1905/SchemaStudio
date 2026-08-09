@@ -6,9 +6,9 @@
 //  replays a named macro, @@ replays the last replayed macro.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineMacroTests: XCTestCase {
@@ -28,7 +28,9 @@ final class VimEngineMacroTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private var pos: Int { buffer.selectedRange().location }
@@ -41,8 +43,11 @@ final class VimEngineMacroTests: XCTestCase {
         keys("dw")
         keys("q")
         // After recording, the buffer should reflect the recorded edit once.
-        XCTAssertEqual(buffer.text, "bbb ccc ddd\n",
-            "Recording the macro should still execute the keys")
+        XCTAssertEqual(
+            buffer.text,
+            "bbb ccc ddd\n",
+            "Recording the macro should still execute the keys"
+        )
     }
 
     func testQAtoQClosesRecording() {
@@ -52,8 +57,11 @@ final class VimEngineMacroTests: XCTestCase {
         keys("q")
         // Now type 'x' again — it should NOT be recorded (recording is closed).
         keys("x")
-        XCTAssertEqual(buffer.text, "a bbb ccc ddd\n",
-            "Recording stops on the second q; subsequent keys must not be appended")
+        XCTAssertEqual(
+            buffer.text,
+            "a bbb ccc ddd\n",
+            "Recording stops on the second q; subsequent keys must not be appended"
+        )
     }
 
     // MARK: - Playback
@@ -65,8 +73,11 @@ final class VimEngineMacroTests: XCTestCase {
         keys("q")
         XCTAssertEqual(buffer.text, "bbb ccc ddd\n")
         keys("@a")
-        XCTAssertEqual(buffer.text, "ccc ddd\n",
-            "@a should replay the recorded dw once")
+        XCTAssertEqual(
+            buffer.text,
+            "ccc ddd\n",
+            "@a should replay the recorded dw once"
+        )
     }
 
     func testAtACanBeReplayedMultipleTimes() {
@@ -86,8 +97,11 @@ final class VimEngineMacroTests: XCTestCase {
         keys("q")
         keys("@a")
         keys("@@")
-        XCTAssertEqual(buffer.text, "ddd\n",
-            "@@ should replay the most recently invoked macro")
+        XCTAssertEqual(
+            buffer.text,
+            "ddd\n",
+            "@@ should replay the most recently invoked macro"
+        )
     }
 
     func testAtAWithCount() {
@@ -96,8 +110,11 @@ final class VimEngineMacroTests: XCTestCase {
         keys("dw")
         keys("q")
         keys("3@a")
-        XCTAssertEqual(buffer.text, "\n",
-            "3@a should replay the macro three times")
+        XCTAssertEqual(
+            buffer.text,
+            "\n",
+            "3@a should replay the macro three times"
+        )
     }
 
     // MARK: - Multiple Macros
@@ -111,8 +128,11 @@ final class VimEngineMacroTests: XCTestCase {
         keys("qb")
         keys("dw")
         keys("q")
-        XCTAssertEqual(buffer.text, "aaa ccc ddd\n",
-            "Macro 'b' should run once during recording")
+        XCTAssertEqual(
+            buffer.text,
+            "aaa ccc ddd\n",
+            "Macro 'b' should run once during recording"
+        )
         keys("0@a")
         XCTAssertEqual(pos, 4, "Macro 'a' should still advance by one word when invoked")
     }
@@ -142,8 +162,11 @@ final class VimEngineMacroTests: XCTestCase {
         // Replay should perform another visual-style delete from the current cursor.
         keys("@a")
         // The exact result depends on cursor position, but it should mutate the buffer.
-        XCTAssertNotEqual(buffer.text, " bbb ccc ddd\n",
-            "@a after recording a visual delete should re-execute and change the buffer")
+        XCTAssertNotEqual(
+            buffer.text,
+            " bbb ccc ddd\n",
+            "@a after recording a visual delete should re-execute and change the buffer"
+        )
     }
 
     // MARK: - Recursive Macro Safety

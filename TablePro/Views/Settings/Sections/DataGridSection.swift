@@ -68,12 +68,20 @@ struct DataGridSection: View {
                 Text("1,000,000").tag(1_000_000)
                 Text(String(localized: "Always count")).tag(Int.max)
             }
-            .help(String(localized: "Tables with more estimated rows use approximate counts to avoid slow COUNT(*) queries"))
+            .help(
+                String(
+                    localized: "Tables with more estimated rows use approximate counts to avoid slow COUNT(*) queries"
+                )
+            )
         }
 
         Section {
             Toggle("Truncate query results", isOn: $settings.truncateQueryResults)
-                .help(String(localized: "Apply a row limit when running queries and cap results at the configured row count"))
+                .help(
+                    String(
+                        localized: "Apply a row limit when running queries and cap results at the configured row count"
+                    )
+                )
 
             if settings.truncateQueryResults {
                 Picker("Row cap:", selection: $settings.queryResultRowCap) {

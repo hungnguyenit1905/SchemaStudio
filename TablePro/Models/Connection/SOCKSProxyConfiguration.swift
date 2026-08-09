@@ -11,13 +11,15 @@ struct SOCKSProxyConfiguration: Codable, Hashable, Sendable {
     var username: String = ""
 
     var isValid: Bool {
-        !host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && (1...65_535).contains(port)
+        !host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && (1 ... 65_535).contains(port)
     }
 }
 
 extension SOCKSProxyConfiguration {
     private enum CodingKeys: String, CodingKey {
-        case host, port, username
+        case host
+        case port
+        case username
     }
 
     init(from decoder: Decoder) throws {

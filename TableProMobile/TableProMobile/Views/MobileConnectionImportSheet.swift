@@ -45,8 +45,7 @@ struct MobileConnectionImportSheet: View {
         .task { await loadFile() }
     }
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         switch phase {
         case .loading:
             ProgressView().controlSize(.large)
@@ -83,8 +82,7 @@ struct MobileConnectionImportSheet: View {
         }
     }
 
-    @ViewBuilder
-    private var previewList: some View {
+    @ViewBuilder private var previewList: some View {
         if let preview {
             List {
                 ForEach(preview.items) { item in

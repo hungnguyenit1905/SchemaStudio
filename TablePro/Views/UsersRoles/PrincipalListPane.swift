@@ -50,8 +50,7 @@ struct PrincipalListPane: View {
         }
     }
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         if viewModel.isLoading, viewModel.principalRows.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

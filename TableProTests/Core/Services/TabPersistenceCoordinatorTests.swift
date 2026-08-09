@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("TabPersistenceCoordinator")
@@ -20,7 +20,7 @@ struct TabPersistenceCoordinatorTests {
     }
 
     private func makeTabs(count: Int) -> [QueryTab] {
-        (0..<count).map { i in
+        (0 ..< count).map { i in
             QueryTab(id: UUID(), title: "Tab \(i)", query: "SELECT \(i)", tabType: .table)
         }
     }
@@ -264,7 +264,7 @@ struct TabPersistenceCoordinatorTests {
     @Test("Three linked-favorite tabs all round-trip with distinct sourceFileURLs")
     func multipleLinkedFavoriteTabsRoundTrip() async {
         let coordinator = makeCoordinator()
-        let urls = (0..<3).map { URL(fileURLWithPath: "/tmp/file-\($0).sql") }
+        let urls = (0 ..< 3).map { URL(fileURLWithPath: "/tmp/file-\($0).sql") }
         let tabs: [QueryTab] = urls.enumerated().map { index, url in
             var tab = QueryTab(id: UUID(), title: "file-\(index)", query: "SELECT \(index)", tabType: .query)
             tab.content.sourceFileURL = url
@@ -291,7 +291,13 @@ struct TabPersistenceCoordinatorTests {
     func tabPropertiesPreserved() async {
         let coordinator = makeCoordinator()
 
-        var tab = QueryTab(id: UUID(), title: "users", query: "SELECT * FROM users", tabType: .table, tableName: "users")
+        var tab = QueryTab(
+            id: UUID(),
+            title: "users",
+            query: "SELECT * FROM users",
+            tabType: .table,
+            tableName: "users"
+        )
         tab.tableContext.isView = true
         tab.tableContext.databaseName = "production"
 

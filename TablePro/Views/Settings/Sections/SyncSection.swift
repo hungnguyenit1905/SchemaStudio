@@ -36,7 +36,7 @@ struct SyncSection: View {
             }
         }
 
-        if settingsManager.sync.enabled && isProAvailable {
+        if settingsManager.sync.enabled, isProAvailable {
             statusSection
             categoriesSection
         }

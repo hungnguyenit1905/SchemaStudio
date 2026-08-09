@@ -11,19 +11,19 @@ import Foundation
 import OSLog
 import TableProPluginKit
 
-extension Array where Element == String? {
+extension [String?] {
     var asCells: [PluginCellValue] { map(PluginCellValue.fromOptional) }
 }
 
-extension Array where Element == String {
+extension [String] {
     var asCells: [PluginCellValue] { map(PluginCellValue.text) }
 }
 
-extension Array where Element == [String?] {
+extension [[String?]] {
     var asCellRows: [[PluginCellValue]] { map { $0.map(PluginCellValue.fromOptional) } }
 }
 
-extension Array where Element == [String] {
+extension [[String]] {
     var asCellRows: [[PluginCellValue]] { map { $0.map(PluginCellValue.text) } }
 }
 
@@ -384,7 +384,8 @@ final class RedisPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         }()
 
         guard let key else { return nil }
-        let quoted = key.contains(" ") || key.contains("\"") ? "\"\(key.replacingOccurrences(of: "\"", with: "\\\""))\"" : key
+        let quoted = key.contains(" ") || key
+            .contains("\"") ? "\"\(key.replacingOccurrences(of: "\"", with: "\\\""))\"" : key
         return "DEBUG OBJECT \(quoted)"
     }
 
@@ -506,7 +507,7 @@ final class RedisPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                 try Task.checkCancellation()
 
                 let batchEnd = min(batchStart + batchSize, keys.count)
-                let batchKeys = Array(keys[batchStart..<batchEnd])
+                let batchKeys = Array(keys[batchStart ..< batchEnd])
 
                 let rowBatch = try await buildKeySummaryRows(keys: batchKeys, connection: conn)
                 if !rowBatch.isEmpty {

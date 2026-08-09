@@ -44,22 +44,25 @@ struct IntegrationsActivityView: View {
     private var sidebar: some View {
         List(selection: $selection) {
             Section(String(localized: "Activity")) {
-                Label(IntegrationsActivitySection.activityLog.title,
-                      systemImage: IntegrationsActivitySection.activityLog.systemImage)
-                    .tag(IntegrationsActivitySection.activityLog)
+                Label(
+                    IntegrationsActivitySection.activityLog.title,
+                    systemImage: IntegrationsActivitySection.activityLog.systemImage
+                )
+                .tag(IntegrationsActivitySection.activityLog)
             }
             Section(String(localized: "Status")) {
-                Label(IntegrationsActivitySection.connectedClients.title,
-                      systemImage: IntegrationsActivitySection.connectedClients.systemImage)
-                    .tag(IntegrationsActivitySection.connectedClients)
+                Label(
+                    IntegrationsActivitySection.connectedClients.title,
+                    systemImage: IntegrationsActivitySection.connectedClients.systemImage
+                )
+                .tag(IntegrationsActivitySection.connectedClients)
             }
         }
         .listStyle(.sidebar)
         .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
     }
 
-    @ViewBuilder
-    private var detail: some View {
+    @ViewBuilder private var detail: some View {
         switch selection {
         case .activityLog:
             IntegrationsActivityLogPane()

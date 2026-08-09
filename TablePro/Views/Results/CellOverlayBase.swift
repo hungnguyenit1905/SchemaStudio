@@ -164,7 +164,10 @@ class CellOverlayBase: NSObject {
             }
         }
 
-        outsideClickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+        outsideClickMonitor = NSEvent.addLocalMonitorForEvents(matching: [
+            .leftMouseDown,
+            .rightMouseDown
+        ]) { [weak self] event in
             MainActor.assumeIsolated {
                 self?.handleOutsideClick(event: event)
             }

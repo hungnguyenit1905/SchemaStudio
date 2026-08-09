@@ -18,7 +18,7 @@ enum PreConnectHookRunner {
 
         var errorDescription: String? {
             switch self {
-            case let .scriptFailed(exitCode, stderr):
+            case .scriptFailed(let exitCode, let stderr):
                 let message = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
                 if message.isEmpty {
                     return String(format: String(localized: "Pre-connect script failed with exit code %d"), exitCode)

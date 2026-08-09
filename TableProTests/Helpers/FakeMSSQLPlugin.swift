@@ -8,8 +8,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 
 final class FakeMSSQLPlugin: NSObject, TableProPlugin, DriverPlugin {
     static let pluginName = "Fake MSSQL Driver"
@@ -68,6 +68,7 @@ final class FakeMSSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func fetchTableMetadata(table: String, schema: String?) async throws -> PluginTableMetadata {
         PluginTableMetadata(tableName: table)
     }
+
     func fetchDatabases() async throws -> [String] { [] }
     func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
         PluginDatabaseMetadata(name: database)

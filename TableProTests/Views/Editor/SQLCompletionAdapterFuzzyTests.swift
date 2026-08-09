@@ -5,8 +5,8 @@
 //  Regression tests for fuzzy matching used by autocomplete.
 //
 
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("SQL Completion Fuzzy Matching")

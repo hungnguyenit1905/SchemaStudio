@@ -109,7 +109,7 @@ enum SQLParameterExtractor {
             }
 
             if inBlockComment {
-                if ch == star && i + 1 < length && nsSQL.character(at: i + 1) == slash {
+                if ch == star, i + 1 < length, nsSQL.character(at: i + 1) == slash {
                     inBlockComment = false
                     i += 2
                     continue
@@ -140,7 +140,7 @@ enum SQLParameterExtractor {
                     inString = true
                     stringCharVal = ch
                 } else if ch == stringCharVal {
-                    if i + 1 < length && nsSQL.character(at: i + 1) == stringCharVal {
+                    if i + 1 < length, nsSQL.character(at: i + 1) == stringCharVal {
                         i += 1
                     } else {
                         inString = false
@@ -150,12 +150,12 @@ enum SQLParameterExtractor {
                 continue
             }
 
-            if !inString && ch == dollarChar {
+            if !inString, ch == dollarChar {
                 let tagStart = i + 1
-                if tagStart < length && nsSQL.character(at: tagStart) == dollarChar {
+                if tagStart < length, nsSQL.character(at: tagStart) == dollarChar {
                     var j = tagStart + 1
                     while j < length - 1 {
-                        if nsSQL.character(at: j) == dollarChar && nsSQL.character(at: j + 1) == dollarChar {
+                        if nsSQL.character(at: j) == dollarChar, nsSQL.character(at: j + 1) == dollarChar {
                             i = j + 2
                             break
                         }
@@ -165,10 +165,10 @@ enum SQLParameterExtractor {
                     continue
                 }
                 var tagEnd = tagStart
-                while tagEnd < length && isIdentifierChar(nsSQL.character(at: tagEnd)) {
+                while tagEnd < length, isIdentifierChar(nsSQL.character(at: tagEnd)) {
                     tagEnd += 1
                 }
-                if tagEnd > tagStart && tagEnd < length && nsSQL.character(at: tagEnd) == dollarChar {
+                if tagEnd > tagStart, tagEnd < length, nsSQL.character(at: tagEnd) == dollarChar {
                     let tagLen = tagEnd - i + 1
                     let openTag = nsSQL.substring(with: NSRange(location: i, length: tagLen))
                     var j = tagEnd + 1
@@ -189,19 +189,19 @@ enum SQLParameterExtractor {
                 }
             }
 
-            if !inString && ch == colonChar {
-                if i + 1 < length && nsSQL.character(at: i + 1) == colonChar {
+            if !inString, ch == colonChar {
+                if i + 1 < length, nsSQL.character(at: i + 1) == colonChar {
                     i += 2
-                    while i < length && isIdentifierChar(nsSQL.character(at: i)) {
+                    while i < length, isIdentifierChar(nsSQL.character(at: i)) {
                         i += 1
                     }
                     continue
                 }
 
-                if i + 1 < length && isIdentifierStart(nsSQL.character(at: i + 1)) {
+                if i + 1 < length, isIdentifierStart(nsSQL.character(at: i + 1)) {
                     let nameStart = i + 1
                     var nameEnd = nameStart
-                    while nameEnd < length && isIdentifierChar(nsSQL.character(at: nameEnd)) {
+                    while nameEnd < length, isIdentifierChar(nsSQL.character(at: nameEnd)) {
                         nameEnd += 1
                     }
                     let paramRange = NSRange(location: i, length: nameEnd - i)

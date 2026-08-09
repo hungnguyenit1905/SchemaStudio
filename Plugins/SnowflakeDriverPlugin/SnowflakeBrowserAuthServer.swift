@@ -141,18 +141,17 @@ final class SnowflakeBrowserAuthServer: @unchecked Sendable {
     private func extractParam(named name: String, from request: String) -> String? {
         guard let firstLine = request.components(separatedBy: "\r\n").first,
               let pathPart = firstLine.components(separatedBy: " ").dropFirst().first,
-              let components = URLComponents(string: "http://localhost\(pathPart)")
-        else { return nil }
+              let components = URLComponents(string: "http://localhost\(pathPart)") else { return nil }
         return components.queryItems?.first(where: { $0.name == name })?.value
     }
 
     private func sendSuccessResponse(to connection: NWConnection) {
         let html = """
-            <html><body style="font-family:system-ui;text-align:center;padding:60px;">
-            <h2>Authentication Successful</h2>
-            <p>You can close this tab and return to TablePro.</p>
-            </body></html>
-            """
+        <html><body style="font-family:system-ui;text-align:center;padding:60px;">
+        <h2>Authentication Successful</h2>
+        <p>You can close this tab and return to TablePro.</p>
+        </body></html>
+        """
         let response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n\(html)"
         connection.send(content: Data(response.utf8), completion: .contentProcessed { _ in
             connection.cancel()
@@ -165,11 +164,11 @@ final class SnowflakeBrowserAuthServer: @unchecked Sendable {
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
         let html = """
-            <html><body style="font-family:system-ui;text-align:center;padding:60px;">
-            <h2>Authentication Failed</h2>
-            <p>\(escaped)</p>
-            </body></html>
-            """
+        <html><body style="font-family:system-ui;text-align:center;padding:60px;">
+        <h2>Authentication Failed</h2>
+        <p>\(escaped)</p>
+        </body></html>
+        """
         let response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n\(html)"
         connection.send(content: Data(response.utf8), completion: .contentProcessed { _ in
             connection.cancel()

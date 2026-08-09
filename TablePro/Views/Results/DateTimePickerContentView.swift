@@ -200,11 +200,11 @@ private struct TimeFieldView: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            field(for: .hour, range: 0...23)
+            field(for: .hour, range: 0 ... 23)
             separator
-            field(for: .minute, range: 0...59)
+            field(for: .minute, range: 0 ... 59)
             separator
-            field(for: .second, range: 0...59)
+            field(for: .second, range: 0 ... 59)
         }
     }
 

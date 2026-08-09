@@ -122,7 +122,7 @@ internal final class ServiceAccountAuthProvider: @unchecked Sendable, BigQueryAu
     private func createJWT() throws -> String {
         let now = Date()
         let iat = Int(now.timeIntervalSince1970)
-        let exp = iat + 3600
+        let exp = iat + 3_600
 
         let headerJson = #"{"alg":"RS256","typ":"JWT"}"#
         let claimsJson = """
@@ -149,8 +149,7 @@ internal final class ServiceAccountAuthProvider: @unchecked Sendable, BigQueryAu
 
         // Try stripping PKCS#8 wrapper to get PKCS#1
         if let pkcs1Data = stripPKCS8Header(derData),
-           let secKey = createRSAKey(from: pkcs1Data)
-        {
+           let secKey = createRSAKey(from: pkcs1Data) {
             return try sign(data: data, with: secKey)
         }
 
@@ -234,7 +233,7 @@ internal final class ServiceAccountAuthProvider: @unchecked Sendable, BigQueryAu
             let numBytes = Int(bytes[pos] & 0x7F)
             pos += 1
             var len = 0
-            for idx in 0..<numBytes {
+            for idx in 0 ..< numBytes {
                 guard pos + idx < bytes.count else { return nil }
                 len = (len << 8) | Int(bytes[pos + idx])
             }
@@ -291,12 +290,11 @@ internal final class ServiceAccountAuthProvider: @unchecked Sendable, BigQueryAu
         }
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let accessToken = json["access_token"] as? String
-        else {
+              let accessToken = json["access_token"] as? String else {
             throw BigQueryError.authFailed("Missing access_token in token response")
         }
 
-        let expiresIn = json["expires_in"] as? Int ?? 3600
+        let expiresIn = json["expires_in"] as? Int ?? 3_600
         let cached = CachedToken(token: accessToken, expiresAt: Date().addingTimeInterval(Double(expiresIn)))
         lock.withLock { _cachedToken = cached }
 
@@ -324,7 +322,7 @@ internal final class ADCAuthProvider: @unchecked Sendable, BigQueryAuthProvider 
         guard let data = FileManager.default.contents(atPath: credPath) else {
             throw BigQueryError.authFailed(
                 "Application default credentials not found at ~/.config/gcloud/application_default_credentials.json. " +
-                "Run 'gcloud auth application-default login' first."
+                    "Run 'gcloud auth application-default login' first."
             )
         }
 
@@ -341,8 +339,7 @@ internal final class ADCAuthProvider: @unchecked Sendable, BigQueryAuthProvider 
         } else if credType == "authorized_user" {
             guard let clientId = json["client_id"] as? String,
                   let clientSecret = json["client_secret"] as? String,
-                  let refreshToken = json["refresh_token"] as? String
-            else {
+                  let refreshToken = json["refresh_token"] as? String else {
                 throw BigQueryError.authFailed(
                     "Application default credentials missing client_id, client_secret, or refresh_token"
                 )
@@ -366,13 +363,14 @@ internal final class ADCAuthProvider: @unchecked Sendable, BigQueryAuthProvider 
         } else if credType == "impersonated_service_account" {
             guard let impersonationUrl = json["service_account_impersonation_url"] as? String,
                   let sourceCredentials = json["source_credentials"] as? [String: Any],
-                  let sourceType = sourceCredentials["type"] as? String
-            else {
-                throw BigQueryError.authFailed("Invalid impersonated_service_account credentials: missing required fields")
+                  let sourceType = sourceCredentials["type"] as? String else {
+                throw BigQueryError
+                    .authFailed("Invalid impersonated_service_account credentials: missing required fields")
             }
 
             // Resolve source credentials
-            let resolvedProjectId = overrideProjectId.flatMap { $0.isEmpty ? nil : $0 } ?? (json["quota_project_id"] as? String ?? "")
+            let resolvedProjectId = overrideProjectId
+                .flatMap { $0.isEmpty ? nil : $0 } ?? (json["quota_project_id"] as? String ?? "")
 
             if resolvedProjectId.isEmpty {
                 throw BigQueryError.authFailed(
@@ -387,8 +385,7 @@ internal final class ADCAuthProvider: @unchecked Sendable, BigQueryAuthProvider 
             case "authorized_user":
                 guard let clientId = sourceCredentials["client_id"] as? String,
                       let clientSecret = sourceCredentials["client_secret"] as? String,
-                      let refreshToken = sourceCredentials["refresh_token"] as? String
-                else {
+                      let refreshToken = sourceCredentials["refresh_token"] as? String else {
                     throw BigQueryError.authFailed("Invalid source credentials for impersonated_service_account")
                 }
                 sourceDelegate = AuthorizedUserDelegate(
@@ -401,7 +398,8 @@ internal final class ADCAuthProvider: @unchecked Sendable, BigQueryAuthProvider 
                 }
                 sourceDelegate = try ServiceAccountAuthProvider(jsonData: saData, overrideProjectId: self.projectId)
             default:
-                throw BigQueryError.authFailed("Unsupported source credential type '\(sourceType)' in impersonated_service_account")
+                throw BigQueryError
+                    .authFailed("Unsupported source credential type '\(sourceType)' in impersonated_service_account")
             }
 
             self._delegate = ImpersonatedServiceAccountDelegate(
@@ -412,8 +410,8 @@ internal final class ADCAuthProvider: @unchecked Sendable, BigQueryAuthProvider 
         } else {
             throw BigQueryError.authFailed(
                 "Unsupported ADC credential type: '\(credType)'. " +
-                "Use a service account key file or run 'gcloud auth application-default login' " +
-                "to generate authorized_user credentials."
+                    "Use a service account key file or run 'gcloud auth application-default login' " +
+                    "to generate authorized_user credentials."
             )
         }
     }
@@ -491,12 +489,11 @@ private final class AuthorizedUserDelegate: @unchecked Sendable, BigQueryAuthPro
         }
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let accessToken = json["access_token"] as? String
-        else {
+              let accessToken = json["access_token"] as? String else {
             throw BigQueryError.authFailed("Missing access_token in refresh response")
         }
 
-        let expiresIn = json["expires_in"] as? Int ?? 3600
+        let expiresIn = json["expires_in"] as? Int ?? 3_600
         let newToken = CachedToken(token: accessToken, expiresAt: Date().addingTimeInterval(Double(expiresIn)))
         lock.withLock { _cachedToken = newToken }
 
@@ -571,14 +568,13 @@ private final class ImpersonatedServiceAccountDelegate: @unchecked Sendable, Big
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let accessToken = json["accessToken"] as? String,
-              let expireTime = json["expireTime"] as? String
-        else {
+              let expireTime = json["expireTime"] as? String else {
             throw BigQueryError.authFailed("Invalid impersonation response")
         }
 
         // Parse expireTime (ISO8601)
         let formatter = ISO8601DateFormatter()
-        let expiresAt = formatter.date(from: expireTime) ?? Date().addingTimeInterval(3600)
+        let expiresAt = formatter.date(from: expireTime) ?? Date().addingTimeInterval(3_600)
 
         let newToken = CachedToken(token: accessToken, expiresAt: expiresAt)
         lock.withLock { _cachedToken = newToken }
@@ -721,13 +717,12 @@ internal final class OAuthBrowserAuthProvider: @unchecked Sendable, BigQueryAuth
         }
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let accessToken = json["access_token"] as? String
-        else {
+              let accessToken = json["access_token"] as? String else {
             throw BigQueryError.authFailed("Missing access_token in token response")
         }
 
         let refreshToken = json["refresh_token"] as? String
-        let expiresIn = json["expires_in"] as? Int ?? 3600
+        let expiresIn = json["expires_in"] as? Int ?? 3_600
 
         if refreshToken == nil {
             Self.logger.warning("No refresh_token in response — subsequent connections will require re-authorization")
@@ -765,12 +760,11 @@ internal final class OAuthBrowserAuthProvider: @unchecked Sendable, BigQueryAuth
         }
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let accessToken = json["access_token"] as? String
-        else {
+              let accessToken = json["access_token"] as? String else {
             throw BigQueryError.authFailed("Missing access_token in refresh response")
         }
 
-        let expiresIn = json["expires_in"] as? Int ?? 3600
+        let expiresIn = json["expires_in"] as? Int ?? 3_600
         let newToken = CachedToken(token: accessToken, expiresAt: Date().addingTimeInterval(Double(expiresIn)))
         lock.withLock { _cachedToken = newToken }
 

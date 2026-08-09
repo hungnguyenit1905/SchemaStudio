@@ -8,8 +8,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @MainActor @Suite("Save Completion")
@@ -119,7 +119,7 @@ struct SaveCompletionTests {
         let (coordinator, tabManager, _) = makeCoordinator(safeModeLevel: .readOnly)
         tabManager.addTab(databaseName: "testdb")
 
-        var truncates: Set<String> = ["users"]
+        var truncates: Set = ["users"]
         var deletes: Set<String> = []
         var options: [String: TableOperationOptions] = [:]
 
@@ -180,7 +180,7 @@ struct SaveCompletionTests {
         let (coordinator, tabManager, _) = makeCoordinator(safeModeLevel: .alert)
         tabManager.addTab(databaseName: "testdb")
 
-        var truncates: Set<String> = ["users"]
+        var truncates: Set = ["users"]
         var deletes: Set<String> = []
         var options: [String: TableOperationOptions] = [:]
 
@@ -200,7 +200,7 @@ struct SaveCompletionTests {
         tabManager.addTab(databaseName: "testdb")
 
         var truncates: Set<String> = []
-        var deletes: Set<String> = ["orders"]
+        var deletes: Set = ["orders"]
         var options: [String: TableOperationOptions] = [:]
 
         coordinator.saveChanges(
@@ -237,7 +237,7 @@ struct SaveCompletionTests {
         let (coordinator, tabManager, _) = makeCoordinator(safeModeLevel: .silent)
         tabManager.addTab(databaseName: "testdb")
 
-        var truncates: Set<String> = ["users"]
+        var truncates: Set = ["users"]
         var deletes: Set<String> = []
         var options: [String: TableOperationOptions] = [:]
 

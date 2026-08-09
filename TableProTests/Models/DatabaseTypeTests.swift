@@ -6,26 +6,25 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("DatabaseType")
 struct DatabaseTypeTests {
-
     @Test("MySQL default port is 3306")
     func testMySQLDefaultPort() {
-        #expect(DatabaseType.mysql.defaultPort == 3306)
+        #expect(DatabaseType.mysql.defaultPort == 3_306)
     }
 
     @Test("MariaDB default port is 3306")
     func testMariaDBDefaultPort() {
-        #expect(DatabaseType.mariadb.defaultPort == 3306)
+        #expect(DatabaseType.mariadb.defaultPort == 3_306)
     }
 
     @Test("PostgreSQL default port is 5432")
     func testPostgreSQLDefaultPort() {
-        #expect(DatabaseType.postgresql.defaultPort == 5432)
+        #expect(DatabaseType.postgresql.defaultPort == 5_432)
     }
 
     @Test("SQLite default port is 0")

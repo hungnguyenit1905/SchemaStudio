@@ -6,9 +6,9 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 enum TestFixtures {
     // MARK: - Database Types
@@ -110,6 +110,25 @@ enum TestFixtures {
         )
     }
 
+    /// A connection identity shared by fixture table refs, so two refs built
+    /// from the same name compare equal unless a test asks for a different one.
+    static let defaultConnectionId = UUID()
+
+    static func makeTableRef(
+        name: String = "test_table",
+        type: TableInfo.TableType = .table,
+        database: String = "shop",
+        schema: String? = nil,
+        connectionId: UUID = TestFixtures.defaultConnectionId
+    ) -> DatabaseTreeTableRef {
+        DatabaseTreeTableRef(
+            connectionId: connectionId,
+            database: database,
+            schema: schema,
+            table: TableInfo(name: name, type: type, rowCount: 0)
+        )
+    }
+
     static func makeEditableColumn(
         name: String = "id",
         dataType: String = "INT",
@@ -205,7 +224,7 @@ enum TestFixtures {
     }
 
     static func makeRows(count: Int, columns: [String] = ["id", "name", "email"]) -> [[String?]] {
-        (0..<count).map { i in
+        (0 ..< count).map { i in
             columns.map { col in "\(col)_\(i)" as String? }
         }
     }

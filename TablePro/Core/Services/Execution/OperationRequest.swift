@@ -13,4 +13,5 @@ internal struct OperationRequest: Sendable {
     let caller: OperationCaller
     let capabilities: CallerCapabilities
     let operationDescription: String
+    var previewsAffectedRows: Bool = false
 }

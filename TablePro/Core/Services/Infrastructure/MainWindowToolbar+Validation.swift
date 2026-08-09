@@ -21,21 +21,21 @@ extension MainWindowToolbar: NSToolbarItemValidation {
 
     static func isEnabled(itemIdentifier: NSToolbarItem.Identifier, context: ValidationContext) -> Bool {
         switch itemIdentifier {
-        case Self.connection, Self.history:
+        case connection, history:
             return true
-        case Self.database:
+        case database:
             return context.connected && !context.fileBased && context.supportsContainerSwitching
-        case Self.refresh, Self.quickSwitcher, Self.newTab, Self.exportTables:
+        case refresh, quickSwitcher, newTab, exportTables:
             return context.connected
-        case Self.saveChanges:
+        case saveChanges:
             return context.hasPendingChanges && context.connected && !context.blocksAllWrites
-        case Self.previewSQL:
+        case previewSQL:
             return context.hasDataPendingChanges && context.connected
-        case Self.results:
+        case results:
             return context.connected && !context.isTableTab
-        case Self.dashboard:
+        case dashboard:
             return context.connected && context.supportsServerDashboard
-        case Self.importTables:
+        case importTables:
             return context.connected && !context.blocksAllWrites && context.supportsImport
         default:
             return true

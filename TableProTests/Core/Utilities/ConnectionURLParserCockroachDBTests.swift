@@ -14,7 +14,8 @@ struct ConnectionURLParserCockroachDBTests {
     func testFullURLDefaultPort() {
         let result = ConnectionURLParser.parse("cockroachdb://user:pass@host:26257/defaultdb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .cockroachdb)
         #expect(parsed.host == "host")
@@ -28,7 +29,8 @@ struct ConnectionURLParserCockroachDBTests {
     func testCockroachSchemeAlias() {
         let result = ConnectionURLParser.parse("cockroach://user:pass@host/defaultdb")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .cockroachdb)
         #expect(parsed.host == "host")
@@ -41,7 +43,8 @@ struct ConnectionURLParserCockroachDBTests {
     func testCaseInsensitiveScheme() {
         let result = ConnectionURLParser.parse("CockroachDB://user@host/db")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .cockroachdb)
         #expect(parsed.host == "host")
@@ -52,7 +55,8 @@ struct ConnectionURLParserCockroachDBTests {
     func testWithoutCredentials() {
         let result = ConnectionURLParser.parse("cockroachdb://host/db")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .cockroachdb)
         #expect(parsed.host == "host")
@@ -65,7 +69,8 @@ struct ConnectionURLParserCockroachDBTests {
     func testNonDefaultPortPreserved() {
         let result = ConnectionURLParser.parse("cockroachdb://user:pass@host:26258/db")
         guard case .success(let parsed) = result else {
-            Issue.record("Expected success"); return
+            Issue.record("Expected success")
+            return
         }
         #expect(parsed.type == .cockroachdb)
         #expect(parsed.port == 26_258)

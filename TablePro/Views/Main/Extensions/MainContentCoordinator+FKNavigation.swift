@@ -21,7 +21,8 @@ extension MainContentCoordinator {
         let referencedTable = fkInfo.referencedTable
         let referencedColumn = fkInfo.referencedColumn
 
-        fkNavigationLogger.debug("FK navigate: \(referencedTable).\(referencedColumn) = \(value) newTab=\(openInNewTab)")
+        fkNavigationLogger
+            .debug("FK navigate: \(referencedTable).\(referencedColumn) = \(value) newTab=\(openInNewTab)")
 
         let filter = TableFilter(
             columnName: referencedColumn,
@@ -104,8 +105,7 @@ extension MainContentCoordinator {
         guard let tableView = NSApp.keyWindow?.firstResponder as? KeyHandlingTableView,
               let coordinator = tableView.coordinator,
               tableView.selectedRow >= 0,
-              tableView.focusedColumn >= 1
-        else { return }
+              tableView.focusedColumn >= 1 else { return }
         coordinator.toggleForeignKeyPreview(
             tableView: tableView,
             row: tableView.selectedRow,
@@ -174,7 +174,10 @@ extension MainContentCoordinator {
                 schemaName: schemaName
             )
         } catch {
-            fkNavigationLogger.error("navigateToFKReference replaceTabContent failed: \(error.localizedDescription, privacy: .public)")
+            fkNavigationLogger
+                .error(
+                    "navigateToFKReference replaceTabContent failed: \(error.localizedDescription, privacy: .public)"
+                )
             return
         }
 

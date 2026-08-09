@@ -1,6 +1,6 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import XCTest
 
 final class MCPProtocolDispatcherTests: XCTestCase {
@@ -226,7 +226,7 @@ final class MCPProtocolDispatcherTests: XCTestCase {
         XCTAssertTrue(observed)
     }
 
-    func testInboundResponsesAreIgnored() async throws {
+    func testInboundResponsesAreIgnored() async {
         let store = MCPSessionStore()
         let dispatcher = MCPProtocolDispatcher(
             handlers: [PingHandler()],
@@ -298,7 +298,7 @@ final class MCPProtocolDispatcherTests: XCTestCase {
         sinks.reserveCapacity(count)
 
         await withTaskGroup(of: RecordingResponderSink.self) { group in
-            for index in 0..<count {
+            for index in 0 ..< count {
                 let request = MCPProtocolTestSupport.makeRequest(
                     id: .number(Int64(index + 1)),
                     method: "ping"
@@ -333,7 +333,7 @@ final class MCPProtocolDispatcherTests: XCTestCase {
             }
             seenIds.insert(value)
         }
-        XCTAssertEqual(seenIds, Set((1...count).map { Int64($0) }))
+        XCTAssertEqual(seenIds, Set((1 ... count).map { Int64($0) }))
     }
 
     func testHandlerThrowingProtocolErrorYieldsErrorResponse() async throws {

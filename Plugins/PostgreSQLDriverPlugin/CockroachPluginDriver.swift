@@ -57,11 +57,11 @@ final class CockroachPluginDriver: LibPQBackedDriver, @unchecked Sendable {
     func fetchTables(schema: String?) async throws -> [PluginTableInfo] {
         let schemaLiteral = escapeLiteral(schema ?? core.currentSchema)
         let query = """
-            SELECT table_name, table_type
-            FROM information_schema.tables
-            WHERE table_schema = '\(schemaLiteral)'
-            ORDER BY table_name
-            """
+        SELECT table_name, table_type
+        FROM information_schema.tables
+        WHERE table_schema = '\(schemaLiteral)'
+        ORDER BY table_name
+        """
         let result = try await execute(query: query)
         return result.rows.compactMap { row -> PluginTableInfo? in
             guard let name = row[0].asText else { return nil }
@@ -143,36 +143,35 @@ final class CockroachPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         let safeTable = escapeLiteral(table)
         let schemaLiteral = escapeLiteral(schema ?? core.currentSchema)
         let query = """
-            SELECT
-                tc.constraint_name,
-                kcu.column_name,
-                ccu.table_name AS referenced_table,
-                ccu.column_name AS referenced_column,
-                rc.delete_rule,
-                rc.update_rule
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.key_column_usage kcu
-                ON tc.constraint_name = kcu.constraint_name
-                AND tc.table_schema = kcu.table_schema
-            JOIN information_schema.referential_constraints rc
-                ON tc.constraint_name = rc.constraint_name
-                AND tc.table_schema = rc.constraint_schema
-            JOIN information_schema.constraint_column_usage ccu
-                ON rc.unique_constraint_name = ccu.constraint_name
-                AND rc.unique_constraint_schema = ccu.table_schema
-            WHERE tc.table_name = '\(safeTable)'
-                AND tc.table_schema = '\(schemaLiteral)'
-                AND tc.constraint_type = 'FOREIGN KEY'
-            ORDER BY tc.constraint_name
-            """
+        SELECT
+            tc.constraint_name,
+            kcu.column_name,
+            ccu.table_name AS referenced_table,
+            ccu.column_name AS referenced_column,
+            rc.delete_rule,
+            rc.update_rule
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.key_column_usage kcu
+            ON tc.constraint_name = kcu.constraint_name
+            AND tc.table_schema = kcu.table_schema
+        JOIN information_schema.referential_constraints rc
+            ON tc.constraint_name = rc.constraint_name
+            AND tc.table_schema = rc.constraint_schema
+        JOIN information_schema.constraint_column_usage ccu
+            ON rc.unique_constraint_name = ccu.constraint_name
+            AND rc.unique_constraint_schema = ccu.table_schema
+        WHERE tc.table_name = '\(safeTable)'
+            AND tc.table_schema = '\(schemaLiteral)'
+            AND tc.constraint_type = 'FOREIGN KEY'
+        ORDER BY tc.constraint_name
+        """
         let result = try await execute(query: query)
         return result.rows.compactMap { row -> PluginForeignKeyInfo? in
             guard row.count >= 6,
                   let name = row[0].asText,
                   let column = row[1].asText,
                   let refTable = row[2].asText,
-                  let refColumn = row[3].asText
-            else { return nil }
+                  let refColumn = row[3].asText else { return nil }
             return PluginForeignKeyInfo(
                 name: name,
                 column: column,
@@ -221,12 +220,12 @@ final class CockroachPluginDriver: LibPQBackedDriver, @unchecked Sendable {
     func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
         let escapedDb = escapeLiteral(database)
         let query = """
-            SELECT COUNT(*)
-            FROM information_schema.tables
-            WHERE table_catalog = '\(escapedDb)'
-              AND table_schema NOT IN ('pg_catalog', 'information_schema', 'crdb_internal', 'pg_extension')
-            """
-        let tableCount = (try? await execute(query: query))
+        SELECT COUNT(*)
+        FROM information_schema.tables
+        WHERE table_catalog = '\(escapedDb)'
+          AND table_schema NOT IN ('pg_catalog', 'information_schema', 'crdb_internal', 'pg_extension')
+        """
+        let tableCount = await (try? execute(query: query))
             .flatMap { $0.rows.first?.first?.asText }
             .flatMap { Int($0) }
 
@@ -262,42 +261,41 @@ final class CockroachPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         let selectPrefix = includesTableName ? "c.table_name,\n" : ""
         let orderBy = includesTableName ? "c.table_name, c.ordinal_position" : "c.ordinal_position"
         return """
-            SELECT
-                \(selectPrefix)c.column_name,
-                c.data_type,
-                c.is_nullable,
-                c.column_default,
-                c.collation_name,
-                pgd.description,
-                c.udt_name,
-                CASE WHEN pk.column_name IS NOT NULL THEN 'YES' ELSE 'NO' END AS is_pk
-            FROM information_schema.columns c
-            LEFT JOIN pg_catalog.pg_class cls
-                ON cls.relname = c.table_name
-                AND cls.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = c.table_schema)
-            LEFT JOIN pg_catalog.pg_description pgd
-                ON pgd.objoid = cls.oid
-                AND pgd.objsubid = c.ordinal_position
-            LEFT JOIN (
-                SELECT DISTINCT kcu.table_name, kcu.column_name
-                FROM information_schema.table_constraints tc
-                JOIN information_schema.key_column_usage kcu
-                    ON tc.constraint_name = kcu.constraint_name
-                    AND tc.table_schema = kcu.table_schema
-                WHERE tc.constraint_type = 'PRIMARY KEY'
-                    AND tc.table_schema = '\(schemaLiteral)'
-            ) pk ON c.table_name = pk.table_name AND c.column_name = pk.column_name
-            WHERE c.table_schema = '\(schemaLiteral)' \(tableFilter)
-            ORDER BY \(orderBy)
-            """
+        SELECT
+            \(selectPrefix)c.column_name,
+            c.data_type,
+            c.is_nullable,
+            c.column_default,
+            c.collation_name,
+            pgd.description,
+            c.udt_name,
+            CASE WHEN pk.column_name IS NOT NULL THEN 'YES' ELSE 'NO' END AS is_pk
+        FROM information_schema.columns c
+        LEFT JOIN pg_catalog.pg_class cls
+            ON cls.relname = c.table_name
+            AND cls.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = c.table_schema)
+        LEFT JOIN pg_catalog.pg_description pgd
+            ON pgd.objoid = cls.oid
+            AND pgd.objsubid = c.ordinal_position
+        LEFT JOIN (
+            SELECT DISTINCT kcu.table_name, kcu.column_name
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.key_column_usage kcu
+                ON tc.constraint_name = kcu.constraint_name
+                AND tc.table_schema = kcu.table_schema
+            WHERE tc.constraint_type = 'PRIMARY KEY'
+                AND tc.table_schema = '\(schemaLiteral)'
+        ) pk ON c.table_name = pk.table_name AND c.column_name = pk.column_name
+        WHERE c.table_schema = '\(schemaLiteral)' \(tableFilter)
+        ORDER BY \(orderBy)
+        """
     }
 
     private static func mapColumnRow(_ row: [PluginCellValue], includesTableName: Bool) -> PluginColumnInfo? {
         let offset = includesTableName ? 1 : 0
         guard row.count >= offset + 8,
               let name = row[offset].asText,
-              let rawDataType = row[offset + 1].asText
-        else { return nil }
+              let rawDataType = row[offset + 1].asText else { return nil }
 
         let udtName = row[offset + 6].asText
         let dataType: String

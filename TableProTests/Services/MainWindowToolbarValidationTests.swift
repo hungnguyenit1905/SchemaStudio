@@ -104,7 +104,8 @@ struct MainWindowToolbarValidationTests {
         let connected = makeContext(connected: true)
         let disconnected = makeContext(connected: false)
         #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.exportTables, context: connected) == true)
-        #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.exportTables, context: disconnected) == false)
+        #expect(MainWindowToolbar
+            .isEnabled(itemIdentifier: MainWindowToolbar.exportTables, context: disconnected) == false)
     }
 
     @Test("Preview SQL requires data pending changes and connection")
@@ -114,8 +115,10 @@ struct MainWindowToolbarValidationTests {
         let onlyPending = makeContext(connected: false, hasDataPendingChanges: true)
         let both = makeContext(connected: true, hasDataPendingChanges: true)
         #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.previewSQL, context: neither) == false)
-        #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.previewSQL, context: onlyConnected) == false)
-        #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.previewSQL, context: onlyPending) == false)
+        #expect(MainWindowToolbar
+            .isEnabled(itemIdentifier: MainWindowToolbar.previewSQL, context: onlyConnected) == false)
+        #expect(MainWindowToolbar
+            .isEnabled(itemIdentifier: MainWindowToolbar.previewSQL, context: onlyPending) == false)
         #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.previewSQL, context: both) == true)
     }
 
@@ -125,14 +128,16 @@ struct MainWindowToolbarValidationTests {
         let disconnected = makeContext(connected: false, supportsServerDashboard: true)
         let happy = makeContext(connected: true, supportsServerDashboard: true)
         #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.dashboard, context: unsupported) == false)
-        #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.dashboard, context: disconnected) == false)
+        #expect(MainWindowToolbar
+            .isEnabled(itemIdentifier: MainWindowToolbar.dashboard, context: disconnected) == false)
         #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.dashboard, context: happy) == true)
     }
 
     @Test("Connection and History stay enabled regardless of connection state")
     func alwaysEnabledItems() {
         let disconnected = makeContext(connected: false)
-        #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.connection, context: disconnected) == true)
+        #expect(MainWindowToolbar
+            .isEnabled(itemIdentifier: MainWindowToolbar.connection, context: disconnected) == true)
         #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.history, context: disconnected) == true)
     }
 

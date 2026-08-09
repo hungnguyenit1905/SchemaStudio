@@ -7,8 +7,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("QueryHistoryStorage")
@@ -83,7 +83,7 @@ struct QueryHistoryStorageTests {
     @Test("fetchHistory respects limit parameter")
     func fetchHistoryRespectsLimit() async {
         let connId = UUID()
-        for i in 0..<5 {
+        for i in 0 ..< 5 {
             _ = await storage.addHistory(makeEntry(query: "SELECT limit_\(i)", connectionId: connId))
         }
         let entries = await storage.fetchHistory(limit: 3, connectionId: connId)
@@ -145,7 +145,10 @@ struct QueryHistoryStorageTests {
         let connId = UUID()
 
         _ = await storage.addHistory(makeEntry(query: "SELECT \(marker) FROM fts_users", connectionId: connId))
-        _ = await storage.addHistory(makeEntry(query: "INSERT INTO fts_orders VALUES (\(marker))", connectionId: connId))
+        _ = await storage.addHistory(makeEntry(
+            query: "INSERT INTO fts_orders VALUES (\(marker))",
+            connectionId: connId
+        ))
 
         let entries = await storage.fetchHistory(connectionId: connId, searchText: "fts_users")
         #expect(entries.count == 1)
@@ -187,7 +190,7 @@ struct QueryHistoryStorageTests {
         let before = await storage.fetchHistory(connectionId: connId)
         #expect(before.isEmpty)
 
-        for i in 0..<3 {
+        for i in 0 ..< 3 {
             _ = await storage.addHistory(makeEntry(query: "SELECT count_\(i)", connectionId: connId))
         }
 
@@ -261,7 +264,7 @@ struct QueryHistoryStorageTests {
         let sharedConnId = UUID()
 
         await withTaskGroup(of: Bool.self) { group in
-            for i in 0..<20 {
+            for i in 0 ..< 20 {
                 group.addTask {
                     let entry = QueryHistoryEntry(
                         query: "SELECT concurrent_\(i)",
@@ -280,7 +283,7 @@ struct QueryHistoryStorageTests {
             }
         }
 
-        let entries = await storage.fetchHistory(limit: 1000, connectionId: sharedConnId)
+        let entries = await storage.fetchHistory(limit: 1_000, connectionId: sharedConnId)
         #expect(entries.count == 20)
     }
 }

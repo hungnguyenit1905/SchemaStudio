@@ -58,8 +58,7 @@ struct DatabaseTypeChooserSheet: View {
         .padding(20)
     }
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         if model.groupedTypes.isEmpty {
             ContentUnavailableView.search(text: model.searchText)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -62,8 +62,7 @@ internal struct ThemeEditorView: View {
         }
     }
 
-    @ViewBuilder
-    private var tabContent: some View {
+    @ViewBuilder private var tabContent: some View {
         switch activeTab {
         case .fonts:
             ThemeEditorFontsSection(onThemeDuplicated: { newTheme in

@@ -237,7 +237,10 @@ internal final class FavoritesSidebarViewModel {
 
         let levelFolders = folders
             .filter { $0.parentId == parentId }
-            .sorted { $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+            .sorted {
+                $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name
+                    .localizedStandardCompare($1.name) == .orderedAscending
+            }
 
         for folder in levelFolders {
             let children = buildNodes(folders: folders, favorites: favorites, parentId: folder.id)
@@ -246,7 +249,10 @@ internal final class FavoritesSidebarViewModel {
 
         let levelFavorites = favorites
             .filter { $0.folderId == parentId }
-            .sorted { $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+            .sorted {
+                $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name
+                    .localizedStandardCompare($1.name) == .orderedAscending
+            }
 
         for fav in levelFavorites {
             items.append(.favorite(fav))

@@ -7,8 +7,8 @@ import Foundation
 
 /// Startup behavior when app launches
 enum StartupBehavior: String, Codable, CaseIterable, Identifiable {
-    case showWelcome = "showWelcome"
-    case reopenLast = "reopenLast"
+    case showWelcome
+    case reopenLast
 
     var id: String { rawValue }
 
@@ -22,7 +22,7 @@ enum StartupBehavior: String, Codable, CaseIterable, Identifiable {
 
 /// App language options
 enum AppLanguage: String, Codable, CaseIterable, Identifiable {
-    case system = "system"
+    case system
     case english = "en"
     case vietnamese = "vi"
     case chineseSimplified = "zh-Hans"

@@ -443,7 +443,7 @@ struct QuickSwitcherPanelContent: View {
         for index in item.matchedIndices where index < characterIndices.count {
             let start = characterIndices[index]
             let end = attributed.characters.index(after: start)
-            attributed[start..<end].font = .system(size: 15, weight: .semibold)
+            attributed[start ..< end].font = .system(size: 15, weight: .semibold)
         }
         return attributed
     }

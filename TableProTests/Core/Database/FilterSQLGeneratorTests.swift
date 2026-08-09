@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Filter SQL Generator")
 struct FilterSQLGeneratorTests {
-
     private static let mysqlDialect = SQLDialectDescriptor(
         identifierQuote: "`", keywords: [], functions: [], dataTypes: [],
         regexSyntax: .regexp, booleanLiteralStyle: .numeric,
@@ -797,7 +796,7 @@ struct FilterSQLGeneratorTests {
                 rawSQL: nil
             )
         ]
-        let result = generator.generatePreviewSQL(tableName: "users", filters: filters, limit: 1000)
+        let result = generator.generatePreviewSQL(tableName: "users", filters: filters, limit: 1_000)
         #expect(result.contains("SELECT * FROM"))
         #expect(result.contains("users"))
         #expect(result.contains("WHERE `age` > 18"))
@@ -808,7 +807,7 @@ struct FilterSQLGeneratorTests {
     func testPreviewSQLNoFilters() {
         let generator = FilterSQLGenerator(dialect: Self.mysqlDialect)
         let filters: [TableFilter] = []
-        let result = generator.generatePreviewSQL(tableName: "users", filters: filters, limit: 1000)
+        let result = generator.generatePreviewSQL(tableName: "users", filters: filters, limit: 1_000)
         #expect(result.contains("SELECT * FROM"))
         #expect(result.contains("users"))
         #expect(!result.contains("WHERE"))

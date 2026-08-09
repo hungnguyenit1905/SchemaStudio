@@ -13,7 +13,9 @@ struct TunnelExclusivityBanner: View {
         Section {
             Label(
                 String(
-                    format: String(localized: "A connection can use one connection method at a time. Disable the other methods to use %@."),
+                    format: String(
+                        localized: "A connection can use one connection method at a time. Disable the other methods to use %@."
+                    ),
                     currentKind.displayName
                 ),
                 systemImage: "exclamationmark.triangle.fill"

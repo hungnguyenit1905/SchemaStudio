@@ -51,7 +51,6 @@ struct ProjectFolderCandidateRow: View {
         .padding(.vertical, 2)
     }
 
-    @ViewBuilder
     private var accessories: some View {
         HStack(spacing: 4) {
             if candidate.placeholderSuspected {

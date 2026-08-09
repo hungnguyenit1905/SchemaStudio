@@ -9,7 +9,7 @@ final class TableProLaunchUITests: XCTestCase {
         XCUIApplication().terminate()
     }
 
-    func testApplicationLaunchesMainWindow() throws {
+    func testApplicationLaunchesMainWindow() {
         let app = XCUIApplication()
         app.launchEnvironment["TABLEPRO_UI_TESTING"] = "1"
         app.launch()
@@ -17,7 +17,7 @@ final class TableProLaunchUITests: XCTestCase {
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10))
     }
 
-    func testMainWindowLaunchesAtOrAboveBaseMinimum() throws {
+    func testMainWindowLaunchesAtOrAboveBaseMinimum() {
         let app = XCUIApplication()
         app.launchEnvironment["TABLEPRO_UI_TESTING"] = "1"
         app.launch()

@@ -1,7 +1,7 @@
-import XCTest
 import TableProDatabase
-import TableProModels
 @testable import TableProMobile
+import TableProModels
+import XCTest
 
 /// Integration tests for the iOS MSSQL driver against a real SQL Server instance.
 ///
@@ -20,8 +20,7 @@ final class MSSQLDriverTests: XCTestCase {
         }
         let fallbackPath = env["MSSQL_TEST_CONFIG_PATH"] ?? "/tmp/mssql-test.json"
         guard let data = FileManager.default.contents(atPath: fallbackPath),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: String]
-        else { return nil }
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: String] else { return nil }
         return json
     }
 
@@ -40,7 +39,7 @@ final class MSSQLDriverTests: XCTestCase {
             name: "test",
             type: .mssql,
             host: config["MSSQL_TEST_HOST"] ?? "localhost",
-            port: Int(config["MSSQL_TEST_PORT"] ?? "1433") ?? 1433,
+            port: Int(config["MSSQL_TEST_PORT"] ?? "1433") ?? 1_433,
             username: config["MSSQL_TEST_USER"] ?? "sa",
             database: config["MSSQL_TEST_DATABASE"] ?? "master",
             additionalFields: ["mssqlSchema": "dbo"],
@@ -88,9 +87,9 @@ final class MSSQLDriverTests: XCTestCase {
     func testFetchTablesReturnsResults() async throws {
         let driver = try XCTUnwrap(driver)
         _ = try await driver.execute(query: """
-            IF OBJECT_ID('dbo.tablepro_test_table', 'U') IS NULL
-                CREATE TABLE dbo.tablepro_test_table (id INT PRIMARY KEY IDENTITY(1,1), name NVARCHAR(100))
-            """)
+        IF OBJECT_ID('dbo.tablepro_test_table', 'U') IS NULL
+            CREATE TABLE dbo.tablepro_test_table (id INT PRIMARY KEY IDENTITY(1,1), name NVARCHAR(100))
+        """)
         let tables = try await driver.fetchTables(schema: "dbo")
         XCTAssertTrue(tables.contains { $0.name == "tablepro_test_table" && $0.type == .table })
     }
@@ -98,9 +97,9 @@ final class MSSQLDriverTests: XCTestCase {
     func testFetchColumnsReturnsTypeMetadata() async throws {
         let driver = try XCTUnwrap(driver)
         _ = try await driver.execute(query: """
-            IF OBJECT_ID('dbo.tablepro_test_table', 'U') IS NULL
-                CREATE TABLE dbo.tablepro_test_table (id INT PRIMARY KEY IDENTITY(1,1), name NVARCHAR(100))
-            """)
+        IF OBJECT_ID('dbo.tablepro_test_table', 'U') IS NULL
+            CREATE TABLE dbo.tablepro_test_table (id INT PRIMARY KEY IDENTITY(1,1), name NVARCHAR(100))
+        """)
         let columns = try await driver.fetchColumns(table: "tablepro_test_table", schema: "dbo")
         XCTAssertEqual(columns.count, 2)
         let id = columns.first { $0.name == "id" }
@@ -113,9 +112,9 @@ final class MSSQLDriverTests: XCTestCase {
     func testExplicitTransactionRollback() async throws {
         let driver = try XCTUnwrap(driver)
         _ = try await driver.execute(query: """
-            IF OBJECT_ID('dbo.tablepro_tx_test', 'U') IS NULL
-                CREATE TABLE dbo.tablepro_tx_test (v INT)
-            """)
+        IF OBJECT_ID('dbo.tablepro_tx_test', 'U') IS NULL
+            CREATE TABLE dbo.tablepro_tx_test (v INT)
+        """)
         _ = try await driver.execute(query: "DELETE FROM dbo.tablepro_tx_test")
 
         try await driver.beginTransaction()
@@ -136,17 +135,17 @@ final class MSSQLDriverTests: XCTestCase {
     func testSortedPaginationEmitsOrderByAndFetch() async throws {
         let driver = try XCTUnwrap(driver)
         _ = try await driver.execute(query: """
-            IF OBJECT_ID('dbo.tablepro_pagination_test', 'U') IS NOT NULL
-                DROP TABLE dbo.tablepro_pagination_test;
-            CREATE TABLE dbo.tablepro_pagination_test (id INT PRIMARY KEY, label NVARCHAR(20));
-            INSERT INTO dbo.tablepro_pagination_test VALUES
-                (1, N'a'), (2, N'b'), (3, N'c'), (4, N'd'), (5, N'e');
-            """)
+        IF OBJECT_ID('dbo.tablepro_pagination_test', 'U') IS NOT NULL
+            DROP TABLE dbo.tablepro_pagination_test;
+        CREATE TABLE dbo.tablepro_pagination_test (id INT PRIMARY KEY, label NVARCHAR(20));
+        INSERT INTO dbo.tablepro_pagination_test VALUES
+            (1, N'a'), (2, N'b'), (3, N'c'), (4, N'd'), (5, N'e');
+        """)
         let result = try await driver.execute(query: """
-            SELECT id, label FROM dbo.tablepro_pagination_test
-            ORDER BY id ASC
-            OFFSET 2 ROWS FETCH NEXT 2 ROWS ONLY
-            """)
+        SELECT id, label FROM dbo.tablepro_pagination_test
+        ORDER BY id ASC
+        OFFSET 2 ROWS FETCH NEXT 2 ROWS ONLY
+        """)
         XCTAssertEqual(result.rows.count, 2)
         XCTAssertEqual(result.rows.first?.first, "3")
         XCTAssertEqual(result.rows.last?.first, "4")
@@ -177,7 +176,7 @@ final class MSSQLDriverTests: XCTestCase {
             name: "wrong-pw",
             type: .mssql,
             host: "localhost",
-            port: 1433,
+            port: 1_433,
             username: "sa",
             database: "master",
             additionalFields: ["mssqlSchema": "dbo"]
@@ -199,7 +198,7 @@ final class MSSQLDriverTests: XCTestCase {
             name: "unreachable",
             type: .mssql,
             host: "192.0.2.1",
-            port: 1433,
+            port: 1_433,
             username: "sa",
             database: "master",
             additionalFields: ["mssqlSchema": "dbo", "mssqlLoginTimeout": "5"]
@@ -222,17 +221,17 @@ final class MSSQLDriverTests: XCTestCase {
     func testSortedWithFilterCombinesOrderAndWhere() async throws {
         let driver = try XCTUnwrap(driver)
         _ = try await driver.execute(query: """
-            IF OBJECT_ID('dbo.tp_filter_sort', 'U') IS NOT NULL DROP TABLE dbo.tp_filter_sort;
-            CREATE TABLE dbo.tp_filter_sort (id INT PRIMARY KEY, kind NVARCHAR(10), score INT);
-            INSERT INTO dbo.tp_filter_sort VALUES
-                (1, N'a', 10), (2, N'b', 5), (3, N'a', 20), (4, N'a', 15), (5, N'b', 1);
-            """)
+        IF OBJECT_ID('dbo.tp_filter_sort', 'U') IS NOT NULL DROP TABLE dbo.tp_filter_sort;
+        CREATE TABLE dbo.tp_filter_sort (id INT PRIMARY KEY, kind NVARCHAR(10), score INT);
+        INSERT INTO dbo.tp_filter_sort VALUES
+            (1, N'a', 10), (2, N'b', 5), (3, N'a', 20), (4, N'a', 15), (5, N'b', 1);
+        """)
         let result = try await driver.execute(query: """
-            SELECT id, kind, score FROM [dbo].[tp_filter_sort]
-            WHERE kind = N'a'
-            ORDER BY score DESC
-            OFFSET 0 ROWS FETCH NEXT 2 ROWS ONLY
-            """)
+        SELECT id, kind, score FROM [dbo].[tp_filter_sort]
+        WHERE kind = N'a'
+        ORDER BY score DESC
+        OFFSET 0 ROWS FETCH NEXT 2 ROWS ONLY
+        """)
         XCTAssertEqual(result.rows.count, 2)
         XCTAssertEqual(result.rows.first?[0], "3")
         XCTAssertEqual(result.rows.last?[0], "4")
@@ -241,10 +240,10 @@ final class MSSQLDriverTests: XCTestCase {
     func testSelectTopOneCellLookup() async throws {
         let driver = try XCTUnwrap(driver)
         _ = try await driver.execute(query: """
-            IF OBJECT_ID('dbo.tp_lookup', 'U') IS NOT NULL DROP TABLE dbo.tp_lookup;
-            CREATE TABLE dbo.tp_lookup (id INT PRIMARY KEY, payload NVARCHAR(MAX));
-            INSERT INTO dbo.tp_lookup VALUES (7, N'hello');
-            """)
+        IF OBJECT_ID('dbo.tp_lookup', 'U') IS NOT NULL DROP TABLE dbo.tp_lookup;
+        CREATE TABLE dbo.tp_lookup (id INT PRIMARY KEY, payload NVARCHAR(MAX));
+        INSERT INTO dbo.tp_lookup VALUES (7, N'hello');
+        """)
         let result = try await driver.execute(query: "SELECT TOP 1 [payload] FROM [dbo].[tp_lookup] WHERE [id] = 7")
         XCTAssertEqual(result.rows.first?.first, "hello")
     }
@@ -252,21 +251,21 @@ final class MSSQLDriverTests: XCTestCase {
     func testMultiColumnForeignKey() async throws {
         let driver = try XCTUnwrap(driver)
         _ = try await driver.execute(query: """
-            IF OBJECT_ID('dbo.tp_fk_child', 'U') IS NOT NULL DROP TABLE dbo.tp_fk_child;
-            IF OBJECT_ID('dbo.tp_fk_parent', 'U') IS NOT NULL DROP TABLE dbo.tp_fk_parent;
-            CREATE TABLE dbo.tp_fk_parent (
-                tenant_id INT NOT NULL,
-                external_id INT NOT NULL,
-                CONSTRAINT pk_tp_fk_parent PRIMARY KEY (tenant_id, external_id)
-            );
-            CREATE TABLE dbo.tp_fk_child (
-                id INT PRIMARY KEY,
-                tenant_id INT NOT NULL,
-                external_id INT NOT NULL,
-                CONSTRAINT fk_tp_fk_child_parent FOREIGN KEY (tenant_id, external_id)
-                    REFERENCES dbo.tp_fk_parent (tenant_id, external_id)
-            );
-            """)
+        IF OBJECT_ID('dbo.tp_fk_child', 'U') IS NOT NULL DROP TABLE dbo.tp_fk_child;
+        IF OBJECT_ID('dbo.tp_fk_parent', 'U') IS NOT NULL DROP TABLE dbo.tp_fk_parent;
+        CREATE TABLE dbo.tp_fk_parent (
+            tenant_id INT NOT NULL,
+            external_id INT NOT NULL,
+            CONSTRAINT pk_tp_fk_parent PRIMARY KEY (tenant_id, external_id)
+        );
+        CREATE TABLE dbo.tp_fk_child (
+            id INT PRIMARY KEY,
+            tenant_id INT NOT NULL,
+            external_id INT NOT NULL,
+            CONSTRAINT fk_tp_fk_child_parent FOREIGN KEY (tenant_id, external_id)
+                REFERENCES dbo.tp_fk_parent (tenant_id, external_id)
+        );
+        """)
         let fks = try await driver.fetchForeignKeys(table: "tp_fk_child", schema: "dbo")
         let matched = fks.filter { $0.name == "fk_tp_fk_child_parent" }
         XCTAssertEqual(matched.count, 2, "composite FK should produce two rows")

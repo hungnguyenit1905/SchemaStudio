@@ -149,7 +149,7 @@ extension PluginMetadataRegistry {
                             id: "redisDatabase",
                             label: String(localized: "Database Index"),
                             defaultValue: "0",
-                            fieldType: .stepper(range: ConnectionField.IntRange(0...15))
+                            fieldType: .stepper(range: ConnectionField.IntRange(0 ... 15))
                         )
                     ],
                     category: .keyValue,
@@ -269,7 +269,18 @@ extension PluginMetadataRegistry {
                     containerEntityName: "Database",
                     defaultPrimaryKeyColumn: nil,
                     immutableColumns: [],
-                    systemDatabaseNames: ["DBC", "Sys", "SysAdmin", "SystemFe", "SYSLIB", "SYSUDTLIB", "TDStats", "PUBLIC", "All", "Default"],
+                    systemDatabaseNames: [
+                        "DBC",
+                        "Sys",
+                        "SysAdmin",
+                        "SystemFe",
+                        "SYSLIB",
+                        "SYSUDTLIB",
+                        "TDStats",
+                        "PUBLIC",
+                        "All",
+                        "Default"
+                    ],
                     systemSchemaNames: [],
                     fileExtensions: [],
                     databaseGroupingStrategy: .byDatabase,
@@ -309,9 +320,12 @@ extension PluginMetadataRegistry {
                 connection: PluginMetadataSnapshot.ConnectionConfig(
                     additionalConnectionFields: [
                         ConnectionField(
-                            id: "teradataLogMech", label: "Logon Mechanism", placeholder: "TD2", defaultValue: "TD2"),
+                            id: "teradataLogMech", label: "Logon Mechanism", placeholder: "TD2", defaultValue: "TD2"
+                        ),
                         ConnectionField(
-                            id: "teradataTMode", label: "Transaction Mode", placeholder: "DEFAULT", defaultValue: "DEFAULT"),
+                            id: "teradataTMode", label: "Transaction Mode", placeholder: "DEFAULT",
+                            defaultValue: "DEFAULT"
+                        ),
                     ],
                     category: .relational,
                     tagline: String(localized: "Teradata Vantage data warehouse")
@@ -324,7 +338,11 @@ extension PluginMetadataRegistry {
                 navigationModel: .standard,
                 explainVariants: [
                     ExplainVariant(id: "logical", label: "Explain (Logical)", sqlPrefix: "EXPLAIN"),
-                    ExplainVariant(id: "distributed", label: "Explain (Distributed)", sqlPrefix: "EXPLAIN (TYPE DISTRIBUTED)"),
+                    ExplainVariant(
+                        id: "distributed",
+                        label: "Explain (Distributed)",
+                        sqlPrefix: "EXPLAIN (TYPE DISTRIBUTED)"
+                    ),
                     ExplainVariant(id: "io", label: "Explain (IO)", sqlPrefix: "EXPLAIN (TYPE IO)"),
                     ExplainVariant(id: "validate", label: "Explain (Validate)", sqlPrefix: "EXPLAIN (TYPE VALIDATE)"),
                     ExplainVariant(id: "analyze", label: "Explain Analyze", sqlPrefix: "EXPLAIN ANALYZE"),
@@ -511,7 +529,8 @@ extension PluginMetadataRegistry {
                     ExplainVariant(id: "estimate", label: "Estimate", sqlPrefix: "EXPLAIN ESTIMATE")
                 ],
                 pathFieldRole: .database,
-                supportsHealthMonitor: true, urlSchemes: ["clickhouse", "ch"], postConnectActions: [.selectDatabaseFromLastSession],
+                supportsHealthMonitor: true, urlSchemes: ["clickhouse", "ch"],
+                postConnectActions: [.selectDatabaseFromLastSession],
                 brandColorHex: "#FFD100",
                 queryLanguageName: "SQL", editorLanguage: .sql,
                 connectionMode: .network, supportsDatabaseSwitching: true,

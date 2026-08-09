@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Export Models")
 struct ExportModelsTests {
-
     @MainActor @Test("Export configuration default format is csv")
     func exportConfigurationDefaultFormat() {
         let config = ExportConfiguration()

@@ -8,7 +8,8 @@
 import Foundation
 import os
 
-@MainActor @Observable final class RightPanelState {
+@MainActor @Observable
+final class RightPanelState {
     @ObservationIgnored private let _didTeardown = OSAllocatedUnfairLock(initialState: false)
     @ObservationIgnored private let connectionId: UUID?
     @ObservationIgnored private let defaults: UserDefaults
@@ -22,7 +23,7 @@ import os
 
     var inspectorContext: InspectorContext = .empty
 
-    // Save closure — set by MainContentCommandActions, called by UnifiedRightPanelView
+    /// Save closure — set by MainContentCommandActions, called by UnifiedRightPanelView
     var onSave: (() -> Void)?
 
     // Owned objects — lifted from MainContentView @StateObject

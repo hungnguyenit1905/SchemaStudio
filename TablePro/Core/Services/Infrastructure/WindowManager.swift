@@ -7,6 +7,21 @@ import AppKit
 import os
 import SwiftUI
 
+/// Which native tab group a newly opened editor window joins.
+///
+/// The sidebar spans every connection, so opening a table under another
+/// connection has to land in the group the user is already looking at,
+/// regardless of the "Group all connections in one window" setting. Passing the
+/// policy in keeps `groupAllConnectionTabs` read in exactly one place.
+internal enum TabGroupPolicy: Equatable {
+    case shared
+    case perConnection
+
+    @MainActor internal static var fromSettings: TabGroupPolicy {
+        AppSettingsManager.shared.tabs.groupAllConnectionTabs ? .shared : .perConnection
+    }
+}
+
 @MainActor
 internal final class WindowManager {
     private static let lifecycleLogger = Logger(subsystem: "com.SchemaStudio", category: "NativeTabLifecycle")
@@ -20,8 +35,16 @@ internal final class WindowManager {
 
     // MARK: - Open
 
-    internal func openTab(payload: EditorTabPayload, activate: Bool = true) {
+    /// - Parameter anchor: the window the open was triggered from. A new tab
+    ///   joins that window's tab group instead of an arbitrary one.
+    internal func openTab(
+        payload: EditorTabPayload,
+        activate: Bool = true,
+        tabGroup: TabGroupPolicy? = nil,
+        anchor: NSWindow? = nil
+    ) {
         let t0 = Date()
+        let policy = tabGroup ?? .fromSettings
         Self.lifecycleLogger.info(
             "[open] WindowManager.openTab start payloadId=\(payload.id, privacy: .public) connId=\(payload.connectionId, privacy: .public) intent=\(String(describing: payload.intent), privacy: .public) skipAutoExecute=\(payload.skipAutoExecute) activate=\(activate)"
         )
@@ -36,7 +59,9 @@ internal final class WindowManager {
             preCreatedSessionState = nil
         }
 
-        let controller = TabWindowController(payload: payload, sessionState: preCreatedSessionState)
+        let controller = TabWindowController(
+            payload: payload, sessionState: preCreatedSessionState, tabGroup: policy
+        )
         guard let window = controller.window else {
             Self.lifecycleLogger.error(
                 "[open] WindowManager.openTab failed: controller has no window payloadId=\(payload.id, privacy: .public)"
@@ -50,9 +75,9 @@ internal final class WindowManager {
         // orderFront before addTabbedWindow avoids a synchronous full-tree
         // SwiftUI layout pass that adds 700-900ms per open.
         let tabbingId = window.tabbingIdentifier ?? ""
-        let groupAll = AppSettingsManager.shared.tabs.groupAllConnectionTabs
+        let groupAll = policy == .shared
         let sibling = findSibling(
-            tabbingIdentifier: tabbingId, groupAll: groupAll, excluding: window
+            tabbingIdentifier: tabbingId, groupAll: groupAll, excluding: window, anchor: anchor
         )
 
         if let sibling {
@@ -131,19 +156,33 @@ internal final class WindowManager {
         return raw == "main" || raw.hasPrefix("main-")
     }
 
+    internal static let sharedTabbingIdentifier = "com.SchemaStudio.main"
+
     internal static func tabbingIdentifier(for connectionId: UUID) -> String {
-        if AppSettingsManager.shared.tabs.groupAllConnectionTabs {
-            return "com.SchemaStudio.main"
+        tabbingIdentifier(for: connectionId, policy: .fromSettings)
+    }
+
+    internal static func tabbingIdentifier(for connectionId: UUID, policy: TabGroupPolicy) -> String {
+        switch policy {
+        case .shared:
+            return sharedTabbingIdentifier
+        case .perConnection:
+            return "\(sharedTabbingIdentifier).\(connectionId.uuidString)"
         }
-        return "com.SchemaStudio.main.\(connectionId.uuidString)"
     }
 
     private func findSibling(
         tabbingIdentifier: String,
         groupAll: Bool,
-        excluding: NSWindow
+        excluding: NSWindow,
+        anchor: NSWindow?
     ) -> NSWindow? {
-        NSApp.windows.first { candidate in
+        TabGroupSiblingPolicy.choose(
+            anchor: anchor,
+            keyWindow: NSApp.keyWindow,
+            mainWindow: NSApp.mainWindow,
+            frontToBack: NSApp.orderedWindows
+        ) { candidate in
             candidate !== excluding
                 && Self.isMainWindow(candidate)
                 && candidate.isVisible

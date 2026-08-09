@@ -53,17 +53,23 @@ enum ClaudeAgentDisclosure {
             ClaudeAgentNote(
                 id: "data-terms",
                 severity: .detail,
-                text: String(localized: "Your prompts, schema, and query text reach Anthropic under your consumer plan and its privacy settings, not the API's commercial terms.")
+                text: String(
+                    localized: "Your prompts, schema, and query text reach Anthropic under your consumer plan and its privacy settings, not the API's commercial terms."
+                )
             ),
             ClaudeAgentNote(
                 id: "api-key-ignored",
                 severity: .detail,
-                text: String(localized: "ANTHROPIC_API_KEY and ANTHROPIC_AUTH_TOKEN are removed from the tool's environment, so replies always draw on the subscription.")
+                text: String(
+                    localized: "ANTHROPIC_API_KEY and ANTHROPIC_AUTH_TOKEN are removed from the tool's environment, so replies always draw on the subscription."
+                )
             )
         ]
     }
 
     static var supportedAlternative: String {
-        String(localized: "For a metered path on Anthropic's commercial terms, add the Claude provider with an API key instead.")
+        String(
+            localized: "For a metered path on Anthropic's commercial terms, add the Claude provider with an API key instead."
+        )
     }
 }

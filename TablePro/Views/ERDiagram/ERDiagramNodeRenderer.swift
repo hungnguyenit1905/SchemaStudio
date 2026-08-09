@@ -94,10 +94,12 @@ enum ERDiagramNodeRenderer {
             let rowY = dividerY + CGFloat(idx) * rowHeight + rowHeight / 2
 
             if col.isPrimaryKey {
-                let badge = Text(Image(systemName: "key.fill")).font(.system(size: Self.badgePointSize * scale)).foregroundStyle(.yellow)
+                let badge = Text(Image(systemName: "key.fill")).font(.system(size: Self.badgePointSize * scale))
+                    .foregroundStyle(.yellow)
                 clipped.draw(clipped.resolve(badge), at: CGPoint(x: rect.minX + badgeXOffset, y: rowY), anchor: .center)
             } else if col.isForeignKey {
-                let badge = Text(Image(systemName: "link")).font(.system(size: Self.badgePointSize * scale)).foregroundStyle(.blue)
+                let badge = Text(Image(systemName: "link")).font(.system(size: Self.badgePointSize * scale))
+                    .foregroundStyle(.blue)
                 clipped.draw(clipped.resolve(badge), at: CGPoint(x: rect.minX + badgeXOffset, y: rowY), anchor: .center)
             }
 

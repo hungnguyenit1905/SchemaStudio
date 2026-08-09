@@ -28,11 +28,11 @@ enum PasswordSourceResolver {
 
         var errorDescription: String? {
             switch self {
-            case let .fileNotFound(path):
+            case .fileNotFound(let path):
                 return String(format: String(localized: "Password file not found: %@"), path)
-            case let .fileUnreadable(path):
+            case .fileUnreadable(let path):
                 return String(format: String(localized: "Could not read password file: %@"), path)
-            case let .environmentVariableNotSet(name):
+            case .environmentVariableNotSet(let name):
                 return String(
                     format: String(localized: """
                     Environment variable %@ is not set in TablePro's environment. \
@@ -41,7 +41,7 @@ enum PasswordSourceResolver {
                     """),
                     name
                 )
-            case let .commandFailed(exitCode, stderr):
+            case .commandFailed(let exitCode, let stderr):
                 let message = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
                 if message.isEmpty {
                     return String(format: String(localized: "Password command failed with exit code %d"), exitCode)
@@ -55,7 +55,7 @@ enum PasswordSourceResolver {
                 return String(localized: "The password source produced an empty password")
             case .invalidSecretJson:
                 return String(localized: "The secret manager did not return valid JSON.")
-            case let .jsonKeyNotFound(key):
+            case .jsonKeyNotFound(let key):
                 return String(format: String(localized: "Key %@ was not found in the secret JSON."), key)
             }
         }
@@ -63,15 +63,15 @@ enum PasswordSourceResolver {
 
     static func resolve(_ source: PasswordSource) async throws -> String {
         switch source {
-        case let .file(path):
+        case .file(let path):
             return try resolveFile(path: path)
-        case let .env(variable):
+        case .env(let variable):
             return try resolveEnvironment(variable: variable)
-        case let .command(shell):
+        case .command(let shell):
             return try await resolveCommand(shell: shell, timeoutSeconds: commandTimeoutSeconds)
         case .onePassword, .vault:
             return try await resolveExternalTool(source)
-        case let .awsSecretsManager(_, jsonKey):
+        case .awsSecretsManager(_, let jsonKey):
             let secret = try await resolveExternalTool(source)
             guard let jsonKey, !jsonKey.isEmpty else { return secret }
             return try extractJsonField(jsonKey, from: secret)
@@ -84,11 +84,11 @@ enum PasswordSourceResolver {
         switch source {
         case .file, .env, .command:
             return nil
-        case let .onePassword(reference):
+        case .onePassword(let reference):
             return "op read --no-newline \(shellQuote(reference))"
-        case let .vault(path, field):
+        case .vault(let path, let field):
             return "vault kv get -field=\(shellQuote(field)) \(shellQuote(path))"
-        case let .awsSecretsManager(secretId, _):
+        case .awsSecretsManager(let secretId, _):
             return "aws secretsmanager get-secret-value --secret-id \(shellQuote(secretId)) "
                 + "--query SecretString --output text"
         }
@@ -159,7 +159,10 @@ enum PasswordSourceResolver {
             try process.run()
 
             let drainGroup = DispatchGroup()
-            let drainQueue = DispatchQueue(label: "com.SchemaStudio.PasswordSourceResolver.pipe-drain", attributes: .concurrent)
+            let drainQueue = DispatchQueue(
+                label: "com.SchemaStudio.PasswordSourceResolver.pipe-drain",
+                attributes: .concurrent
+            )
             drainPipe(
                 stdoutPipe.fileHandleForReading,
                 into: stdoutCollector,

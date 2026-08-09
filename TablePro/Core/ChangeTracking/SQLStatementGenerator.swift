@@ -128,8 +128,7 @@ struct SQLStatementGenerator {
     // MARK: - INSERT Generation
 
     private func generateInsertSQL(for change: RowChange, insertedRowData: [Int: [PluginCellValue]])
-        -> ParameterizedStatement?
-    {
+        -> ParameterizedStatement? {
         if let values = insertedRowData[change.rowIndex] {
             return generateInsertSQLFromStoredData(rowIndex: change.rowIndex, values: values)
         }
@@ -137,8 +136,7 @@ struct SQLStatementGenerator {
     }
 
     private func generateInsertSQLFromStoredData(rowIndex: Int, values: [PluginCellValue])
-        -> ParameterizedStatement?
-    {
+        -> ParameterizedStatement? {
         var nonDefaultColumns: [String] = []
         var placeholderParts: [String] = []
         var bindParameters: [Any?] = []
@@ -173,8 +171,7 @@ struct SQLStatementGenerator {
     }
 
     func insertStatement(columns insertColumns: [String], values: [PluginCellValue])
-        -> ParameterizedStatement?
-    {
+        -> ParameterizedStatement? {
         guard !insertColumns.isEmpty, insertColumns.count == values.count else { return nil }
 
         var bindParameters: [Any?] = []
@@ -191,8 +188,7 @@ struct SQLStatementGenerator {
     }
 
     func insertStatement(columns insertColumns: [String], rows: [[PluginCellValue]])
-        -> ParameterizedStatement?
-    {
+        -> ParameterizedStatement? {
         guard !insertColumns.isEmpty, !rows.isEmpty,
               rows.allSatisfy({ $0.count == insertColumns.count }) else { return nil }
 
@@ -224,8 +220,7 @@ struct SQLStatementGenerator {
         "DELETE FROM \(quoteIdentifierFn(tableName))"
     }
 
-    private func generateInsertSQLFromCellChanges(for change: RowChange) -> ParameterizedStatement?
-    {
+    private func generateInsertSQLFromCellChanges(for change: RowChange) -> ParameterizedStatement? {
         guard !change.cellChanges.isEmpty else { return nil }
 
         let nonDefaultChanges = change.cellChanges.filter {

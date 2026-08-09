@@ -51,7 +51,7 @@ enum ScannedConnectionURLBuilder {
         guard let schemeRange = value.range(of: "://") else {
             return nil
         }
-        let scheme = value[value.startIndex..<schemeRange.lowerBound].lowercased()
+        let scheme = value[value.startIndex ..< schemeRange.lowerBound].lowercased()
         guard !rejectedSchemes.contains(scheme) else {
             return nil
         }

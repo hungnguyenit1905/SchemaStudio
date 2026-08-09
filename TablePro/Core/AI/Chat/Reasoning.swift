@@ -17,10 +17,10 @@ enum ReasoningEffort: String, Codable, Sendable, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .minimal: return String(localized: "Minimal")
-        case .low:     return String(localized: "Low")
-        case .medium:  return String(localized: "Medium")
-        case .high:    return String(localized: "High")
-        case .xhigh:   return String(localized: "Extra High")
+        case .low: return String(localized: "Low")
+        case .medium: return String(localized: "Medium")
+        case .high: return String(localized: "High")
+        case .xhigh: return String(localized: "Extra High")
         }
     }
 
@@ -29,38 +29,38 @@ enum ReasoningEffort: String, Codable, Sendable, CaseIterable, Identifiable {
     var xaiReasoningEffort: String {
         switch self {
         case .minimal, .low: return "low"
-        case .medium:        return "medium"
-        case .high, .xhigh:  return "high"
+        case .medium: return "medium"
+        case .high, .xhigh: return "high"
         }
     }
 
     var anthropicAdaptiveEffort: String? {
         switch self {
         case .minimal: return nil
-        case .low:     return "low"
-        case .medium:  return "medium"
-        case .high:    return "high"
-        case .xhigh:   return "maximum"
+        case .low: return "low"
+        case .medium: return "medium"
+        case .high: return "high"
+        case .xhigh: return "maximum"
         }
     }
 
     var anthropicBudgetTokens: Int? {
         switch self {
         case .minimal: return nil
-        case .low:     return 2_048
-        case .medium:  return 8_192
-        case .high:    return 16_384
-        case .xhigh:   return 32_768
+        case .low: return 2_048
+        case .medium: return 8_192
+        case .high: return 16_384
+        case .xhigh: return 32_768
         }
     }
 
     var autoScaledMaxOutputTokens: Int {
         switch self {
         case .minimal: return 4_096
-        case .low:     return 8_192
-        case .medium:  return 16_384
-        case .high:    return 32_768
-        case .xhigh:   return 65_536
+        case .low: return 8_192
+        case .medium: return 16_384
+        case .high: return 32_768
+        case .xhigh: return 65_536
         }
     }
 }
@@ -92,7 +92,10 @@ struct ReasoningOpaque: Codable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case kind, itemID, value, blockType
+        case kind
+        case itemID
+        case value
+        case blockType
     }
 }
 

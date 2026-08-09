@@ -193,7 +193,7 @@ actor DuckDBConnectionActor {
         var columns: [String] = []
         var columnTypeNames: [String] = []
         var columnTypes: [duckdb_type] = []
-        for i in 0..<colCount {
+        for i in 0 ..< colCount {
             if let namePtr = duckdb_column_name(&result, i) {
                 columns.append(String(cString: namePtr))
             } else {
@@ -281,14 +281,14 @@ actor DuckDBConnectionActor {
             Self.logger.warning("streamQuery truncating result from \(rowCount) to \(maxRows) rows")
         }
 
-        for row in 0..<maxRows {
+        for row in 0 ..< maxRows {
             if Task.isCancelled {
                 continuation.finish(throwing: CancellationError())
                 return
             }
 
             var rowData: [PluginCellValue] = []
-            for col in 0..<colCount {
+            for col in 0 ..< colCount {
                 let colType = duckdb_column_type(&result, col)
                 if duckdb_value_is_null(&result, col, row) {
                     rowData.append(.null)
@@ -328,7 +328,7 @@ actor DuckDBConnectionActor {
         var columnTypeNames: [String] = []
         var columnTypes: [duckdb_type] = []
 
-        for i in 0..<colCount {
+        for i in 0 ..< colCount {
             if let namePtr = duckdb_column_name(&result, i) {
                 columns.append(String(cString: namePtr))
             } else {
@@ -348,10 +348,10 @@ actor DuckDBConnectionActor {
             truncated = true
         }
 
-        for row in 0..<maxRows {
+        for row in 0 ..< maxRows {
             var rowData: [PluginCellValue] = []
 
-            for col in 0..<colCount {
+            for col in 0 ..< colCount {
                 let colType = columnTypes[Int(col)]
                 if duckdb_value_is_null(&result, col, row) {
                     rowData.append(.null)
@@ -437,19 +437,15 @@ actor DuckDBConnectionActor {
         case DUCKDB_TYPE_TIMESTAMP, DUCKDB_TYPE_TIMESTAMP_S, DUCKDB_TYPE_TIMESTAMP_MS, DUCKDB_TYPE_TIMESTAMP_NS:
             let ts = duckdb_value_timestamp(&result, col, row)
             return formatTimestamp(ts)
-
         case DUCKDB_TYPE_DATE:
             let date = duckdb_value_date(&result, col, row)
             let d = duckdb_from_date(date)
             return String(format: "\(formatYearISO(d.year))-%02d-%02d", d.month, d.day)
-
         case DUCKDB_TYPE_TIME, DUCKDB_TYPE_TIME_NS:
             let time = duckdb_value_time(&result, col, row)
             return formatTime(duckdb_from_time(time))
-
         case DUCKDB_TYPE_BOOLEAN:
             return duckdb_value_boolean(&result, col, row) ? "true" : "false"
-
         case DUCKDB_TYPE_TINYINT:
             return String(duckdb_value_int8(&result, col, row))
         case DUCKDB_TYPE_SMALLINT:
@@ -470,15 +466,12 @@ actor DuckDBConnectionActor {
             return String(duckdb_value_float(&result, col, row))
         case DUCKDB_TYPE_DOUBLE:
             return String(duckdb_value_double(&result, col, row))
-
         case DUCKDB_TYPE_HUGEINT:
             let h = duckdb_value_hugeint(&result, col, row)
             return formatHugeInt(upper: h.upper, lower: h.lower)
-
         case DUCKDB_TYPE_UHUGEINT:
             let u = duckdb_value_uhugeint(&result, col, row)
             return formatUHugeInt(upper: u.upper, lower: u.lower)
-
         default:
             return nil
         }
@@ -502,7 +495,7 @@ actor DuckDBConnectionActor {
         defer { duckdb_destroy_result(&patchResult) }
 
         let patchRowCount = min(duckdb_row_count(&patchResult), UInt64(raw.rows.count))
-        for row in 0..<patchRowCount {
+        for row in 0 ..< patchRowCount {
             for colIdx in patchedColIndices {
                 if duckdb_value_is_null(&patchResult, idx_t(colIdx), row) {
                     raw.rows[Int(row)][colIdx] = .null
@@ -518,7 +511,8 @@ actor DuckDBConnectionActor {
         switch type {
         case DUCKDB_TYPE_BOOLEAN,
              DUCKDB_TYPE_TINYINT, DUCKDB_TYPE_SMALLINT, DUCKDB_TYPE_INTEGER, DUCKDB_TYPE_BIGINT, DUCKDB_TYPE_HUGEINT,
-             DUCKDB_TYPE_UTINYINT, DUCKDB_TYPE_USMALLINT, DUCKDB_TYPE_UINTEGER, DUCKDB_TYPE_UBIGINT, DUCKDB_TYPE_UHUGEINT,
+             DUCKDB_TYPE_UTINYINT, DUCKDB_TYPE_USMALLINT, DUCKDB_TYPE_UINTEGER, DUCKDB_TYPE_UBIGINT,
+             DUCKDB_TYPE_UHUGEINT,
              DUCKDB_TYPE_FLOAT, DUCKDB_TYPE_DOUBLE, DUCKDB_TYPE_DECIMAL,
              DUCKDB_TYPE_VARCHAR, DUCKDB_TYPE_BLOB, DUCKDB_TYPE_UUID, DUCKDB_TYPE_BIT, DUCKDB_TYPE_ENUM,
              DUCKDB_TYPE_DATE, DUCKDB_TYPE_TIME, DUCKDB_TYPE_TIME_NS, DUCKDB_TYPE_INTERVAL,

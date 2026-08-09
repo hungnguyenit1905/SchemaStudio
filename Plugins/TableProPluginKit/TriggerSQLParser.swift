@@ -13,7 +13,7 @@ public enum TriggerSQLParser {
     public static func timingAndEvent(from sql: String) -> (timing: String, event: String) {
         let upper = sql.uppercased()
         let headerEnd = upper.range(of: " ON ")?.lowerBound ?? upper.endIndex
-        let tokens = upper[upper.startIndex..<headerEnd]
+        let tokens = upper[upper.startIndex ..< headerEnd]
             .split(whereSeparator: { $0.isWhitespace || $0 == "," })
             .map(String.init)
 

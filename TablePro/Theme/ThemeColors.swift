@@ -5,6 +5,7 @@
 
 import Foundation
 import SwiftUI
+
 // MARK: - Syntax Colors
 
 internal struct SyntaxColors: Codable, Equatable, Sendable {

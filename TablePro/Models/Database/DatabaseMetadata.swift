@@ -10,13 +10,13 @@ import Foundation
 
 /// Metadata for a database including statistics and access information
 struct DatabaseMetadata: Identifiable, Equatable {
-    let id: String              // Database name (unique identifier)
-    let name: String            // Display name
-    let tableCount: Int?        // Number of tables in database
-    let sizeBytes: Int64?       // Total size in bytes
-    let lastAccessed: Date?     // Last time this database was accessed
-    let isSystemDatabase: Bool  // Whether this is a system database (mysql, information_schema, etc.)
-    let icon: String            // SF Symbol name for icon
+    let id: String // Database name (unique identifier)
+    let name: String // Display name
+    let tableCount: Int? // Number of tables in database
+    let sizeBytes: Int64? // Total size in bytes
+    let lastAccessed: Date? // Last time this database was accessed
+    let isSystemDatabase: Bool // Whether this is a system database (mysql, information_schema, etc.)
+    let icon: String // SF Symbol name for icon
 
     /// Formatted size string (e.g., "14.2 MB")
     var formattedSize: String {

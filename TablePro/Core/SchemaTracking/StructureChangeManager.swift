@@ -84,8 +84,10 @@ final class StructureChangeManager: ChangeManaging {
                 referencedTable: first.referencedTable,
                 referencedColumns: fkInfos.map { $0.referencedColumn },
                 referencedSchema: first.referencedSchema,
-                onDelete: EditableForeignKeyDefinition.ReferentialAction(rawValue: first.onDelete.uppercased()) ?? .noAction,
-                onUpdate: EditableForeignKeyDefinition.ReferentialAction(rawValue: first.onUpdate.uppercased()) ?? .noAction
+                onDelete: EditableForeignKeyDefinition
+                    .ReferentialAction(rawValue: first.onDelete.uppercased()) ?? .noAction,
+                onUpdate: EditableForeignKeyDefinition
+                    .ReferentialAction(rawValue: first.onUpdate.uppercased()) ?? .noAction
             )
         }
         self.currentPrimaryKey = primaryKey

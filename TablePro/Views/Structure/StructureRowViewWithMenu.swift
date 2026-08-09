@@ -139,14 +139,22 @@ final class StructureRowViewWithMenu: DataGridRowView {
         return [rowIndex]
     }
 
-    @objc private func handleCopyName() { onCopyName?(effectiveIndices()) }
-    @objc private func handleCopyDefinition() { onCopyDefinition?(effectiveIndices()) }
-    @objc private func handleCopyAsCSV() { onCopyAsCSV?(effectiveIndices()) }
-    @objc private func handleCopyAsJSON() { onCopyAsJSON?(effectiveIndices()) }
-    @objc private func handleNavigateFK() { onNavigateFK?(rowIndex) }
-    @objc private func handleDuplicate() { onDuplicate?(effectiveIndices()) }
-    @objc private func handleDelete() { onDelete?(effectiveIndices()) }
-    @objc private func handleUndoDelete() { onUndoDelete?(rowIndex) }
+    @objc
+    private func handleCopyName() { onCopyName?(effectiveIndices()) }
+    @objc
+    private func handleCopyDefinition() { onCopyDefinition?(effectiveIndices()) }
+    @objc
+    private func handleCopyAsCSV() { onCopyAsCSV?(effectiveIndices()) }
+    @objc
+    private func handleCopyAsJSON() { onCopyAsJSON?(effectiveIndices()) }
+    @objc
+    private func handleNavigateFK() { onNavigateFK?(rowIndex) }
+    @objc
+    private func handleDuplicate() { onDuplicate?(effectiveIndices()) }
+    @objc
+    private func handleDelete() { onDelete?(effectiveIndices()) }
+    @objc
+    private func handleUndoDelete() { onUndoDelete?(rowIndex) }
 }
 
 /// Menu action target for empty-space context menu.
@@ -158,7 +166,8 @@ final class StructureMenuTarget: NSObject {
         self.action = action
     }
 
-    @objc func addNewItem() {
+    @objc
+    func addNewItem() {
         action()
     }
 }

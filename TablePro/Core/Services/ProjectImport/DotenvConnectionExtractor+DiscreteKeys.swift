@@ -181,7 +181,7 @@ extension DotenvConnectionExtractor {
     }
 
     private static func serviceHostWarnings(_ host: String) -> [String] {
-        let serviceNames: Set<String> = [
+        let serviceNames: Set = [
             "db", "database", "postgres", "postgresql", "mysql",
             "mariadb", "mongo", "mongodb", "redis", "mssql", "pgsql",
         ]

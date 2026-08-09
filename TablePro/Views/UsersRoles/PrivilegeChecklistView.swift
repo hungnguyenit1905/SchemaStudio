@@ -76,8 +76,7 @@ struct PrivilegeChecklistView: View {
 
     // MARK: - Content
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         if viewModel.selection == nil {
             ContentUnavailableView(
                 String(localized: "No Selection"),
@@ -111,8 +110,7 @@ struct PrivilegeChecklistView: View {
         }
     }
 
-    @ViewBuilder
-    private var emptyPrivileges: some View {
+    @ViewBuilder private var emptyPrivileges: some View {
         if !viewModel.privilegeFilter.isEmpty {
             ContentUnavailableView.search(text: viewModel.privilegeFilter)
         } else {
@@ -160,7 +158,7 @@ struct PrivilegeChecklistView: View {
     @ViewBuilder
     private func grantedCell(_ row: PrivilegeRow) -> some View {
         switch row.kind {
-        case let .category(category):
+        case .category(let category):
             let section = viewModel.privilegeSections.first { $0.category == category }
             TristateCheckbox(
                 state: section.map { viewModel.sectionState($0) } ?? .unchecked,
@@ -171,7 +169,7 @@ struct PrivilegeChecklistView: View {
                 viewModel.setGranted(viewModel.sectionState(section) != .checked, section: section)
             }
 
-        case let .privilege(descriptor):
+        case .privilege(let descriptor):
             if viewModel.selectedScopes.count > 1 {
                 TristateCheckbox(
                     state: viewModel.grantState(for: descriptor.name),
@@ -197,7 +195,6 @@ struct PrivilegeChecklistView: View {
         }
     }
 
-    @ViewBuilder
     private func privilegeCell(_ row: PrivilegeRow) -> some View {
         HStack(spacing: 4) {
             Text(row.title)
@@ -219,7 +216,7 @@ struct PrivilegeChecklistView: View {
             case .direct, .notEffective:
                 EmptyView()
 
-            case let .viaScope(scope):
+            case .viaScope(let scope):
                 Label(
                     String(format: String(localized: "Granted on %@"), scope.displayName),
                     systemImage: "arrow.turn.left.up"
@@ -228,7 +225,7 @@ struct PrivilegeChecklistView: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
-            case let .viaRole(name, isAutomatic):
+            case .viaRole(let name, let isAutomatic):
                 Label(
                     String(format: String(localized: "Inherited from %@"), name),
                     systemImage: "person.2"

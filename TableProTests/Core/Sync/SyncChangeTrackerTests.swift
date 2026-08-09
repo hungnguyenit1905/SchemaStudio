@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import Testing
 import TableProSyncTransport
+import Testing
 
 @testable import SchemaStudio
 

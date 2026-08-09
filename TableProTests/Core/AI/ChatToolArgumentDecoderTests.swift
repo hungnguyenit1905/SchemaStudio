@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("ChatToolArgumentDecoder")
@@ -88,8 +88,8 @@ struct ChatToolArgumentDecoderTests {
     func optionalIntClamps() {
         let args: JsonValue = .object(["max_rows": .int(50_000)])
         #expect(
-            ChatToolArgumentDecoder.optionalInt(args, key: "max_rows", default: 500, clamp: 1...10_000)
-            == 10_000
+            ChatToolArgumentDecoder.optionalInt(args, key: "max_rows", default: 500, clamp: 1 ... 10_000)
+                == 10_000
         )
     }
 

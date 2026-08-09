@@ -59,7 +59,10 @@ struct SessionsTableView: View {
                             }
                             .buttonStyle(.borderless)
                             .help(String(localized: "Cancel Query"))
-                            .accessibilityLabel(String(format: String(localized: "Cancel query for session %@"), session.id))
+                            .accessibilityLabel(String(
+                                format: String(localized: "Cancel query for session %@"),
+                                session.id
+                            ))
                         }
                         if session.canKill, viewModel.canKillSessions {
                             Button { viewModel.confirmKillSession(processId: session.id) } label: {

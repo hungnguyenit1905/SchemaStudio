@@ -34,11 +34,17 @@ func buildGroupTree(
     if parentId == nil {
         levelGroups = groups
             .filter { $0.parentId == nil || ($0.parentId.flatMap { validGroupIds.contains($0) } != true) }
-            .sorted { $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+            .sorted {
+                $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name
+                    .localizedStandardCompare($1.name) == .orderedAscending
+            }
     } else {
         levelGroups = groups
             .filter { $0.parentId == parentId }
-            .sorted { $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+            .sorted {
+                $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name
+                    .localizedStandardCompare($1.name) == .orderedAscending
+            }
     }
 
     for group in levelGroups {
@@ -55,7 +61,10 @@ func buildGroupTree(
 
         let groupConnections = connections
             .filter { $0.groupId == group.id }
-            .sorted { $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+            .sorted {
+                $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name
+                    .localizedStandardCompare($1.name) == .orderedAscending
+            }
         for conn in groupConnections {
             children.append(.connection(conn))
         }
@@ -68,7 +77,10 @@ func buildGroupTree(
             guard let groupId = conn.groupId else { return true }
             return !validGroupIds.contains(groupId)
         }
-        .sorted { $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        .sorted {
+            $0.sortOrder != $1.sortOrder ? $0.sortOrder < $1.sortOrder : $0.name
+                .localizedStandardCompare($1.name) == .orderedAscending
+        }
         for conn in ungrouped {
             items.append(.connection(conn))
         }
@@ -146,7 +158,11 @@ func collectAllDescendantGroupIds(groupId: UUID, groups: [ConnectionGroup], visi
     let directChildren = groups.filter { $0.parentId == groupId }
     for child in directChildren where !visited.contains(child.id) {
         result.insert(child.id)
-        result.formUnion(collectAllDescendantGroupIds(groupId: child.id, groups: groups, visited: visited.union(result).union([groupId])))
+        result.formUnion(collectAllDescendantGroupIds(
+            groupId: child.id,
+            groups: groups,
+            visited: visited.union(result).union([groupId])
+        ))
     }
     return result
 }

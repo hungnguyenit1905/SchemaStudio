@@ -63,7 +63,7 @@ final class JSONImportPlugin: ImportFormatPlugin, SettablePlugin {
                     lineNumber += 1
                     let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !trimmed.isEmpty else { continue }
-                    batch.append((lineNumber, try JSONImportParsing.parseRow(fromLine: trimmed)))
+                    try batch.append((lineNumber, JSONImportParsing.parseRow(fromLine: trimmed)))
                 }
                 return batch.isEmpty ? nil : batch
             }
@@ -76,7 +76,7 @@ final class JSONImportPlugin: ImportFormatPlugin, SettablePlugin {
             ) {
                 guard cursor < rawRows.count else { return nil }
                 let end = min(cursor + Self.batchSize, rawRows.count)
-                let batch = (cursor..<end).map { index in
+                let batch = (cursor ..< end).map { index in
                     (index + 1, JSONImportParsing.convertRow(rawRows[index]))
                 }
                 cursor = end

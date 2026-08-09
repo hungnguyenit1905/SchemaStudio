@@ -45,7 +45,8 @@ struct DatabaseSwitcherSheet: View {
                 currentDatabase: currentDatabase,
                 databaseType: databaseType,
                 sidebarState: SharedSidebarState.forConnection(connectionId)
-            ))
+            )
+        )
     }
 
     var body: some View {
@@ -105,8 +106,7 @@ struct DatabaseSwitcherSheet: View {
         .padding(.vertical, 8)
     }
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         if viewModel.isLoading {
             loadingView
         } else if let error = viewModel.errorMessage {

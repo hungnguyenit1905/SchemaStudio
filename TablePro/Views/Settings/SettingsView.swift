@@ -6,7 +6,15 @@
 import SwiftUI
 
 enum SettingsPane: String {
-    case general, appearance, editor, data, keyboard, ai, mcp, plugins, account
+    case general
+    case appearance
+    case editor
+    case data
+    case keyboard
+    case ai
+    case mcp
+    case plugins
+    case account
 
     var title: String {
         switch self {

@@ -674,7 +674,7 @@
 			);
 			target = 5AE4F4732F6BC0640097AC5B /* CloudflareD1DriverPlugin */;
 		};
-		5AF312BE2F36FF7500E86682 /* Exceptions for "TablePro" folder in "TablePro" target */ = {
+		5AF312BE2F36FF7500E86682 /* Exceptions for "TablePro" folder in "SchemaStudio" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				CLI/BridgeMain.swift,
@@ -704,7 +704,7 @@
 		5A1091C92EF17EDC0055EA7C /* TablePro */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				5AF312BE2F36FF7500E86682 /* Exceptions for "TablePro" folder in "TablePro" target */,
+				5AF312BE2F36FF7500E86682 /* Exceptions for "TablePro" folder in "SchemaStudio" target */,
 				5A32BC082F9D5FC900BAEB5F /* Exceptions for "TablePro" folder in "mcp-server" target */,
 			);
 			path = TablePro;
@@ -2261,7 +2261,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 5A1091C22EF17EDC0055EA7C /* Build configuration list for PBXProject "TablePro" */;
+			buildConfigurationList = 5A1091C22EF17EDC0055EA7C /* Build configuration list for PBXProject "SchemaStudio" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -5127,7 +5127,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5A1091C22EF17EDC0055EA7C /* Build configuration list for PBXProject "TablePro" */ = {
+		5A1091C22EF17EDC0055EA7C /* Build configuration list for PBXProject "SchemaStudio" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5A1091D02EF17EDC0055EA7C /* Debug */,

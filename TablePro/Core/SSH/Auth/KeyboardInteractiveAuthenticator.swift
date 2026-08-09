@@ -130,7 +130,7 @@ private let kbdintCallback: @convention(c) (
     let name = decodeKbdintString(namePtr, length: nameLen)
     let instruction = decodeKbdintString(instructionPtr, length: instructionLen)
 
-    let decodedPrompts = (0..<Int(numPrompts)).map { index -> KeyboardInteractivePrompt in
+    let decodedPrompts = (0 ..< Int(numPrompts)).map { index -> KeyboardInteractivePrompt in
         let prompt = prompts[index]
         let bytes: [UInt8]
         if let textPtr = prompt.text, prompt.length > 0 {
@@ -143,7 +143,7 @@ private let kbdintCallback: @convention(c) (
 
     let answers = context.responses(name: name, instruction: instruction, prompts: decodedPrompts)
 
-    for index in 0..<Int(numPrompts) {
+    for index in 0 ..< Int(numPrompts) {
         let answer = index < answers.count ? answers[index] : ""
         let duplicated = strdup(answer) ?? strdup("")
         responses[index].text = duplicated
@@ -151,12 +151,18 @@ private let kbdintCallback: @convention(c) (
     }
 }
 
+// swiftlint:disable optional_data_string_conversion
 private func decodeKbdintString(_ pointer: UnsafePointer<CChar>?, length: Int32) -> String {
     guard let pointer, length > 0 else { return "" }
     return pointer.withMemoryRebound(to: UInt8.self, capacity: Int(length)) { bytes in
-        String(decoding: UnsafeBufferPointer(start: bytes, count: Int(length)), as: UTF8.self) // swiftlint:disable:this optional_data_string_conversion
+        String(
+            decoding: UnsafeBufferPointer(start: bytes, count: Int(length)),
+            as: UTF8.self
+        )
     }
 }
+
+// swiftlint:enable optional_data_string_conversion
 
 internal struct KeyboardInteractiveAuthenticator: SSHAuthenticator {
     private static let logger = Logger(

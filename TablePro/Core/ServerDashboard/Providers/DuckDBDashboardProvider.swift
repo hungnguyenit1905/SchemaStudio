@@ -49,9 +49,9 @@ struct DuckDBDashboardProvider: ServerDashboardQueryProvider {
         }
 
         let settingsResult = try await execute("""
-            SELECT current_setting('memory_limit') AS memory_limit,
-                   current_setting('threads') AS threads
-            """)
+        SELECT current_setting('memory_limit') AS memory_limit,
+               current_setting('threads') AS threads
+        """)
         if let row = settingsResult.rows.first {
             let col = columnIndex(from: settingsResult.columns)
             let memLimit = value(row, at: col["memory_limit"])

@@ -27,7 +27,7 @@ struct SQLCompletionProviderConcurrencyTests {
         SQLContext(
             clauseType: .unknown,
             prefix: prefix,
-            prefixRange: 0..<prefix.count,
+            prefixRange: 0 ..< prefix.count,
             dotPrefix: nil,
             tableReferences: [],
             isInsideString: false,
@@ -71,7 +71,7 @@ struct SQLCompletionProviderConcurrencyTests {
         let baseline = provider.filterAndRank(items, prefix: "sc", context: context)
 
         await withTaskGroup(of: [SQLCompletionItem].self) { group in
-            for _ in 0..<8 {
+            for _ in 0 ..< 8 {
                 group.addTask {
                     provider.filterAndRank(items, prefix: "sc", context: context)
                 }

@@ -75,7 +75,7 @@ struct EtcdStatementGenerator {
 
         // Prepend the current browse prefix if the key doesn't already include it
         let fullKey: String
-        if !prefix.isEmpty && !k.hasPrefix("/") {
+        if !prefix.isEmpty, !k.hasPrefix("/") {
             fullKey = prefix + k
         } else {
             fullKey = k
@@ -125,7 +125,7 @@ struct EtcdStatementGenerator {
         } else if let lease = leaseChange?.newValue.asText {
             let currentValue = extractOriginalValue(from: change) ?? ""
             var cmd = "put \(escapeArgument(newKey)) \(escapeArgument(currentValue))"
-            if !lease.isEmpty && lease != "0" {
+            if !lease.isEmpty, lease != "0" {
                 cmd += " --lease=\(lease)"
             }
             statements.append((statement: cmd, parameters: []))

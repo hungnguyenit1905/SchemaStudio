@@ -424,6 +424,7 @@ struct MongoDBQueryBuilderTests {
     }
 
     // MARK: - Combined Query
+
     // TODO: Re-enable when buildCombinedQuery API is restored
     #if false
     @Test("Combined query wraps filter and search in $and")

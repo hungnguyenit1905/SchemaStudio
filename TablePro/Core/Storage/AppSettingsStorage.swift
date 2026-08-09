@@ -113,7 +113,6 @@ final class AppSettingsStorage {
         save(settings, key: Keys.history)
     }
 
-
     // MARK: - Tab Settings
 
     func loadTabs() -> TabSettings {

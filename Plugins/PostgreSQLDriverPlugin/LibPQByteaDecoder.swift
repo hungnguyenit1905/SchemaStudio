@@ -86,9 +86,9 @@ enum LibPQByteaDecoder {
 
     private static func hexNibble(_ byte: UInt8) -> UInt8? {
         switch byte {
-        case 0x30...0x39: return byte - 0x30          // 0-9
-        case 0x41...0x46: return byte - 0x41 + 10     // A-F
-        case 0x61...0x66: return byte - 0x61 + 10     // a-f
+        case 0x30 ... 0x39: return byte - 0x30 // 0-9
+        case 0x41 ... 0x46: return byte - 0x41 + 10 // A-F
+        case 0x61 ... 0x66: return byte - 0x61 + 10 // a-f
         default: return nil
         }
     }

@@ -48,13 +48,17 @@ enum SSHTunnelError: Error, LocalizedError, Equatable, Sendable {
             case .password:
                 return String(localized: "SSH password rejected. Check the password and try again.")
             case .verificationCode:
-                return String(localized: "Verification code rejected. Get a new code from your authenticator app and try again.")
+                return String(
+                    localized: "Verification code rejected. Get a new code from your authenticator app and try again."
+                )
             case .privateKey:
                 return String(localized: "SSH private key rejected. Check the key file or passphrase.")
             case .agentRejected:
                 return String(localized: "SSH agent did not authenticate. Run ssh-add -l to check loaded keys.")
             case .passwordlessRejected:
-                return String(localized: "The SSH server did not accept passwordless authentication. Choose Password, Private Key, or SSH Agent.")
+                return String(
+                    localized: "The SSH server did not accept passwordless authentication. Choose Password, Private Key, or SSH Agent."
+                )
             case .keyboardInteractive:
                 return String(localized: "SSH verification rejected. Check your response and try again.")
             case .cancelled:
@@ -229,7 +233,9 @@ actor SSHTunnelManager: TunnelManaging {
     func closeAllTunnels() async {
         let currentTunnels = tunnels
         tunnels.removeAll()
-        Self.tunnelRegistry.withLock { $0.removeAll(); return }
+        Self.tunnelRegistry.withLock { $0.removeAll()
+            return
+        }
         updateAppNapState()
 
         for (_, tunnel) in currentTunnels {
@@ -292,7 +298,7 @@ actor SSHTunnelManager: TunnelManaging {
     // MARK: - Private
 
     private func localPortCandidates() -> [Int] {
-        Array(portRangeStart...portRangeEnd).shuffled()
+        Array(portRangeStart ... portRangeEnd).shuffled()
     }
 
     private func handleTunnelDeath(connectionId: UUID) async {
@@ -307,7 +313,7 @@ actor SSHTunnelManager: TunnelManaging {
 
     /// Acquires or releases an App Nap activity token based on whether tunnels exist.
     private func updateAppNapState() {
-        if !tunnels.isEmpty && appNapActivity == nil {
+        if !tunnels.isEmpty, appNapActivity == nil {
             appNapActivity = ProcessInfo.processInfo.beginActivity(
                 options: .userInitiatedAllowingIdleSystemSleep,
                 reason: "SSH tunnel keepalive requires timely execution"

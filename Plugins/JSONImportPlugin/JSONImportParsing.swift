@@ -90,8 +90,7 @@ enum JSONImportParsing {
     private static func serialize(_ object: Any) -> String {
         guard JSONSerialization.isValidJSONObject(object),
               let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]),
-              let string = String(data: data, encoding: .utf8)
-        else {
+              let string = String(data: data, encoding: .utf8) else {
             return String(describing: object)
         }
         return string
@@ -115,7 +114,7 @@ enum JSONImportParsing {
             return rows
         }
         let object = try JSONSerialization.jsonObject(with: Data(contentsOf: url))
-        return Array(try extractRows(from: object, targetTable: targetTable).prefix(limit))
+        return try Array(extractRows(from: object, targetTable: targetTable).prefix(limit))
     }
 
     static func detectFields(in rows: [[String: Any]]) -> [PluginImportField] {

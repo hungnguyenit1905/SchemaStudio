@@ -4,9 +4,9 @@
 //
 
 import AppKit
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("NSView+Focus")
 struct NSViewFocusTests {

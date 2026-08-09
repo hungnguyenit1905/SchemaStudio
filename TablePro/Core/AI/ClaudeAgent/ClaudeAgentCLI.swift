@@ -108,13 +108,13 @@ struct ClaudeAgentCLI: Sendable {
     }
 
     func authStatus() async throws -> ClaudeAgentAuthStatus {
-        let result = try await process.run(try launch(arguments: ["auth", "status", "--json"]))
+        let result = try await process.run(launch(arguments: ["auth", "status", "--json"]))
         guard result.code == 0 else { return .signedOut }
         return Self.decodeAuthStatus(result.output) ?? .signedOut
     }
 
     func version() async throws -> String? {
-        let result = try await process.run(try launch(arguments: ["--version"]))
+        let result = try await process.run(launch(arguments: ["--version"]))
         guard result.code == 0 else { return nil }
         return Self.parseVersion(result.output)
     }

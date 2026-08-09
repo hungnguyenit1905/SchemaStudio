@@ -105,8 +105,7 @@ internal struct ResultsJsonView: View {
         prettyText.isEmpty
     }
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         if tableRows.rows.isEmpty {
             ContentUnavailableView(
                 String(localized: "No Data"),

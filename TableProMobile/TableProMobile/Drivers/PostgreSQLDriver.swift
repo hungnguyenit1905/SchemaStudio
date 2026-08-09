@@ -19,7 +19,14 @@ final class PostgreSQLDriver: DatabaseDriver, @unchecked Sendable {
     nonisolated(unsafe) private(set) var currentSchema: String? = "public"
     nonisolated(unsafe) private(set) var serverVersion: String?
 
-    init(host: String, port: Int, user: String, password: String, database: String, ssl: DriverSSLConfiguration = .disabled) {
+    init(
+        host: String,
+        port: Int,
+        user: String,
+        password: String,
+        database: String,
+        ssl: DriverSSLConfiguration = .disabled
+    ) {
         self.host = host
         self.port = port
         self.user = user
@@ -129,11 +136,11 @@ final class PostgreSQLDriver: DatabaseDriver, @unchecked Sendable {
         let schemaName = schema ?? "public"
         let safe = schemaName.replacingOccurrences(of: "'", with: "''")
         let raw = try await actor.execute("""
-            SELECT table_name, table_type
-            FROM information_schema.tables
-            WHERE table_schema = '\(safe)'
-            ORDER BY table_name
-            """)
+        SELECT table_name, table_type
+        FROM information_schema.tables
+        WHERE table_schema = '\(safe)'
+        ORDER BY table_name
+        """)
 
         return raw.rows.compactMap { row in
             guard row.count >= 2, let name = row[0] else { return nil }
@@ -154,27 +161,27 @@ final class PostgreSQLDriver: DatabaseDriver, @unchecked Sendable {
         let safeSchema = schemaName.replacingOccurrences(of: "'", with: "''")
 
         let raw = try await actor.execute("""
-            SELECT
-                c.column_name,
-                c.data_type,
-                c.is_nullable,
-                c.column_default,
-                c.character_maximum_length,
-                CASE WHEN pk.column_name IS NOT NULL THEN 'YES' ELSE 'NO' END AS is_pk
-            FROM information_schema.columns c
-            LEFT JOIN (
-                SELECT kcu.column_name
-                FROM information_schema.table_constraints tc
-                JOIN information_schema.key_column_usage kcu
-                    ON tc.constraint_name = kcu.constraint_name
-                    AND tc.table_schema = kcu.table_schema
-                WHERE tc.constraint_type = 'PRIMARY KEY'
-                    AND tc.table_schema = '\(safeSchema)'
-                    AND tc.table_name = '\(safeTbl)'
-            ) pk ON c.column_name = pk.column_name
-            WHERE c.table_schema = '\(safeSchema)' AND c.table_name = '\(safeTbl)'
-            ORDER BY c.ordinal_position
-            """)
+        SELECT
+            c.column_name,
+            c.data_type,
+            c.is_nullable,
+            c.column_default,
+            c.character_maximum_length,
+            CASE WHEN pk.column_name IS NOT NULL THEN 'YES' ELSE 'NO' END AS is_pk
+        FROM information_schema.columns c
+        LEFT JOIN (
+            SELECT kcu.column_name
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.key_column_usage kcu
+                ON tc.constraint_name = kcu.constraint_name
+                AND tc.table_schema = kcu.table_schema
+            WHERE tc.constraint_type = 'PRIMARY KEY'
+                AND tc.table_schema = '\(safeSchema)'
+                AND tc.table_name = '\(safeTbl)'
+        ) pk ON c.column_name = pk.column_name
+        WHERE c.table_schema = '\(safeSchema)' AND c.table_name = '\(safeTbl)'
+        ORDER BY c.ordinal_position
+        """)
 
         return raw.rows.enumerated().compactMap { index, row in
             guard row.count >= 6, let name = row[0], let dataType = row[1] else { return nil }
@@ -198,19 +205,19 @@ final class PostgreSQLDriver: DatabaseDriver, @unchecked Sendable {
         let safeSchema = schemaName.replacingOccurrences(of: "'", with: "''")
 
         let raw = try await actor.execute("""
-            SELECT
-                i.relname AS index_name,
-                ix.indisunique,
-                ix.indisprimary,
-                a.attname AS column_name
-            FROM pg_index ix
-            JOIN pg_class t ON t.oid = ix.indrelid
-            JOIN pg_class i ON i.oid = ix.indexrelid
-            JOIN pg_namespace n ON n.oid = t.relnamespace
-            JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
-            WHERE n.nspname = '\(safeSchema)' AND t.relname = '\(safeTbl)'
-            ORDER BY i.relname, a.attnum
-            """)
+        SELECT
+            i.relname AS index_name,
+            ix.indisunique,
+            ix.indisprimary,
+            a.attname AS column_name
+        FROM pg_index ix
+        JOIN pg_class t ON t.oid = ix.indrelid
+        JOIN pg_class i ON i.oid = ix.indexrelid
+        JOIN pg_namespace n ON n.oid = t.relnamespace
+        JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
+        WHERE n.nspname = '\(safeSchema)' AND t.relname = '\(safeTbl)'
+        ORDER BY i.relname, a.attnum
+        """)
 
         var indexMap: [String: (isUnique: Bool, isPrimary: Bool, columns: [String])] = [:]
         var order: [String] = []
@@ -246,28 +253,28 @@ final class PostgreSQLDriver: DatabaseDriver, @unchecked Sendable {
         let safeSchema = schemaName.replacingOccurrences(of: "'", with: "''")
 
         let raw = try await actor.execute("""
-            SELECT
-                tc.constraint_name,
-                kcu.column_name,
-                ccu.table_name AS referenced_table,
-                ccu.column_name AS referenced_column,
-                rc.delete_rule,
-                rc.update_rule
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.key_column_usage kcu
-                ON tc.constraint_name = kcu.constraint_name
-                AND tc.table_schema = kcu.table_schema
-            JOIN information_schema.constraint_column_usage ccu
-                ON tc.constraint_name = ccu.constraint_name
-                AND tc.table_schema = ccu.table_schema
-            JOIN information_schema.referential_constraints rc
-                ON tc.constraint_name = rc.constraint_name
-                AND tc.table_schema = rc.constraint_schema
-            WHERE tc.constraint_type = 'FOREIGN KEY'
-                AND tc.table_schema = '\(safeSchema)'
-                AND tc.table_name = '\(safeTbl)'
-            ORDER BY tc.constraint_name
-            """)
+        SELECT
+            tc.constraint_name,
+            kcu.column_name,
+            ccu.table_name AS referenced_table,
+            ccu.column_name AS referenced_column,
+            rc.delete_rule,
+            rc.update_rule
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.key_column_usage kcu
+            ON tc.constraint_name = kcu.constraint_name
+            AND tc.table_schema = kcu.table_schema
+        JOIN information_schema.constraint_column_usage ccu
+            ON tc.constraint_name = ccu.constraint_name
+            AND tc.table_schema = ccu.table_schema
+        JOIN information_schema.referential_constraints rc
+            ON tc.constraint_name = rc.constraint_name
+            AND tc.table_schema = rc.constraint_schema
+        WHERE tc.constraint_type = 'FOREIGN KEY'
+            AND tc.table_schema = '\(safeSchema)'
+            AND tc.table_name = '\(safeTbl)'
+        ORDER BY tc.constraint_name
+        """)
 
         return raw.rows.compactMap { row in
             guard row.count >= 6,
@@ -304,7 +311,8 @@ final class PostgreSQLDriver: DatabaseDriver, @unchecked Sendable {
     }
 
     func fetchSchemas() async throws -> [String] {
-        let result = try await execute(query: "SELECT schema_name FROM information_schema.schemata ORDER BY schema_name")
+        let result =
+            try await execute(query: "SELECT schema_name FROM information_schema.schemata ORDER BY schema_name")
         return result.rows.compactMap { $0.first ?? nil }
     }
 
@@ -326,14 +334,23 @@ final class PostgreSQLDriver: DatabaseDriver, @unchecked Sendable {
 private actor PostgreSQLActor {
     private var conn: OpaquePointer?
 
-    func connect(host: String, port: Int, user: String, password: String, database: String, ssl: DriverSSLConfiguration = .disabled) throws {
-        guard (1...65_535).contains(port) else {
+    func connect(
+        host: String,
+        port: Int,
+        user: String,
+        password: String,
+        database: String,
+        ssl: DriverSSLConfiguration = .disabled
+    ) throws {
+        guard (1 ... 65_535).contains(port) else {
             throw PostgreSQLError.connectionFailed(
                 "Port \(port) is out of range. Use a value between 1 and 65535."
             )
         }
         // Close existing connection if reconnecting
-        if let conn { PQfinish(conn); self.conn = nil }
+        if let conn { PQfinish(conn)
+            self.conn = nil
+        }
 
         let escapedHost = escapeConnParam(host)
         let escapedUser = escapeConnParam(user)
@@ -383,7 +400,7 @@ private actor PostgreSQLActor {
         guard let conn else { return nil }
         let version = PQserverVersion(conn)
         if version == 0 { return nil }
-        let major = version / 10000 // swiftlint:disable:this number_separator
+        let major = version / 10_000 // swiftlint:disable:this number_separator
         let minor = (version / 100) % 100
         let patch = version % 100
         // PostgreSQL 10+ uses two-component versioning (major.patch)
@@ -430,7 +447,7 @@ private actor PostgreSQLActor {
         var columns: [String] = []
         var columnTypes: [String] = []
 
-        for i in 0..<Int32(colCount) {
+        for i in 0 ..< Int32(colCount) {
             let name = PQfname(result, i).map { String(cString: $0) } ?? "col_\(i)"
             columns.append(name)
             let oid = PQftype(result, i)
@@ -441,9 +458,9 @@ private actor PostgreSQLActor {
         let maxRows = min(rowCount, 100_000)
         let isTruncated = rowCount > 100_000
 
-        for r in 0..<Int32(maxRows) {
+        for r in 0 ..< Int32(maxRows) {
             var rowData: [String?] = []
-            for c in 0..<Int32(colCount) {
+            for c in 0 ..< Int32(colCount) {
                 if PQgetisnull(result, r, c) == 1 {
                     rowData.append(nil)
                 } else if let value = PQgetvalue(result, r, c) {
@@ -517,7 +534,9 @@ private actor PostgreSQLActor {
             result = pending
             pendingResult = nil
         } else {
-            guard let conn else { streamingFinished = true; return nil }
+            guard let conn else { streamingFinished = true
+                return nil
+            }
             result = PQgetResult(conn)
         }
 
@@ -541,7 +560,7 @@ private actor PostgreSQLActor {
 
         var cells: [Cell] = []
         cells.reserveCapacity(columns.count)
-        for c in 0..<columns.count {
+        for c in 0 ..< columns.count {
             let col = Int32(c)
             if PQgetisnull(result, 0, col) == 1 {
                 cells.append(.null)
@@ -581,7 +600,7 @@ private actor PostgreSQLActor {
     private func parseColumns(_ result: OpaquePointer) -> [ColumnInfo] {
         let colCount = Int(PQnfields(result))
         var cols: [ColumnInfo] = []
-        for i in 0..<colCount {
+        for i in 0 ..< colCount {
             let name = PQfname(result, Int32(i)).map { String(cString: $0) } ?? "col_\(i)"
             let oid = PQftype(result, Int32(i))
             cols.append(ColumnInfo(
@@ -598,7 +617,12 @@ private actor PostgreSQLActor {
         return cols
     }
 
-    private func makeCellRef(column: String, columns: [ColumnInfo], result: OpaquePointer, options: StreamOptions) -> CellRef? {
+    private func makeCellRef(
+        column: String,
+        columns: [ColumnInfo],
+        result: OpaquePointer,
+        options: StreamOptions
+    ) -> CellRef? {
         guard let lazyContext = options.lazyContext, !lazyContext.primaryKeyColumns.isEmpty else { return nil }
         var pkComponents: [PrimaryKeyComponent] = []
         for pkColumn in lazyContext.primaryKeyColumns {
@@ -637,15 +661,15 @@ nonisolated private func pgOidToTypeName(_ oid: UInt32) -> String {
     case 869: return "inet"
     // PostgreSQL OID constants — separators would obscure the wire-protocol values
     // swiftlint:disable number_separator
-    case 1042: return "char"
-    case 1043: return "varchar"
-    case 1082: return "date"
-    case 1083: return "time"
-    case 1114: return "timestamp"
-    case 1184: return "timestamptz"
-    case 1700: return "numeric"
-    case 2950: return "uuid"
-    case 3802: return "jsonb"
+    case 1_042: return "char"
+    case 1_043: return "varchar"
+    case 1_082: return "date"
+    case 1_083: return "time"
+    case 1_114: return "timestamp"
+    case 1_184: return "timestamptz"
+    case 1_700: return "numeric"
+    case 2_950: return "uuid"
+    case 3_802: return "jsonb"
     // swiftlint:enable number_separator
     default: return "unknown"
     }

@@ -5,9 +5,9 @@
 
 import CommonCrypto
 import Foundation
+@testable import SchemaStudio
 import TableProImport
 import TableProPluginKit
-@testable import SchemaStudio
 import Testing
 
 @Suite("DBeaverImporter", .serialized)
@@ -78,7 +78,7 @@ struct DBeaverImporterTests {
         name: String = "Test DB",
         provider: String = "postgresql",
         host: String = "db.example.com",
-        port: Any? = 5432,
+        port: Any? = 5_432,
         user: String? = "admin",
         database: String = "mydb",
         folder: String? = nil,
@@ -99,13 +99,13 @@ struct DBeaverImporterTests {
             "host": host,
             "database": database
         ]
-        if let user = user {
+        if let user {
             config["user"] = user
         }
-        if let port = port {
+        if let port {
             config["port"] = port
         }
-        if let color = color {
+        if let color {
             config["color"] = color
         }
 
@@ -150,7 +150,7 @@ struct DBeaverImporterTests {
             "provider": provider,
             "configuration": config
         ]
-        if let folder = folder {
+        if let folder {
             dict["folder"] = folder
         }
         return dict
@@ -176,13 +176,13 @@ struct DBeaverImporterTests {
     }
 
     @Test("isAvailable returns false when no app and no data exist")
-    func testIsAvailable_whenFileMissing_returnsFalse() throws {
+    func testIsAvailable_whenFileMissing_returnsFalse() {
         try? FileManager.default.removeItem(at: projectDir.appendingPathComponent("data-sources.json"))
         #expect(importer.isAvailable() == false)
     }
 
     @Test("isAvailable returns true when a DBeaver app is installed even without data")
-    func testIsAvailable_whenAppInstalledWithoutData_returnsTrue() throws {
+    func testIsAvailable_whenAppInstalledWithoutData_returnsTrue() {
         try? FileManager.default.removeItem(at: projectDir.appendingPathComponent("data-sources.json"))
         var imp = importer
         imp.resolveAppURL = { _ in URL(fileURLWithPath: "/Applications/DBeaver.app") }
@@ -203,7 +203,7 @@ struct DBeaverImporterTests {
     }
 
     @Test("connectionCount returns 0 when file missing")
-    func testConnectionCount_fileMissing_returnsZero() throws {
+    func testConnectionCount_fileMissing_returnsZero() {
         try? FileManager.default.removeItem(at: projectDir.appendingPathComponent("data-sources.json"))
         #expect(importer.connectionCount() == 0)
     }
@@ -258,12 +258,12 @@ struct DBeaverImporterTests {
     @Test("importConnections parses port as Int")
     func testImportConnections_parsesPortAsInt() throws {
         let connections: [String: [String: Any]] = [
-            "pg-1": makeConnection(name: "PG", port: 5433)
+            "pg-1": makeConnection(name: "PG", port: 5_433)
         ]
         try writeDataSources(makeDataSourcesJSON(connections: connections))
 
         let result = try importer.importConnections(includePasswords: false)
-        #expect(result.envelope.connections[0].port == 5433)
+        #expect(result.envelope.connections[0].port == 5_433)
     }
 
     @Test("importConnections parses port as String")
@@ -274,7 +274,7 @@ struct DBeaverImporterTests {
         try writeDataSources(makeDataSourcesJSON(connections: connections))
 
         let result = try importer.importConnections(includePasswords: false)
-        #expect(result.envelope.connections[0].port == 5433)
+        #expect(result.envelope.connections[0].port == 5_433)
     }
 
     @Test("importConnections uses default port when missing")
@@ -296,14 +296,14 @@ struct DBeaverImporterTests {
             uniqueKeysWithValues: result.envelope.connections.map { ($0.type, $0.port) }
         )
 
-        #expect(portMap["PostgreSQL"] == 5432)
-        #expect(portMap["MySQL"] == 3306)
+        #expect(portMap["PostgreSQL"] == 5_432)
+        #expect(portMap["MySQL"] == 3_306)
         #expect(portMap["MongoDB"] == 27_017)
-        #expect(portMap["Redis"] == 6379)
-        #expect(portMap["SQL Server"] == 1433)
-        #expect(portMap["Oracle"] == 1521)
-        #expect(portMap["ClickHouse"] == 8123)
-        #expect(portMap["Cassandra"] == 9042)
+        #expect(portMap["Redis"] == 6_379)
+        #expect(portMap["SQL Server"] == 1_433)
+        #expect(portMap["Oracle"] == 1_521)
+        #expect(portMap["ClickHouse"] == 8_123)
+        #expect(portMap["Cassandra"] == 9_042)
     }
 
     @Test("importConnections parses SSH tunnel with PUBLIC_KEY auth")
@@ -313,7 +313,7 @@ struct DBeaverImporterTests {
                 name: "SSH PG",
                 sshEnabled: true,
                 sshHost: "bastion.example.com",
-                sshPort: 2222,
+                sshPort: 2_222,
                 sshUsername: "deploy",
                 sshAuthType: "PUBLIC_KEY",
                 sshKeyPath: "~/.ssh/id_rsa"
@@ -327,7 +327,7 @@ struct DBeaverImporterTests {
         #expect(ssh != nil)
         #expect(ssh?.enabled == true)
         #expect(ssh?.host == "bastion.example.com")
-        #expect(ssh?.port == 2222)
+        #expect(ssh?.port == 2_222)
         #expect(ssh?.username == "deploy")
         #expect(ssh?.authMethod == "Private Key")
         #expect(ssh?.privateKeyPath == "~/.ssh/id_rsa")
@@ -563,7 +563,7 @@ struct DBeaverImporterTests {
         #expect(colorMap["Green"] == "Green")
         #expect(colorMap["Blue"] == "Blue")
         #expect(colorMap["Purple"] == "Purple")
-        #expect(colorMap["No Color"] == Optional<String>.none)
+        #expect(colorMap["No Color"] == String?.none)
     }
 
     @Test("importConnections file not found throws error")
@@ -604,7 +604,7 @@ struct DBeaverImporterTests {
         try writeDataSources(makeDataSourcesJSON(connections: connections))
 
         let result = try importer.importConnections(includePasswords: false)
-        #expect(result.envelope.connections[0].sshConfig?.port == 2222)
+        #expect(result.envelope.connections[0].sshConfig?.port == 2_222)
     }
 
     @Test("importConnections unknown provider passes through")

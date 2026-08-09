@@ -59,7 +59,9 @@ public struct ResourcesListHandler: MCPMethodHandler {
         .object([
             "uri": .string("tablepro://connections/\(item.id)/schema"),
             "name": .string(String(format: String(localized: "Schema for %@"), item.name)),
-            "description": .string(String(localized: "Tables, columns, indexes, and foreign keys for the connected database")),
+            "description": .string(
+                String(localized: "Tables, columns, indexes, and foreign keys for the connected database")
+            ),
             "mimeType": .string("application/json")
         ])
     }

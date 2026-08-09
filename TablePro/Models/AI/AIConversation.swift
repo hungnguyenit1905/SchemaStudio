@@ -47,13 +47,18 @@ struct AIConversation: Codable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, title, messages, createdAt, updatedAt, connectionName, schemaVersion
+        case id
+        case title
+        case messages
+        case createdAt
+        case updatedAt
+        case connectionName
+        case schemaVersion
     }
 
     mutating func updateTitle() {
         guard title.isEmpty,
-              let firstUserMessage = messages.first(where: { $0.role == .user })
-        else { return }
+              let firstUserMessage = messages.first(where: { $0.role == .user }) else { return }
 
         let text = firstUserMessage.plainText.trimmingCharacters(in: .whitespacesAndNewlines)
         if (text as NSString).length > 50 {

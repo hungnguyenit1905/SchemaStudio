@@ -5,9 +5,9 @@
 //  Specification tests for the indent operators >> and << and their motion forms.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineIndentTests: XCTestCase {
@@ -32,7 +32,9 @@ final class VimEngineIndentTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     // MARK: - >>: Indent Current Line
@@ -40,25 +42,32 @@ final class VimEngineIndentTests: XCTestCase {
     func testDoubleGreaterIndentsCurrentLine() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys(">>")
-        XCTAssertEqual(buffer.text, "\(indentString)one\ntwo\nthree\n",
-            ">> should add one indent (4 spaces) to the current line")
+        XCTAssertEqual(
+            buffer.text,
+            "\(indentString)one\ntwo\nthree\n",
+            ">> should add one indent (4 spaces) to the current line"
+        )
     }
 
     func testDoubleGreaterWithCount() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("3>>")
-        XCTAssertEqual(buffer.text,
+        XCTAssertEqual(
+            buffer.text,
             "\(indentString)one\n\(indentString)two\n\(indentString)three\n",
-            "3>> should indent the current line and the next two lines")
+            "3>> should indent the current line and the next two lines"
+        )
     }
 
     func testGreaterMotionIndentsRange() {
         // >j should indent the current line and the next line.
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys(">j")
-        XCTAssertEqual(buffer.text,
+        XCTAssertEqual(
+            buffer.text,
             "\(indentString)one\n\(indentString)two\nthree\n",
-            ">j should indent the current line and the line below")
+            ">j should indent the current line and the line below"
+        )
     }
 
     func testGreaterGoesIndentsToEndOfBuffer() {
@@ -66,9 +75,11 @@ final class VimEngineIndentTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys(">")
         _ = engine.process("G", shift: true)
-        XCTAssertEqual(buffer.text,
+        XCTAssertEqual(
+            buffer.text,
             "\(indentString)one\n\(indentString)two\n\(indentString)three\n",
-            ">G should indent from the current line through the end of the buffer")
+            ">G should indent from the current line through the end of the buffer"
+        )
     }
 
     // MARK: - <<: Outdent Current Line
@@ -78,8 +89,11 @@ final class VimEngineIndentTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("<<")
-        XCTAssertEqual(buffer.text, "\(indentString)one\ntwo\n",
-            "<< should remove one indent from the current line")
+        XCTAssertEqual(
+            buffer.text,
+            "\(indentString)one\ntwo\n",
+            "<< should remove one indent from the current line"
+        )
     }
 
     func testDoubleLessWithCount() {
@@ -87,15 +101,21 @@ final class VimEngineIndentTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("3<<")
-        XCTAssertEqual(buffer.text, "one\ntwo\nthree\n",
-            "3<< should remove one indent from three consecutive lines")
+        XCTAssertEqual(
+            buffer.text,
+            "one\ntwo\nthree\n",
+            "3<< should remove one indent from three consecutive lines"
+        )
     }
 
     func testDoubleLessNoIndentIsNoOp() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("<<")
-        XCTAssertEqual(buffer.text, "one\ntwo\nthree\n",
-            "<< on an unindented line should be a no-op")
+        XCTAssertEqual(
+            buffer.text,
+            "one\ntwo\nthree\n",
+            "<< on an unindented line should be a no-op"
+        )
     }
 
     func testDoubleLessLessIndentThanWidthRemovesAll() {
@@ -105,8 +125,11 @@ final class VimEngineIndentTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("<<")
-        XCTAssertEqual(buffer.text, "one\n",
-            "<< on under-indented line should remove the leading whitespace it has")
+        XCTAssertEqual(
+            buffer.text,
+            "one\n",
+            "<< on under-indented line should remove the leading whitespace it has"
+        )
     }
 
     // MARK: - =: Auto-indent (just verify it consumes correctly)
@@ -124,7 +147,10 @@ final class VimEngineIndentTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys(">>")
         let cursor = buffer.selectedRange().location
-        XCTAssertEqual(cursor, indentString.count,
-            "Cursor should land on the first non-blank after >>")
+        XCTAssertEqual(
+            cursor,
+            indentString.count,
+            "Cursor should land on the first non-blank after >>"
+        )
     }
 }

@@ -41,7 +41,7 @@ struct ThemeEditorFontsSection: View {
             sizePicker(
                 label: String(localized: "Size"),
                 value: currentThemeFonts.editorFontSize,
-                range: 11...18,
+                range: 11 ... 18,
                 onChange: { newSize in
                     updateFont { $0.editorFontSize = newSize }
                 }
@@ -63,7 +63,7 @@ struct ThemeEditorFontsSection: View {
             sizePicker(
                 label: String(localized: "Size"),
                 value: currentThemeFonts.dataGridFontSize,
-                range: 10...18,
+                range: 10 ... 18,
                 onChange: { newSize in
                     updateFont { $0.dataGridFontSize = newSize }
                 }
@@ -104,8 +104,12 @@ struct ThemeEditorFontsSection: View {
         }
     }
 
-    private func sizePicker(label: String, value: Int, range: ClosedRange<Int>,
-                            onChange: @escaping (Int) -> Void) -> some View {
+    private func sizePicker(
+        label: String,
+        value: Int,
+        range: ClosedRange<Int>,
+        onChange: @escaping (Int) -> Void
+    ) -> some View {
         Picker(label, selection: Binding<Int>(
             get: { value },
             set: { onChange($0) }

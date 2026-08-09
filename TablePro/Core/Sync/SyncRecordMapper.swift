@@ -138,8 +138,7 @@ struct SyncRecordMapper {
 
     static func toConnection(_ record: CKRecord) throws -> DatabaseConnection {
         guard let connectionIdString = record[.connectionId] as? String,
-              let connectionId = UUID(uuidString: connectionIdString)
-        else {
+              let connectionId = UUID(uuidString: connectionIdString) else {
             throw SyncDecodeError.missingRequiredField("connectionId")
         }
         guard let name = record[.name] as? String else {
@@ -262,8 +261,7 @@ struct SyncRecordMapper {
     static func toGroup(_ record: CKRecord) -> ConnectionGroup? {
         guard let groupIdString = record["groupId"] as? String,
               let groupId = UUID(uuidString: groupIdString),
-              let name = record["name"] as? String
-        else {
+              let name = record["name"] as? String else {
             logger.warning("Failed to decode group from CKRecord: missing required fields")
             return nil
         }
@@ -300,8 +298,7 @@ struct SyncRecordMapper {
     static func toTag(_ record: CKRecord) -> ConnectionTag? {
         guard let tagIdString = record["tagId"] as? String,
               let tagId = UUID(uuidString: tagIdString),
-              let name = record["name"] as? String
-        else {
+              let name = record["name"] as? String else {
             logger.warning("Failed to decode tag from CKRecord: missing required fields")
             return nil
         }
@@ -345,7 +342,10 @@ struct SyncRecordMapper {
 
     // MARK: - Table Favorite
 
-    static func toCKRecord(favoriteEntry entry: FavoriteTablesStorage.FavoriteEntry, in zone: CKRecordZone.ID) -> CKRecord {
+    static func toCKRecord(
+        favoriteEntry entry: FavoriteTablesStorage.FavoriteEntry,
+        in zone: CKRecordZone.ID
+    ) -> CKRecord {
         let favoriteId = FavoriteTablesStorage.syncId(for: entry)
         let recordID = recordID(type: .tableFavorite, id: favoriteId, in: zone)
         let record = CKRecord(recordType: SyncRecordType.tableFavorite.rawValue, recordID: recordID)
@@ -511,8 +511,7 @@ struct SyncRecordMapper {
 
     static func toSSHProfile(_ record: CKRecord) throws -> SSHProfile {
         guard let profileIdString = record["profileId"] as? String,
-              let profileId = UUID(uuidString: profileIdString)
-        else {
+              let profileId = UUID(uuidString: profileIdString) else {
             throw SyncDecodeError.missingRequiredField("profileId")
         }
         guard let name = record["name"] as? String else {
@@ -558,6 +557,7 @@ struct SyncRecordMapper {
     }
 
     // MARK: - Path Portability
+
     // Contract device-local paths to portable ~/… form before pushing to iCloud,
     // expand them back to device-local form when pulling. Matches the proven
     // pattern in ConnectionExportService.

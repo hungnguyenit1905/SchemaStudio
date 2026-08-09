@@ -57,16 +57,16 @@ struct UsersRolesTabView: View {
         case .create:
             CreatePrincipalSheet(viewModel: viewModel)
 
-        case let .changePassword(ref):
+        case .changePassword(let ref):
             ChangePasswordSheet(viewModel: viewModel, principal: ref)
 
-        case let .drop(prompt):
+        case .drop(let prompt):
             DropPrincipalSheet(viewModel: viewModel, prompt: prompt)
 
-        case let .roleMembership(ref):
+        case .roleMembership(let ref):
             RoleMembershipSheet(viewModel: viewModel, principal: ref)
 
-        case let .copyPrivileges(ref):
+        case .copyPrivileges(let ref):
             CopyPrivilegesSheet(viewModel: viewModel, target: ref)
 
         case .review:

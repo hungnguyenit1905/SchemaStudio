@@ -68,7 +68,10 @@ struct JsonRowConverterTests {
 
     @Test("Decimal infinity and NaN produce quoted strings")
     func decimalInfinityNaN() {
-        let converter = makeConverter(columns: ["a", "b"], columnTypes: [.decimal(rawType: nil), .decimal(rawType: nil)])
+        let converter = makeConverter(
+            columns: ["a", "b"],
+            columnTypes: [.decimal(rawType: nil), .decimal(rawType: nil)]
+        )
         let result = converter.generateJson(rows: [["inf", "nan"]])
         #expect(result.contains("\"inf\""))
         #expect(result.contains("\"nan\""))

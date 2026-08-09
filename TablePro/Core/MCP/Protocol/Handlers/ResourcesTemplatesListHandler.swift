@@ -15,13 +15,19 @@ public struct ResourcesTemplatesListHandler: MCPMethodHandler {
             .object([
                 "uriTemplate": .string("tablepro://connections/{id}/schema"),
                 "name": .string(String(localized: "Database Schema")),
-                "description": .string(String(localized: "Tables, columns, indexes, and foreign keys for a connected database")),
+                "description": .string(
+                    String(localized: "Tables, columns, indexes, and foreign keys for a connected database")
+                ),
                 "mimeType": .string("application/json")
             ]),
             .object([
                 "uriTemplate": .string("tablepro://connections/{id}/history"),
                 "name": .string(String(localized: "Query History")),
-                "description": .string(String(localized: "Recent query history for a connection (supports ?limit=, ?search=, ?date_filter=)")),
+                "description": .string(
+                    String(
+                        localized: "Recent query history for a connection (supports ?limit=, ?search=, ?date_filter=)"
+                    )
+                ),
                 "mimeType": .string("application/json")
             ])
         ]

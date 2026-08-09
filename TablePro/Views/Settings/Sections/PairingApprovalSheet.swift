@@ -69,9 +69,13 @@ struct PairingApprovalSheet: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(String(format: String(localized: "Allow %@ to access SchemaStudio?"), request.clientName))
                 .font(.headline)
-            Text(String(localized: "An external app is asking for an API token. Review the permissions before approving."))
-                .font(.callout)
-                .foregroundStyle(.secondary)
+            Text(
+                String(
+                    localized: "An external app is asking for an API token. Review the permissions before approving."
+                )
+            )
+            .font(.callout)
+            .foregroundStyle(.secondary)
             countdownLabel
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -145,8 +149,7 @@ struct PairingApprovalSheet: View {
         }
     }
 
-    @ViewBuilder
-    private var connectionList: some View {
+    @ViewBuilder private var connectionList: some View {
         if connections.isEmpty {
             Text(String(localized: "No saved connections"))
                 .foregroundStyle(.secondary)
@@ -228,7 +231,7 @@ struct PairingApprovalSheet: View {
 
     private var approveDisabled: Bool {
         if isExpired { return true }
-        if connectionAccess == .selected && selectedConnectionIds.isEmpty { return true }
+        if connectionAccess == .selected, selectedConnectionIds.isEmpty { return true }
         return false
     }
 

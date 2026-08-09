@@ -35,7 +35,9 @@ struct MobileConnectionExportSheet: View {
                 Section {
                     Toggle(String(localized: "Include passwords"), isOn: $includePasswords)
                 } footer: {
-                    Text("Passwords are excluded by default. To include them, set a passphrase. The file is encrypted with it.")
+                    Text(
+                        "Passwords are excluded by default. To include them, set a passphrase. The file is encrypted with it."
+                    )
                 }
 
                 if includePasswords {

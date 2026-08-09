@@ -28,14 +28,14 @@ extension PluginPrivilegeScope {
         switch self {
         case .server:
             "server"
-        case let .database(name):
+        case .database(let name):
             "db:\(name)"
-        case let .schema(database, schema):
+        case .schema(let database, let schema):
             "db:\(database)/schema:\(schema)"
-        case let .table(database, schema, table):
+        case .table(let database, let schema, let table):
             schema.map { "db:\(database)/schema:\($0)/table:\(table)" }
                 ?? "db:\(database)/table:\(table)"
-        case let .column(database, schema, table, column):
+        case .column(let database, let schema, let table, let column):
             schema.map { "db:\(database)/schema:\($0)/table:\(table)/column:\(column)" }
                 ?? "db:\(database)/table:\(table)/column:\(column)"
         }
@@ -45,13 +45,13 @@ extension PluginPrivilegeScope {
         switch self {
         case .server:
             String(localized: "Server")
-        case let .database(name):
+        case .database(let name):
             name
-        case let .schema(database, schema):
+        case .schema(let database, let schema):
             "\(database) › \(schema)"
-        case let .table(database, schema, table):
+        case .table(let database, let schema, let table):
             schema.map { "\(database) › \($0) › \(table)" } ?? "\(database) › \(table)"
-        case let .column(database, schema, table, column):
+        case .column(let database, let schema, let table, let column):
             schema.map { "\(database) › \($0) › \(table) › \(column)" }
                 ?? "\(database) › \(table) › \(column)"
         }
@@ -61,13 +61,13 @@ extension PluginPrivilegeScope {
         switch self {
         case .server:
             String(localized: "Server")
-        case let .database(name):
+        case .database(let name):
             name
-        case let .schema(_, schema):
+        case .schema(_, let schema):
             schema
-        case let .table(_, _, table):
+        case .table(_, _, let table):
             table
-        case let .column(_, _, _, column):
+        case .column(_, _, _, let column):
             column
         }
     }

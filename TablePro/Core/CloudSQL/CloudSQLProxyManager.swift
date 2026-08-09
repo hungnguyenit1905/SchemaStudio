@@ -56,7 +56,7 @@ actor CloudSQLProxyManager: TunnelManaging {
         let attempts = config.localPort != nil ? 1 : Self.portRetryCount
 
         var lastError: Error = CloudSQLProxyError.noAvailablePort
-        for _ in 0..<attempts {
+        for _ in 0 ..< attempts {
             guard let port = config.localPort ?? LoopbackPort.allocateFree() else {
                 throw CloudSQLProxyError.noAvailablePort
             }
@@ -90,7 +90,10 @@ actor CloudSQLProxyManager: TunnelManaging {
                 binaryPath: binaryPath,
                 credentialsFilePath: credentialsFilePath
             )
-            Self.logger.info("Cloud SQL Auth Proxy ready for \(connectionId.uuidString, privacy: .public) on 127.0.0.1:\(port)")
+            Self.logger
+                .info(
+                    "Cloud SQL Auth Proxy ready for \(connectionId.uuidString, privacy: .public) on 127.0.0.1:\(port)"
+                )
             return port
         }
 
@@ -207,14 +210,14 @@ actor CloudSQLProxyManager: TunnelManaging {
         let deadline = Date().addingTimeInterval(Self.readinessTimeout)
         while Date() < deadline {
             if await monitor.streamEnded {
-                throw CloudSQLProxyError.startupFailed(stderrTail: await monitor.tail)
+                throw await CloudSQLProxyError.startupFailed(stderrTail: monitor.tail)
             }
             if await LoopbackPort.isReachable(host: "127.0.0.1", port: port) {
                 return
             }
             try await Task.sleep(nanoseconds: Self.readinessPollInterval)
         }
-        throw CloudSQLProxyError.readinessTimeout(stderrTail: await monitor.tail)
+        throw await CloudSQLProxyError.readinessTimeout(stderrTail: monitor.tail)
     }
 
     // MARK: - Private: binary, arguments, credentials
@@ -288,7 +291,7 @@ actor CloudSQLProxyManager: TunnelManaging {
             return
         }
         for url in entries
-        where url.lastPathComponent.hasPrefix(credentialsFilePrefix) && url.pathExtension == "json" {
+            where url.lastPathComponent.hasPrefix(credentialsFilePrefix) && url.pathExtension == "json" {
             try? FileManager.default.removeItem(at: url)
         }
     }
@@ -305,7 +308,8 @@ actor CloudSQLProxyManager: TunnelManaging {
             let data = try JSONEncoder().encode(records)
             UserDefaults.standard.set(data, forKey: Self.stalePidsDefaultsKey)
         } catch {
-            Self.logger.error("Failed to persist cloud-sql-proxy PID records: \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .error("Failed to persist cloud-sql-proxy PID records: \(error.localizedDescription, privacy: .public)")
         }
     }
 

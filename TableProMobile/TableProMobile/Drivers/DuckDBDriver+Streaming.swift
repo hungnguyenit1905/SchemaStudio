@@ -19,7 +19,11 @@ extension DuckDBDriver {
     ) async throws {
         let raw = try await actor.query(query)
         let columns = raw.columnNames.enumerated().map { index, name in
-            ColumnInfo(name: name, typeName: index < raw.columnTypeNames.count ? raw.columnTypeNames[index] : "", ordinalPosition: index)
+            ColumnInfo(
+                name: name,
+                typeName: index < raw.columnTypeNames.count ? raw.columnTypeNames[index] : "",
+                ordinalPosition: index
+            )
         }
         continuation.yield(.columns(columns))
         var emitted = 0
@@ -29,7 +33,11 @@ extension DuckDBDriver {
                 break
             }
             let cells = legacyRow.enumerated().map { index, value -> Cell in
-                Cell.from(legacyValue: value, columnTypeName: index < columns.count ? columns[index].typeName : nil, options: options)
+                Cell.from(
+                    legacyValue: value,
+                    columnTypeName: index < columns.count ? columns[index].typeName : nil,
+                    options: options
+                )
             }
             continuation.yield(.row(Row(cells: cells)))
             emitted += 1
@@ -48,7 +56,12 @@ extension DuckDBDriver {
                     do {
                         columns = try await actor.beginStream(query: query)
                     } catch {
-                        try await Self.yieldMaterialized(query: query, options: options, actor: actor, continuation: continuation)
+                        try await Self.yieldMaterialized(
+                            query: query,
+                            options: options,
+                            actor: actor,
+                            continuation: continuation
+                        )
                         continuation.finish()
                         return
                     }
@@ -105,7 +118,9 @@ extension DuckDBActor {
 
         var stmt: duckdb_prepared_statement?
         guard duckdb_prepare(connection, streamQuery, &stmt) != DuckDBError, let preparedStmt = stmt else {
-            let message = stmt.flatMap { duckdb_prepare_error($0).map { String(cString: $0) } } ?? "Failed to prepare query"
+            let message = stmt.flatMap { duckdb_prepare_error($0).map { String(
+                cString: $0
+            ) } } ?? "Failed to prepare query"
             duckdb_destroy_prepare(&stmt)
             throw DuckDBDriverError.queryFailed(message)
         }
@@ -113,7 +128,9 @@ extension DuckDBActor {
 
         var pending: duckdb_pending_result?
         guard duckdb_pending_prepared_streaming(preparedStmt, &pending) != DuckDBError, pending != nil else {
-            let message = pending.flatMap { duckdb_pending_error($0).map { String(cString: $0) } } ?? "Failed to start streaming"
+            let message = pending.flatMap { duckdb_pending_error($0).map { String(
+                cString: $0
+            ) } } ?? "Failed to start streaming"
             duckdb_destroy_pending(&pending)
             throw DuckDBDriverError.queryFailed(message)
         }
@@ -145,14 +162,14 @@ extension DuckDBActor {
         let columns = streamColumns
 
         var vectors: [duckdb_vector?] = []
-        for index in 0..<columns.count {
+        for index in 0 ..< columns.count {
             vectors.append(duckdb_data_chunk_get_vector(chunk, idx_t(index)))
         }
 
-        for row in 0..<rowCount {
+        for row in 0 ..< rowCount {
             var cells: [Cell] = []
             cells.reserveCapacity(columns.count)
-            for index in 0..<columns.count {
+            for index in 0 ..< columns.count {
                 guard let vector = vectors[index] else {
                     cells.append(.null)
                     continue
@@ -185,7 +202,7 @@ extension DuckDBActor {
 
         let columnCount = duckdb_column_count(&probe)
         var columns: [DuckDBStreamColumn] = []
-        for index in 0..<columnCount {
+        for index in 0 ..< columnCount {
             let name = duckdb_column_name(&probe, index).map { String(cString: $0) } ?? "column_\(index)"
             let type = duckdb_column_type(&probe, index)
             columns.append(DuckDBStreamColumn(

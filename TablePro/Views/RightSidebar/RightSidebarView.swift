@@ -24,7 +24,10 @@ struct RightSidebarView: View {
     // MARK: - Inspector Mode
 
     private enum InspectorMode {
-        case editRow, rowDetails, tableInfo, empty
+        case editRow
+        case rowDetails
+        case tableInfo
+        case empty
     }
 
     private var contentMode: InspectorMode {
@@ -79,13 +82,16 @@ struct RightSidebarView: View {
             Section {
                 LabeledContent(
                     String(localized: "Data Size"),
-                    value: TableMetadata.formatSize(metadata.dataSize))
+                    value: TableMetadata.formatSize(metadata.dataSize)
+                )
                 LabeledContent(
                     String(localized: "Index Size"),
-                    value: TableMetadata.formatSize(metadata.indexSize))
+                    value: TableMetadata.formatSize(metadata.indexSize)
+                )
                 LabeledContent(
                     String(localized: "Total Size"),
-                    value: TableMetadata.formatSize(metadata.totalSize))
+                    value: TableMetadata.formatSize(metadata.totalSize)
+                )
             } header: {
                 Text("SIZE")
             }
@@ -137,7 +143,6 @@ struct RightSidebarView: View {
 
     // MARK: - Row Detail Form
 
-    @ViewBuilder
     private func rowDetailForm(
         _ rowData: [(column: String, value: String?, type: String)]
     ) -> some View {
@@ -273,11 +278,11 @@ struct RightSidebarView: View {
     ) -> some View {
         let filtered =
             searchText.isEmpty
-            ? editState.fields
-            : editState.fields.filter {
-                $0.columnName.localizedCaseInsensitiveContains(searchText)
-                    || ($0.originalValue?.localizedCaseInsensitiveContains(searchText) ?? false)
-            }
+                ? editState.fields
+                : editState.fields.filter {
+                    $0.columnName.localizedCaseInsensitiveContains(searchText)
+                        || ($0.originalValue?.localizedCaseInsensitiveContains(searchText) ?? false)
+                }
 
         return VStack(spacing: 0) {
             NativeSearchField(
@@ -289,7 +294,7 @@ struct RightSidebarView: View {
 
             List {
                 Section {
-                    if filtered.isEmpty && !searchText.isEmpty {
+                    if filtered.isEmpty, !searchText.isEmpty {
                         Text("No matching fields")
                             .font(.subheadline)
                             .foregroundStyle(.tertiary)

@@ -30,7 +30,7 @@ struct ScopedDriverRoutingTests {
     }
 
     @Test("A pin-capable engine keeps the user's SQL on the session driver")
-    func pinCapableEngineUsesTheSessionDriver() throws {
+    func pinCapableEngineUsesTheSessionDriver() {
         let connection = Self.makeSession(type: .mysql, browseDatabase: "inventory")
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
 
@@ -40,7 +40,7 @@ struct ScopedDriverRoutingTests {
     }
 
     @Test("A reconnect-required engine stays on the session driver for its own database")
-    func reconnectRequiredEngineStaysOnItsOwnDatabase() throws {
+    func reconnectRequiredEngineStaysOnItsOwnDatabase() {
         let connection = Self.makeSession(type: .postgresql, browseDatabase: "orders")
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
 
@@ -62,7 +62,7 @@ struct ScopedDriverRoutingTests {
     }
 
     @Test("A reconnect-required engine runs a foreign database on a pooled connection")
-    func reconnectRequiredEngineOnAForeignDatabasePools() throws {
+    func reconnectRequiredEngineOnAForeignDatabasePools() {
         let connection = Self.makeSession(type: .postgresql, browseDatabase: "inventory")
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
 
@@ -72,7 +72,7 @@ struct ScopedDriverRoutingTests {
     }
 
     @Test("An engine that can neither pin nor pool reports the tab's database instead of guessing")
-    func engineThatCanNeitherPinNorPoolIsUnavailable() throws {
+    func engineThatCanNeitherPinNorPoolIsUnavailable() {
         let connection = Self.makeSession(type: .pglite, browseDatabase: "inventory")
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
 
@@ -89,7 +89,7 @@ struct ScopedDriverRoutingTests {
     }
 
     @Test("A single-database engine never leaves the session driver")
-    func singleDatabaseEnginesNeverLeaveTheSessionDriver() throws {
+    func singleDatabaseEnginesNeverLeaveTheSessionDriver() {
         for type in [DatabaseType.sqlite, DatabaseType.duckdb] {
             let connection = Self.makeSession(type: type, browseDatabase: "main")
             defer { DatabaseManager.shared.removeSession(for: connection.id) }
@@ -108,7 +108,7 @@ struct ScopedDriverRoutingTests {
     }
 
     @Test("A metadata read on a poolable engine leaves the shared driver where it is")
-    func metadataReadsPoolWhenTheEngineCan() throws {
+    func metadataReadsPoolWhenTheEngineCan() {
         let connection = Self.makeSession(type: .mysql, browseDatabase: "inventory")
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
 
@@ -118,7 +118,7 @@ struct ScopedDriverRoutingTests {
     }
 
     @Test("A metadata read falls back to the session driver when the engine cannot pool")
-    func metadataReadsFallBackToTheSessionDriver() throws {
+    func metadataReadsFallBackToTheSessionDriver() {
         let connection = Self.makeSession(type: .pglite, browseDatabase: "inventory")
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
 
@@ -128,7 +128,7 @@ struct ScopedDriverRoutingTests {
     }
 
     @Test("An engine that selects its database from a connection field is never pooled")
-    func connectionFieldScopedEngineIsNeverPooled() throws {
+    func connectionFieldScopedEngineIsNeverPooled() {
         let connection = Self.makeSession(type: .redis, browseDatabase: "0")
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
 
@@ -139,7 +139,7 @@ struct ScopedDriverRoutingTests {
     }
 
     @Test("Without a session every route is unavailable")
-    func noSessionIsAlwaysUnavailable() throws {
+    func noSessionIsAlwaysUnavailable() {
         let orphan = DatabaseScope(connectionId: UUID(), database: "orders", schema: nil)
 
         guard case .unavailable = DatabaseManager.shared.executionRoute(for: orphan) else {

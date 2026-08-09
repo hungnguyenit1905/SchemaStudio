@@ -179,7 +179,11 @@ struct DataGripImporter: ForeignAppImporter {
                 options: [.skipsHiddenFiles]
             ) {
                 for project in projects {
-                    appendLocation(directory: project.appendingPathComponent(".idea"), configDir: configDir, into: &result)
+                    appendLocation(
+                        directory: project.appendingPathComponent(".idea"),
+                        configDir: configDir,
+                        into: &result
+                    )
                 }
             }
 

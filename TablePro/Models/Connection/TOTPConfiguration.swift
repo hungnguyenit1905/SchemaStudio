@@ -7,7 +7,7 @@ import Foundation
 
 /// TOTP (Time-based One-Time Password) mode for SSH connections
 internal enum TOTPMode: String, CaseIterable, Identifiable, Codable {
-    case none = "none"
+    case none
     case autoGenerate = "auto_generate"
     case promptAtConnect = "prompt_at_connect"
 

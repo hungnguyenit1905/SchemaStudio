@@ -15,8 +15,8 @@ internal struct ThemeListRowView: View {
                 Text(theme.isBuiltIn
                     ? String(localized: "Built-in")
                     : theme.isRegistry
-                        ? String(localized: "Registry")
-                        : String(localized: "Custom"))
+                    ? String(localized: "Registry")
+                    : String(localized: "Custom"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

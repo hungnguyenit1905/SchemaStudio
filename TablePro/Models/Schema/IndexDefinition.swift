@@ -24,10 +24,10 @@ struct EditableIndexDefinition: Hashable, Codable, Identifiable {
         case btree = "BTREE"
         case hash = "HASH"
         case fulltext = "FULLTEXT"
-        case spatial = "SPATIAL"  // MySQL only
-        case gin = "GIN"          // PostgreSQL only
-        case gist = "GIST"        // PostgreSQL only
-        case brin = "BRIN"        // PostgreSQL only
+        case spatial = "SPATIAL" // MySQL only
+        case gin = "GIN" // PostgreSQL only
+        case gist = "GIST" // PostgreSQL only
+        case brin = "BRIN" // PostgreSQL only
     }
 
     /// Create a placeholder index for adding new indexes

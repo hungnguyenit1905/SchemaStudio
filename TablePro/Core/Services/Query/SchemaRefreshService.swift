@@ -77,8 +77,7 @@ final class SchemaRefreshService {
     func syncAutocompleteProvider(connectionId: UUID) async {
         guard case .loaded = schemaService.state(for: connectionId),
               let provider = providerRegistry.provider(for: connectionId),
-              let browseDatabase = databaseManager?.browseScope(for: connectionId)?.database
-        else {
+              let browseDatabase = databaseManager?.browseScope(for: connectionId)?.database else {
             return
         }
         let tables = schemaService.allLoadedTables(for: connectionId)

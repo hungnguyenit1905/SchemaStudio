@@ -6,14 +6,14 @@ extension DuckDBDriver {
     func fetchTables(schema: String?) async throws -> [TableInfo] {
         let schemaName = resolveSchema(schema)
         let query = """
-            SELECT table_name, table_type
-            FROM information_schema.tables
-            WHERE table_schema = '\(escapeLiteral(schemaName))'
-            ORDER BY table_name
-            """
+        SELECT table_name, table_type
+        FROM information_schema.tables
+        WHERE table_schema = '\(escapeLiteral(schemaName))'
+        ORDER BY table_name
+        """
         let result = try await actor.query(query)
         return result.rows.compactMap { row in
-            guard row.count > 0, let name = row[0] else { return nil }
+            guard !row.isEmpty, let name = row[0] else { return nil }
             let typeString = (row.count > 1 ? row[1] : nil) ?? "BASE TABLE"
             let kind: TableInfo.TableKind = typeString.uppercased().contains("VIEW") ? .view : .table
             return TableInfo(name: name, type: kind)
@@ -23,12 +23,12 @@ extension DuckDBDriver {
     func fetchColumns(table: String, schema: String?) async throws -> [ColumnInfo] {
         let schemaName = resolveSchema(schema)
         let query = """
-            SELECT column_name, data_type, is_nullable, column_default, ordinal_position
-            FROM information_schema.columns
-            WHERE table_schema = '\(escapeLiteral(schemaName))'
-              AND table_name = '\(escapeLiteral(table))'
-            ORDER BY ordinal_position
-            """
+        SELECT column_name, data_type, is_nullable, column_default, ordinal_position
+        FROM information_schema.columns
+        WHERE table_schema = '\(escapeLiteral(schemaName))'
+          AND table_name = '\(escapeLiteral(table))'
+        ORDER BY ordinal_position
+        """
         let result = try await actor.query(query)
         let primaryKeys = try await fetchPrimaryKeyColumns(table: table, schema: schemaName)
 
@@ -48,14 +48,14 @@ extension DuckDBDriver {
     func fetchIndexes(table: String, schema: String?) async throws -> [IndexInfo] {
         let schemaName = resolveSchema(schema)
         let query = """
-            SELECT index_name, is_unique, sql
-            FROM duckdb_indexes()
-            WHERE schema_name = '\(escapeLiteral(schemaName))'
-              AND table_name = '\(escapeLiteral(table))'
-            """
+        SELECT index_name, is_unique, sql
+        FROM duckdb_indexes()
+        WHERE schema_name = '\(escapeLiteral(schemaName))'
+          AND table_name = '\(escapeLiteral(table))'
+        """
         let result = try await actor.query(query)
         return result.rows.compactMap { row in
-            guard row.count > 0, let name = row[0] else { return nil }
+            guard !row.isEmpty, let name = row[0] else { return nil }
             let sql = row.count > 2 ? row[2] : nil
             let isUnique = (row.count > 1 ? row[1] : nil) == "true"
             let isPrimary = name.lowercased().contains("primary")
@@ -73,24 +73,24 @@ extension DuckDBDriver {
     func fetchForeignKeys(table: String, schema: String?) async throws -> [ForeignKeyInfo] {
         let schemaName = resolveSchema(schema)
         let query = """
-            SELECT
-                rc.constraint_name,
-                kcu.column_name,
-                kcu2.table_name AS referenced_table,
-                kcu2.column_name AS referenced_column,
-                rc.delete_rule,
-                rc.update_rule
-            FROM information_schema.referential_constraints rc
-            JOIN information_schema.key_column_usage kcu
-                ON rc.constraint_name = kcu.constraint_name
-                AND rc.constraint_schema = kcu.constraint_schema
-            JOIN information_schema.key_column_usage kcu2
-                ON rc.unique_constraint_name = kcu2.constraint_name
-                AND rc.unique_constraint_schema = kcu2.constraint_schema
-                AND kcu.ordinal_position = kcu2.ordinal_position
-            WHERE kcu.table_schema = '\(escapeLiteral(schemaName))'
-              AND kcu.table_name = '\(escapeLiteral(table))'
-            """
+        SELECT
+            rc.constraint_name,
+            kcu.column_name,
+            kcu2.table_name AS referenced_table,
+            kcu2.column_name AS referenced_column,
+            rc.delete_rule,
+            rc.update_rule
+        FROM information_schema.referential_constraints rc
+        JOIN information_schema.key_column_usage kcu
+            ON rc.constraint_name = kcu.constraint_name
+            AND rc.constraint_schema = kcu.constraint_schema
+        JOIN information_schema.key_column_usage kcu2
+            ON rc.unique_constraint_name = kcu2.constraint_name
+            AND rc.unique_constraint_schema = kcu2.constraint_schema
+            AND kcu.ordinal_position = kcu2.ordinal_position
+        WHERE kcu.table_schema = '\(escapeLiteral(schemaName))'
+          AND kcu.table_name = '\(escapeLiteral(table))'
+        """
         do {
             let result = try await actor.query(query)
             return result.rows.compactMap { row in
@@ -136,15 +136,15 @@ extension DuckDBDriver {
 
     private func fetchPrimaryKeyColumns(table: String, schema: String) async throws -> Set<String> {
         let query = """
-            SELECT kcu.column_name
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.key_column_usage kcu
-              ON tc.constraint_name = kcu.constraint_name
-              AND tc.table_schema = kcu.table_schema
-            WHERE tc.constraint_type = 'PRIMARY KEY'
-              AND tc.table_schema = '\(escapeLiteral(schema))'
-              AND tc.table_name = '\(escapeLiteral(table))'
-            """
+        SELECT kcu.column_name
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.key_column_usage kcu
+          ON tc.constraint_name = kcu.constraint_name
+          AND tc.table_schema = kcu.table_schema
+        WHERE tc.constraint_type = 'PRIMARY KEY'
+          AND tc.table_schema = '\(escapeLiteral(schema))'
+          AND tc.table_name = '\(escapeLiteral(table))'
+        """
         let result = try await actor.query(query)
         return Set(result.rows.compactMap { $0.first ?? nil })
     }

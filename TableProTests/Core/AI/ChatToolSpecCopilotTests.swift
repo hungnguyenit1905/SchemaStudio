@@ -4,14 +4,14 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("ChatToolSpec.asCopilotToolInformation")
 struct ChatToolSpecCopilotTests {
     @Test("schema missing required gets empty required array")
-    func addsRequiredWhenMissing() throws {
+    func addsRequiredWhenMissing() {
         let spec = ChatToolSpec(
             name: "list_tables",
             description: "List tables",
@@ -30,7 +30,7 @@ struct ChatToolSpecCopilotTests {
     }
 
     @Test("schema with existing required is preserved")
-    func preservesExistingRequired() throws {
+    func preservesExistingRequired() {
         let spec = ChatToolSpec(
             name: "describe_table",
             description: "Describe table",
@@ -50,7 +50,7 @@ struct ChatToolSpecCopilotTests {
     }
 
     @Test("non-object schema is passed through unchanged")
-    func nonObjectSchemaUnchanged() throws {
+    func nonObjectSchemaUnchanged() {
         let spec = ChatToolSpec(
             name: "noop",
             description: "no schema",
@@ -61,7 +61,7 @@ struct ChatToolSpecCopilotTests {
     }
 
     @Test("name and description carry through")
-    func passesNameAndDescription() throws {
+    func passesNameAndDescription() {
         let spec = ChatToolSpec(
             name: "execute_query",
             description: "Execute a SQL query",

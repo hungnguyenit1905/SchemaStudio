@@ -8,7 +8,7 @@ import XCTest
 @testable import SchemaStudio
 
 final class ResizableFieldMetricsTests: XCTestCase {
-    private let range: ClosedRange<Double> = 80...600
+    private let range: ClosedRange<Double> = 80 ... 600
 
     func testResolveAddsDeltaWithinRange() {
         XCTAssertEqual(ResizableFieldMetrics.resolve(base: 120, delta: 40, range: range), 160)

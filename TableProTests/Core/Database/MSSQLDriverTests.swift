@@ -63,6 +63,7 @@ private final class MockMSSQLPluginDriver: PluginDatabaseDriver, @unchecked Send
     func fetchTableMetadata(table: String, schema: String?) async throws -> PluginTableMetadata {
         PluginTableMetadata(tableName: table)
     }
+
     func fetchDatabases() async throws -> [String] { [] }
     func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
         PluginDatabaseMetadata(name: database)
@@ -87,7 +88,11 @@ struct MSSQLDriverTests {
 
     private func makeAdapterWithMock(mssqlSchema: String? = nil) -> (PluginDriverAdapter, MockMSSQLPluginDriver) {
         let conn = makeConnection(mssqlSchema: mssqlSchema)
-        let effectiveSchema: String? = if let s = mssqlSchema, !s.isEmpty { s } else { "dbo" }
+        let effectiveSchema: String? = if let s = mssqlSchema, !s.isEmpty {
+            s
+        } else {
+            "dbo"
+        }
         let mock = MockMSSQLPluginDriver(initialSchema: effectiveSchema)
         let adapter = PluginDriverAdapter(connection: conn, pluginDriver: mock)
         return (adapter, mock)

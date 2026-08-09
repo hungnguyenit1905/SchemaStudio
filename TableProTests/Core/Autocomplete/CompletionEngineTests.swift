@@ -6,9 +6,9 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Completion Engine", .serialized)
 struct CompletionEngineTests {
@@ -47,7 +47,7 @@ struct CompletionEngineTests {
         let text = "SELECT"
         let result = await engine.getCompletions(text: text, cursorPosition: text.count)
         #expect(result != nil)
-        if let result = result {
+        if let result {
             #expect(!result.items.isEmpty)
         }
     }
@@ -57,7 +57,7 @@ struct CompletionEngineTests {
         let text = " "
         let result = await engine.getCompletions(text: text, cursorPosition: 0)
         #expect(result != nil)
-        if let result = result {
+        if let result {
             #expect(!result.items.isEmpty)
             let hasStatementKeywords = result.items.contains { item in
                 ["SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "ALTER", "DROP"].contains(item.label)
@@ -71,7 +71,7 @@ struct CompletionEngineTests {
         let text = "SEL"
         let result = await engine.getCompletions(text: text, cursorPosition: text.count)
         #expect(result != nil)
-        if let result = result {
+        if let result {
             #expect(result.replacementRange.location >= 0)
             #expect(result.replacementRange.length >= 0)
         }
@@ -82,7 +82,7 @@ struct CompletionEngineTests {
         let text = "SELECT * FROM users WHERE"
         let result = await engine.getCompletions(text: text, cursorPosition: text.count)
         #expect(result != nil)
-        if let result = result {
+        if let result {
             let maxRange = result.replacementRange.location + result.replacementRange.length
             #expect(maxRange <= (text as NSString).length)
         }
@@ -100,7 +100,7 @@ struct CompletionEngineTests {
         let text = "SEL"
         let result = await engine.getCompletions(text: text, cursorPosition: text.count)
         #expect(result != nil)
-        if let result = result {
+        if let result {
             let hasSelect = result.items.contains { $0.label == "SELECT" }
             #expect(hasSelect)
         }
@@ -111,7 +111,7 @@ struct CompletionEngineTests {
         let text = "S"
         let result = await engine.getCompletions(text: text, cursorPosition: 1)
         #expect(result != nil)
-        if let result = result {
+        if let result {
             #expect(!result.items.isEmpty)
         }
     }
@@ -121,7 +121,7 @@ struct CompletionEngineTests {
         let text = "SELECT * FROM "
         let result = await engine.getCompletions(text: text, cursorPosition: text.count)
         #expect(result != nil)
-        if let result = result {
+        if let result {
             #expect(!result.items.isEmpty)
         }
     }
@@ -131,7 +131,7 @@ struct CompletionEngineTests {
         let text = "SELECT * FROM users WHERE "
         let result = await engine.getCompletions(text: text, cursorPosition: text.count)
         #expect(result != nil)
-        if let result = result {
+        if let result {
             #expect(!result.items.isEmpty)
         }
     }
@@ -149,7 +149,7 @@ struct CompletionEngineTests {
         let text = "SEL"
         let result = await engine.getCompletions(text: text, cursorPosition: text.count)
         #expect(result != nil)
-        if let result = result {
+        if let result {
             #expect(result.items.count <= 40)
         }
     }

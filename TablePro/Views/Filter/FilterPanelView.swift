@@ -45,14 +45,14 @@ struct FilterPanelView: View {
             closePanelAndFocusGrid()
         }
         .onAppear {
-            if filterState.filters.isEmpty && !columns.isEmpty {
+            if filterState.filters.isEmpty, !columns.isEmpty {
                 coordinator.addFilter(columns: columns, primaryKeyColumn: primaryKeyColumn)
             }
             focusedFilterId = filterState.filters.last?.id
             refreshRawSQLCompletionProvider()
         }
         .onChange(of: columns) { _, newColumns in
-            if filterState.filters.isEmpty && !newColumns.isEmpty && filterState.isVisible {
+            if filterState.filters.isEmpty, !newColumns.isEmpty, filterState.isVisible {
                 coordinator.addFilter(columns: newColumns, primaryKeyColumn: primaryKeyColumn)
                 focusedFilterId = filterState.filters.last?.id
             }
@@ -164,7 +164,11 @@ struct FilterPanelView: View {
                                 Spacer()
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundStyle(.yellow)
-                                    .help(String(localized: "Some columns in this preset don't exist in the current table"))
+                                    .help(
+                                        String(
+                                            localized: "Some columns in this preset don't exist in the current table"
+                                        )
+                                    )
                             }
                         }
                     }
@@ -268,8 +272,7 @@ struct FilterPanelView: View {
         )
     }
 
-    @ViewBuilder
-    private var filterList: some View {
+    @ViewBuilder private var filterList: some View {
         if filterRowsHeight > maxFilterListHeight {
             ScrollView {
                 measuredFilterRows

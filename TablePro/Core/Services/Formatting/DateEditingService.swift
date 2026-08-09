@@ -99,7 +99,7 @@ enum DateEditingService {
         let timePart = timeString(from: components) + (layout.fractionalSeconds ?? "")
 
         var result: String
-        if layout.hasDate && layout.hasTime {
+        if layout.hasDate, layout.hasTime {
             result = datePart + layout.dateTimeSeparator + timePart
         } else if layout.hasDate {
             result = datePart

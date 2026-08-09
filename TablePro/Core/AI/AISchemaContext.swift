@@ -34,7 +34,7 @@ struct AISchemaContext {
         )
         parts.append(
             "The user is connected to a \(databaseType.rawValue) database"
-            + " named \"\(databaseName)\"."
+                + " named \"\(databaseName)\"."
         )
 
         if settings.includeSchema {
@@ -79,11 +79,11 @@ struct AISchemaContext {
         case .sql:
             parts.append(
                 "\nProvide SQL queries appropriate for"
-                + " \(databaseType.rawValue) syntax when applicable."
+                    + " \(databaseType.rawValue) syntax when applicable."
             )
             parts.append(
                 "When writing SQL, use the correct identifier quoting"
-                + " for \(databaseType.rawValue)."
+                    + " for \(databaseType.rawValue)."
             )
         default:
             parts.append(
@@ -135,7 +135,7 @@ struct AISchemaContext {
                 for fk in fks {
                     lines.append(
                         "  FK: \(fk.column) -> "
-                        + "\(fk.referencedTable).\(fk.referencedColumn)"
+                            + "\(fk.referencedTable).\(fk.referencedColumn)"
                     )
                 }
             }

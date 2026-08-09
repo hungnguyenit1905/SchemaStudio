@@ -40,14 +40,6 @@ public struct MCPPrincipal: Sendable, Equatable, Hashable {
         self.metadata = metadata
     }
 
-    public static func == (lhs: MCPPrincipal, rhs: MCPPrincipal) -> Bool {
-        lhs.tokenFingerprint == rhs.tokenFingerprint
-            && lhs.tokenId == rhs.tokenId
-            && lhs.scopes == rhs.scopes
-            && lhs.connectionAccess == rhs.connectionAccess
-            && lhs.metadata == rhs.metadata
-    }
-
     public func hash(into hasher: inout Hasher) {
         hasher.combine(tokenFingerprint)
         hasher.combine(tokenId)

@@ -390,8 +390,7 @@ internal final class BigQueryPluginDriver: PluginDatabaseDriver, @unchecked Send
         let result = try await conn.executeQuery(sql, defaultDataset: dataset)
 
         if let row = result.queryResponse.rows?.first, let cell = row.f?.first,
-           case .string(let ddl) = cell.v
-        {
+           case .string(let ddl) = cell.v {
             return ddl
         }
 
@@ -410,8 +409,7 @@ internal final class BigQueryPluginDriver: PluginDatabaseDriver, @unchecked Send
         let viewSQL = "SELECT view_definition FROM `\(conn.projectId).\(dataset).INFORMATION_SCHEMA.VIEWS` WHERE table_name = '\(escapedView)'"
         let viewResult = try? await conn.executeQuery(viewSQL, defaultDataset: dataset)
         if let row = viewResult?.queryResponse.rows?.first, let cell = row.f?.first,
-           case .string(let definition) = cell.v
-        {
+           case .string(let definition) = cell.v {
             return definition
         }
 
@@ -419,8 +417,7 @@ internal final class BigQueryPluginDriver: PluginDatabaseDriver, @unchecked Send
         let ddlSQL = "SELECT ddl FROM `\(conn.projectId).\(dataset).INFORMATION_SCHEMA.TABLES` WHERE table_name = '\(escapedView)'"
         let ddlResult = try await conn.executeQuery(ddlSQL, defaultDataset: dataset)
         if let row = ddlResult.queryResponse.rows?.first, let cell = row.f?.first,
-           case .string(let ddl) = cell.v
-        {
+           case .string(let ddl) = cell.v {
             return ddl
         }
 
@@ -451,11 +448,11 @@ internal final class BigQueryPluginDriver: PluginDatabaseDriver, @unchecked Send
             parts.append("Labels: \(labelStr)")
         }
         if let exp = tableResource.expirationTime, let ms = Double(exp) {
-            let date = Date(timeIntervalSince1970: ms / 1000)
+            let date = Date(timeIntervalSince1970: ms / 1_000)
             parts.append("Expires: \(Self.metadataDateFormatter.string(from: date))")
         }
         if let created = tableResource.creationTime, let ms = Double(created) {
-            let date = Date(timeIntervalSince1970: ms / 1000)
+            let date = Date(timeIntervalSince1970: ms / 1_000)
             parts.append("Created: \(Self.metadataDateFormatter.string(from: date))")
         }
 
@@ -606,8 +603,7 @@ internal final class BigQueryPluginDriver: PluginDatabaseDriver, @unchecked Send
                 return cached
             }
             if let resource = _tableSchemaCache[cacheKey]?.resource,
-               let fields = resource.schema?.fields
-            {
+               let fields = resource.schema?.fields {
                 return BigQueryTypeMapper.columnTypeNames(from: BQTableSchema(fields: fields))
             }
             return columns.map { _ in "STRING" }
@@ -793,10 +789,10 @@ internal final class BigQueryPluginDriver: PluginDatabaseDriver, @unchecked Send
 
         do {
             let query = """
-                SELECT table_name, column_name, data_type, is_nullable
-                FROM `\(conn.projectId).\(dataset).INFORMATION_SCHEMA.COLUMNS`
-                ORDER BY table_name, ordinal_position
-                """
+            SELECT table_name, column_name, data_type, is_nullable
+            FROM `\(conn.projectId).\(dataset).INFORMATION_SCHEMA.COLUMNS`
+            ORDER BY table_name, ordinal_position
+            """
 
             let result = try await conn.executeQuery(query, defaultDataset: dataset)
             let response = result.queryResponse
@@ -935,8 +931,8 @@ internal final class BigQueryPluginDriver: PluginDatabaseDriver, @unchecked Send
         let units = ["B", "KB", "MB", "GB", "TB"]
         var value = Double(bytes)
         var unitIndex = 0
-        while value >= 1024 && unitIndex < units.count - 1 {
-            value /= 1024
+        while value >= 1_024, unitIndex < units.count - 1 {
+            value /= 1_024
             unitIndex += 1
         }
         if unitIndex == 0 { return "\(bytes) B" }
@@ -946,7 +942,7 @@ internal final class BigQueryPluginDriver: PluginDatabaseDriver, @unchecked Send
     private func estimateCost(_ bytesBilledStr: String) -> String {
         guard let bytes = Int64(bytesBilledStr), bytes > 0 else { return "~$0.00" }
         // BigQuery on-demand pricing: $6.25 per TB
-        let tb = Double(bytes) / (1024 * 1024 * 1024 * 1024)
+        let tb = Double(bytes) / (1_024 * 1_024 * 1_024 * 1_024)
         let cost = tb * 6.25
         if cost < 0.01 { return "~$0.01" }
         return String(format: "~$%.4f", cost)

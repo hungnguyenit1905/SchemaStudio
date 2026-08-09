@@ -60,6 +60,7 @@ final class GroupStorage {
             defaults.set(data, forKey: groupsKey)
             cachedGroups = nil
             syncTracker.markDirty(.group, ids: groups.map { $0.id.uuidString })
+            NotificationCenter.default.post(name: .connectionsDidChange, object: nil)
         } catch {
             Self.logger.error("Failed to save groups: \(error)")
         }
@@ -101,6 +102,7 @@ final class GroupStorage {
 
         for deletedId in allIdsToDelete {
             syncTracker.markDeleted(.group, id: deletedId.uuidString)
+            ConnectionTreeState.shared.forget(folderId: deletedId)
         }
 
         let storage = connectionStorageProvider()

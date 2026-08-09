@@ -345,7 +345,9 @@ enum LicenseError: LocalizedError {
         case .licenseSuspended:
             return String(localized: "This license has been suspended. Contact support for help.")
         case .networkError:
-            return String(localized: "Could not reach the license server. Check your internet connection and try again.")
+            return String(
+                localized: "Could not reach the license server. Check your internet connection and try again."
+            )
         case .serverError(let code, _):
             if code == 422 {
                 return String(localized: "Invalid license key format. Check for typos and try again.")

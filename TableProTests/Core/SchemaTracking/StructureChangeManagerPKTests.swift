@@ -7,42 +7,83 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Structure Change Manager Primary Key Detection")
 struct StructureChangeManagerPKTests {
-
     // MARK: - Helpers
 
-    @MainActor private func makeManager() -> StructureChangeManager {
+    @MainActor
+    private func makeManager() -> StructureChangeManager {
         StructureChangeManager()
     }
 
     private func sampleColumns() -> [ColumnInfo] {
         [
-            ColumnInfo(name: "id", dataType: "INT", isNullable: false, isPrimaryKey: true,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil),
-            ColumnInfo(name: "name", dataType: "VARCHAR(255)", isNullable: true, isPrimaryKey: false,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil)
+            ColumnInfo(
+                name: "id",
+                dataType: "INT",
+                isNullable: false,
+                isPrimaryKey: true,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            ),
+            ColumnInfo(
+                name: "name",
+                dataType: "VARCHAR(255)",
+                isNullable: true,
+                isPrimaryKey: false,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            )
         ]
     }
 
     private func sampleColumnsNoPK() -> [ColumnInfo] {
         [
-            ColumnInfo(name: "id", dataType: "INTEGER", isNullable: false, isPrimaryKey: false,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil),
-            ColumnInfo(name: "name", dataType: "VARCHAR(255)", isNullable: true, isPrimaryKey: false,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil)
+            ColumnInfo(
+                name: "id",
+                dataType: "INTEGER",
+                isNullable: false,
+                isPrimaryKey: false,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            ),
+            ColumnInfo(
+                name: "name",
+                dataType: "VARCHAR(255)",
+                isNullable: true,
+                isPrimaryKey: false,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            )
         ]
     }
 
     private func sampleIndexes(withPrimary: Bool = true) -> [IndexInfo] {
         var indexes: [IndexInfo] = []
         if withPrimary {
-            indexes.append(IndexInfo(name: "PRIMARY", columns: ["id"], isUnique: true,
-                                     isPrimary: true, type: "BTREE"))
+            indexes.append(IndexInfo(
+                name: "PRIMARY",
+                columns: ["id"],
+                isUnique: true,
+                isPrimary: true,
+                type: "BTREE"
+            ))
         }
         return indexes
     }
@@ -50,7 +91,8 @@ struct StructureChangeManagerPKTests {
     // MARK: - MySQL PK Detection (via ColumnInfo.isPrimaryKey)
 
     @Test("MySQL columns carry isPrimaryKey correctly")
-    @MainActor func mysqlPKFromColumns() {
+    @MainActor
+    func mysqlPKFromColumns() {
         let manager = makeManager()
         manager.loadSchema(
             tableName: "users",
@@ -72,7 +114,8 @@ struct StructureChangeManagerPKTests {
     // MARK: - PostgreSQL PK Detection
 
     @Test("PostgreSQL PK detected from primaryKey parameter even when isPrimaryKey is false")
-    @MainActor func postgresqlPKFromParameter() {
+    @MainActor
+    func postgresqlPKFromParameter() {
         let manager = makeManager()
 
         // PostgreSQL columns come with isPrimaryKey: false (the bug in S-03)
@@ -96,16 +139,44 @@ struct StructureChangeManagerPKTests {
     }
 
     @Test("PostgreSQL composite PK detected from primaryKey parameter")
-    @MainActor func postgresqlCompositePK() {
+    @MainActor
+    func postgresqlCompositePK() {
         let manager = makeManager()
 
         let columns: [ColumnInfo] = [
-            ColumnInfo(name: "tenant_id", dataType: "INTEGER", isNullable: false, isPrimaryKey: false,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil),
-            ColumnInfo(name: "user_id", dataType: "INTEGER", isNullable: false, isPrimaryKey: false,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil),
-            ColumnInfo(name: "role", dataType: "VARCHAR(50)", isNullable: true, isPrimaryKey: false,
-                       defaultValue: nil, extra: nil, charset: nil, collation: nil, comment: nil)
+            ColumnInfo(
+                name: "tenant_id",
+                dataType: "INTEGER",
+                isNullable: false,
+                isPrimaryKey: false,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            ),
+            ColumnInfo(
+                name: "user_id",
+                dataType: "INTEGER",
+                isNullable: false,
+                isPrimaryKey: false,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            ),
+            ColumnInfo(
+                name: "role",
+                dataType: "VARCHAR(50)",
+                isNullable: true,
+                isPrimaryKey: false,
+                defaultValue: nil,
+                extra: nil,
+                charset: nil,
+                collation: nil,
+                comment: nil
+            )
         ]
 
         manager.loadSchema(
@@ -129,7 +200,8 @@ struct StructureChangeManagerPKTests {
     }
 
     @Test("Empty primaryKey parameter means no PK columns")
-    @MainActor func emptyPrimaryKey() {
+    @MainActor
+    func emptyPrimaryKey() {
         let manager = makeManager()
 
         manager.loadSchema(

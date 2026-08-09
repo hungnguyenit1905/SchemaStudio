@@ -12,7 +12,7 @@ public enum OracleSSLClassifier {
         if lower.contains("ora-28860") {
             return .cipherMismatch(serverMessage: message)
         }
-        if lower.contains("certificate") && (lower.contains("verify") || lower.contains("untrusted")) {
+        if lower.contains("certificate"), lower.contains("verify") || lower.contains("untrusted") {
             return .untrustedCertificate(serverMessage: message)
         }
         return nil

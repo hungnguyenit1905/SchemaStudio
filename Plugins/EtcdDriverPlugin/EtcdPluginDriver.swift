@@ -10,11 +10,11 @@ import Foundation
 import OSLog
 import TableProPluginKit
 
-private extension Array where Element == String? {
+private extension [String?] {
     var asCells: [PluginCellValue] { map(PluginCellValue.fromOptional) }
 }
 
-private extension Array where Element == String {
+private extension [String] {
     var asCells: [PluginCellValue] { map(PluginCellValue.text) }
 }
 
@@ -31,7 +31,6 @@ final class EtcdPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     private static let logger = Logger(subsystem: "com.TablePro", category: "EtcdPluginDriver")
     private static let maxKeys = PluginRowLimits.emergencyMax
-
 
     private static let columns = ["Key", "Value", "Version", "ModRevision", "CreateRevision", "Lease"]
     private static let columnTypeNames = ["String", "String", "Int64", "Int64", "Int64", "String"]
@@ -305,7 +304,7 @@ final class EtcdPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
             if let slashIndex = relative[searchStart...].firstIndex(of: "/") {
                 // Include everything up to and including the slash (and leading / if present)
-                let segment = String(relative[relative.startIndex...slashIndex])
+                let segment = String(relative[relative.startIndex ... slashIndex])
                 prefixCounts[segment, default: 0] += 1
             } else {
                 bareKeyCount += 1
@@ -489,7 +488,13 @@ final class EtcdPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             return try await dispatchDel(key: key, prefix: prefix, client: client, startTime: startTime)
 
         case .watch(let key, let prefix, let timeout):
-            return try await dispatchWatch(key: key, prefix: prefix, timeout: timeout, client: client, startTime: startTime)
+            return try await dispatchWatch(
+                key: key,
+                prefix: prefix,
+                timeout: timeout,
+                client: client,
+                startTime: startTime
+            )
 
         case .leaseGrant(let ttl):
             return try await dispatchLeaseGrant(ttl: ttl, client: client, startTime: startTime)
@@ -543,7 +548,7 @@ final class EtcdPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         case .userList:
             let users = try await client.userList()
-            let rows = users.map { ([$0 as String?]).asCells }
+            let rows = users.map { [$0 as String?].asCells }
             return PluginQueryResult(
                 columns: ["User"],
                 columnTypeNames: ["String"],
@@ -562,7 +567,7 @@ final class EtcdPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         case .roleList:
             let roles = try await client.roleList()
-            let rows = roles.map { ([$0 as String?]).asCells }
+            let rows = roles.map { [$0 as String?].asCells }
             return PluginQueryResult(
                 columns: ["Role"],
                 columnTypeNames: ["String"],
@@ -598,7 +603,7 @@ final class EtcdPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         if prefix {
             req.rangeEnd = EtcdHttpClient.base64Encode(EtcdHttpClient.prefixRangeEnd(for: key))
         }
-        if let limit = limit {
+        if let limit {
             req.limit = limit
         }
         if keysOnly {
@@ -638,7 +643,7 @@ final class EtcdPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             value: EtcdHttpClient.base64Encode(value),
             prevKv: true
         )
-        if let leaseId = leaseId {
+        if let leaseId {
             req.lease = String(leaseId)
         }
 
@@ -798,7 +803,10 @@ final class EtcdPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let response = try await client.leaseTimeToLive(leaseId: leaseId, keys: false)
         let ttl = response.TTL ?? "unknown"
         let hexId = String(leaseId, radix: 16)
-        return singleMessageResult("Lease \(hexId) current TTL: \(ttl)s (keep-alive requires streaming; use etcdctl CLI for persistent keep-alive)", startTime: startTime)
+        return singleMessageResult(
+            "Lease \(hexId) current TTL: \(ttl)s (keep-alive requires streaming; use etcdctl CLI for persistent keep-alive)",
+            startTime: startTime
+        )
     }
 
     // MARK: - Cluster Dispatch
@@ -878,7 +886,12 @@ final class EtcdPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         }
 
         if let parsed = EtcdQueryBuilder.parseCountQuery(query) {
-            let count = try await countKeys(prefix: parsed.prefix, filterType: parsed.filterType, filterValue: parsed.filterValue, client: client)
+            let count = try await countKeys(
+                prefix: parsed.prefix,
+                filterType: parsed.filterType,
+                filterValue: parsed.filterValue,
+                client: client
+            )
             return PluginQueryResult(
                 columns: ["Count"],
                 columnTypeNames: ["Int64"],
@@ -953,7 +966,12 @@ final class EtcdPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
         // Need to fetch keys (and values for contains/startsWith filters) and filter client-side
         let needsValues = filterType == .contains || filterType == .startsWith
-        let req = EtcdRangeRequest(key: b64Key, rangeEnd: b64RangeEnd, limit: Int64(Self.maxKeys), keysOnly: !needsValues)
+        let req = EtcdRangeRequest(
+            key: b64Key,
+            rangeEnd: b64RangeEnd,
+            limit: Int64(Self.maxKeys),
+            keysOnly: !needsValues
+        )
         let response = try await client.rangeRequest(req)
         let kvs = response.kvs ?? []
 
@@ -1001,7 +1019,12 @@ final class EtcdPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         return key
     }
 
-    private func matchesFilter(key: String, value: String? = nil, filterType: EtcdFilterType, filterValue: String) -> Bool {
+    private func matchesFilter(
+        key: String,
+        value: String? = nil,
+        filterType: EtcdFilterType,
+        filterValue: String
+    ) -> Bool {
         switch filterType {
         case .none:
             return true

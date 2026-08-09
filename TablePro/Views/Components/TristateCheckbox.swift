@@ -8,7 +8,9 @@ import SwiftUI
 
 struct TristateCheckbox: NSViewRepresentable {
     enum State {
-        case unchecked, checked, mixed
+        case unchecked
+        case checked
+        case mixed
 
         init(allEnabled: Bool?) {
             switch allEnabled {
@@ -25,7 +27,11 @@ struct TristateCheckbox: NSViewRepresentable {
     let action: () -> Void
 
     func makeNSView(context: Context) -> NSButton {
-        let button = NSButton(checkboxWithTitle: "", target: context.coordinator, action: #selector(Coordinator.clicked))
+        let button = NSButton(
+            checkboxWithTitle: "",
+            target: context.coordinator,
+            action: #selector(Coordinator.clicked)
+        )
         button.allowsMixedState = true
         button.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         button.setContentHuggingPriority(.defaultHigh, for: .vertical)
@@ -58,7 +64,8 @@ struct TristateCheckbox: NSViewRepresentable {
             self.action = action
         }
 
-        @objc func clicked() {
+        @objc
+        func clicked() {
             action()
         }
     }

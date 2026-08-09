@@ -18,8 +18,11 @@ struct AIRulesPaneView: View {
                 Text(String(localized: "Rules"))
             } footer: {
                 VStack(alignment: .leading, spacing: 4) {
-                    // swiftlint:disable:next line_length
-                    Text("Custom guidance the AI sees on every chat turn for this connection. Use it for table conventions, naming, columns to avoid (PII, soft-deleted rows), join hints, or business rules the schema doesn't show.")
+                    // swiftlint:disable line_length
+                    Text(
+                        "Custom guidance the AI sees on every chat turn for this connection. Use it for table conventions, naming, columns to avoid (PII, soft-deleted rows), join hints, or business rules the schema doesn't show."
+                    )
+                    // swiftlint:enable line_length
                     Text(String(localized: "Plain text. Markdown is preserved as written."))
                 }
                 .font(.caption)
@@ -27,12 +30,15 @@ struct AIRulesPaneView: View {
             }
 
             Section {
-                // swiftlint:disable:next line_length
-                Text(verbatim: "- Tables prefixed with `tmp_` are scratch and safe to ignore\n- `users.email_hash` is the join key, not `users.email`\n- Always filter `orders` by `deleted_at IS NULL`\n- Never select `users.ssn`")
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .textSelection(.enabled)
+                // swiftlint:disable line_length
+                Text(
+                    verbatim: "- Tables prefixed with `tmp_` are scratch and safe to ignore\n- `users.email_hash` is the join key, not `users.email`\n- Always filter `orders` by `deleted_at IS NULL`\n- Never select `users.ssn`"
+                )
+                // swiftlint:enable line_length
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
             } header: {
                 Text(String(localized: "Examples"))
             }

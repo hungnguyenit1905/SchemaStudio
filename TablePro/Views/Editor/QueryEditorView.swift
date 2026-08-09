@@ -50,7 +50,7 @@ struct QueryEditorView: View {
 
             Divider()
 
-            if isParameterPanelVisible && !parameters.isEmpty {
+            if isParameterPanelVisible, !parameters.isEmpty {
                 QueryParameterPanelView(
                     parameters: $parameters,
                     onDismiss: { isParameterPanelVisible = false }

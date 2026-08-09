@@ -17,12 +17,12 @@ enum SnowflakeRetryPolicy {
     static let maxDelay: Double = 16.0
 
     static func isTransient(statusCode: Int) -> Bool {
-        statusCode == 429 || statusCode == 408 || (500...599).contains(statusCode)
+        statusCode == 429 || statusCode == 408 || (500 ... 599).contains(statusCode)
     }
 
     static func nextDelay(after previous: Double, using generator: inout some RandomNumberGenerator) -> Double {
         let upper = max(baseDelay, previous * 3)
-        return min(maxDelay, Double.random(in: baseDelay...upper, using: &generator))
+        return min(maxDelay, Double.random(in: baseDelay ... upper, using: &generator))
     }
 
     static func retriedURL(_ url: URL, retryCount: Int, retryReason: Int, clientStartTime: Int) -> URL {
@@ -49,7 +49,7 @@ enum SnowflakeHTTPClient {
         var lastError: Error?
         var lastReason = 0
 
-        for attempt in 0..<SnowflakeRetryPolicy.maxAttempts {
+        for attempt in 0 ..< SnowflakeRetryPolicy.maxAttempts {
             var attemptRequest = request
             if attempt > 0, let url = request.url {
                 attemptRequest.url = SnowflakeRetryPolicy.retriedURL(
@@ -69,11 +69,17 @@ enum SnowflakeHTTPClient {
                 }
                 lastReason = http.statusCode
                 lastError = SnowflakeError.invalidResponse("Snowflake returned HTTP \(http.statusCode)")
-                logger.warning("Transient HTTP \(http.statusCode, privacy: .public); attempt \(attempt + 1, privacy: .public) of \(SnowflakeRetryPolicy.maxAttempts, privacy: .public)")
+                logger
+                    .warning(
+                        "Transient HTTP \(http.statusCode, privacy: .public); attempt \(attempt + 1, privacy: .public) of \(SnowflakeRetryPolicy.maxAttempts, privacy: .public)"
+                    )
             } catch let error as URLError where error.code != .cancelled {
                 lastReason = 0
                 lastError = error
-                logger.warning("Transport error \(error.code.rawValue, privacy: .public); attempt \(attempt + 1, privacy: .public) of \(SnowflakeRetryPolicy.maxAttempts, privacy: .public)")
+                logger
+                    .warning(
+                        "Transport error \(error.code.rawValue, privacy: .public); attempt \(attempt + 1, privacy: .public) of \(SnowflakeRetryPolicy.maxAttempts, privacy: .public)"
+                    )
             }
         }
 

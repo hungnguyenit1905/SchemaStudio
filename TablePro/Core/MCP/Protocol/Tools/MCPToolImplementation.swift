@@ -7,7 +7,8 @@ public protocol MCPToolImplementation: Sendable {
     static var inputSchema: JsonValue { get }
     static var annotations: MCPToolAnnotations { get }
     static var requiredScopes: Set<MCPScope> { get }
-    func call(arguments: JsonValue, context: MCPRequestContext, services: MCPToolServices) async throws -> MCPToolCallResult
+    func call(arguments: JsonValue, context: MCPRequestContext, services: MCPToolServices) async throws
+        -> MCPToolCallResult
 }
 
 public extension MCPToolImplementation {

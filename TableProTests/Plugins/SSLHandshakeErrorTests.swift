@@ -69,7 +69,8 @@ struct SSLHandshakeErrorTests {
 
     @Test("formatted() redacts password from libpq-style conninfo")
     func testSanitizeKeyValuePassword() {
-        let error = SSLHandshakeError.untrustedCertificate(serverMessage: "host=db.example.com user=root password=Sup3rS3cret port=5432")
+        let error = SSLHandshakeError
+            .untrustedCertificate(serverMessage: "host=db.example.com user=root password=Sup3rS3cret port=5432")
         let formatted = SSLHandshakeError.formatted(error)
         #expect(!formatted.contains("Sup3rS3cret"))
         #expect(formatted.contains("password=[redacted]"))
@@ -77,7 +78,8 @@ struct SSLHandshakeErrorTests {
 
     @Test("formatted() redacts password from URL userinfo segment")
     func testSanitizeURLUserInfo() {
-        let error = SSLHandshakeError.serverRejectedPlaintext(serverMessage: "Failed: postgresql://admin:LeakedPass@db.example.com/app")
+        let error = SSLHandshakeError
+            .serverRejectedPlaintext(serverMessage: "Failed: postgresql://admin:LeakedPass@db.example.com/app")
         let formatted = SSLHandshakeError.formatted(error)
         #expect(!formatted.contains("LeakedPass"))
         #expect(formatted.contains("://[redacted]@"))

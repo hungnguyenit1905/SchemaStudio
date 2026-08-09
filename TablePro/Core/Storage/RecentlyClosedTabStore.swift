@@ -166,7 +166,10 @@ internal final class RecentlyClosedTabStore {
             try query.write(to: overflowDirectory.appendingPathComponent(fileName), atomically: true, encoding: .utf8)
             return true
         } catch {
-            Self.logger.fault("Failed to write overflow query \(fileName, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .fault(
+                    "Failed to write overflow query \(fileName, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
             return false
         }
     }
@@ -191,7 +194,10 @@ internal final class RecentlyClosedTabStore {
         do {
             try FileManager.default.createDirectory(at: overflowDirectory, withIntermediateDirectories: true)
         } catch {
-            Self.logger.error("Failed to create directory \(self.overflowDirectory.path, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .error(
+                    "Failed to create directory \(self.overflowDirectory.path, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
         }
     }
 

@@ -37,7 +37,11 @@ struct CloudflareConfiguration: Codable, Hashable, Sendable {
 
 extension CloudflareConfiguration {
     private enum CodingKeys: String, CodingKey {
-        case accessHostname, localPort, authMethod, exposeToLAN, binaryPath
+        case accessHostname
+        case localPort
+        case authMethod
+        case exposeToLAN
+        case binaryPath
     }
 
     init(from decoder: Decoder) throws {

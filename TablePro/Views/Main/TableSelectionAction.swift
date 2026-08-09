@@ -14,16 +14,16 @@ enum TableSelectionAction: Equatable {
     /// Covers: Cmd+A (multi-select), Shift+click range, deselection.
     case noNavigation
     /// Exactly one table was added — navigate to it.
-    case navigate(table: TableInfo)
+    case navigate(ref: DatabaseTreeTableRef)
 
     static func resolve(
-        oldTables: Set<TableInfo>,
-        newTables: Set<TableInfo>
+        oldTables: Set<DatabaseTreeTableRef>,
+        newTables: Set<DatabaseTreeTableRef>
     ) -> TableSelectionAction {
-        guard let table = SelectionDelta.singleAddition(old: oldTables, new: newTables) else {
+        guard let ref = SelectionDelta.singleAddition(old: oldTables, new: newTables) else {
             return .noNavigation
         }
-        return .navigate(table: table)
+        return .navigate(ref: ref)
     }
 }
 
@@ -46,13 +46,12 @@ enum SidebarSyncAction: Equatable {
     /// Called when `tables` array changes. Returns which table to sync to, if any.
     static func resolveOnTablesLoad(
         newTables: [TableInfo],
-        selectedTables: Set<TableInfo>,
+        selectedTables: Set<DatabaseTreeTableRef>,
         currentTabTableName: String?
     ) -> SidebarSyncAction {
         guard !newTables.isEmpty, selectedTables.isEmpty,
               let tabTableName = currentTabTableName,
-              newTables.contains(where: { $0.name == tabTableName })
-        else {
+              newTables.contains(where: { $0.name == tabTableName }) else {
             return .noSync
         }
         return .select(tableName: tabTableName)

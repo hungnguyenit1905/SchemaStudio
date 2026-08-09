@@ -31,10 +31,9 @@ struct TableListView: View {
     }
 
     private var filteredTables: [TableInfo] {
-        let filtered = searchText.isEmpty ? tables : tables.filter {
+        return searchText.isEmpty ? tables : tables.filter {
             $0.name.localizedCaseInsensitiveContains(searchText)
         }
-        return filtered
     }
 
     private var tableSections: [(String, [TableInfo])] {
@@ -67,7 +66,7 @@ struct TableListView: View {
                             }
 
                             let isView = table.type == .view || table.type == .materializedView
-                            if !isView && !connection.safeModeLevel.blocksWrites {
+                            if !isView, !connection.safeModeLevel.blocksWrites {
                                 Divider()
 
                                 Button(role: .destructive) {
@@ -119,7 +118,7 @@ struct TableListView: View {
                     systemImage: "tablecells",
                     description: Text("This database has no tables.")
                 )
-            } else if filteredTables.isEmpty && !searchText.isEmpty {
+            } else if filteredTables.isEmpty, !searchText.isEmpty {
                 ContentUnavailableView.search(text: searchText)
             }
         }
@@ -177,7 +176,6 @@ struct TableListView: View {
             Text(errorMessage)
         }
     }
-
 }
 
 private struct TableRow: View {
@@ -211,8 +209,8 @@ private struct TableRow: View {
     private func formatRowCount(_ count: Int) -> String {
         if count >= 1_000_000 {
             return String(format: "%.1fM", Double(count) / 1_000_000)
-        } else if count >= 1000 {
-            return String(format: "%.1fK", Double(count) / 1000)
+        } else if count >= 1_000 {
+            return String(format: "%.1fK", Double(count) / 1_000)
         }
         return "\(count)"
     }

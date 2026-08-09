@@ -204,20 +204,20 @@ extension JsonRpcMessage: Codable {
 
         if hasMethod {
             if hasId {
-                self = .request(try JsonRpcRequest(from: decoder))
+                self = try .request(JsonRpcRequest(from: decoder))
                 return
             }
-            self = .notification(try JsonRpcNotification(from: decoder))
+            self = try .notification(JsonRpcNotification(from: decoder))
             return
         }
 
         if hasResult {
-            self = .successResponse(try JsonRpcSuccessResponse(from: decoder))
+            self = try .successResponse(JsonRpcSuccessResponse(from: decoder))
             return
         }
 
         if hasError {
-            self = .errorResponse(try JsonRpcErrorResponse(from: decoder))
+            self = try .errorResponse(JsonRpcErrorResponse(from: decoder))
             return
         }
 

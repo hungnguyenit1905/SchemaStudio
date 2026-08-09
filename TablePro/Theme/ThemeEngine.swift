@@ -34,7 +34,7 @@ internal struct EditorFontCache {
         scaleFactor = scale
         let scaledSize = round(CGFloat(min(max(fonts.editorFontSize, 11), 18)) * scale)
         font = EditorFontResolver.resolve(familyId: fonts.editorFontFamily, size: scaledSize)
-        let lineNumSize = max(round((scaledSize - 2)), 9)
+        let lineNumSize = max(round(scaledSize - 2), 9)
         lineNumberFont = NSFont.monospacedSystemFont(ofSize: lineNumSize, weight: .regular)
     }
 

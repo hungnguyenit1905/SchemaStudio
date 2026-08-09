@@ -29,8 +29,6 @@ struct DatabaseSwitcherPopoverHost: View {
                     coordinator?.databaseToDrop = name
                 }
             )
-        } else {
-            EmptyView()
         }
     }
 }
@@ -53,12 +51,15 @@ struct DatabaseSwitcherPopover: View {
     private var supportsDropDatabase: Bool {
         PluginManager.shared.supportsDropDatabase(for: databaseType)
     }
+
     private var showsCreateRow: Bool {
         supportsCreateDatabase
     }
+
     private var containerName: String {
         PluginManager.shared.containerEntityName(for: databaseType)
     }
+
     private var containerNamePlural: String {
         PluginManager.shared.containerEntityNamePlural(for: databaseType)
     }
@@ -83,7 +84,8 @@ struct DatabaseSwitcherPopover: View {
                 currentDatabase: currentDatabase,
                 databaseType: databaseType,
                 sidebarState: SharedSidebarState.forConnection(connectionId)
-            ))
+            )
+        )
     }
 
     var body: some View {
@@ -126,8 +128,7 @@ struct DatabaseSwitcherPopover: View {
         .padding(.vertical, 6)
     }
 
-    @ViewBuilder
-    private var content: some View {
+    @ViewBuilder private var content: some View {
         if viewModel.isLoading {
             loadingView
         } else if let error = viewModel.errorMessage {

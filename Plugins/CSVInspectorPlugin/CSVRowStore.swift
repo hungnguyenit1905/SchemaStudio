@@ -64,7 +64,11 @@ final class CSVRowStore {
             case .original(let range):
                 return data.withUnsafeBytes { raw -> String in
                     guard let base = raw.bindMemory(to: UInt8.self).baseAddress else { return "" }
-                    return parser.field(UnsafeBufferPointer(start: base, count: raw.count), range: range, column: column)
+                    return parser.field(
+                        UnsafeBufferPointer(start: base, count: raw.count),
+                        range: range,
+                        column: column
+                    )
                 }
             }
         }
@@ -80,7 +84,7 @@ final class CSVRowStore {
 
     private var cache: [Int: [String]] = [:]
     private var cacheOrder: [Int] = []
-    private let cacheCapacity = 4000
+    private let cacheCapacity = 4_000
 
     init(data: Data, dialect: CSVDialect) {
         let streamingParser = CSVStreamingParser(dialect: dialect)
@@ -103,7 +107,7 @@ final class CSVRowStore {
                 resolvedHasHeaderRow = true
                 ranges.removeFirst()
             } else {
-                let synthetic = (0..<headerCells.count).map { "Column \($0 + 1)" }
+                let synthetic = (0 ..< headerCells.count).map { "Column \($0 + 1)" }
                 resolvedColumnNames = synthetic
                 resolvedHeaderRef = .materialized(synthetic)
             }
@@ -160,7 +164,7 @@ final class CSVRowStore {
         let lower = max(offset, 0)
         let upper = min(lower + max(limit, 0), logicalRows.count)
         guard lower < upper else { return [] }
-        return (lower..<upper).map { cells(forRow: $0) }
+        return (lower ..< upper).map { cells(forRow: $0) }
     }
 
     func snapshot() -> Snapshot {
@@ -279,7 +283,9 @@ final class CSVRowStore {
             headerRef = .materialized(applyColumnTransforms(rawCells(in: range)))
         }
         if case .materialized(var cells) = headerRef {
-            while cells.count <= index { cells.append("") }
+            while cells.count <= index {
+                cells.append("")
+            }
             cells[index] = name
             headerRef = .materialized(cells)
         }
@@ -302,11 +308,11 @@ final class CSVRowStore {
             rowCells.append(cells)
             pieceRows.append(pieces)
         }
-        let newNames = (0..<pieceCount).map { "\(baseName) \($0 + 1)" }
+        let newNames = (0 ..< pieceCount).map { "\(baseName) \($0 + 1)" }
         for row in logicalRows.indices {
             var cells = rowCells[row]
             let pieces = pieceRows[row]
-            let padded = (0..<pieceCount).map { $0 < pieces.count ? pieces[$0] : "" }
+            let padded = (0 ..< pieceCount).map { $0 < pieces.count ? pieces[$0] : "" }
             if index < cells.count { cells.remove(at: index) }
             cells.insert(contentsOf: padded, at: min(index, cells.count))
             logicalRows[row] = .materialized(cells)
@@ -320,7 +326,9 @@ final class CSVRowStore {
         guard index >= 0, index + 1 < columnNames.count else { return }
         for row in logicalRows.indices {
             var cells = cells(forRow: row)
-            while cells.count <= index + 1 { cells.append("") }
+            while cells.count <= index + 1 {
+                cells.append("")
+            }
             cells[index] = cells[index] + separator + cells[index + 1]
             cells.remove(at: index + 1)
             logicalRows[row] = .materialized(cells)
@@ -332,7 +340,7 @@ final class CSVRowStore {
     func toggleHeaderRow() {
         if hasHeaderRow {
             let headerCells = columnNames
-            let synthetic = (0..<columnNames.count).map { "Column \($0 + 1)" }
+            let synthetic = (0 ..< columnNames.count).map { "Column \($0 + 1)" }
             logicalRows.insert(.materialized(headerCells), at: 0)
             columnNames = synthetic
             headerRef = .materialized(synthetic)

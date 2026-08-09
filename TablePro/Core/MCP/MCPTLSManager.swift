@@ -81,7 +81,8 @@ actor MCPTLSManager {
         let identity = try retrieveIdentity()
         cacheMetadata(derData: derCertData)
 
-        Self.logger.info("Generated new MCP TLS certificate, fingerprint: \(self.fingerprint ?? "unknown", privacy: .public)")
+        Self.logger
+            .info("Generated new MCP TLS certificate, fingerprint: \(self.fingerprint ?? "unknown", privacy: .public)")
         return identity
     }
 

@@ -198,7 +198,7 @@ public actor MCPStreamableHttpClientTransport: MCPMessageTransport {
 
         let contentType = headerValue(httpResponse, name: "Content-Type")?.lowercased() ?? ""
 
-        if (200..<300).contains(status) {
+        if (200 ..< 300).contains(status) {
             if contentType.contains("text/event-stream") {
                 try await consumeSseBytes(bytes)
                 return
@@ -351,7 +351,7 @@ public actor MCPStreamableHttpClientTransport: MCPMessageTransport {
             )
         )
 
-        guard (200..<300).contains(outcome.status),
+        guard (200 ..< 300).contains(outcome.status),
               case .successResponse(let success)? = outcome.message,
               success.id == internalId,
               let refreshedSessionId = outcome.sessionId else {
@@ -363,7 +363,7 @@ public actor MCPStreamableHttpClientTransport: MCPMessageTransport {
 
         if let notification = cachedInitializedNotification {
             let acknowledgement = try await executeInternalExchange(message: .notification(notification))
-            guard (200..<300).contains(acknowledgement.status) else {
+            guard (200 ..< 300).contains(acknowledgement.status) else {
                 throw MCPUpstreamRecoveryError.initializedNotificationFailed(status: acknowledgement.status)
             }
         }
@@ -398,10 +398,10 @@ public actor MCPStreamableHttpClientTransport: MCPMessageTransport {
         let data = try await collectBytes(bytes)
         let contentType = headerValue(httpResponse, name: "Content-Type")?.lowercased() ?? ""
 
-        return InternalExchangeOutcome(
+        return await InternalExchangeOutcome(
             status: httpResponse.statusCode,
             sessionId: headerValue(httpResponse, name: "Mcp-Session-Id"),
-            message: await Self.decodeInternalBody(data, contentType: contentType)
+            message: Self.decodeInternalBody(data, contentType: contentType)
         )
     }
 
@@ -503,7 +503,7 @@ public actor MCPStreamableHttpClientTransport: MCPMessageTransport {
             }
             captureSessionIdIfPresent(from: httpResponse)
             let status = httpResponse.statusCode
-            guard (200..<300).contains(status) else {
+            guard (200 ..< 300).contains(status) else {
                 let body = try await collectBytes(bytes)
                 handleNonSuccessResponse(
                     status: status,

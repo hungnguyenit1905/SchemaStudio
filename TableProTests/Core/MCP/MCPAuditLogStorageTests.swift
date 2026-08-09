@@ -116,7 +116,7 @@ struct MCPAuditLogStorageTests {
     @Test("Limit clamps result size")
     func limitClampsResultSize() async {
         let storage = makeStorage()
-        for index in 0..<10 {
+        for index in 0 ..< 10 {
             await storage.addEntry(makeEntry(action: "tool.\(index)"))
         }
 
@@ -156,7 +156,7 @@ struct MCPAuditLogStorageTests {
         let storage = makeStorage()
 
         await withTaskGroup(of: Void.self) { group in
-            for index in 0..<50 {
+            for index in 0 ..< 50 {
                 group.addTask {
                     await storage.addEntry(
                         AuditEntry(

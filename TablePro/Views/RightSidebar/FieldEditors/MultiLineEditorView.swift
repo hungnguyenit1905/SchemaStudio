@@ -14,7 +14,7 @@ internal struct MultiLineEditorView: View {
         TextField(context.placeholderText, text: context.value, axis: .vertical)
             .textFieldStyle(.roundedBorder)
             .font(.subheadline)
-            .lineLimit(3...6)
+            .lineLimit(3 ... 6)
             .autocorrectionDisabled(true)
             .focused($isFocused)
             .disabled(context.isReadOnly)

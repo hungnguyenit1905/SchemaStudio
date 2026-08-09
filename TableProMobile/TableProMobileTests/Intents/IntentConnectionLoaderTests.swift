@@ -1,7 +1,7 @@
 import Foundation
-import Testing
-import TableProModels
 @testable import TableProMobile
+import TableProModels
+import Testing
 
 @Suite("IntentConnectionLoader")
 struct IntentConnectionLoaderTests {
@@ -12,7 +12,7 @@ struct IntentConnectionLoaderTests {
             name: "Prod",
             type: .postgresql,
             host: "db.example.com",
-            port: 5432,
+            port: 5_432,
             username: "alice",
             database: "appdb",
             sshEnabled: true,
@@ -40,7 +40,7 @@ struct IntentConnectionLoaderTests {
     func skipsUndecodableConnection() throws {
         let valid = DatabaseConnection(
             id: UUID(), name: "Prod", type: .mysql,
-            host: "h", port: 3306, username: "u", database: "d"
+            host: "h", port: 3_306, username: "u", database: "d"
         )
         let validObject = try JSONSerialization.jsonObject(with: JSONEncoder().encode(valid))
         let mixed: [Any] = [["unexpected": "shape"], validObject]

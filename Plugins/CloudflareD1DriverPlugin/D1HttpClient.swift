@@ -15,7 +15,9 @@ struct D1ApiResponse<T: Decodable>: Decodable {
     let errors: [D1ApiErrorDetail]?
 
     private enum CodingKeys: String, CodingKey {
-        case result, success, errors
+        case result
+        case success
+        case errors
     }
 }
 
@@ -24,7 +26,8 @@ struct D1ApiErrorDetail: Decodable {
     let message: String
 
     private enum CodingKeys: String, CodingKey {
-        case code, message
+        case code
+        case message
     }
 }
 
@@ -34,7 +37,9 @@ struct D1RawResultPayload: Decodable {
     let success: Bool
 
     private enum CodingKeys: String, CodingKey {
-        case results, meta, success
+        case results
+        case meta
+        case success
     }
 }
 
@@ -43,10 +48,10 @@ struct D1RawResults: Decodable {
     let rows: [[D1Value]]?
 
     private enum CodingKeys: String, CodingKey {
-        case columns, rows
+        case columns
+        case rows
     }
 }
-
 
 struct D1QueryMeta: Decodable {
     let duration: Double?
@@ -55,7 +60,8 @@ struct D1QueryMeta: Decodable {
     let rowsWritten: Int?
 
     private enum CodingKeys: String, CodingKey {
-        case duration, changes
+        case duration
+        case changes
         case rowsRead = "rows_read"
         case rowsWritten = "rows_written"
     }
@@ -68,7 +74,9 @@ struct D1DatabaseInfo: Decodable {
     let version: String?
 
     private enum CodingKeys: String, CodingKey {
-        case uuid, name, version
+        case uuid
+        case name
+        case version
         case createdAt = "created_at"
     }
 }
@@ -78,12 +86,13 @@ struct D1ListResponse: Decodable {
     let success: Bool
 
     private enum CodingKeys: String, CodingKey {
-        case result, success
+        case result
+        case success
     }
 }
 
-// No .bool case: D1/SQLite stores booleans as integers (0/1),
-// and Foundation's JSONDecoder decodes JSON true/false as Int when Int is tried first.
+/// No .bool case: D1/SQLite stores booleans as integers (0/1),
+/// and Foundation's JSONDecoder decodes JSON true/false as Int when Int is tried first.
 enum D1Value: Decodable {
     case string(String)
     case int(Int)
@@ -377,7 +386,10 @@ final class D1HttpClient: @unchecked Sendable {
             Self.logger.warning("D1 rate limited. Retry-After: \(retryAfter ?? "not specified")")
             if let seconds = retryAfter {
                 throw D1HttpError(
-                    message: String(format: String(localized: "Rate limited by Cloudflare. Retry after %@ seconds."), seconds)
+                    message: String(
+                        format: String(localized: "Rate limited by Cloudflare. Retry after %@ seconds."),
+                        seconds
+                    )
                 )
             } else {
                 throw D1HttpError(

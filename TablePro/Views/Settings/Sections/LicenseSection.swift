@@ -76,7 +76,7 @@ struct LicenseSection: View {
                     ProgressView().controlSize(.small)
                     Spacer()
                 }
-            } else if activations.isEmpty && activationLoadError == nil {
+            } else if activations.isEmpty, activationLoadError == nil {
                 Text("No activations found")
                     .foregroundStyle(.secondary)
             }
@@ -139,7 +139,9 @@ struct LicenseSection: View {
                     Task { @MainActor in
                         let confirmed = await AlertHelper.confirmDestructive(
                             title: String(localized: "Deactivate License?"),
-                            message: String(localized: "This will remove the license from this machine. You can reactivate later."),
+                            message: String(
+                                localized: "This will remove the license from this machine. You can reactivate later."
+                            ),
                             confirmButton: String(localized: "Deactivate"),
                             cancelButton: String(localized: "Cancel")
                         )
@@ -223,7 +225,9 @@ struct LicenseSection: View {
         if !serverSuccess {
             AlertHelper.showInfoSheet(
                 title: String(localized: "License Removed"),
-                message: String(localized: "License removed from this Mac, but the server could not be reached. The activation slot may not be freed until it expires."),
+                message: String(
+                    localized: "License removed from this Mac, but the server could not be reached. The activation slot may not be freed until it expires."
+                ),
                 window: NSApp.keyWindow
             )
         }

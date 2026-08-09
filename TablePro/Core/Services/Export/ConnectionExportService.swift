@@ -621,7 +621,10 @@ enum ConnectionExportService {
             return nil
         }
         if (url as NSString).length > 2_000 {
-            logger.warning("Import deeplink for '\(connection.name)' is \((url as NSString).length) chars — may be truncated by some apps")
+            logger
+                .warning(
+                    "Import deeplink for '\(connection.name)' is \((url as NSString).length) chars — may be truncated by some apps"
+                )
         }
         return url
     }

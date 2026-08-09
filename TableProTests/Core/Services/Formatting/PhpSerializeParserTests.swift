@@ -42,7 +42,7 @@ struct PhpSerializeParserScalarTests {
 
     @Test("INF parses to positive infinity")
     func floatInfinity() {
-        guard case let .float(value)? = PhpSerializeParser.parse("d:INF;") else {
+        guard case .float(let value)? = PhpSerializeParser.parse("d:INF;") else {
             Issue.record("expected float")
             return
         }
@@ -51,7 +51,7 @@ struct PhpSerializeParserScalarTests {
 
     @Test("-INF parses to negative infinity")
     func floatNegativeInfinity() {
-        guard case let .float(value)? = PhpSerializeParser.parse("d:-INF;") else {
+        guard case .float(let value)? = PhpSerializeParser.parse("d:-INF;") else {
             Issue.record("expected float")
             return
         }
@@ -60,7 +60,7 @@ struct PhpSerializeParserScalarTests {
 
     @Test("NAN parses to .nan")
     func floatNan() {
-        guard case let .float(value)? = PhpSerializeParser.parse("d:NAN;") else {
+        guard case .float(let value)? = PhpSerializeParser.parse("d:NAN;") else {
             Issue.record("expected float")
             return
         }
@@ -116,7 +116,7 @@ struct PhpSerializeParserArrayTests {
     @Test("integer-keyed array parses")
     func intKeyedArray() {
         let result = PhpSerializeParser.parse("a:2:{i:0;s:1:\"a\";i:1;s:1:\"b\";}")
-        guard case let .array(entries)? = result else {
+        guard case .array(let entries)? = result else {
             Issue.record("expected array")
             return
         }
@@ -132,7 +132,7 @@ struct PhpSerializeParserArrayTests {
         let result = PhpSerializeParser.parse(
             "a:3:{s:1:\"z\";i:1;s:1:\"a\";i:2;s:1:\"m\";i:3;}"
         )
-        guard case let .array(entries)? = result else {
+        guard case .array(let entries)? = result else {
             Issue.record("expected array")
             return
         }
@@ -145,9 +145,9 @@ struct PhpSerializeParserArrayTests {
     @Test("nested array parses")
     func nestedArray() {
         let result = PhpSerializeParser.parse("a:1:{i:0;a:1:{i:0;i:42;}}")
-        guard case let .array(outer)? = result,
+        guard case .array(let outer)? = result,
               outer.count == 1,
-              case let .array(inner) = outer[0].value,
+              case .array(let inner) = outer[0].value,
               inner.count == 1,
               case .int(42) = inner[0].value else {
             Issue.record("expected nested array structure")
@@ -161,7 +161,7 @@ struct PhpSerializeParserObjectTests {
     @Test("object with public property")
     func publicProperty() {
         let result = PhpSerializeParser.parse("O:4:\"User\":1:{s:4:\"name\";s:3:\"Bob\";}")
-        guard case let .object(className, properties)? = result else {
+        guard case .object(let className, let properties)? = result else {
             Issue.record("expected object")
             return
         }
@@ -179,7 +179,7 @@ struct PhpSerializeParserObjectTests {
         let mangledBytes = Array(mangled.utf8)
         let serialized = "O:4:\"User\":1:{s:\(mangledBytes.count):\"\(mangled)\";s:5:\"value\";}"
         let result = PhpSerializeParser.parse(serialized)
-        guard case let .object(_, properties)? = result, properties.count == 1 else {
+        guard case .object(_, let properties)? = result, properties.count == 1 else {
             Issue.record("expected one property")
             return
         }
@@ -194,7 +194,7 @@ struct PhpSerializeParserObjectTests {
         let mangledBytes = Array(mangled.utf8)
         let serialized = "O:4:\"User\":1:{s:\(mangledBytes.count):\"\(mangled)\";s:5:\"value\";}"
         let result = PhpSerializeParser.parse(serialized)
-        guard case let .object(_, properties)? = result, properties.count == 1 else {
+        guard case .object(_, let properties)? = result, properties.count == 1 else {
             Issue.record("expected one property")
             return
         }
@@ -208,7 +208,7 @@ struct PhpSerializeParserSpecialTests {
     @Test("C token returns .serializable with class + payload")
     func serializableToken() {
         let result = PhpSerializeParser.parse("C:3:\"Foo\":5:{xyzab}")
-        guard case let .serializable(className, payload)? = result else {
+        guard case .serializable(let className, let payload)? = result else {
             Issue.record("expected serializable")
             return
         }
@@ -228,7 +228,7 @@ struct PhpSerializeParserSpecialTests {
 
     @Test("o (PHP-3) token returns .unsupported")
     func oToken() {
-        guard case let .unsupported(token)? = PhpSerializeParser.parse("o:0:\"X\":0:{}") else {
+        guard case .unsupported(let token)? = PhpSerializeParser.parse("o:0:\"X\":0:{}") else {
             Issue.record("expected unsupported")
             return
         }

@@ -61,7 +61,7 @@ final class BlobFormattingService {
         var index = cleaned.startIndex
         while index < cleaned.endIndex {
             let nextIndex = cleaned.index(index, offsetBy: 2)
-            let byteString = cleaned[index..<nextIndex]
+            let byteString = cleaned[index ..< nextIndex]
             guard let byte = UInt8(byteString, radix: 16) else { return nil }
             bytes.append(byte)
             index = nextIndex

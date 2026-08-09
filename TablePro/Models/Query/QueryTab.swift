@@ -107,7 +107,8 @@ struct QueryTab: Identifiable, Equatable {
         self.restoredCursorOffset = Self.clampedCursorOffset(persisted.cursorOffset, in: persisted.query)
     }
 
-    @MainActor static func buildBaseTableQuery(
+    @MainActor
+    static func buildBaseTableQuery(
         tableName: String,
         databaseType: DatabaseType,
         schemaName: String? = nil,
@@ -124,7 +125,10 @@ struct QueryTab: Identifiable, Equatable {
 
         switch PluginManager.shared.editorLanguage(for: databaseType) {
         case .javascript:
-            let escaped = tableName.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+            let escaped = tableName.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(
+                of: "\"",
+                with: "\\\""
+            )
             return "db[\"\(escaped)\"].find({}).limit(\(pageSize))"
         case .bash:
             return "SCAN 0 MATCH * COUNT \(pageSize)"

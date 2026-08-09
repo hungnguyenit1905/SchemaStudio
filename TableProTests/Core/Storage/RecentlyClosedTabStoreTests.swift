@@ -69,7 +69,7 @@ struct RecentlyClosedTabStoreTests {
     func historyIsCapped() throws {
         let (store, _) = try makeStore()
         let connection = TestFixtures.makeConnection()
-        for index in 0..<(RecentlyClosedTabStore.maxEntries + 5) {
+        for index in 0 ..< (RecentlyClosedTabStore.maxEntries + 5) {
             store.push(tab: QueryTab(query: "SELECT \(index)"), connection: connection)
         }
 

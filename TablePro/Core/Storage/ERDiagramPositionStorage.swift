@@ -15,8 +15,7 @@ final class ERDiagramPositionStorage {
 
     func load(connectionId: UUID, schemaKey: String) -> [String: CGPoint] {
         guard let data = defaults.data(forKey: key(connectionId: connectionId, schemaKey: schemaKey)),
-              let stored = try? JSONDecoder().decode([String: CodablePoint].self, from: data)
-        else { return [:] }
+              let stored = try? JSONDecoder().decode([String: CodablePoint].self, from: data) else { return [:] }
         return stored.mapValues { CGPoint(x: $0.x, y: $0.y) }
     }
 

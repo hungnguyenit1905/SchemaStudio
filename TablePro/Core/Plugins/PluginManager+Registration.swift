@@ -18,7 +18,10 @@ extension PluginManager {
 
         if let driver = instance as? any DriverPlugin {
             if !declared.contains(.databaseDriver) {
-                Self.logger.warning("Plugin '\(pluginId)' conforms to DriverPlugin but does not declare .databaseDriver capability - registering anyway")
+                Self.logger
+                    .warning(
+                        "Plugin '\(pluginId)' conforms to DriverPlugin but does not declare .databaseDriver capability - registering anyway"
+                    )
             }
             do {
                 try validateDriverDescriptor(type(of: driver), pluginId: pluginId)
@@ -39,7 +42,10 @@ extension PluginManager {
                     isDownloadable: driverType.isDownloadable
                 )
                 if snapshot.schema.databaseGroupingStrategy == .hierarchicalSchema, snapshot.supportsDatabaseSwitching {
-                    Self.logger.warning("Plugin '\(pluginId)' declares hierarchicalSchema grouping together with supportsDatabaseSwitching; schema-only engines must declare supportsDatabaseSwitching = false or the container switcher misroutes")
+                    Self.logger
+                        .warning(
+                            "Plugin '\(pluginId)' declares hierarchicalSchema grouping together with supportsDatabaseSwitching; schema-only engines must declare supportsDatabaseSwitching = false or the container switcher misroutes"
+                        )
                 }
                 PluginMetadataRegistry.shared.register(snapshot: snapshot, forTypeId: typeId, preserveIcon: true)
                 for additionalId in driverType.additionalDatabaseTypeIds {
@@ -54,7 +60,10 @@ extension PluginManager {
 
         if let exportPlugin = instance as? any ExportFormatPlugin {
             if !declared.contains(.exportFormat) {
-                Self.logger.warning("Plugin '\(pluginId)' conforms to ExportFormatPlugin but does not declare .exportFormat capability - registering anyway")
+                Self.logger
+                    .warning(
+                        "Plugin '\(pluginId)' conforms to ExportFormatPlugin but does not declare .exportFormat capability - registering anyway"
+                    )
             }
             let formatId = type(of: exportPlugin).formatId
             exportPlugins[formatId] = exportPlugin
@@ -64,7 +73,10 @@ extension PluginManager {
 
         if let importPlugin = instance as? any ImportFormatPlugin {
             if !declared.contains(.importFormat) {
-                Self.logger.warning("Plugin '\(pluginId)' conforms to ImportFormatPlugin but does not declare .importFormat capability - registering anyway")
+                Self.logger
+                    .warning(
+                        "Plugin '\(pluginId)' conforms to ImportFormatPlugin but does not declare .importFormat capability - registering anyway"
+                    )
             }
             let formatId = type(of: importPlugin).formatId
             importPlugins[formatId] = importPlugin
@@ -74,7 +86,10 @@ extension PluginManager {
 
         if let inspectorPlugin = instance as? any DocumentInspectorPlugin {
             if !declared.contains(.documentInspector) {
-                Self.logger.warning("Plugin '\(pluginId)' conforms to DocumentInspectorPlugin but does not declare .documentInspector capability - registering anyway")
+                Self.logger
+                    .warning(
+                        "Plugin '\(pluginId)' conforms to DocumentInspectorPlugin but does not declare .documentInspector capability - registering anyway"
+                    )
             }
             let inspectorId = type(of: inspectorPlugin).inspectorId
             inspectorPlugins[inspectorId] = inspectorPlugin
@@ -94,17 +109,22 @@ extension PluginManager {
         let isImporter = pluginType is any ImportFormatPlugin.Type
         let isInspector = pluginType is any DocumentInspectorPlugin.Type
 
-        if declared.contains(.databaseDriver) && !isDriver {
+        if declared.contains(.databaseDriver), !isDriver {
             Self.logger.warning("Plugin '\(pluginId)' declares .databaseDriver but does not conform to DriverPlugin")
         }
-        if declared.contains(.exportFormat) && !isExporter {
-            Self.logger.warning("Plugin '\(pluginId)' declares .exportFormat but does not conform to ExportFormatPlugin")
+        if declared.contains(.exportFormat), !isExporter {
+            Self.logger
+                .warning("Plugin '\(pluginId)' declares .exportFormat but does not conform to ExportFormatPlugin")
         }
-        if declared.contains(.importFormat) && !isImporter {
-            Self.logger.warning("Plugin '\(pluginId)' declares .importFormat but does not conform to ImportFormatPlugin")
+        if declared.contains(.importFormat), !isImporter {
+            Self.logger
+                .warning("Plugin '\(pluginId)' declares .importFormat but does not conform to ImportFormatPlugin")
         }
-        if declared.contains(.documentInspector) && !isInspector {
-            Self.logger.warning("Plugin '\(pluginId)' declares .documentInspector but does not conform to DocumentInspectorPlugin")
+        if declared.contains(.documentInspector), !isInspector {
+            Self.logger
+                .warning(
+                    "Plugin '\(pluginId)' declares .documentInspector but does not conform to DocumentInspectorPlugin"
+                )
         }
     }
 
@@ -133,7 +153,10 @@ extension PluginManager {
 
         let allAdditionalIds = driverType.additionalDatabaseTypeIds
         if allAdditionalIds.contains(typeId) {
-            Self.logger.warning("Plugin '\(pluginId)': additionalDatabaseTypeIds contains the primary databaseTypeId '\(typeId)'")
+            Self.logger
+                .warning(
+                    "Plugin '\(pluginId)': additionalDatabaseTypeIds contains the primary databaseTypeId '\(typeId)'"
+                )
         }
 
         for additionalId in allAdditionalIds {
@@ -164,7 +187,8 @@ extension PluginManager {
                 Self.logger.warning("Plugin '\(pluginId)': duplicate connection field id '\(field.id)'")
             }
             if case .dropdown(let options) = field.fieldType, options.isEmpty {
-                Self.logger.warning("Plugin '\(pluginId)': connection field '\(field.id)' is a dropdown with no options")
+                Self.logger
+                    .warning("Plugin '\(pluginId)': connection field '\(field.id)' is a dropdown with no options")
             }
         }
     }
@@ -266,7 +290,7 @@ extension PluginManager {
             .filter { plugin in
                 let supported = type(of: plugin).supportedDatabaseTypeIds
                 let excluded = type(of: plugin).excludedDatabaseTypeIds
-                if !supported.isEmpty && !supported.contains(typeId) { return false }
+                if !supported.isEmpty, !supported.contains(typeId) { return false }
                 if excluded.contains(typeId) { return false }
                 return true
             }
@@ -299,7 +323,7 @@ extension PluginManager {
         let driver = plugin.createDriver(config: config)
         let result: (any PluginDatabaseDriver)? =
             driver.buildBrowseQuery(table: "_probe", sortColumns: [], columns: [], limit: 1, offset: 0) != nil
-            ? driver : nil
+                ? driver : nil
         if hasFinishedInitialLoad {
             queryBuildingDriverCache[typeId] = .some(result)
         }
@@ -555,7 +579,10 @@ extension PluginManager {
                 do {
                     try await uninstallPlugin(id: existingEntry.id)
                 } catch {
-                    Self.logger.warning("Failed to uninstall plugin '\(existingEntry.id)' before reinstall: \(error.localizedDescription)")
+                    Self.logger
+                        .warning(
+                            "Failed to uninstall plugin '\(existingEntry.id)' before reinstall: \(error.localizedDescription)"
+                        )
                 }
             }
         }
@@ -579,7 +606,10 @@ extension PluginManager {
         Self.logger.info("Installed missing plugin '\(entry.name)' for database type '\(databaseType.rawValue)'")
     }
 
-    nonisolated static func registryPlugin(forTypeId pluginTypeId: String, in manifest: RegistryManifest?) -> RegistryPlugin? {
+    nonisolated static func registryPlugin(
+        forTypeId pluginTypeId: String,
+        in manifest: RegistryManifest?
+    ) -> RegistryPlugin? {
         manifest?.plugins.first { $0.databaseTypeIds?.contains(pluginTypeId) == true }
     }
 }

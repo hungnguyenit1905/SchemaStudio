@@ -227,8 +227,7 @@ struct QueryPlanDiagramView: View {
 
     private func subtreeWidth(_ nodes: [PositionedNode]) -> CGFloat {
         guard let minX = nodes.map({ $0.rect.minX }).min(),
-              let maxX = nodes.map({ $0.rect.maxX }).max()
-        else { return PlanLayout.nodeWidth }
+              let maxX = nodes.map({ $0.rect.maxX }).max() else { return PlanLayout.nodeWidth }
         return maxX - minX
     }
 

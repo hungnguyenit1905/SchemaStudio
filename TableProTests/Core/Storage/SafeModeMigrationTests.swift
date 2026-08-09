@@ -9,8 +9,8 @@ import Combine
 import Foundation
 @testable import SchemaStudio
 import TableProPluginKit
-import Testing
 import TableProSyncTransport
+import Testing
 
 @Suite("SafeModeMigration")
 @MainActor
@@ -30,8 +30,7 @@ struct SafeModeMigrationTests {
         )
         let suiteName = "com.SchemaStudio.tests.ConnectionStorage.\(unique)"
         guard let defaults = UserDefaults(suiteName: suiteName),
-              let syncDefaults = UserDefaults(suiteName: "com.SchemaStudio.tests.Sync.\(unique)")
-        else {
+              let syncDefaults = UserDefaults(suiteName: "com.SchemaStudio.tests.Sync.\(unique)") else {
             fatalError("Failed to create isolated test user defaults")
         }
         self.defaults = defaults
@@ -48,7 +47,7 @@ struct SafeModeMigrationTests {
     // MARK: - Round-Trip Through ConnectionStorage API
 
     @Test("DatabaseConnection with silent level survives save and load cycle")
-    func roundTripSilent() throws {
+    func roundTripSilent() {
         let id = UUID()
         let connection = DatabaseConnection(
             id: id, name: "Silent Test", host: "127.0.0.1", port: 3_306,
@@ -63,7 +62,7 @@ struct SafeModeMigrationTests {
     }
 
     @Test("DatabaseConnection with alert level survives save and load cycle")
-    func roundTripAlert() throws {
+    func roundTripAlert() {
         let id = UUID()
         let connection = DatabaseConnection(
             id: id, name: "Alert Test", host: "127.0.0.1", port: 5_432,
@@ -78,7 +77,7 @@ struct SafeModeMigrationTests {
     }
 
     @Test("DatabaseConnection with alertFull level survives save and load cycle")
-    func roundTripAlertFull() throws {
+    func roundTripAlertFull() {
         let id = UUID()
         let connection = DatabaseConnection(
             id: id, name: "AlertFull Test", host: "127.0.0.1", port: 3_306,
@@ -93,7 +92,7 @@ struct SafeModeMigrationTests {
     }
 
     @Test("DatabaseConnection with safeMode level survives save and load cycle")
-    func roundTripSafeMode() throws {
+    func roundTripSafeMode() {
         let id = UUID()
         let connection = DatabaseConnection(
             id: id, name: "SafeMode Test", host: "127.0.0.1", port: 3_306,
@@ -108,7 +107,7 @@ struct SafeModeMigrationTests {
     }
 
     @Test("DatabaseConnection with safeModeFull level survives save and load cycle")
-    func roundTripSafeModeFull() throws {
+    func roundTripSafeModeFull() {
         let id = UUID()
         let connection = DatabaseConnection(
             id: id, name: "SafeModeFull Test", host: "127.0.0.1", port: 3_306,
@@ -123,7 +122,7 @@ struct SafeModeMigrationTests {
     }
 
     @Test("DatabaseConnection with readOnly level survives save and load cycle")
-    func roundTripReadOnly() throws {
+    func roundTripReadOnly() {
         let id = UUID()
         let connection = DatabaseConnection(
             id: id, name: "ReadOnly Test", host: "127.0.0.1", port: 3_306,

@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("TableRows - construction")
@@ -415,7 +415,7 @@ struct TableRowsAppendPageTests {
             columnTypes: [.text(rawType: nil)]
         )
         let delta = table.appendPage([["a"], ["b"]], startingAt: 0)
-        #expect(delta == .rowsInserted(IndexSet(integersIn: 0...1)))
+        #expect(delta == .rowsInserted(IndexSet(integersIn: 0 ... 1)))
         #expect(table.rows[0].id == .existing(0))
         #expect(table.rows[1].id == .existing(1))
     }
@@ -612,7 +612,12 @@ struct TableRowsMetadataPreservationTests {
             columns: ["c1", "c2"],
             columnTypes: [.text(rawType: "TEXT"), .integer(rawType: "INT")],
             columnDefaults: ["c1": "default-1"],
-            columnForeignKeys: ["c2": ForeignKeyInfo(name: "fk", column: "c2", referencedTable: "t", referencedColumn: "id")],
+            columnForeignKeys: ["c2": ForeignKeyInfo(
+                name: "fk",
+                column: "c2",
+                referencedTable: "t",
+                referencedColumn: "id"
+            )],
             columnEnumValues: ["c1": ["a", "b"]],
             columnNullable: ["c2": false]
         )

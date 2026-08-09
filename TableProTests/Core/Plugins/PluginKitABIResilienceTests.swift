@@ -35,7 +35,11 @@ struct PluginKitABIResilienceTests {
         #expect(driver.injectRowLimit("SELECT 1", limit: 100) == nil)
         #expect(driver.defaultExportQuery(table: "users") == nil)
         #expect(driver.createViewTemplate() == nil)
-        #expect(driver.generateCreateTableSQL(definition: .init(tableName: "users", columns: [], primaryKeyColumns: [])) == nil)
+        #expect(driver.generateCreateTableSQL(definition: .init(
+            tableName: "users",
+            columns: [],
+            primaryKeyColumns: []
+        )) == nil)
     }
 
     @Test("A driver that omits defaulted requirements falls back to the documented asynchronous defaults")

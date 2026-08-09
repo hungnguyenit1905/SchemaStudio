@@ -32,7 +32,7 @@ public struct ListRecentTabsTool: MCPToolImplementation {
         context: MCPRequestContext,
         services: MCPToolServices
     ) async throws -> MCPToolCallResult {
-        let limit = MCPArgumentDecoder.optionalInt(arguments, key: "limit", default: 20, clamp: 1...500) ?? 20
+        let limit = MCPArgumentDecoder.optionalInt(arguments, key: "limit", default: 20, clamp: 1 ... 500) ?? 20
 
         let snapshots = await MainActor.run { MCPTabSnapshotProvider.collectTabSnapshots() }
         let blocked = await MainActor.run { MCPTabSnapshotProvider.blockedExternalConnectionIds() }

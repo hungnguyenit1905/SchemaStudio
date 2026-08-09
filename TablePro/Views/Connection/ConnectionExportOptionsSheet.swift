@@ -138,8 +138,7 @@ struct ConnectionExportOptionsSheet: View {
         }
     }
 
-    @ViewBuilder
-    private var validationMessage: some View {
+    @ViewBuilder private var validationMessage: some View {
         switch passphraseState {
         case .tooShort:
             warningLabel(String(localized: "Use at least 8 characters"))

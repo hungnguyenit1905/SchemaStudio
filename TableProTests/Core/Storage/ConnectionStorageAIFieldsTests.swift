@@ -4,10 +4,10 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
-import Testing
+import TableProPluginKit
 import TableProSyncTransport
+import Testing
 
 @Suite("ConnectionStorage AI Fields")
 @MainActor
@@ -71,7 +71,7 @@ struct ConnectionStorageAIFieldsTests {
     @Test("round-trip preserves aiAlwaysAllowedTools")
     func roundTripAIAlwaysAllowedTools() {
         let id = UUID()
-        let tools: Set<String> = ["execute_query", "list_tables"]
+        let tools: Set = ["execute_query", "list_tables"]
         let connection = DatabaseConnection(
             id: id,
             name: "Test",

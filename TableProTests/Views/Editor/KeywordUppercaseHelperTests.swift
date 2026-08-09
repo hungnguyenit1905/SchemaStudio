@@ -1,11 +1,10 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("KeywordUppercaseHelper")
 struct KeywordUppercaseHelperTests {
-
     // MARK: - isWordBoundary
 
     @Test("Space is a word boundary")
@@ -311,10 +310,44 @@ struct KeywordUppercaseHelperTests {
 
     @Test("All major SQL keywords detected")
     func majorKeywordsDetected() {
-        let keywords = ["select", "from", "where", "insert", "update", "delete", "create", "alter",
-                        "drop", "join", "inner", "left", "right", "on", "group", "order", "having",
-                        "limit", "offset", "union", "exists", "between", "like", "in", "is", "null",
-                        "not", "and", "or", "as", "set", "into", "values", "begin", "commit", "rollback"]
+        let keywords = [
+            "select",
+            "from",
+            "where",
+            "insert",
+            "update",
+            "delete",
+            "create",
+            "alter",
+            "drop",
+            "join",
+            "inner",
+            "left",
+            "right",
+            "on",
+            "group",
+            "order",
+            "having",
+            "limit",
+            "offset",
+            "union",
+            "exists",
+            "between",
+            "like",
+            "in",
+            "is",
+            "null",
+            "not",
+            "and",
+            "or",
+            "as",
+            "set",
+            "into",
+            "values",
+            "begin",
+            "commit",
+            "rollback"
+        ]
         for kw in keywords {
             let text = kw as NSString
             let result = KeywordUppercaseHelper.keywordBeforePosition(text, at: text.length)

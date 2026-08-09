@@ -109,7 +109,7 @@ struct ChatGPTCodexTokenStoreTests {
         let store = ChatGPTCodexTokenStore(keychain: InMemoryKeychain(), refresher: refresher)
         await store.save(tokens(expiresIn: -10))
         try await withThrowingTaskGroup(of: String.self) { group in
-            for _ in 0..<8 {
+            for _ in 0 ..< 8 {
                 group.addTask { try await store.validAccessToken() }
             }
             for try await _ in group {}

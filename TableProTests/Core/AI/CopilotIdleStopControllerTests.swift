@@ -5,8 +5,8 @@
 //  Verifies the deferred-stop state machine extracted from CopilotService.
 //
 
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @MainActor

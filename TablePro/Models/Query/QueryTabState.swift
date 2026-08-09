@@ -9,6 +9,7 @@ import TableProPluginKit
 @MainActor @Observable
 final class GridSelectionState {
     var indices: Set<Int> = []
+    var aggregates: GridSelectionAggregates = .empty
 }
 
 /// Type of tab
@@ -80,9 +81,22 @@ struct PersistedTab: Codable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, title, query, tabType, tableName, isView, databaseName, schemaName
-        case sourceFileURL, erDiagramSchemaKey, queryParameters
-        case sortColumns, restoredPage, cursorOffset, columnWidths, windowGroupIndex
+        case id
+        case title
+        case query
+        case tabType
+        case tableName
+        case isView
+        case databaseName
+        case schemaName
+        case sourceFileURL
+        case erDiagramSchemaKey
+        case queryParameters
+        case sortColumns
+        case restoredPage
+        case cursorOffset
+        case columnWidths
+        case windowGroupIndex
         case overflowFileName
     }
 
@@ -184,20 +198,20 @@ struct SortState: Equatable {
 
 /// Tracks pagination state for navigating large datasets
 struct PaginationState: Equatable {
-    var totalRowCount: Int?         // Total rows in table (from COUNT(*))
-    var pageSize: Int               // Rows per page (passed from manager/coordinator)
-    var currentPage: Int = 1         // Current page number (1-based)
-    var currentOffset: Int = 0       // Current OFFSET for SQL query
+    var totalRowCount: Int? // Total rows in table (from COUNT(*))
+    var pageSize: Int // Rows per page (passed from manager/coordinator)
+    var currentPage: Int = 1 // Current page number (1-based)
+    var currentOffset: Int = 0 // Current OFFSET for SQL query
     var isLoading: Bool = false
-    var isApproximateRowCount: Bool = false  // True when totalRowCount is from fast estimate
-    var isCountingExact: Bool = false        // True while a user-requested exact count is running
+    var isApproximateRowCount: Bool = false // True when totalRowCount is from fast estimate
+    var isCountingExact: Bool = false // True while a user-requested exact count is running
 
     // Result truncation state (query tabs)
     var hasMoreRows: Bool = false
     var isLoadingMore: Bool = false
     var baseQueryForMore: String?
     var baseQueryParameterValues: [String?]?
-    var sortExecutionOverride: String?  // Derived ORDER BY query run for a grid sort; never written back to the editor
+    var sortExecutionOverride: String? // Derived ORDER BY query run for a grid sort; never written back to the editor
 
     /// Default page size constant (used when no explicit value is provided)
     /// Note: For new tabs, callers should pass AppSettingsManager.shared.dataGrid.defaultPageSize
@@ -222,7 +236,7 @@ struct PaginationState: Equatable {
     /// Total number of pages
     var totalPages: Int {
         guard let total = totalRowCount, total > 0 else { return 1 }
-        return (total + pageSize - 1) / pageSize  // Ceiling division
+        return (total + pageSize - 1) / pageSize // Ceiling division
     }
 
     /// Whether there is a next page available
@@ -288,7 +302,7 @@ struct PaginationState: Equatable {
     }
 
     mutating func goToPage(_ page: Int) {
-        guard page > 0 && page <= totalPages else { return }
+        guard page > 0, page <= totalPages else { return }
         setPage(page)
     }
 
@@ -386,6 +400,7 @@ struct TabQueryContent: Equatable {
         get { queryStorage.text }
         set { queryStorage = QueryStorage(newValue) }
     }
+
     var queryParameters: [QueryParameter] = []
     var isParameterPanelVisible: Bool = false
     var sourceFileURL: URL?
@@ -434,12 +449,13 @@ struct TabQueryContent: Equatable {
             && sameText(lhs.savedFileContent, rhs.savedFileContent)
     }
 
-    /// Literal text equality that skips Swift's canonical Unicode comparison, returning in O(1) when the lengths differ.
+    /// Literal text equality that skips Swift's canonical Unicode comparison, returning in O(1) when the lengths
+    /// differ.
     private static func sameText(_ lhs: String?, _ rhs: String?) -> Bool {
         switch (lhs, rhs) {
         case (nil, nil):
             return true
-        case let (lhs?, rhs?):
+        case (let lhs?, let rhs?):
             return (lhs as NSString).isEqual(to: rhs)
         default:
             return false

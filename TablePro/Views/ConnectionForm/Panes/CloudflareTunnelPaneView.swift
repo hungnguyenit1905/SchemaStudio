@@ -16,7 +16,9 @@ struct CloudflareTunnelPaneView: View {
             Section {
                 Toggle(String(localized: "Enable Cloudflare Tunnel"), isOn: $coordinator.cloudflareTunnel.state.enabled)
             } footer: {
-                Text("Starts and stops `cloudflared access tcp` with this connection and routes it through a local port.")
+                Text(
+                    "Starts and stops `cloudflared access tcp` with this connection and routes it through a local port."
+                )
             }
 
             if coordinator.cloudflareTunnel.state.enabled {
@@ -46,7 +48,6 @@ struct CloudflareTunnelPaneView: View {
         }
     }
 
-    @ViewBuilder
     private var authenticationSection: some View {
         Section(String(localized: "Authentication")) {
             Picker(String(localized: "Method"), selection: $coordinator.cloudflareTunnel.state.authMethod) {
@@ -60,30 +61,40 @@ struct CloudflareTunnelPaneView: View {
                 Button("Sign In with Browser...") {
                     viewModel.signInWithBrowser()
                 }
-                .disabled(coordinator.cloudflareTunnel.state.accessHostname.trimmingCharacters(in: .whitespaces).isEmpty)
+                .disabled(coordinator.cloudflareTunnel.state.accessHostname.trimmingCharacters(in: .whitespaces)
+                    .isEmpty)
                 if let signInError = viewModel.signInError {
                     Label(signInError, systemImage: "exclamationmark.triangle.fill")
                         .font(.caption)
                         .foregroundStyle(.orange)
                 } else {
-                    Text("Signs in to Cloudflare Access once and caches the token, so connecting doesn't open a browser.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "Signs in to Cloudflare Access once and caches the token, so connecting doesn't open a browser."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
             case .serviceToken:
                 SecureField(String(localized: "Client ID"), text: $coordinator.cloudflareTunnel.state.serviceTokenId)
-                SecureField(String(localized: "Client Secret"), text: $coordinator.cloudflareTunnel.state.serviceTokenSecret)
-                Text("The Access application policy must use a Service Auth rule, or Cloudflare still prompts for browser sign-in.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                SecureField(
+                    String(localized: "Client Secret"),
+                    text: $coordinator.cloudflareTunnel.state.serviceTokenSecret
+                )
+                Text(
+                    "The Access application policy must use a Service Auth rule, or Cloudflare still prompts for browser sign-in."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
         }
     }
 
-    @ViewBuilder
     private var listenerSection: some View {
         Section {
-            Toggle(String(localized: "Choose port automatically"), isOn: $coordinator.cloudflareTunnel.state.automaticPort)
+            Toggle(
+                String(localized: "Choose port automatically"),
+                isOn: $coordinator.cloudflareTunnel.state.automaticPort
+            )
             if !coordinator.cloudflareTunnel.state.automaticPort {
                 TextField(
                     String(localized: "Local port"),
@@ -103,7 +114,6 @@ struct CloudflareTunnelPaneView: View {
         }
     }
 
-    @ViewBuilder
     private var binarySection: some View {
         Section {
             TextField(
@@ -122,7 +132,9 @@ struct CloudflareTunnelPaneView: View {
                         .foregroundStyle(.secondary)
                 } else if viewModel.didResolveBinary {
                     Label(
-                        String(localized: "cloudflared not found. Install it with `brew install cloudflared`, or choose the binary above."),
+                        String(
+                            localized: "cloudflared not found. Install it with `brew install cloudflared`, or choose the binary above."
+                        ),
                         systemImage: "exclamationmark.triangle.fill"
                     )
                     .foregroundStyle(.orange)

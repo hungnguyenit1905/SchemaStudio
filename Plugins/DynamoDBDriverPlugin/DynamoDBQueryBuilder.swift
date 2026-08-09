@@ -73,8 +73,7 @@ struct DynamoDBQueryBuilder {
     ) -> String? {
         let partitionKey = keySchema.first(where: { $0.keyType == "HASH" })
         if let pk = partitionKey,
-           let pkFilter = filters.first(where: { $0.column == pk.name && $0.op == "=" })
-        {
+           let pkFilter = filters.first(where: { $0.column == pk.name && $0.op == "=" }) {
             let pkType = attributeTypes[pk.name] ?? "S"
             let remainingFilters = filters.filter { !($0.column == pk.name && $0.op == "=") }
             let specs = remainingFilters.map { DynamoDBFilterSpec(column: $0.column, op: $0.op, value: $0.value) }
@@ -157,13 +156,11 @@ struct DynamoDBQueryBuilder {
         guard let tableData = Data(base64Encoded: parts[0]),
               let tableName = String(data: tableData, encoding: .utf8),
               let limit = Int(parts[1]),
-              let offset = Int(parts[2])
-        else { return nil }
+              let offset = Int(parts[2]) else { return nil }
 
         let filters: [DynamoDBFilterSpec]
         if let filtersData = Data(base64Encoded: parts[3]),
-           let decoded = try? JSONDecoder().decode([DynamoDBFilterSpec].self, from: filtersData)
-        {
+           let decoded = try? JSONDecoder().decode([DynamoDBFilterSpec].self, from: filtersData) {
             filters = decoded
         } else {
             filters = []
@@ -192,14 +189,12 @@ struct DynamoDBQueryBuilder {
               let offset = Int(parts[2]),
               let pkName = decodeBase64(parts[3]),
               let pkValue = decodeBase64(parts[4]),
-              let pkType = decodeBase64(parts[5])
-        else { return nil }
+              let pkType = decodeBase64(parts[5]) else { return nil }
 
         let filters: [DynamoDBFilterSpec]
         if parts.count >= 7,
            let filtersData = Data(base64Encoded: parts[6]),
-           let decoded = try? JSONDecoder().decode([DynamoDBFilterSpec].self, from: filtersData)
-        {
+           let decoded = try? JSONDecoder().decode([DynamoDBFilterSpec].self, from: filtersData) {
             filters = decoded
         } else {
             filters = []
@@ -231,8 +226,7 @@ struct DynamoDBQueryBuilder {
         guard parts.count >= 4 else { return nil }
 
         guard let tableData = Data(base64Encoded: parts[0]),
-              let tableName = String(data: tableData, encoding: .utf8)
-        else { return nil }
+              let tableName = String(data: tableData, encoding: .utf8) else { return nil }
 
         let filterColumn = decodeBase64(parts[1])
         let filterOp = decodeBase64(parts[2])
@@ -254,8 +248,7 @@ struct DynamoDBQueryBuilder {
 
     private static func decodeBase64(_ string: String) -> String? {
         guard let data = Data(base64Encoded: string),
-              let decoded = String(data: data, encoding: .utf8)
-        else { return nil }
+              let decoded = String(data: data, encoding: .utf8) else { return nil }
         return decoded
     }
 }

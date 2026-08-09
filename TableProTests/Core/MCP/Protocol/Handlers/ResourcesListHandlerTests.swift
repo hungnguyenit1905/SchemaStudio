@@ -1,6 +1,6 @@
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import XCTest
 
 final class ResourcesListHandlerTests: XCTestCase {
@@ -37,8 +37,7 @@ final class ResourcesListHandlerTests: XCTestCase {
 
         guard case .successResponse(let success) = response,
               let resources = success.result["resources"]?.arrayValue,
-              let connections = resources.first(where: { $0["uri"]?.stringValue == "tablepro://connections" })
-        else {
+              let connections = resources.first(where: { $0["uri"]?.stringValue == "tablepro://connections" }) else {
             XCTFail("Expected connections resource")
             return
         }

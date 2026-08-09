@@ -27,7 +27,11 @@ extension ClickHousePluginDriver {
         return try await perform(request: request, session: session)
     }
 
-    func executeRawWithParams(_ query: String, params: [String: String?], queryId: String? = nil) async throws -> CHQueryResult {
+    func executeRawWithParams(
+        _ query: String,
+        params: [String: String?],
+        queryId: String? = nil
+    ) async throws -> CHQueryResult {
         lock.lock()
         guard let session = self.session else {
             lock.unlock()
@@ -74,7 +78,10 @@ extension ClickHousePluginDriver {
 
     private func send(request: URLRequest, session: URLSession) async throws -> (Data, URLResponse) {
         try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<(Data, URLResponse), Error>) in
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<
+                (Data, URLResponse),
+                Error
+            >) in
                 let task = session.dataTask(with: request) { data, response, error in
                     if let error {
                         continuation.resume(throwing: error)
@@ -111,7 +118,12 @@ extension ClickHousePluginDriver {
         return fields
     }
 
-    func buildRequest(query: String, database: String, queryId: String? = nil, params: [String: String?]? = nil) throws -> URLRequest {
+    func buildRequest(
+        query: String,
+        database: String,
+        queryId: String? = nil,
+        params: [String: String?]? = nil
+    ) throws -> URLRequest {
         let useTLS = config.ssl.isEnabled
 
         var components = URLComponents()
@@ -129,7 +141,8 @@ extension ClickHousePluginDriver {
         }
         queryItems.append(URLQueryItem(name: "send_progress_in_http_headers", value: "1"))
         queryItems.append(contentsOf: ClickHouseResponseClassifier.transportQueryItems(
-            supportsWriteExceptionSetting: ClickHouseCapabilities.parse(serverVersion).hasWriteExceptionInOutputFormatSetting
+            supportsWriteExceptionSetting: ClickHouseCapabilities.parse(serverVersion)
+                .hasWriteExceptionInOutputFormatSetting
         ))
         if let params {
             for (key, value) in params.sorted(by: { $0.key < $1.key }) {
@@ -176,17 +189,17 @@ extension ClickHousePluginDriver {
                 converted.append(char)
                 continue
             }
-            if char == "\\" && (inSingleQuote || inDoubleQuote) {
+            if char == "\\", inSingleQuote || inDoubleQuote {
                 isEscaped = true
                 converted.append(char)
                 continue
             }
-            if char == "'" && !inDoubleQuote {
+            if char == "'", !inDoubleQuote {
                 inSingleQuote.toggle()
-            } else if char == "\"" && !inSingleQuote {
+            } else if char == "\"", !inSingleQuote {
                 inDoubleQuote.toggle()
             }
-            if char == "?" && !inSingleQuote && !inDoubleQuote && paramIndex < parameters.count {
+            if char == "?", !inSingleQuote, !inDoubleQuote, paramIndex < parameters.count {
                 paramIndex += 1
                 converted.append("{p\(paramIndex):String}")
             } else {
@@ -195,7 +208,7 @@ extension ClickHousePluginDriver {
         }
 
         var paramMap: [String: String?] = [:]
-        for i in 0..<paramIndex where i < parameters.count {
+        for i in 0 ..< paramIndex where i < parameters.count {
             switch parameters[i] {
             case .null:
                 paramMap["p\(i + 1)"] = nil

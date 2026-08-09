@@ -114,7 +114,7 @@ final class KeyHandlingTableView: NSTableView {
         let clickedRow = row(at: point)
         let clickedColumn = column(at: point)
 
-        if event.clickCount == 2 && clickedRow == -1 && coordinator?.isEditable == true {
+        if event.clickCount == 2, clickedRow == -1, coordinator?.isEditable == true {
             coordinator?.delegate?.dataGridAddRow()
             return
         }
@@ -220,14 +220,16 @@ final class KeyHandlingTableView: NSTableView {
         return DataGridView.dataColumnIndex(for: candidate, in: self, schema: schema) ?? -1
     }
 
-    @objc func delete(_ sender: Any?) {
+    @objc
+    func delete(_ sender: Any?) {
         guard let coordinator, coordinator.isEditable else { return }
         let indices = coordinator.currentRowSelection()
         guard !indices.isEmpty else { return }
         coordinator.delegate?.dataGridDeleteRows(indices)
     }
 
-    @objc func copy(_ sender: Any?) {
+    @objc
+    func copy(_ sender: Any?) {
         if let controller = gridSelection, !controller.isEmpty {
             coordinator?.copyGridSelection(controller.selection)
             return
@@ -239,12 +241,14 @@ final class KeyHandlingTableView: NSTableView {
         coordinator?.delegate?.dataGridCopyRows(Set(selectedRowIndexes))
     }
 
-    @objc func copyRowsAsTSV(_ sender: Any?) {
+    @objc
+    func copyRowsAsTSV(_ sender: Any?) {
         guard let coordinator else { return }
         coordinator.delegate?.dataGridCopyRows(coordinator.currentRowSelection())
     }
 
-    @objc override func selectAll(_ sender: Any?) {
+    @objc
+    override func selectAll(_ sender: Any?) {
         let totalRows = totalRows()
         let totalColumns = totalDataColumns()
         guard totalRows > 0, totalColumns > 0 else {
@@ -252,7 +256,7 @@ final class KeyHandlingTableView: NSTableView {
             return
         }
         gridSelection?.selectAll(totalRows: totalRows, totalColumns: totalColumns)
-        selectRowIndexes(IndexSet(integersIn: 0..<totalRows), byExtendingSelection: false)
+        selectRowIndexes(IndexSet(integersIn: 0 ..< totalRows), byExtendingSelection: false)
     }
 
     private func focusedDataCell() -> (row: Int, columnIndex: Int)? {
@@ -266,7 +270,8 @@ final class KeyHandlingTableView: NSTableView {
         return (focusedRow, dataColumn)
     }
 
-    @objc func paste(_ sender: Any?) {
+    @objc
+    func paste(_ sender: Any?) {
         guard coordinator?.isEditable == true else { return }
         if focusedRow >= 0,
            DataGridView.isDataTableColumn(focusedColumn),
@@ -369,7 +374,12 @@ final class KeyHandlingTableView: NSTableView {
         return combo.matches(event)
     }
 
-    private func handleArrow(_ direction: GridSelectionController.Direction, modifiers: NSEvent.ModifierFlags, currentRow: Int, event: NSEvent) {
+    private func handleArrow(
+        _ direction: GridSelectionController.Direction,
+        modifiers: NSEvent.ModifierFlags,
+        currentRow: Int,
+        event: NSEvent
+    ) {
         if modifiers.contains(.shift) {
             if extendGridSelection(direction: direction, jumpToEdge: modifiers.contains(.command)) {
                 return
@@ -404,7 +414,8 @@ final class KeyHandlingTableView: NSTableView {
         return GridCoord(row: cell.row, column: cell.columnIndex)
     }
 
-    @objc override func insertNewline(_ sender: Any?) {
+    @objc
+    override func insertNewline(_ sender: Any?) {
         let row = selectedRow
         guard row >= 0,
               DataGridView.isDataTableColumn(focusedColumn),
@@ -413,10 +424,16 @@ final class KeyHandlingTableView: NSTableView {
               let coordinator else {
             return
         }
-        coordinator.handleCellInteraction(row: row, tableColumn: focusedColumn, columnIndex: columnIndex, tableView: self)
+        coordinator.handleCellInteraction(
+            row: row,
+            tableColumn: focusedColumn,
+            columnIndex: columnIndex,
+            tableView: self
+        )
     }
 
-    @objc override func cancelOperation(_ sender: Any?) {
+    @objc
+    override func cancelOperation(_ sender: Any?) {
         guard let controller = gridSelection, !controller.isEmpty else {
             super.cancelOperation(sender)
             return
@@ -451,7 +468,7 @@ final class KeyHandlingTableView: NSTableView {
     }
 
     private func firstVisibleDataColumn() -> Int {
-        for index in DataGridView.firstDataTableColumnIndex..<numberOfColumns where isVisibleDataColumn(at: index) {
+        for index in DataGridView.firstDataTableColumnIndex ..< numberOfColumns where isVisibleDataColumn(at: index) {
             return index
         }
         return -1
@@ -470,7 +487,7 @@ final class KeyHandlingTableView: NSTableView {
 
     private func nextVisibleDataColumn(after current: Int) -> Int {
         guard current + 1 < numberOfColumns else { return -1 }
-        for index in (current + 1)..<numberOfColumns where isVisibleDataColumn(at: index) {
+        for index in (current + 1) ..< numberOfColumns where isVisibleDataColumn(at: index) {
             return index
         }
         return -1

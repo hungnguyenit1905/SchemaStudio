@@ -35,7 +35,7 @@ struct JSONEditorContentView: View {
             isEditable: true,
             onDismiss: onDismiss,
             onCommit: { newValue in
-                if newValue.isEmpty && initialValue == nil { return }
+                if newValue.isEmpty, initialValue == nil { return }
                 if newValue != JsonReindenter.normalize(initialValue ?? "") {
                     onCommit(newValue)
                 }

@@ -86,14 +86,14 @@ extension VimEngine {
     ) -> VimNumberMatch? {
         guard contentEnd > lineStart else { return nil }
         var scan = max(cursor, lineStart)
-        while scan < contentEnd && !isDigitChar(buffer.character(at: scan)) {
+        while scan < contentEnd, !isDigitChar(buffer.character(at: scan)) {
             scan += 1
         }
         guard scan < contentEnd else { return nil }
         var start = scan
-        if start >= lineStart + 2
-            && buffer.character(at: start - 2) == 0x30
-            && (buffer.character(at: start - 1) == 0x78 || buffer.character(at: start - 1) == 0x58) {
+        if start >= lineStart + 2,
+           buffer.character(at: start - 2) == 0x30,
+           buffer.character(at: start - 1) == 0x78 || buffer.character(at: start - 1) == 0x58 {
             start -= 2
         }
         var end = scan
@@ -104,15 +104,15 @@ extension VimEngine {
         if isHex {
             hexUppercase = buffer.character(at: start + 1) == 0x58
             end = start + 2
-            while end < contentEnd && isHexDigitChar(buffer.character(at: end)) {
+            while end < contentEnd, isHexDigitChar(buffer.character(at: end)) {
                 end += 1
             }
             guard end > start + 2 else { return nil }
         } else {
-            while end < contentEnd && isDigitChar(buffer.character(at: end)) {
+            while end < contentEnd, isDigitChar(buffer.character(at: end)) {
                 end += 1
             }
-            if start > lineStart && buffer.character(at: start - 1) == 0x2D {
+            if start > lineStart, buffer.character(at: start - 1) == 0x2D {
                 start -= 1
             }
         }

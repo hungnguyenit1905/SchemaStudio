@@ -116,15 +116,21 @@ extension MainContentCoordinator {
     func syncSidebarToSelectedTab() {
         let liveTables = DatabaseManager.shared
             .session(for: connectionId)?.tables ?? []
-        let target: Set<TableInfo>
-        if let currentTableName = tabManager.selectedTab?.tableContext.tableName,
+        let target: Set<DatabaseTreeTableRef>
+        if let context = tabManager.selectedTab?.tableContext,
+           let currentTableName = context.tableName,
            let match = liveTables.first(where: { $0.name == currentTableName }) {
-            target = [match]
+            target = [DatabaseTreeTableRef(
+                connectionId: connectionId,
+                database: context.databaseName.isEmpty ? browseDatabaseName : context.databaseName,
+                schema: context.schemaName,
+                table: match
+            )]
         } else {
             target = []
         }
         if windowSidebarState.selectedTables != target {
-            if target.isEmpty && liveTables.isEmpty { return }
+            if target.isEmpty, liveTables.isEmpty { return }
             windowSidebarState.selectedTables = target
         }
     }

@@ -68,8 +68,7 @@ final class OpenAICompatibleProvider: ChatTransport {
             jsonString = payload
         }
         guard let data = jsonString.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else { return nil }
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
         return json
     }
 
@@ -212,7 +211,9 @@ final class OpenAICompatibleProvider: ChatTransport {
                 let models = try await fetchAvailableModels()
                 if models.isEmpty {
                     throw AIProviderError.networkError(
-                        String(localized: "Ollama is running but has no models. Run \"ollama pull <model>\" to download one.")
+                        String(
+                            localized: "Ollama is running but has no models. Run \"ollama pull <model>\" to download one."
+                        )
                     )
                 }
                 return true
@@ -476,15 +477,13 @@ final class OpenAICompatibleProvider: ChatTransport {
         }
 
         guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200
-        else {
+              httpResponse.statusCode == 200 else {
             throw AIProviderError.networkError("Failed to fetch models")
         }
 
         guard let json = try? JSONSerialization.jsonObject(with: data)
-                  as? [String: Any],
-              let modelsArray = json["data"] as? [[String: Any]]
-        else {
+            as? [String: Any],
+            let modelsArray = json["data"] as? [[String: Any]] else {
             return []
         }
 
@@ -510,8 +509,7 @@ final class OpenAICompatibleProvider: ChatTransport {
         }
 
         guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200
-        else {
+              httpResponse.statusCode == 200 else {
             let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
             throw AIProviderError.networkError(
                 String(format: String(localized: "Failed to fetch models from %@ (HTTP %d)"), endpoint, statusCode)
@@ -519,9 +517,8 @@ final class OpenAICompatibleProvider: ChatTransport {
         }
 
         guard let json = try? JSONSerialization.jsonObject(with: data)
-                  as? [String: Any],
-              let models = json["models"] as? [[String: Any]]
-        else {
+            as? [String: Any],
+            let models = json["models"] as? [[String: Any]] else {
             return []
         }
 

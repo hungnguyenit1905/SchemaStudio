@@ -30,7 +30,10 @@ struct SurrealQLTests {
         #expect(SurrealQL.parseRecordId("person:alice") == SurrealRecordID(table: "person", id: .string("alice")))
         #expect(SurrealQL.parseRecordId("person:10") == SurrealRecordID(table: "person", id: .int(10)))
         #expect(SurrealQL.parseRecordId("person:`a:b`") == SurrealRecordID(table: "person", id: .string("a:b")))
-        #expect(SurrealQL.parseRecordId("person:\u{27E8}10\u{27E9}") == SurrealRecordID(table: "person", id: .string("10")))
+        #expect(SurrealQL.parseRecordId("person:\u{27E8}10\u{27E9}") == SurrealRecordID(
+            table: "person",
+            id: .string("10")
+        ))
         #expect(SurrealQL.parseRecordId("alice", fallbackTable: "person")
             == SurrealRecordID(table: "person", id: .string("alice")))
         #expect(SurrealQL.parseRecordId("") == nil)
@@ -39,7 +42,10 @@ struct SurrealQLTests {
     @Test("A backticked string id is not re-inferred as an int")
     func quotedStringIdStaysString() {
         #expect(SurrealQL.parseRecordId("person:`10`") == SurrealRecordID(table: "person", id: .string("10")))
-        #expect(SurrealQL.parseRecordId("person:\u{27E8}10\u{27E9}") == SurrealRecordID(table: "person", id: .string("10")))
+        #expect(SurrealQL.parseRecordId("person:\u{27E8}10\u{27E9}") == SurrealRecordID(
+            table: "person",
+            id: .string("10")
+        ))
         #expect(SurrealQL.parseRecordId("person:10") == SurrealRecordID(table: "person", id: .int(10)))
     }
 
@@ -371,7 +377,12 @@ struct SurrealStatementGeneratorTests {
         let change = PluginRowChange(
             rowIndex: 0,
             type: .update,
-            cellChanges: [(columnIndex: 1, columnName: "name", oldValue: .text("a"), newValue: .text("'; REMOVE TABLE person; --"))],
+            cellChanges: [(
+                columnIndex: 1,
+                columnName: "name",
+                oldValue: .text("a"),
+                newValue: .text("'; REMOVE TABLE person; --")
+            )],
             originalRow: [.text("person:alice"), .text("a"), .null]
         )
         let statements = SurrealStatementGenerator.statements(
@@ -441,7 +452,12 @@ struct SurrealStatementGeneratorTests {
         let change = PluginRowChange(
             rowIndex: 0,
             type: .update,
-            cellChanges: [(columnIndex: 1, columnName: "name", oldValue: .text("Alice"), newValue: .text("__DEFAULT__"))],
+            cellChanges: [(
+                columnIndex: 1,
+                columnName: "name",
+                oldValue: .text("Alice"),
+                newValue: .text("__DEFAULT__")
+            )],
             originalRow: [.text("person:alice"), .text("Alice"), .text("30")]
         )
         let statements = SurrealStatementGenerator.statements(
@@ -484,7 +500,7 @@ struct SurrealCellCoderTests {
         #expect(value(#"{"a":1}"#, "object") == .object([(key: "a", value: .int(1))]))
         #expect(value("2024-09-15T12:34:56.789Z", "datetime")
             == .datetime(seconds: 1_726_403_696, nanoseconds: 789_000_000))
-        #expect(value("1h30m", "duration") == .duration(seconds: 5400, nanoseconds: 0))
+        #expect(value("1h30m", "duration") == .duration(seconds: 5_400, nanoseconds: 0))
     }
 
     @Test("With no known kind, numeric and bool text is typed, not left a string")
@@ -531,11 +547,15 @@ struct SurrealCellCoderTests {
 
 @Suite("SurrealDB - connection config")
 struct SurrealDBConnectionConfigTests {
-    private func config(_ level: String, namespace: String = "ns", extra: [String: String] = [:]) -> SurrealDBConnectionConfig {
+    private func config(
+        _ level: String,
+        namespace: String = "ns",
+        extra: [String: String] = [:]
+    ) -> SurrealDBConnectionConfig {
         var fields = ["sdbAuthLevel": level]
         fields.merge(extra) { _, new in new }
         return SurrealDBConnectionConfig(config: DriverConnectionConfig(
-            host: "localhost", port: 8000, username: "root", password: "secret",
+            host: "localhost", port: 8_000, username: "root", password: "secret",
             database: namespace, ssl: SSLConfiguration(), additionalFields: fields
         ))
     }

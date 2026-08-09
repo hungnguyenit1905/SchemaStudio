@@ -56,7 +56,7 @@ enum WordPressConfigExtractor {
             if line.hasPrefix("//") || line.hasPrefix("#") || line.hasPrefix("*") {
                 continue
             }
-            let range = NSRange(line.startIndex..<line.endIndex, in: line)
+            let range = NSRange(line.startIndex ..< line.endIndex, in: line)
             guard let match = regex.firstMatch(in: line, range: range),
                   let keyRange = Range(match.range(at: 1), in: line),
                   let valueRange = Range(match.range(at: 2), in: line) else {
@@ -71,7 +71,7 @@ enum WordPressConfigExtractor {
         guard let colon = value.firstIndex(of: ":") else {
             return (value, nil, false)
         }
-        let head = String(value[value.startIndex..<colon])
+        let head = String(value[value.startIndex ..< colon])
         let tail = String(value[value.index(after: colon)...])
         if let port = Int(tail) {
             return (head, port, false)

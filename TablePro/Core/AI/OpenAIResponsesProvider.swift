@@ -13,7 +13,7 @@ enum ResponsesDialect: Sendable {
     var defaultTestModel: String {
         switch self {
         case .openAI: return "gpt-5.5"
-        case .xai:    return "grok-4.5"
+        case .xai: return "grok-4.5"
         }
     }
 }
@@ -74,8 +74,7 @@ final class OpenAIResponsesProvider: ChatTransport {
         guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200,
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let modelsArray = json["data"] as? [[String: Any]]
-        else {
+              let modelsArray = json["data"] as? [[String: Any]] else {
             throw AIProviderError.networkError("Failed to fetch models")
         }
         return modelsArray.compactMap { $0["id"] as? String }.sorted()
@@ -113,9 +112,9 @@ final class OpenAIResponsesProvider: ChatTransport {
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         }
 
-        var body: [String: Any] = [
+        var body: [String: Any] = try [
             "model": options.model,
-            "input": try Self.encodeInput(turns: turns),
+            "input": Self.encodeInput(turns: turns),
             "store": false,
             "stream": stream
         ]
@@ -152,7 +151,7 @@ final class OpenAIResponsesProvider: ChatTransport {
     static func encodeInput(turns: [ChatTurnWire]) throws -> [[String: Any]] {
         var items: [[String: Any]] = []
         for turn in turns where turn.role != .system {
-            items.append(contentsOf: try encodeTurn(turn))
+            try items.append(contentsOf: encodeTurn(turn))
         }
         return items
     }
@@ -201,7 +200,10 @@ final class OpenAIResponsesProvider: ChatTransport {
             }
             if hasFunctionCall {
                 if !messageParts.isEmpty {
-                    Self.logger.warning("Dropping \(messageParts.count) text parts after function_call to keep tool-call adjacent to its output")
+                    Self.logger
+                        .warning(
+                            "Dropping \(messageParts.count) text parts after function_call to keep tool-call adjacent to its output"
+                        )
                     messageParts.removeAll()
                 }
             } else {
@@ -249,11 +251,11 @@ final class OpenAIResponsesProvider: ChatTransport {
     }
 
     static func encodeToolSpec(_ spec: ChatToolSpec) throws -> [String: Any] {
-        var encoded: [String: Any] = [
+        var encoded: [String: Any] = try [
             "type": "function",
             "name": spec.name,
             "description": spec.description,
-            "parameters": try spec.inputSchema.jsonObject()
+            "parameters": spec.inputSchema.jsonObject()
         ]
         encoded["strict"] = spec.strict
         return encoded
@@ -283,8 +285,7 @@ final class OpenAIResponsesProvider: ChatTransport {
         let payload = String(line.dropFirst(6))
         guard payload != "[DONE]",
               let data = payload.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else { return nil }
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
         return json
     }
 

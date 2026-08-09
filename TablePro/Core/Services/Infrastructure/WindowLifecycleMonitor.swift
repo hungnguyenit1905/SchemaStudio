@@ -225,10 +225,18 @@ internal final class WindowLifecycleMonitor {
         let hasRemainingWindows = entries.values.contains {
             $0.connectionId == closedConnectionId && $0.window != nil
         }
+        let isExpandedInTree = ConnectionTreeState.shared.expandedConnectionIds.contains(closedConnectionId)
+        let hasAnyRemainingWindow = entries.values.contains { $0.window != nil }
+        let shouldDisconnect = !ConnectionTeardown.isTearingDown(closedConnectionId)
+            && WindowCloseDisconnectPolicy.shouldDisconnect(
+                hasRemainingWindowsForConnection: hasRemainingWindows,
+                isExpandedInTree: isExpandedInTree,
+                hasAnyRemainingWindow: hasAnyRemainingWindow
+            )
         Self.lifecycleLogger.info(
-            "[close] handleWindowClose post-remove windowId=\(windowId, privacy: .public) remainingForConn=\(hasRemainingWindows) totalEntries=\(self.entries.count)"
+            "[close] handleWindowClose post-remove windowId=\(windowId, privacy: .public) remainingForConn=\(hasRemainingWindows) expandedInTree=\(isExpandedInTree) anyWindowLeft=\(hasAnyRemainingWindow) disconnect=\(shouldDisconnect) totalEntries=\(self.entries.count)"
         )
-        if !hasRemainingWindows {
+        if shouldDisconnect {
             Task {
                 let t0 = Date()
                 await DatabaseManager.shared.disconnectSession(closedConnectionId)

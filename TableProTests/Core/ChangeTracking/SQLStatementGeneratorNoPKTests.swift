@@ -123,7 +123,13 @@ struct SQLStatementGeneratorNoPKTests {
                 type: .update,
                 cellChanges: [
                     CellChange(rowIndex: 0, columnIndex: 1, columnName: "name", oldValue: "John", newValue: "Johnny"),
-                    CellChange(rowIndex: 0, columnIndex: 2, columnName: "email", oldValue: "john@example.com", newValue: "johnny@example.com")
+                    CellChange(
+                        rowIndex: 0,
+                        columnIndex: 2,
+                        columnName: "email",
+                        oldValue: "john@example.com",
+                        newValue: "johnny@example.com"
+                    )
                 ],
                 originalRow: ["1", "John", "john@example.com"]
             )

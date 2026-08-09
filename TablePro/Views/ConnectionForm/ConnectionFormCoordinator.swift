@@ -55,7 +55,6 @@ final class ConnectionFormCoordinator {
     var clipboardCandidate: ParsedConnection?
     var clipboardBannerDismissed: Bool = false
 
-
     private var temporaryTestIds: Set<UUID> = []
 
     @ObservationIgnored let services: AppServices
@@ -165,8 +164,7 @@ final class ConnectionFormCoordinator {
         ssh.loadProfiles()
         ssh.loadSSHConfig()
         if let id = connectionId,
-           let existing = storage.loadConnections().first(where: { $0.id == id })
-        {
+           let existing = storage.loadConnections().first(where: { $0.id == id }) {
             Self.logger.debug(
                 "[trace] load found existing id=\(existing.id.uuidString, privacy: .public) name='\(existing.name, privacy: .public)' promptForPassword=\(existing.promptForPassword)"
             )
@@ -247,8 +245,7 @@ final class ConnectionFormCoordinator {
 
         if network.type.pluginTypeId == "MongoDB",
            let mongoHosts = finalAdditionalFields["mongoHosts"],
-           !mongoHosts.isEmpty
-        {
+           !mongoHosts.isEmpty {
             let result = Self.normalizeMongoHosts(mongoHosts, defaultPort: network.type.defaultPort)
             finalAdditionalFields["mongoHosts"] = result.hosts
             finalHost = result.primaryHost
@@ -315,16 +312,15 @@ final class ConnectionFormCoordinator {
             storage.savePassword(auth.password, for: connectionToSave.id)
         }
 
-        if ssh.state.enabled && ssh.state.profileId == nil {
-            if (ssh.state.authMethod == .password || ssh.state.authMethod == .keyboardInteractive)
-                && !ssh.state.password.isEmpty
-            {
+        if ssh.state.enabled, ssh.state.profileId == nil {
+            if ssh.state.authMethod == .password || ssh.state.authMethod == .keyboardInteractive,
+               !ssh.state.password.isEmpty {
                 storage.saveSSHPassword(ssh.state.password, for: connectionToSave.id)
             }
-            if ssh.state.authMethod == .privateKey && !ssh.state.keyPassphrase.isEmpty {
+            if ssh.state.authMethod == .privateKey, !ssh.state.keyPassphrase.isEmpty {
                 storage.saveKeyPassphrase(ssh.state.keyPassphrase, for: connectionToSave.id)
             }
-            if ssh.state.totpMode == .autoGenerate && !ssh.state.totpSecret.isEmpty {
+            if ssh.state.totpMode == .autoGenerate, !ssh.state.totpSecret.isEmpty {
                 storage.saveTOTPSecret(ssh.state.totpSecret, for: connectionToSave.id)
             } else {
                 storage.deleteTOTPSecret(for: connectionToSave.id)
@@ -335,7 +331,7 @@ final class ConnectionFormCoordinator {
             storage.deleteTOTPSecret(for: connectionToSave.id)
         }
 
-        if !ssl.clientKeyPassphrase.isEmpty && !ssl.clientKeyPath.trimmingCharacters(in: .whitespaces).isEmpty {
+        if !ssl.clientKeyPassphrase.isEmpty, !ssl.clientKeyPath.trimmingCharacters(in: .whitespaces).isEmpty {
             storage.saveSSLClientKeyPassphrase(ssl.clientKeyPassphrase, for: connectionToSave.id)
         } else {
             storage.deleteSSLClientKeyPassphrase(for: connectionToSave.id)
@@ -349,7 +345,10 @@ final class ConnectionFormCoordinator {
         if isNew {
             savedConnections.append(connectionToSave)
             guard storage.saveConnections(savedConnections) else {
-                saveError = String(localized: "Could not save the connection. Check disk space and permissions, then try again.")
+                saveError =
+                    String(
+                        localized: "Could not save the connection. Check disk space and permissions, then try again."
+                    )
                 return
             }
             if !connectionToSave.localOnly {
@@ -362,12 +361,18 @@ final class ConnectionFormCoordinator {
             }
         } else {
             guard let index = savedConnections.firstIndex(where: { $0.id == connectionToSave.id }) else {
-                saveError = String(localized: "This connection was deleted on another device or window. Your changes were not saved.")
+                saveError =
+                    String(
+                        localized: "This connection was deleted on another device or window. Your changes were not saved."
+                    )
                 return
             }
             savedConnections[index] = connectionToSave
             guard storage.saveConnections(savedConnections) else {
-                saveError = String(localized: "Could not save the connection. Check disk space and permissions, then try again.")
+                saveError =
+                    String(
+                        localized: "Could not save the connection. Check disk space and permissions, then try again."
+                    )
                 return
             }
             if !connectionToSave.localOnly {
@@ -397,7 +402,8 @@ final class ConnectionFormCoordinator {
 
         if !WindowManager.shared.hasOpenWindow(for: connection.id) {
             Self.logger.info(
-                "Connection failed after window was closed: \(error.localizedDescription, privacy: .public)")
+                "Connection failed after window was closed: \(error.localizedDescription, privacy: .public)"
+            )
             return
         }
 
@@ -453,8 +459,7 @@ final class ConnectionFormCoordinator {
 
         if network.type.pluginTypeId == "MongoDB",
            let mongoHosts = finalAdditionalFields["mongoHosts"],
-           !mongoHosts.isEmpty
-        {
+           !mongoHosts.isEmpty {
             let result = Self.normalizeMongoHosts(mongoHosts, defaultPort: network.type.defaultPort)
             finalAdditionalFields["mongoHosts"] = result.hosts
             testHost = result.primaryHost
@@ -520,9 +525,9 @@ final class ConnectionFormCoordinator {
             do {
                 let sshPasswordForTest = sshState.profileId == nil ? sshState.password : nil
                 let isApiOnly = services.pluginManager.connectionMode(for: connectionType) == .apiOnly
-                let testPwOverride: String? = promptForPassword
+                let testPwOverride: String? = await promptForPassword
                     ? (password.isEmpty
-                        ? await PasswordPromptHelper.prompt(
+                        ? PasswordPromptHelper.prompt(
                             connectionName: displayName,
                             isAPIToken: isApiOnly,
                             window: NSApp.keyWindow
@@ -642,48 +647,45 @@ final class ConnectionFormCoordinator {
         let cloudSQLProxyState = tunnelStates.cloudSQLProxy
         let socksProxyState = tunnelStates.socksProxy
 
-        if !password.isEmpty && !promptForPassword {
+        if !password.isEmpty, !promptForPassword {
             services.connectionStorage.savePassword(password, for: testId)
         }
-        if sshState.enabled && sshState.profileId == nil {
-            if (sshState.authMethod == .password || sshState.authMethod == .keyboardInteractive)
-                && !sshState.password.isEmpty
-            {
+        if sshState.enabled, sshState.profileId == nil {
+            if sshState.authMethod == .password || sshState.authMethod == .keyboardInteractive,
+               !sshState.password.isEmpty {
                 services.connectionStorage.saveSSHPassword(sshState.password, for: testId)
             }
-            if sshState.authMethod == .privateKey && !sshState.keyPassphrase.isEmpty {
+            if sshState.authMethod == .privateKey, !sshState.keyPassphrase.isEmpty {
                 services.connectionStorage.saveKeyPassphrase(sshState.keyPassphrase, for: testId)
             }
-            if sshState.totpMode == .autoGenerate && !sshState.totpSecret.isEmpty {
+            if sshState.totpMode == .autoGenerate, !sshState.totpSecret.isEmpty {
                 services.connectionStorage.saveTOTPSecret(sshState.totpSecret, for: testId)
             }
         }
 
-        if !sslClientKeyPassphrase.isEmpty
-            && !sslClientKeyPath.trimmingCharacters(in: .whitespaces).isEmpty
-        {
+        if !sslClientKeyPassphrase.isEmpty,
+           !sslClientKeyPath.trimmingCharacters(in: .whitespaces).isEmpty {
             services.connectionStorage.saveSSLClientKeyPassphrase(sslClientKeyPassphrase, for: testId)
         }
 
-        if cloudflareState.enabled && cloudflareState.authMethod == .serviceToken {
+        if cloudflareState.enabled, cloudflareState.authMethod == .serviceToken {
             services.connectionStorage.saveCloudflareTokenId(cloudflareState.serviceTokenId, for: testId)
             services.connectionStorage.saveCloudflareTokenSecret(cloudflareState.serviceTokenSecret, for: testId)
         }
 
-        if cloudSQLProxyState.enabled && cloudSQLProxyState.authMode == .serviceAccountKey
-            && !cloudSQLProxyState.serviceAccountKeyJSON.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if cloudSQLProxyState.enabled, cloudSQLProxyState.authMode == .serviceAccountKey,
+           !cloudSQLProxyState.serviceAccountKeyJSON.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             services.connectionStorage.saveCloudSQLProxyServiceAccountKey(
                 cloudSQLProxyState.serviceAccountKeyJSON, for: testId
             )
         }
 
-        if socksProxyState.enabled && !socksProxyState.password.isEmpty {
+        if socksProxyState.enabled, !socksProxyState.password.isEmpty {
             services.connectionStorage.saveSOCKSProxyPassword(socksProxyState.password, for: testId)
         }
 
         for field in services.pluginManager.additionalConnectionFields(for: connectionType)
-            where field.isSecure
-        {
+            where field.isSecure {
             if let value = additionalFieldValues[field.id], !value.isEmpty {
                 services.connectionStorage.savePluginSecureField(value, fieldId: field.id, for: testId)
             }
@@ -718,8 +720,7 @@ final class ConnectionFormCoordinator {
                     if self.network.type == databaseType {
                         for field in services.pluginManager.additionalConnectionFields(for: databaseType) {
                             if self.targetValues(for: field.section)[field.id] == nil,
-                               let defaultValue = field.defaultValue
-                            {
+                               let defaultValue = field.defaultValue {
                                 self.setFieldValue(defaultValue, fieldId: field.id, section: field.section)
                             }
                         }

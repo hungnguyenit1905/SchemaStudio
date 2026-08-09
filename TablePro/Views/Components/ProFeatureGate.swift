@@ -30,8 +30,7 @@ struct ProFeatureGateModifier: ViewModifier {
             }
     }
 
-    @ViewBuilder
-    private var proRequiredOverlay: some View {
+    @ViewBuilder private var proRequiredOverlay: some View {
         let access = licenseManager.checkFeature(feature)
 
         ZStack {

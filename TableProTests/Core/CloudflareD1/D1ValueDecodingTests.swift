@@ -9,7 +9,6 @@ import Testing
 
 @Suite("D1Value JSON Decoding")
 struct D1ValueDecodingTests {
-
     // MARK: - Local copy of D1Value for testing
 
     private enum D1Value: Decodable {

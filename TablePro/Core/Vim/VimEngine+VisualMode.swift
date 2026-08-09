@@ -96,9 +96,11 @@ extension VimEngine {
         case "~":
             applyCaseToVisualSelection(.toggleCase, linewise: isLinewise, in: buffer)
             return true
+
         case "u":
             applyCaseToVisualSelection(.lowercase, linewise: isLinewise, in: buffer)
             return true
+
         case "U":
             applyCaseToVisualSelection(.uppercase, linewise: isLinewise, in: buffer)
             return true
@@ -111,15 +113,18 @@ extension VimEngine {
             pendingTextObject = true
             pendingTextObjectAround = false
             return true
+
         case "a":
             pendingTextObject = true
             pendingTextObjectAround = true
             return true
+
         case "I":
             let sel = buffer.selectedRange()
             buffer.setSelectedRange(NSRange(location: sel.location, length: 0))
             setMode(.insert)
             return true
+
         case "A":
             let sel = buffer.selectedRange()
             let endPos = sel.location + sel.length
@@ -238,7 +243,9 @@ extension VimEngine {
 
     func applyCaseToVisualSelection(_ op: VimOperator, linewise: Bool, in buffer: VimTextBuffer) {
         let sel = buffer.selectedRange()
-        guard sel.length > 0 else { setMode(.normal); return }
+        guard sel.length > 0 else { setMode(.normal)
+            return
+        }
         let original = buffer.string(in: sel)
         let transformed: String
         switch op {
@@ -254,10 +261,12 @@ extension VimEngine {
 
     func replaceVisualSelectionWithChar(_ char: Character, in buffer: VimTextBuffer) {
         let sel = buffer.selectedRange()
-        guard sel.length > 0 else { setMode(.normal); return }
+        guard sel.length > 0 else { setMode(.normal)
+            return
+        }
         var replacement = ""
         replacement.reserveCapacity(sel.length)
-        for i in 0..<sel.length {
+        for i in 0 ..< sel.length {
             let original = buffer.character(at: sel.location + i)
             if original == 0x0A {
                 replacement.append("\n")
@@ -273,7 +282,9 @@ extension VimEngine {
     func pasteOverVisualSelection(in buffer: VimTextBuffer) {
         let sel = buffer.selectedRange()
         let text = register.text
-        guard sel.length > 0 else { setMode(.normal); return }
+        guard sel.length > 0 else { setMode(.normal)
+            return
+        }
         buffer.replaceCharacters(in: sel, with: text)
         let newPos = sel.location + (text as NSString).length - 1
         buffer.setSelectedRange(NSRange(location: max(sel.location, newPos), length: 0))

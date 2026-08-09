@@ -76,5 +76,7 @@ internal struct ThemeDefinition: Codable, Identifiable, Equatable, Sendable {
 }
 
 internal enum ThemeAppearance: String, Codable, Sendable {
-    case light, dark, auto
+    case light
+    case dark
+    case auto
 }

@@ -93,8 +93,7 @@ struct ElasticsearchQueryBuilder {
               let indexData = Data(base64Encoded: parts[0]),
               let index = String(data: indexData, encoding: .utf8),
               let from = Int(parts[1]),
-              let size = Int(parts[2])
-        else { return nil }
+              let size = Int(parts[2]) else { return nil }
 
         let sorts: [ElasticsearchSortSpec]
         if let data = Data(base64Encoded: parts[3]),
@@ -189,7 +188,8 @@ struct ElasticsearchQueryBuilder {
         fields: [String: ElasticsearchFieldInfo],
         caseInsensitive: Bool = true
     ) -> [String: Any] {
-        let active = filters.filter { !($0.column == rawColumn && $0.value.trimmingCharacters(in: .whitespaces).isEmpty) }
+        let active = filters
+            .filter { !($0.column == rawColumn && $0.value.trimmingCharacters(in: .whitespaces).isEmpty) }
         guard !active.isEmpty else { return ["match_all": [String: Any]()] }
 
         let clauses = active.map { clause(for: $0, fields: fields, caseInsensitive: caseInsensitive) }
@@ -282,14 +282,23 @@ struct ElasticsearchQueryBuilder {
         case "CONTAINS":
             return containsClause(column: column, value: value, fields: fields, caseInsensitive: caseInsensitive)
         case "NOT CONTAINS":
-            return mustNot(containsClause(column: column, value: value, fields: fields, caseInsensitive: caseInsensitive))
+            return mustNot(containsClause(
+                column: column,
+                value: value,
+                fields: fields,
+                caseInsensitive: caseInsensitive
+            ))
         case "STARTS WITH":
             if isTextField(column, fields: fields) {
                 return ["match_phrase_prefix": [column: value]]
             }
             return prefixClause(keywordField(column, fields: fields), value: value, caseInsensitive: caseInsensitive)
         case "ENDS WITH":
-            return wildcardClause(keywordField(column, fields: fields), pattern: "*\(escapeWildcard(value))", caseInsensitive: caseInsensitive)
+            return wildcardClause(
+                keywordField(column, fields: fields),
+                pattern: "*\(escapeWildcard(value))",
+                caseInsensitive: caseInsensitive
+            )
         case "IN":
             return ["terms": [keywordField(column, fields: fields): splitList(value)]]
         case "NOT IN":
@@ -298,7 +307,10 @@ struct ElasticsearchQueryBuilder {
             return regexpClause(keywordField(column, fields: fields), value: value, caseInsensitive: caseInsensitive)
         case "IS NULL", "IS_NULL", "IS EMPTY", "IS_EMPTY":
             return ["bool": [
-                "should": [mustNot(["exists": ["field": column]]), ["term": [keywordField(column, fields: fields): ""]]],
+                "should": [
+                    mustNot(["exists": ["field": column]]),
+                    ["term": [keywordField(column, fields: fields): ""]]
+                ],
                 "minimum_should_match": 1,
             ]]
         case "IS NOT NULL", "IS_NOT_NULL", "IS NOT EMPTY", "IS_NOT_EMPTY":
@@ -317,7 +329,11 @@ struct ElasticsearchQueryBuilder {
         if isTextField(column, fields: fields) {
             return ["match": [column: value]]
         }
-        return wildcardClause(keywordField(column, fields: fields), pattern: "*\(escapeWildcard(value))*", caseInsensitive: caseInsensitive)
+        return wildcardClause(
+            keywordField(column, fields: fields),
+            pattern: "*\(escapeWildcard(value))*",
+            caseInsensitive: caseInsensitive
+        )
     }
 
     private static func wildcardClause(_ field: String, pattern: String, caseInsensitive: Bool) -> [String: Any] {

@@ -13,7 +13,14 @@ import Testing
 @Suite("ER diagram layout")
 struct ERDiagramLayoutTests {
     private func column(_ name: String) -> ERColumnDisplay {
-        ERColumnDisplay(id: name, name: name, dataType: "int", isPrimaryKey: false, isForeignKey: false, isNullable: true)
+        ERColumnDisplay(
+            id: name,
+            name: name,
+            dataType: "int",
+            isPrimaryKey: false,
+            isForeignKey: false,
+            isNullable: true
+        )
     }
 
     private func makeGraph(
@@ -22,7 +29,7 @@ struct ERDiagramLayoutTests {
         foreignKeys: [(from: String, to: String)] = []
     ) -> ERDiagramGraph {
         let nodes = tables.map { name -> ERTableNode in
-            let cols = (0..<columnsPerTable).map { column("\(name)_\($0)") }
+            let cols = (0 ..< columnsPerTable).map { column("\(name)_\($0)") }
             return ERTableNode(id: UUID(), tableName: name, columns: cols, displayColumns: cols, clusterId: nil)
         }
         let index = Dictionary(uniqueKeysWithValues: nodes.map { ($0.tableName, $0.id) })
@@ -92,8 +99,8 @@ struct ERDiagramLayoutTests {
         let layout = ERDiagramLayout.compute(graph: graph)
         let rects = graph.nodes.compactMap { node in layout[node.id].map { rect(for: node, at: $0) } }
 
-        for i in 0..<rects.count {
-            for j in (i + 1)..<rects.count {
+        for i in 0 ..< rects.count {
+            for j in (i + 1) ..< rects.count {
                 #expect(!rects[i].intersects(rects[j]))
             }
         }
@@ -119,7 +126,7 @@ struct ERDiagramLayoutTests {
 
     @Test("Isolated tables fill horizontal space instead of stacking vertically")
     func isolatedTablesUseWidth() {
-        let graph = makeGraph(tables: (0..<9).map { "t\($0)" })
+        let graph = makeGraph(tables: (0 ..< 9).map { "t\($0)" })
         let layout = ERDiagramLayout.compute(graph: graph)
         let bounds = graph.nodes
             .compactMap { node in layout[node.id].map { rect(for: node, at: $0) } }
@@ -137,8 +144,8 @@ struct ERDiagramLayoutTests {
 
     @Test("A long foreign-key chain does not stack into a tall narrow column")
     func longChainStaysCompact() {
-        let tables = (0..<10).map { "t\($0)" }
-        let chainFks = (0..<9).map { (from: "t\($0)", to: "t\($0 + 1)") }
+        let tables = (0 ..< 10).map { "t\($0)" }
+        let chainFks = (0 ..< 9).map { (from: "t\($0)", to: "t\($0 + 1)") }
         let graph = makeGraph(tables: tables, foreignKeys: chainFks)
         let layout = ERDiagramLayout.compute(graph: graph)
         let bounds = graph.nodes

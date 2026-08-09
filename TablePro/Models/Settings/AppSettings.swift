@@ -8,7 +8,6 @@
 import Foundation
 import SwiftUI
 
-
 // MARK: - Appearance Settings
 
 /// Controls which appearance the app uses: forced light, forced dark, or follow system.
@@ -60,10 +59,11 @@ struct AppearanceSettings: Codable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case appearanceMode, preferredLightThemeId, preferredDarkThemeId
+        case appearanceMode
+        case preferredLightThemeId
+        case preferredDarkThemeId
     }
 }
-
 
 // MARK: - Data Grid Settings
 
@@ -205,16 +205,18 @@ struct DataGridSettings: Codable, Equatable {
         rowHeight = try container.decodeIfPresent(DataGridRowHeight.self, forKey: .rowHeight) ?? .normal
         dateFormat = try container.decodeIfPresent(DateFormatOption.self, forKey: .dateFormat) ?? .iso8601
         nullDisplay = try container.decodeIfPresent(String.self, forKey: .nullDisplay) ?? "NULL"
-        defaultPageSize = (try container.decodeIfPresent(Int.self, forKey: .defaultPageSize) ?? 1_000)
+        defaultPageSize = try (container.decodeIfPresent(Int.self, forKey: .defaultPageSize) ?? 1_000)
             .clamped(to: SettingsValidationRules.defaultPageSizeRange)
         showAlternateRows = try container.decodeIfPresent(Bool.self, forKey: .showAlternateRows) ?? true
         showRowNumbers = try container.decodeIfPresent(Bool.self, forKey: .showRowNumbers) ?? true
         autoShowInspector = try container.decodeIfPresent(Bool.self, forKey: .autoShowInspector) ?? false
         enableSmartValueDetection = try container.decodeIfPresent(Bool.self, forKey: .enableSmartValueDetection) ?? true
-        countRowsIfEstimateLessThan = try container.decodeIfPresent(Int.self, forKey: .countRowsIfEstimateLessThan) ?? 100_000
+        countRowsIfEstimateLessThan = try container
+            .decodeIfPresent(Int.self, forKey: .countRowsIfEstimateLessThan) ?? 100_000
         queryResultRowCap = try container.decodeIfPresent(Int.self, forKey: .queryResultRowCap) ?? 10_000
         truncateQueryResults = try container.decodeIfPresent(Bool.self, forKey: .truncateQueryResults) ?? true
-        defaultSortBehavior = try container.decodeIfPresent(DefaultSortBehavior.self, forKey: .defaultSortBehavior) ?? .none
+        defaultSortBehavior = try container
+            .decodeIfPresent(DefaultSortBehavior.self, forKey: .defaultSortBehavior) ?? .none
     }
 
     // MARK: - Validated Properties
@@ -256,7 +258,11 @@ struct DataGridSettings: Codable, Equatable {
     var defaultPageSizeValidationError: String? {
         let range = SettingsValidationRules.defaultPageSizeRange
         if defaultPageSize < range.lowerBound || defaultPageSize > range.upperBound {
-            return String(format: String(localized: "Page size must be between %@ and %@"), range.lowerBound.formatted(), range.upperBound.formatted())
+            return String(
+                format: String(localized: "Page size must be between %@ and %@"),
+                range.lowerBound.formatted(),
+                range.upperBound.formatted()
+            )
         }
         return nil
     }
@@ -270,7 +276,7 @@ struct DataGridSettings: Codable, Equatable {
     /// Validation error for queryResultRowCap (for UI feedback)
     var queryResultRowCapValidationError: String? {
         let range = SettingsValidationRules.queryResultRowCapRange
-        if queryResultRowCap != 0 && (queryResultRowCap < range.lowerBound || queryResultRowCap > range.upperBound) {
+        if queryResultRowCap != 0, queryResultRowCap < range.lowerBound || queryResultRowCap > range.upperBound {
             return String(
                 format: String(localized: "Query result row cap must be between %@ and %@"),
                 range.lowerBound.formatted(),

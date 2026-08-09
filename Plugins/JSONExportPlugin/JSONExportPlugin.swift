@@ -152,7 +152,6 @@ final class JSONExportPlugin: ExportFormatPlugin, SettablePlugin {
     }
 
     private func formatJSONTextValue(_ val: String, columnTypeName: String, preserveAsString: Bool) -> String {
-
         if preserveAsString {
             return "\"\(PluginExportUtilities.escapeJSONString(val))\""
         }
@@ -163,7 +162,7 @@ final class JSONExportPlugin: ExportFormatPlugin, SettablePlugin {
 
         let isNumericCol = PluginExportUtilities.isNumericColumnType(columnTypeName)
 
-        if isNumericCol && isValidIntegerLiteral(val) {
+        if isNumericCol, isValidIntegerLiteral(val) {
             if let intVal = Int(val) {
                 return String(intVal)
             }
@@ -172,7 +171,7 @@ final class JSONExportPlugin: ExportFormatPlugin, SettablePlugin {
         if isNumericCol, let doubleVal = Double(val), !val.contains("e"), !val.contains("E") {
             let jsMaxSafeInteger = 9_007_199_254_740_991.0
 
-            if doubleVal.truncatingRemainder(dividingBy: 1) == 0 && !val.contains(".") {
+            if doubleVal.truncatingRemainder(dividingBy: 1) == 0, !val.contains(".") {
                 if abs(doubleVal) <= jsMaxSafeInteger,
                    doubleVal >= Double(Int.min),
                    doubleVal <= Double(Int.max) {
@@ -191,7 +190,7 @@ final class JSONExportPlugin: ExportFormatPlugin, SettablePlugin {
         guard !val.isEmpty else { return false }
         let digits = val.hasPrefix("-") || val.hasPrefix("+") ? String(val.dropFirst()) : val
         guard !digits.isEmpty else { return false }
-        if digits.count > 1 && digits.hasPrefix("0") { return false }
+        if digits.count > 1, digits.hasPrefix("0") { return false }
         return digits.allSatisfy(\.isNumber)
     }
 }

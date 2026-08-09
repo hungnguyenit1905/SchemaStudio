@@ -100,7 +100,8 @@ internal struct JsonRowConverter {
         if let intVal = Int64(value) {
             return String(intVal)
         }
-        if let doubleVal = Double(value), doubleVal == doubleVal.rounded(.towardZero), !doubleVal.isInfinite, !doubleVal.isNaN {
+        if let doubleVal = Double(value), doubleVal == doubleVal.rounded(.towardZero), !doubleVal.isInfinite,
+           !doubleVal.isNaN {
             return String(Int64(doubleVal))
         }
         return quotedEscaped(value)
@@ -125,7 +126,9 @@ internal struct JsonRowConverter {
         guard var ch = iter.next() else { return false }
 
         // Optional leading minus
-        if ch == "-" { guard let next = iter.next() else { return false }; ch = next }
+        if ch == "-" { guard let next = iter.next() else { return false }
+            ch = next
+        }
 
         // Integer part: "0" or [1-9][0-9]*
         guard ch >= "0" && ch <= "9" else { return false }
@@ -136,17 +139,17 @@ internal struct JsonRowConverter {
             while true {
                 guard let next = iter.next() else { return true }
                 ch = next
-                guard ch >= "0" && ch <= "9" else { break }
+                guard ch >= "0", ch <= "9" else { break }
             }
         }
 
         // Optional fractional part
         if ch == "." {
-            guard let next = iter.next(), next >= "0" && next <= "9" else { return false }
+            guard let next = iter.next(), next >= "0", next <= "9" else { return false }
             while true {
                 guard let next = iter.next() else { return true }
                 ch = next
-                guard ch >= "0" && ch <= "9" else { break }
+                guard ch >= "0", ch <= "9" else { break }
             }
         }
 
@@ -157,9 +160,9 @@ internal struct JsonRowConverter {
                 guard let signed = iter.next() else { return false }
                 next = signed
             }
-            guard next >= "0" && next <= "9" else { return false }
+            guard next >= "0", next <= "9" else { return false }
             for remaining in IteratorSequence(iter) {
-                guard remaining >= "0" && remaining <= "9" else { return false }
+                guard remaining >= "0", remaining <= "9" else { return false }
             }
         } else {
             return false // Unexpected trailing character

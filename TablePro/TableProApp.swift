@@ -147,13 +147,6 @@ struct AppMenuCommands: Commands {
         focusedActions ?? commandRegistry.current
     }
 
-    private var sidebarLayoutBinding: Binding<SidebarLayout> {
-        Binding(
-            get: { actions?.sidebarLayout ?? .flat },
-            set: { actions?.setSidebarLayout($0) }
-        )
-    }
-
     private var showObjectCommentsBinding: Binding<Bool> {
         Binding(
             get: { settingsManager.general.showObjectComments },
@@ -178,8 +171,7 @@ struct AppMenuCommands: Commands {
     private var resolvedCloseTabActions: MainContentCommandActions? {
         if let actions { return actions }
         guard let window = NSApp.keyWindow,
-              window.identifier?.rawValue.hasPrefix("main") == true
-        else { return nil }
+              window.identifier?.rawValue.hasPrefix("main") == true else { return nil }
         if let coordinator = MainContentCoordinator.coordinator(forWindow: window) {
             return coordinator.commandActions
         }
@@ -223,7 +215,11 @@ struct AppMenuCommands: Commands {
                 }
                 let centered = NSMutableParagraphStyle()
                 centered.alignment = .center
-                credits.addAttribute(.paragraphStyle, value: centered, range: NSRange(location: 0, length: credits.length))
+                credits.addAttribute(
+                    .paragraphStyle,
+                    value: centered,
+                    range: NSRange(location: 0, length: credits.length)
+                )
                 NSApplication.shared.orderFrontStandardAboutPanel(options: [
                     .credits: credits
                 ])
@@ -233,6 +229,7 @@ struct AppMenuCommands: Commands {
         }
 
         // MARK: - Keyboard Shortcut Architecture
+
         //
         // This app uses a hybrid approach for keyboard shortcuts:
         //
@@ -340,10 +337,10 @@ struct AppMenuCommands: Commands {
 
             Button(resolvedCloseTabActions?.closeTabsForOtherDatabasesTitle
                 ?? String(localized: "Close Tabs for Other Databases")) {
-                resolvedCloseTabActions?.closeTabsForOtherDatabases()
-            }
-            .optionalKeyboardShortcut(shortcut(for: .closeTabsForOtherDatabases))
-            .disabled(resolvedCloseTabActions?.canCloseTabsForOtherDatabases != true)
+                    resolvedCloseTabActions?.closeTabsForOtherDatabases()
+                }
+                .optionalKeyboardShortcut(shortcut(for: .closeTabsForOtherDatabases))
+                .disabled(resolvedCloseTabActions?.canCloseTabsForOtherDatabases != true)
 
             Button(String(localized: "Close All Tabs")) {
                 resolvedCloseTabActions?.closeAllTabs()
@@ -459,7 +456,10 @@ struct AppMenuCommands: Commands {
                 actions?.previewSQL()
             } label: {
                 if let dbType = actions?.currentDatabaseType {
-                    Text(String(format: String(localized: "Preview %@"), PluginManager.shared.queryLanguageName(for: dbType)))
+                    Text(String(
+                        format: String(localized: "Preview %@"),
+                        PluginManager.shared.queryLanguageName(for: dbType)
+                    ))
                 } else {
                     Text("Preview SQL")
                 }
@@ -550,6 +550,13 @@ struct AppMenuCommands: Commands {
                 actions?.openConnectionSwitcher()
             }
             .optionalKeyboardShortcut(shortcut(for: .switchConnection))
+            .disabled(!(actions?.isConnected ?? false))
+        }
+
+        CommandMenu("Tools") {
+            Button(String(localized: "Data Transfer\u{2026}")) {
+                actions?.openDataTransfer()
+            }
             .disabled(!(actions?.isConnected ?? false))
         }
 
@@ -703,15 +710,6 @@ struct AppMenuCommands: Commands {
 
             Divider()
 
-            Picker(selection: sidebarLayoutBinding) {
-                Text("Sidebar as List").tag(SidebarLayout.flat)
-                Text("Sidebar as Tree").tag(SidebarLayout.tree)
-            } label: {
-                Text("Sidebar Layout")
-            }
-            .pickerStyle(.inline)
-            .disabled(!(actions?.canSwitchSidebarLayout ?? false))
-
             Toggle(String(localized: "Show Object Comments"), isOn: showObjectCommentsBinding)
 
             Divider()
@@ -770,12 +768,11 @@ struct AppMenuCommands: Commands {
 
             Button(actions?.isResultTabPinned == true
                 ? String(localized: "Unpin Result")
-                : String(localized: "Pin Result"))
-            {
-                actions?.pinResultTab()
-            }
-            .optionalKeyboardShortcut(shortcut(for: .pinResultTab))
-            .disabled(!(actions?.canPinResultTab ?? false))
+                : String(localized: "Pin Result")) {
+                    actions?.pinResultTab()
+                }
+                .optionalKeyboardShortcut(shortcut(for: .pinResultTab))
+                .disabled(!(actions?.canPinResultTab ?? false))
 
             Button("Close Result Tab") {
                 actions?.closeResultTab()
@@ -813,55 +810,57 @@ struct AppMenuCommands: Commands {
             .keyboardShortcut("-", modifiers: .command)
         }
 
-        // Tab navigation shortcuts — native macOS window tabs
-        CommandGroup(after: .windowArrangement) {
-            ForEach(1...9, id: \.self) { number in
-                Button("Select Tab \(number)") {
-                    actions?.selectTab(number: number)
+        Group {
+            // Tab navigation shortcuts — native macOS window tabs
+            CommandGroup(after: .windowArrangement) {
+                ForEach(1 ... 9, id: \.self) { number in
+                    Button("Select Tab \(number)") {
+                        actions?.selectTab(number: number)
+                    }
+                    .keyboardShortcut(
+                        KeyEquivalent(Character(String(number))),
+                        modifiers: .command
+                    )
+                    .disabled(!(actions?.isConnected ?? false))
                 }
-                .keyboardShortcut(
-                    KeyEquivalent(Character(String(number))),
-                    modifiers: .command
-                )
+
+                Divider()
+
+                // Previous tab (Cmd+Shift+[) — delegate to native macOS tab switching
+                Button("Show Previous Tab") {
+                    NSApp.sendAction(#selector(NSWindow.selectPreviousTab(_:)), to: nil, from: nil)
+                }
+                .optionalKeyboardShortcut(shortcut(for: .showPreviousTab))
                 .disabled(!(actions?.isConnected ?? false))
+
+                // Next tab (Cmd+Shift+]) — delegate to native macOS tab switching
+                Button("Show Next Tab") {
+                    NSApp.sendAction(#selector(NSWindow.selectNextTab(_:)), to: nil, from: nil)
+                }
+                .optionalKeyboardShortcut(shortcut(for: .showNextTab))
+                .disabled(!(actions?.isConnected ?? false))
+
+                Divider()
+
+                Button("Bring All to Front") {
+                    NSApp.arrangeInFront(nil)
+                }
             }
 
-            Divider()
+            // Help menu — replace default "[App Name] Help" item (which calls
+            // showHelp: and fails with "Help isn't available" when no Help Book
+            // is registered). The search field is preserved automatically.
+            CommandGroup(replacing: .help) {
+                Button("GitHub Repository") {
+                    if let url = URL(string: "https://github.com/TableProApp/TablePro") { NSWorkspace.shared.open(url) }
+                }
 
-            // Previous tab (Cmd+Shift+[) — delegate to native macOS tab switching
-            Button("Show Previous Tab") {
-                NSApp.sendAction(#selector(NSWindow.selectPreviousTab(_:)), to: nil, from: nil)
-            }
-            .optionalKeyboardShortcut(shortcut(for: .showPreviousTab))
-            .disabled(!(actions?.isConnected ?? false))
+                Divider()
 
-            // Next tab (Cmd+Shift+]) — delegate to native macOS tab switching
-            Button("Show Next Tab") {
-                NSApp.sendAction(#selector(NSWindow.selectNextTab(_:)), to: nil, from: nil)
-            }
-            .optionalKeyboardShortcut(shortcut(for: .showNextTab))
-            .disabled(!(actions?.isConnected ?? false))
-
-            Divider()
-
-            Button("Bring All to Front") {
-                NSApp.arrangeInFront(nil)
-            }
-        }
-
-        // Help menu — replace default "[App Name] Help" item (which calls
-        // showHelp: and fails with "Help isn't available" when no Help Book
-        // is registered). The search field is preserved automatically.
-        CommandGroup(replacing: .help) {
-            Button("GitHub Repository") {
-                if let url = URL(string: "https://github.com/TableProApp/TablePro") { NSWorkspace.shared.open(url) }
-            }
-
-            Divider()
-
-            Button(String(localized: "Report an Issue")) {
-                if let url = URL(string: "https://github.com/TableProApp/TablePro/issues") {
-                    NSWorkspace.shared.open(url)
+                Button(String(localized: "Report an Issue")) {
+                    if let url = URL(string: "https://github.com/TableProApp/TablePro/issues") {
+                        NSWorkspace.shared.open(url)
+                    }
                 }
             }
         }
@@ -872,8 +871,7 @@ struct AppMenuCommands: Commands {
 
 @main
 struct TableProApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self)
-    var appDelegate
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @State private var settingsManager = AppSettingsManager.shared
     @State private var commandRegistry = CommandActionsRegistry.shared

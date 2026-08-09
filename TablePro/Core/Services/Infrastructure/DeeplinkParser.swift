@@ -183,8 +183,7 @@ internal enum DeeplinkParser {
     }
 
     private static func parsePair(_ url: URL) -> Result<LaunchIntent, DeeplinkError> {
-        guard let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
-        else {
+        guard let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems else {
             return .failure(.missingRequiredParam("client"))
         }
         func value(_ key: String) -> String? {
@@ -223,8 +222,7 @@ internal enum DeeplinkParser {
     }
 
     private static func parseImport(_ url: URL) -> Result<LaunchIntent, DeeplinkError> {
-        guard let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
-        else {
+        guard let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems else {
             return .failure(.missingRequiredParam("name"))
         }
         func value(_ key: String) -> String? {

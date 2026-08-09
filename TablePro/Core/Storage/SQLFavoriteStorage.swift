@@ -35,7 +35,7 @@ internal actor SQLFavoriteStorage {
     }
 
     deinit {
-        if let db = db {
+        if let db {
             sqlite3_close_v2(db)
         }
         if removeDatabaseOnDeinit {
@@ -108,7 +108,9 @@ internal actor SQLFavoriteStorage {
             execute("CREATE INDEX IF NOT EXISTS idx_favorites_connection ON favorites(connection_id);")
             execute("CREATE INDEX IF NOT EXISTS idx_favorites_folder ON favorites(folder_id);")
             execute("CREATE INDEX IF NOT EXISTS idx_favorites_keyword ON favorites(keyword);")
-            execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_favorites_keyword_scope ON favorites(keyword, connection_id) WHERE keyword IS NOT NULL;")
+            execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_favorites_keyword_scope ON favorites(keyword, connection_id) WHERE keyword IS NOT NULL;"
+            )
             execute("CREATE INDEX IF NOT EXISTS idx_folders_connection ON folders(connection_id);")
             execute("CREATE INDEX IF NOT EXISTS idx_folders_parent ON folders(parent_id);")
 
@@ -142,8 +144,7 @@ internal actor SQLFavoriteStorage {
         var statement: OpaquePointer?
         defer { sqlite3_finalize(statement) }
         guard sqlite3_prepare_v2(db, "PRAGMA user_version", -1, &statement, nil) == SQLITE_OK,
-              sqlite3_step(statement) == SQLITE_ROW
-        else {
+              sqlite3_step(statement) == SQLITE_ROW else {
             return 0
         }
         return sqlite3_column_int(statement, 0)
@@ -157,57 +158,57 @@ internal actor SQLFavoriteStorage {
 
     private func createTables() {
         let favoritesTable = """
-            CREATE TABLE IF NOT EXISTS favorites (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                query TEXT NOT NULL,
-                keyword TEXT,
-                folder_id TEXT,
-                connection_id TEXT,
-                sort_order INTEGER NOT NULL DEFAULT 0,
-                created_at REAL NOT NULL,
-                updated_at REAL NOT NULL
-            );
-            """
+        CREATE TABLE IF NOT EXISTS favorites (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            query TEXT NOT NULL,
+            keyword TEXT,
+            folder_id TEXT,
+            connection_id TEXT,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at REAL NOT NULL,
+            updated_at REAL NOT NULL
+        );
+        """
 
         let foldersTable = """
-            CREATE TABLE IF NOT EXISTS folders (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                parent_id TEXT,
-                connection_id TEXT,
-                sort_order INTEGER NOT NULL DEFAULT 0,
-                created_at REAL NOT NULL,
-                updated_at REAL NOT NULL
-            );
-            """
+        CREATE TABLE IF NOT EXISTS folders (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            parent_id TEXT,
+            connection_id TEXT,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at REAL NOT NULL,
+            updated_at REAL NOT NULL
+        );
+        """
 
         let ftsTable = """
-            CREATE VIRTUAL TABLE IF NOT EXISTS favorites_fts USING fts5(
-                name, query, keyword,
-                content='favorites',
-                content_rowid='rowid'
-            );
-            """
+        CREATE VIRTUAL TABLE IF NOT EXISTS favorites_fts USING fts5(
+            name, query, keyword,
+            content='favorites',
+            content_rowid='rowid'
+        );
+        """
 
         let ftsInsertTrigger = """
-            CREATE TRIGGER IF NOT EXISTS favorites_ai AFTER INSERT ON favorites BEGIN
-                INSERT INTO favorites_fts(rowid, name, query, keyword) VALUES (new.rowid, new.name, new.query, new.keyword);
-            END;
-            """
+        CREATE TRIGGER IF NOT EXISTS favorites_ai AFTER INSERT ON favorites BEGIN
+            INSERT INTO favorites_fts(rowid, name, query, keyword) VALUES (new.rowid, new.name, new.query, new.keyword);
+        END;
+        """
 
         let ftsDeleteTrigger = """
-            CREATE TRIGGER IF NOT EXISTS favorites_ad AFTER DELETE ON favorites BEGIN
-                INSERT INTO favorites_fts(favorites_fts, rowid, name, query, keyword) VALUES('delete', old.rowid, old.name, old.query, old.keyword);
-            END;
-            """
+        CREATE TRIGGER IF NOT EXISTS favorites_ad AFTER DELETE ON favorites BEGIN
+            INSERT INTO favorites_fts(favorites_fts, rowid, name, query, keyword) VALUES('delete', old.rowid, old.name, old.query, old.keyword);
+        END;
+        """
 
         let ftsUpdateTrigger = """
-            CREATE TRIGGER IF NOT EXISTS favorites_au AFTER UPDATE ON favorites BEGIN
-                INSERT INTO favorites_fts(favorites_fts, rowid, name, query, keyword) VALUES('delete', old.rowid, old.name, old.query, old.keyword);
-                INSERT INTO favorites_fts(rowid, name, query, keyword) VALUES (new.rowid, new.name, new.query, new.keyword);
-            END;
-            """
+        CREATE TRIGGER IF NOT EXISTS favorites_au AFTER UPDATE ON favorites BEGIN
+            INSERT INTO favorites_fts(favorites_fts, rowid, name, query, keyword) VALUES('delete', old.rowid, old.name, old.query, old.keyword);
+            INSERT INTO favorites_fts(rowid, name, query, keyword) VALUES (new.rowid, new.name, new.query, new.keyword);
+        END;
+        """
 
         let indexes = [
             "CREATE INDEX IF NOT EXISTS idx_favorites_connection ON favorites(connection_id);",
@@ -234,11 +235,12 @@ internal actor SQLFavoriteStorage {
         let prepareResult = sqlite3_prepare_v2(db, sql, -1, &statement, nil)
         if prepareResult == SQLITE_OK {
             let stepResult = sqlite3_step(statement)
-            if stepResult != SQLITE_DONE && stepResult != SQLITE_ROW {
+            if stepResult != SQLITE_DONE, stepResult != SQLITE_ROW {
                 Self.logger.error("sqlite3_step failed (\(stepResult)): \(String(cString: sqlite3_errmsg(self.db)))")
             }
         } else {
-            Self.logger.error("sqlite3_prepare_v2 failed (\(prepareResult)): \(String(cString: sqlite3_errmsg(self.db)))")
+            Self.logger
+                .error("sqlite3_prepare_v2 failed (\(prepareResult)): \(String(cString: sqlite3_errmsg(self.db)))")
         }
         sqlite3_finalize(statement)
     }
@@ -247,9 +249,9 @@ internal actor SQLFavoriteStorage {
 
     func addFavorite(_ favorite: SQLFavorite) -> Bool {
         let sql = """
-            INSERT INTO favorites (id, name, query, keyword, folder_id, connection_id, sort_order, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """
+        INSERT INTO favorites (id, name, query, keyword, folder_id, connection_id, sort_order, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
 
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
@@ -295,9 +297,9 @@ internal actor SQLFavoriteStorage {
 
     func updateFavorite(_ favorite: SQLFavorite) -> Bool {
         let sql = """
-            UPDATE favorites SET name = ?, query = ?, keyword = ?, folder_id = ?, connection_id = ?, sort_order = ?, updated_at = ?
-            WHERE id = ?;
-            """
+        UPDATE favorites SET name = ?, query = ?, keyword = ?, folder_id = ?, connection_id = ?, sort_order = ?, updated_at = ?
+        WHERE id = ?;
+        """
 
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
@@ -338,13 +340,13 @@ internal actor SQLFavoriteStorage {
 
     func upsertFavorite(_ favorite: SQLFavorite) -> Bool {
         let sql = """
-            INSERT INTO favorites (id, name, query, keyword, folder_id, connection_id, sort_order, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                name = excluded.name, query = excluded.query, keyword = excluded.keyword,
-                folder_id = excluded.folder_id, connection_id = excluded.connection_id,
-                sort_order = excluded.sort_order, updated_at = excluded.updated_at;
-            """
+        INSERT INTO favorites (id, name, query, keyword, folder_id, connection_id, sort_order, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            name = excluded.name, query = excluded.query, keyword = excluded.keyword,
+            folder_id = excluded.folder_id, connection_id = excluded.connection_id,
+            sort_order = excluded.sort_order, updated_at = excluded.updated_at;
+        """
 
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
@@ -424,9 +426,9 @@ internal actor SQLFavoriteStorage {
     }
 
     private static let detachDanglingFolderReferencesSQL = """
-        UPDATE favorites SET folder_id = NULL
-        WHERE folder_id IS NOT NULL AND folder_id NOT IN (SELECT id FROM folders);
-        """
+    UPDATE favorites SET folder_id = NULL
+    WHERE folder_id IS NOT NULL AND folder_id NOT IN (SELECT id FROM folders);
+    """
 
     @discardableResult
     func deleteFavoritesAndFolders(connectionId: UUID) -> Bool {
@@ -473,7 +475,8 @@ internal actor SQLFavoriteStorage {
         guard sqlite3_exec(db, "COMMIT;", nil, nil, nil) == SQLITE_OK else { return 0 }
 
         if prunedFavorites > 0 || prunedFolders > 0 {
-            Self.logger.info("Pruned \(prunedFavorites) favorites and \(prunedFolders) folders scoped to deleted connections")
+            Self.logger
+                .info("Pruned \(prunedFavorites) favorites and \(prunedFolders) folders scoped to deleted connections")
         }
         return prunedFavorites
     }
@@ -552,13 +555,13 @@ internal actor SQLFavoriteStorage {
         var hasFolderFilter = false
 
         let isJoined: Bool
-        if let searchText = searchText, !searchText.isEmpty {
+        if let searchText, !searchText.isEmpty {
             sql = """
-                SELECT f.id, f.name, f.query, f.keyword, f.folder_id, f.connection_id, f.sort_order, f.created_at, f.updated_at
-                FROM favorites f
-                INNER JOIN favorites_fts ON f.rowid = favorites_fts.rowid
-                WHERE favorites_fts MATCH ?
-                """
+            SELECT f.id, f.name, f.query, f.keyword, f.folder_id, f.connection_id, f.sort_order, f.created_at, f.updated_at
+            FROM favorites f
+            INNER JOIN favorites_fts ON f.rowid = favorites_fts.rowid
+            WHERE favorites_fts MATCH ?
+            """
             isJoined = true
 
             if connectionIdString != nil {
@@ -572,9 +575,9 @@ internal actor SQLFavoriteStorage {
             }
         } else {
             sql = """
-                SELECT id, name, query, keyword, folder_id, connection_id, sort_order, created_at, updated_at
-                FROM favorites
-                """
+            SELECT id, name, query, keyword, folder_id, connection_id, sort_order, created_at, updated_at
+            FROM favorites
+            """
             isJoined = false
 
             var whereClauses: [String] = []
@@ -605,7 +608,7 @@ internal actor SQLFavoriteStorage {
 
         let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
-        if let searchText = searchText, !searchText.isEmpty {
+        if let searchText, !searchText.isEmpty {
             let sanitized = "\"\(searchText.replacingOccurrences(of: "\"", with: "\"\""))\""
             sqlite3_bind_text(statement, bindIndex, sanitized, -1, SQLITE_TRANSIENT)
             bindIndex += 1
@@ -635,9 +638,9 @@ internal actor SQLFavoriteStorage {
 
     func addFolder(_ folder: SQLFavoriteFolder) -> Bool {
         let sql = """
-            INSERT INTO folders (id, name, parent_id, connection_id, sort_order, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?);
-            """
+        INSERT INTO folders (id, name, parent_id, connection_id, sort_order, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?);
+        """
 
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
@@ -672,9 +675,9 @@ internal actor SQLFavoriteStorage {
 
     func updateFolder(_ folder: SQLFavoriteFolder) -> Bool {
         let sql = """
-            UPDATE folders SET name = ?, parent_id = ?, connection_id = ?, sort_order = ?, updated_at = ?
-            WHERE id = ?;
-            """
+        UPDATE folders SET name = ?, parent_id = ?, connection_id = ?, sort_order = ?, updated_at = ?
+        WHERE id = ?;
+        """
 
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
@@ -708,13 +711,13 @@ internal actor SQLFavoriteStorage {
 
     func upsertFolder(_ folder: SQLFavoriteFolder) -> Bool {
         let sql = """
-            INSERT INTO folders (id, name, parent_id, connection_id, sort_order, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                name = excluded.name, parent_id = excluded.parent_id,
-                connection_id = excluded.connection_id, sort_order = excluded.sort_order,
-                updated_at = excluded.updated_at;
-            """
+        INSERT INTO folders (id, name, parent_id, connection_id, sort_order, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            name = excluded.name, parent_id = excluded.parent_id,
+            connection_id = excluded.connection_id, sort_order = excluded.sort_order,
+            updated_at = excluded.updated_at;
+        """
 
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
@@ -774,7 +777,7 @@ internal actor SQLFavoriteStorage {
         let moveFavoritesSQL = "UPDATE favorites SET folder_id = ? WHERE folder_id = ?;"
         var moveFavStatement: OpaquePointer?
         if sqlite3_prepare_v2(db, moveFavoritesSQL, -1, &moveFavStatement, nil) == SQLITE_OK {
-            if let parentId = parentId {
+            if let parentId {
                 sqlite3_bind_text(moveFavStatement, 1, parentId, -1, SQLITE_TRANSIENT)
             } else {
                 sqlite3_bind_null(moveFavStatement, 1)
@@ -795,7 +798,7 @@ internal actor SQLFavoriteStorage {
         let moveSubfoldersSQL = "UPDATE folders SET parent_id = ? WHERE parent_id = ?;"
         var moveSubStatement: OpaquePointer?
         if sqlite3_prepare_v2(db, moveSubfoldersSQL, -1, &moveSubStatement, nil) == SQLITE_OK {
-            if let parentId = parentId {
+            if let parentId {
                 sqlite3_bind_text(moveSubStatement, 1, parentId, -1, SQLITE_TRANSIENT)
             } else {
                 sqlite3_bind_null(moveSubStatement, 1)
@@ -837,9 +840,9 @@ internal actor SQLFavoriteStorage {
         let connectionIdString = connectionId?.uuidString
 
         var sql = """
-            SELECT id, name, parent_id, connection_id, sort_order, created_at, updated_at
-            FROM folders
-            """
+        SELECT id, name, parent_id, connection_id, sort_order, created_at, updated_at
+        FROM folders
+        """
 
         if connectionIdString != nil {
             sql += " WHERE (connection_id IS NULL OR connection_id = ?)"
@@ -875,9 +878,9 @@ internal actor SQLFavoriteStorage {
         let connectionIdString = connectionId?.uuidString
 
         var sql = """
-            SELECT keyword, name, query FROM favorites
-            WHERE keyword IS NOT NULL
-            """
+        SELECT keyword, name, query FROM favorites
+        WHERE keyword IS NOT NULL
+        """
 
         if connectionIdString != nil {
             sql += " AND (connection_id IS NULL OR connection_id = ?)"
@@ -903,8 +906,7 @@ internal actor SQLFavoriteStorage {
         while sqlite3_step(statement) == SQLITE_ROW {
             guard let keyword = sqlite3_column_text(statement, 0).map({ String(cString: $0) }),
                   let name = sqlite3_column_text(statement, 1).map({ String(cString: $0) }),
-                  let query = sqlite3_column_text(statement, 2).map({ String(cString: $0) })
-            else {
+                  let query = sqlite3_column_text(statement, 2).map({ String(cString: $0) }) else {
                 continue
             }
             map[keyword] = (name: name, query: query)
@@ -926,16 +928,16 @@ internal actor SQLFavoriteStorage {
 
         if connectionIdString != nil {
             sql = """
-                SELECT COUNT(*) FROM favorites
-                WHERE keyword = ?
-                AND (connection_id IS NULL OR connection_id = ?)
-                """
+            SELECT COUNT(*) FROM favorites
+            WHERE keyword = ?
+            AND (connection_id IS NULL OR connection_id = ?)
+            """
         } else {
             sql = """
-                SELECT COUNT(*) FROM favorites
-                WHERE keyword = ?
-                AND connection_id IS NULL
-                """
+            SELECT COUNT(*) FROM favorites
+            WHERE keyword = ?
+            AND connection_id IS NULL
+            """
         }
 
         if excludeIdString != nil {
@@ -974,13 +976,12 @@ internal actor SQLFavoriteStorage {
     // MARK: - Parsing Helpers
 
     private func parseFavorite(from statement: OpaquePointer?) -> SQLFavorite? {
-        guard let statement = statement else { return nil }
+        guard let statement else { return nil }
 
         guard let idString = sqlite3_column_text(statement, 0).map({ String(cString: $0) }),
               let id = UUID(uuidString: idString),
               let name = sqlite3_column_text(statement, 1).map({ String(cString: $0) }),
-              let query = sqlite3_column_text(statement, 2).map({ String(cString: $0) })
-        else {
+              let query = sqlite3_column_text(statement, 2).map({ String(cString: $0) }) else {
             return nil
         }
 
@@ -1005,12 +1006,11 @@ internal actor SQLFavoriteStorage {
     }
 
     private func parseFolder(from statement: OpaquePointer?) -> SQLFavoriteFolder? {
-        guard let statement = statement else { return nil }
+        guard let statement else { return nil }
 
         guard let idString = sqlite3_column_text(statement, 0).map({ String(cString: $0) }),
               let id = UUID(uuidString: idString),
-              let name = sqlite3_column_text(statement, 1).map({ String(cString: $0) })
-        else {
+              let name = sqlite3_column_text(statement, 1).map({ String(cString: $0) }) else {
             return nil
         }
 

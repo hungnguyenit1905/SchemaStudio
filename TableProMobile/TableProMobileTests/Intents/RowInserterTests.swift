@@ -1,8 +1,8 @@
 import Foundation
-import Testing
 import TableProDatabase
-import TableProModels
 @testable import TableProMobile
+import TableProModels
+import Testing
 
 @Suite("RowInserter")
 struct RowInserterTests {

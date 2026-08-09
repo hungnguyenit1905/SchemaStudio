@@ -30,7 +30,7 @@ internal enum RedisKeyNode: Identifiable, Hashable {
         }
     }
 
-    // Hash on id only (children excluded for performance)
+    /// Hash on id only (children excluded for performance)
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }

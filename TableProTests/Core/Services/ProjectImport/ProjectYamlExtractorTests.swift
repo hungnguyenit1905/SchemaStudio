@@ -4,8 +4,8 @@
 //
 
 import Foundation
-import Testing
 @testable import SchemaStudio
+import Testing
 
 @Suite("Rails Database YAML Extractor")
 struct RailsDatabaseYamlExtractorTests {
@@ -108,7 +108,6 @@ struct RailsDatabaseYamlExtractorTests {
 
 @Suite("Docker Compose Extractor")
 struct DockerComposeExtractorTests {
-
     private func extract(_ contents: String, environment: DotenvDocument? = nil) -> [ScannedConnectionCandidate] {
         DockerComposeExtractor.extract(
             contents: contents,
@@ -133,7 +132,7 @@ struct DockerComposeExtractorTests {
         let candidate = extract(contents).first
         #expect(candidate?.parsedURL.type == .postgresql)
         #expect(candidate?.parsedURL.host == "127.0.0.1")
-        #expect(candidate?.parsedURL.port == 8001)
+        #expect(candidate?.parsedURL.port == 8_001)
         #expect(candidate?.parsedURL.database == "appdb")
     }
 
@@ -147,7 +146,7 @@ struct DockerComposeExtractorTests {
               POSTGRES_PASSWORD: apppass
         """
         let candidate = extract(contents).first
-        #expect(candidate?.parsedURL.port == 5432)
+        #expect(candidate?.parsedURL.port == 5_432)
         #expect(candidate?.warnings.isEmpty == false)
     }
 
@@ -167,7 +166,7 @@ struct DockerComposeExtractorTests {
         let candidate = extract(contents).first
         #expect(candidate?.parsedURL.type == .mysql)
         #expect(candidate?.parsedURL.database == "appdb")
-        #expect(candidate?.parsedURL.port == 3307)
+        #expect(candidate?.parsedURL.port == 3_307)
     }
 
     @Test("Interpolation uses the adjacent dotenv file")
@@ -183,7 +182,7 @@ struct DockerComposeExtractorTests {
         """
         let environment = DotenvParser.parse("DB_PASSWORD=frompass\nDB_PORT=15432", processEnvironment: [:])
         let candidate = extract(contents, environment: environment).first
-        #expect(candidate?.parsedURL.port == 15432)
+        #expect(candidate?.parsedURL.port == 15_432)
         #expect(candidate?.hasPassword == true)
     }
 
@@ -265,13 +264,12 @@ struct DockerComposeExtractorTests {
         """
         let candidate = extract(contents).first
         #expect(candidate?.parsedURL.type == .mariadb)
-        #expect(candidate?.parsedURL.port == 3399)
+        #expect(candidate?.parsedURL.port == 3_399)
     }
 }
 
 @Suite("Spring YAML Extractor")
 struct SpringYamlExtractorTests {
-
     @Test("A nested datasource block is read")
     func testNestedDatasource() {
         let contents = """

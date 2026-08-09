@@ -49,13 +49,13 @@ final class SQLFileParser: Sendable {
         case .normal:
             var result = char == kDash || char == kSlash || char == kBackslash || char == kStar
                 || char == kSingleQuote || char == kDoubleQuote || char == kBacktick
-            if dialect.supportsDollarQuotes && char == kDollar {
+            if dialect.supportsDollarQuotes, char == kDollar {
                 result = true
             }
-            if dialect.supportsEscapeStringPrefix && (char == kCapitalE || char == kSmallE) {
+            if dialect.supportsEscapeStringPrefix, char == kCapitalE || char == kSmallE {
                 result = true
             }
-            if !isSingleCharDelimiter && char == delimiter.character(at: 0) {
+            if !isSingleCharDelimiter, char == delimiter.character(at: 0) {
                 result = true
             }
             return result
@@ -95,7 +95,7 @@ final class SQLFileParser: Sendable {
     ) -> Bool {
         let delimLen = delimiter.length
         guard position + delimLen <= bufLen else { return false }
-        for j in 0..<delimLen where buffer.character(at: position + j) != delimiter.character(at: j) {
+        for j in 0 ..< delimLen where buffer.character(at: position + j) != delimiter.character(at: j) {
             return false
         }
         return true
@@ -139,7 +139,7 @@ final class SQLFileParser: Sendable {
 
     private static func processDelimiterChange(_ ctx: inout ParserContext, char: unichar) {
         guard ctx.dialect == .mysql || ctx.dialect == .generic else { return }
-        guard char == kNewline && ctx.hasStatementContent else { return }
+        guard char == kNewline, ctx.hasStatementContent else { return }
         let text = trimmedStatement(ctx)
         if let newDelim = extractDelimiterChange(text) {
             ctx.currentDelimiter = newDelim as NSString
@@ -164,13 +164,13 @@ final class SQLFileParser: Sendable {
     ) -> StepResult {
         processDelimiterChange(&ctx, char: char)
 
-        if char == kDash && nextChar == kDash {
+        if char == kDash, nextChar == kDash {
             ctx.state = .inSingleLineComment
             i += 2
             return StepResult(advanced: true, deferred: false)
         }
 
-        if char == kHash && (ctx.dialect == .mysql || ctx.dialect == .generic) {
+        if char == kHash, ctx.dialect == .mysql || ctx.dialect == .generic {
             ctx.state = .inSingleLineComment
             return StepResult(advanced: false, deferred: false)
         }
@@ -181,7 +181,8 @@ final class SQLFileParser: Sendable {
             ctx.state = .inMultiLineComment
             if ctx.isConditionalComment {
                 (ctx.hasStatementContent, ctx.statementStartLine) = markContent(
-                    ctx.hasStatementContent, ctx.statementStartLine, ctx.currentLine)
+                    ctx.hasStatementContent, ctx.statementStartLine, ctx.currentLine
+                )
                 appendChar(char, to: ctx.currentStatement)
                 appendChar(next, to: ctx.currentStatement)
             }
@@ -189,11 +190,12 @@ final class SQLFileParser: Sendable {
             return StepResult(advanced: true, deferred: false)
         }
 
-        if ctx.dialect.supportsEscapeStringPrefix
-            && (char == kCapitalE || char == kSmallE)
-            && nextChar == kSingleQuote {
+        if ctx.dialect.supportsEscapeStringPrefix,
+           char == kCapitalE || char == kSmallE,
+           nextChar == kSingleQuote {
             (ctx.hasStatementContent, ctx.statementStartLine) = markContent(
-                ctx.hasStatementContent, ctx.statementStartLine, ctx.currentLine)
+                ctx.hasStatementContent, ctx.statementStartLine, ctx.currentLine
+            )
             appendChar(char, to: ctx.currentStatement)
             appendChar(kSingleQuote, to: ctx.currentStatement)
             ctx.state = .inSingleQuotedString
@@ -202,11 +204,12 @@ final class SQLFileParser: Sendable {
             return StepResult(advanced: true, deferred: false)
         }
 
-        if ctx.dialect.supportsDollarQuotes && char == kDollar {
+        if ctx.dialect.supportsDollarQuotes, char == kDollar {
             switch SqlDollarQuote.scanOpener(at: i, in: nsBuffer, bufLen: bufLen) {
             case .opener(let length, let tag):
                 (ctx.hasStatementContent, ctx.statementStartLine) = markContent(
-                    ctx.hasStatementContent, ctx.statementStartLine, ctx.currentLine)
+                    ctx.hasStatementContent, ctx.statementStartLine, ctx.currentLine
+                )
                 if let target = ctx.currentStatement {
                     let openerRange = NSRange(location: i, length: length)
                     target.append(nsBuffer.substring(with: openerRange))
@@ -227,19 +230,19 @@ final class SQLFileParser: Sendable {
             return StepResult(advanced: advanced, deferred: false)
         }
 
-        if ctx.isSingleCharDelimiter && char == kSemicolon {
+        if ctx.isSingleCharDelimiter, char == kSemicolon {
             yieldAndReset(&ctx)
             return StepResult(advanced: false, deferred: false)
         }
 
-        if !ctx.isSingleCharDelimiter
-            && matchesDelimiter(at: i, delimiter: ctx.currentDelimiter, in: nsBuffer, bufLen: bufLen) {
+        if !ctx.isSingleCharDelimiter,
+           matchesDelimiter(at: i, delimiter: ctx.currentDelimiter, in: nsBuffer, bufLen: bufLen) {
             yieldAndReset(&ctx)
             i += ctx.currentDelimiter.length
             return StepResult(advanced: true, deferred: false)
         }
 
-        if !ctx.hasStatementContent && !isWhitespace(char) {
+        if !ctx.hasStatementContent, !isWhitespace(char) {
             ctx.statementStartLine = ctx.currentLine
             ctx.hasStatementContent = true
         }
@@ -261,7 +264,8 @@ final class SQLFileParser: Sendable {
             guard char == quoteChar else { continue }
             if let next = nextChar, next == quoteChar {
                 (ctx.hasStatementContent, ctx.statementStartLine) = markContent(
-                    ctx.hasStatementContent, ctx.statementStartLine, ctx.currentLine)
+                    ctx.hasStatementContent, ctx.statementStartLine, ctx.currentLine
+                )
                 appendChar(char, to: ctx.currentStatement)
                 appendChar(next, to: ctx.currentStatement)
                 return true
@@ -276,7 +280,8 @@ final class SQLFileParser: Sendable {
                 ctx.backslashEscapesActive = false
             }
             (ctx.hasStatementContent, ctx.statementStartLine) = markContent(
-                ctx.hasStatementContent, ctx.statementStartLine, ctx.currentLine)
+                ctx.hasStatementContent, ctx.statementStartLine, ctx.currentLine
+            )
             appendChar(char, to: ctx.currentStatement)
             return false
         }
@@ -335,11 +340,11 @@ final class SQLFileParser: Sendable {
 
         while pos < bufLen {
             let ch = nsBuffer.character(at: pos)
-            if pos > start && ch == kNewline {
+            if pos > start, ch == kNewline {
                 ctx.currentLine += 1
             }
 
-            if escapesActive && ch == kBackslash {
+            if escapesActive, ch == kBackslash {
                 if pos + 1 >= bufLen {
                     appendRange(&ctx, from: start, to: pos, in: nsBuffer)
                     i = pos
@@ -390,7 +395,7 @@ final class SQLFileParser: Sendable {
 
         while pos < bufLen {
             let ch = nsBuffer.character(at: pos)
-            if pos > start && ch == kNewline {
+            if pos > start, ch == kNewline {
                 ctx.currentLine += 1
             }
 
@@ -432,7 +437,7 @@ final class SQLFileParser: Sendable {
 
         guard encoding == .utf8 else { return nil }
 
-        for trim in 1...3 where data.count > trim {
+        for trim in 1 ... 3 where data.count > trim {
             let head = data.prefix(data.count - trim)
             if let decoded = String(data: head, encoding: .utf8) {
                 pendingTail = Data(data.suffix(trim))
@@ -515,7 +520,7 @@ final class SQLFileParser: Sendable {
             let handle = try openFileIfNeeded()
             let rawData = handle.readData(ofLength: chunkSize)
 
-            if rawData.isEmpty && pendingTail.isEmpty {
+            if rawData.isEmpty, pendingTail.isEmpty {
                 emitTrailingStatement()
                 finished = true
                 closeFile()
@@ -531,7 +536,7 @@ final class SQLFileParser: Sendable {
                 )
             }
 
-            if isFinalChunk && !pendingTail.isEmpty {
+            if isFinalChunk, !pendingTail.isEmpty {
                 throw DecompressionError.fileReadFailed(
                     "Trailing bytes did not form a valid \(encoding.description) sequence at end of file"
                 )
@@ -549,7 +554,7 @@ final class SQLFileParser: Sendable {
                 let char = nsBuffer.character(at: i)
                 let nextChar: unichar? = (i + 1 < bufLen) ? nsBuffer.character(at: i + 1) : nil
 
-                if nextChar == nil && SQLFileParser.needsLookahead(
+                if nextChar == nil, SQLFileParser.needsLookahead(
                     char,
                     state: ctx.state,
                     dialect: dialect,
@@ -567,7 +572,8 @@ final class SQLFileParser: Sendable {
                 case .normal:
                     let result = SQLFileParser.processNormalChar(
                         &ctx, char: char, nextChar: nextChar,
-                        i: &i, nsBuffer: nsBuffer, bufLen: bufLen)
+                        i: &i, nsBuffer: nsBuffer, bufLen: bufLen
+                    )
                     didManuallyAdvance = result.advanced
                     shouldDefer = result.deferred
 
@@ -578,33 +584,38 @@ final class SQLFileParser: Sendable {
 
                 case .inMultiLineComment:
                     didManuallyAdvance = SQLFileParser.processMultiLineComment(
-                        &ctx, char: char, nextChar: nextChar, i: &i)
+                        &ctx, char: char, nextChar: nextChar, i: &i
+                    )
 
                 case .inSingleQuotedString:
                     let result = SQLFileParser.processQuotedString(
                         &ctx, quoteChar: SQLFileParser.kSingleQuote,
-                        i: &i, nsBuffer: nsBuffer, bufLen: bufLen)
+                        i: &i, nsBuffer: nsBuffer, bufLen: bufLen
+                    )
                     didManuallyAdvance = result.advanced
                     shouldDefer = result.deferred
 
                 case .inDoubleQuotedString:
                     let result = SQLFileParser.processQuotedString(
                         &ctx, quoteChar: SQLFileParser.kDoubleQuote,
-                        i: &i, nsBuffer: nsBuffer, bufLen: bufLen)
+                        i: &i, nsBuffer: nsBuffer, bufLen: bufLen
+                    )
                     didManuallyAdvance = result.advanced
                     shouldDefer = result.deferred
 
                 case .inBacktickQuotedString:
                     let result = SQLFileParser.processQuotedString(
                         &ctx, quoteChar: SQLFileParser.kBacktick,
-                        i: &i, nsBuffer: nsBuffer, bufLen: bufLen)
+                        i: &i, nsBuffer: nsBuffer, bufLen: bufLen
+                    )
                     didManuallyAdvance = result.advanced
                     shouldDefer = result.deferred
 
                 case .inDollarQuote:
                     let result = SQLFileParser.processDollarQuote(
                         &ctx, i: &i,
-                        nsBuffer: nsBuffer, bufLen: bufLen)
+                        nsBuffer: nsBuffer, bufLen: bufLen
+                    )
                     didManuallyAdvance = result.advanced
                     shouldDefer = result.deferred
                 }
@@ -644,7 +655,8 @@ final class SQLFileParser: Sendable {
                 try handle.close()
             } catch {
                 SQLFileParser.logger.warning(
-                    "Failed to close file handle for \(self.url.path): \(error.localizedDescription)")
+                    "Failed to close file handle for \(self.url.path): \(error.localizedDescription)"
+                )
             }
         }
     }

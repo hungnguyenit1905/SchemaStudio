@@ -46,16 +46,16 @@ enum RedshiftExternalSchemaQueries {
         let tableFilter = tableLiteral.map { " AND tablename = '\($0)'" } ?? ""
         let orderBy = tableLiteral == nil ? "tablename, columnnum" : "columnnum"
         return """
-            SELECT
-                \(selectPrefix)columnname,
-                external_type,
-                is_nullable,
-                part_key
-            FROM svv_external_columns
-            WHERE schemaname = '\(schemaLiteral)'\(tableFilter)
-                AND redshift_database_name = '\(databaseLiteral)'
-            ORDER BY \(orderBy)
-            """
+        SELECT
+            \(selectPrefix)columnname,
+            external_type,
+            is_nullable,
+            part_key
+        FROM svv_external_columns
+        WHERE schemaname = '\(schemaLiteral)'\(tableFilter)
+            AND redshift_database_name = '\(databaseLiteral)'
+        ORDER BY \(orderBy)
+        """
     }
 
     /// `tabletype` is `TABLE`, `VIEW`, `MATERIALIZED VIEW`, or a blank string
@@ -78,8 +78,7 @@ enum RedshiftExternalSchemaQueries {
     /// column within the partition key.
     static func partitionKeyDescription(rawPartKey: String?) -> String? {
         guard let raw = rawPartKey?.trimmingCharacters(in: .whitespaces),
-              let position = Int(raw), position > 0
-        else { return nil }
+              let position = Int(raw), position > 0 else { return nil }
         return "PARTITION KEY \(position)"
     }
 }

@@ -56,7 +56,7 @@ actor QueryHistoryStorage {
     }
 
     deinit {
-        if let db = db {
+        if let db {
             sqlite3_close(db)
         }
         if removeDatabaseOnDeinit {
@@ -125,8 +125,7 @@ actor QueryHistoryStorage {
         var statement: OpaquePointer?
         defer { sqlite3_finalize(statement) }
         guard sqlite3_prepare_v2(db, "PRAGMA user_version", -1, &statement, nil) == SQLITE_OK,
-              sqlite3_step(statement) == SQLITE_ROW
-        else {
+              sqlite3_step(statement) == SQLITE_ROW else {
             return 0
         }
         return sqlite3_column_int(statement, 0)
@@ -140,46 +139,46 @@ actor QueryHistoryStorage {
 
     private func createTables() {
         let historyTable = """
-            CREATE TABLE IF NOT EXISTS history (
-                id TEXT PRIMARY KEY,
-                query TEXT NOT NULL,
-                connection_id TEXT NOT NULL,
-                database_name TEXT NOT NULL,
-                executed_at REAL NOT NULL,
-                execution_time REAL NOT NULL,
-                row_count INTEGER NOT NULL,
-                was_successful INTEGER NOT NULL,
-                error_message TEXT,
-                parameter_values TEXT
-            );
-            """
+        CREATE TABLE IF NOT EXISTS history (
+            id TEXT PRIMARY KEY,
+            query TEXT NOT NULL,
+            connection_id TEXT NOT NULL,
+            database_name TEXT NOT NULL,
+            executed_at REAL NOT NULL,
+            execution_time REAL NOT NULL,
+            row_count INTEGER NOT NULL,
+            was_successful INTEGER NOT NULL,
+            error_message TEXT,
+            parameter_values TEXT
+        );
+        """
 
         let ftsTable = """
-            CREATE VIRTUAL TABLE IF NOT EXISTS history_fts USING fts5(
-                query,
-                content='history',
-                content_rowid='rowid'
-            );
-            """
+        CREATE VIRTUAL TABLE IF NOT EXISTS history_fts USING fts5(
+            query,
+            content='history',
+            content_rowid='rowid'
+        );
+        """
 
         let ftsInsertTrigger = """
-            CREATE TRIGGER IF NOT EXISTS history_ai AFTER INSERT ON history BEGIN
-                INSERT INTO history_fts(rowid, query) VALUES (new.rowid, new.query);
-            END;
-            """
+        CREATE TRIGGER IF NOT EXISTS history_ai AFTER INSERT ON history BEGIN
+            INSERT INTO history_fts(rowid, query) VALUES (new.rowid, new.query);
+        END;
+        """
 
         let ftsDeleteTrigger = """
-            CREATE TRIGGER IF NOT EXISTS history_ad AFTER DELETE ON history BEGIN
-                INSERT INTO history_fts(history_fts, rowid, query) VALUES('delete', old.rowid, old.query);
-            END;
-            """
+        CREATE TRIGGER IF NOT EXISTS history_ad AFTER DELETE ON history BEGIN
+            INSERT INTO history_fts(history_fts, rowid, query) VALUES('delete', old.rowid, old.query);
+        END;
+        """
 
         let ftsUpdateTrigger = """
-            CREATE TRIGGER IF NOT EXISTS history_au AFTER UPDATE ON history BEGIN
-                INSERT INTO history_fts(history_fts, rowid, query) VALUES('delete', old.rowid, old.query);
-                INSERT INTO history_fts(rowid, query) VALUES (new.rowid, new.query);
-            END;
-            """
+        CREATE TRIGGER IF NOT EXISTS history_au AFTER UPDATE ON history BEGIN
+            INSERT INTO history_fts(history_fts, rowid, query) VALUES('delete', old.rowid, old.query);
+            INSERT INTO history_fts(rowid, query) VALUES (new.rowid, new.query);
+        END;
+        """
 
         let historyIndexes = [
             "CREATE INDEX IF NOT EXISTS idx_history_connection ON history(connection_id);",
@@ -216,9 +215,9 @@ actor QueryHistoryStorage {
         }
 
         let sql = """
-            INSERT INTO history (id, query, connection_id, database_name, executed_at, execution_time, row_count, was_successful, error_message, parameter_values)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """
+        INSERT INTO history (id, query, connection_id, database_name, executed_at, execution_time, row_count, was_successful, error_message, parameter_values)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
 
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
@@ -295,13 +294,13 @@ actor QueryHistoryStorage {
         var hasUntilFilter = false
         var hasAllowedFilter = false
 
-        if let searchText = searchText, !searchText.isEmpty {
+        if let searchText, !searchText.isEmpty {
             sql = """
-                SELECT h.id, h.query, h.connection_id, h.database_name, h.executed_at, h.execution_time, h.row_count, h.was_successful, h.error_message, h.parameter_values
-                FROM history h
-                INNER JOIN history_fts ON h.rowid = history_fts.rowid
-                WHERE history_fts MATCH ?
-                """
+            SELECT h.id, h.query, h.connection_id, h.database_name, h.executed_at, h.execution_time, h.row_count, h.was_successful, h.error_message, h.parameter_values
+            FROM history h
+            INNER JOIN history_fts ON h.rowid = history_fts.rowid
+            WHERE history_fts MATCH ?
+            """
 
             if connectionId != nil {
                 sql += " AND h.connection_id = ?"
@@ -366,13 +365,13 @@ actor QueryHistoryStorage {
 
         let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
-        if let searchText = searchText, !searchText.isEmpty {
+        if let searchText, !searchText.isEmpty {
             let sanitized = "\"\(searchText.replacingOccurrences(of: "\"", with: "\"\""))\""
             sqlite3_bind_text(statement, bindIndex, sanitized, -1, SQLITE_TRANSIENT)
             bindIndex += 1
         }
 
-        if let connectionId = connectionId, hasConnectionFilter {
+        if let connectionId, hasConnectionFilter {
             sqlite3_bind_text(statement, bindIndex, connectionId.uuidString, -1, SQLITE_TRANSIENT)
             bindIndex += 1
         }
@@ -492,17 +491,17 @@ actor QueryHistoryStorage {
 
                     if count > maxEntries {
                         let deleteExcessSQL = """
-                            DELETE FROM history WHERE id IN (
-                                SELECT id FROM history ORDER BY executed_at ASC LIMIT ?
-                            );
-                            """
+                        DELETE FROM history WHERE id IN (
+                            SELECT id FROM history ORDER BY executed_at ASC LIMIT ?
+                        );
+                        """
 
                         var deleteStatement: OpaquePointer?
                         if sqlite3_prepare_v2(db, deleteExcessSQL, -1, &deleteStatement, nil)
-                            == SQLITE_OK
-                        {
+                            == SQLITE_OK {
                             sqlite3_bind_int(
-                                deleteStatement, 1, Int32(count - maxEntries))
+                                deleteStatement, 1, Int32(count - maxEntries)
+                            )
                             sqlite3_step(deleteStatement)
                             sqlite3_finalize(deleteStatement)
                         }
@@ -524,15 +523,14 @@ actor QueryHistoryStorage {
     // MARK: - Parsing Helpers
 
     private func parseHistoryEntry(from statement: OpaquePointer?) -> QueryHistoryEntry? {
-        guard let statement = statement else { return nil }
+        guard let statement else { return nil }
 
         guard let idString = sqlite3_column_text(statement, 0).map({ String(cString: $0) }),
-            let id = UUID(uuidString: idString),
-            let query = sqlite3_column_text(statement, 1).map({ String(cString: $0) }),
-            let connectionIdString = sqlite3_column_text(statement, 2).map({ String(cString: $0) }),
-            let connectionId = UUID(uuidString: connectionIdString),
-            let databaseName = sqlite3_column_text(statement, 3).map({ String(cString: $0) })
-        else {
+              let id = UUID(uuidString: idString),
+              let query = sqlite3_column_text(statement, 1).map({ String(cString: $0) }),
+              let connectionIdString = sqlite3_column_text(statement, 2).map({ String(cString: $0) }),
+              let connectionId = UUID(uuidString: connectionIdString),
+              let databaseName = sqlite3_column_text(statement, 3).map({ String(cString: $0) }) else {
             return nil
         }
 

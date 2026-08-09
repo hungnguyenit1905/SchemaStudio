@@ -16,10 +16,10 @@ struct EditableColumnDefinition: Hashable, Codable, Identifiable {
     var isNullable: Bool
     var defaultValue: String?
     var autoIncrement: Bool
-    var unsigned: Bool  // MySQL only
+    var unsigned: Bool // MySQL only
     var comment: String?
     var collation: String?
-    var onUpdate: String?  // MySQL timestamp columns
+    var onUpdate: String? // MySQL timestamp columns
     var charset: String?
     var extra: String?
 

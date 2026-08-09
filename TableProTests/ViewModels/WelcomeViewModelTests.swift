@@ -5,8 +5,8 @@
 
 @testable import SchemaStudio
 import TableProPluginKit
-import XCTest
 import TableProSyncTransport
+import XCTest
 
 @MainActor
 final class WelcomeViewModelTests: XCTestCase {

@@ -11,14 +11,14 @@ struct PostgreSQLDashboardProvider: ServerDashboardQueryProvider {
 
     func fetchSessions(execute: (String) async throws -> QueryResult) async throws -> [DashboardSession] {
         let sql = """
-            SELECT pid, usename, datname, state,
-                   EXTRACT(EPOCH FROM (now() - query_start))::int AS duration_secs,
-                   left(query, 1000) AS query
-            FROM pg_stat_activity
-            WHERE pid <> pg_backend_pid()
-              AND backend_type = 'client backend'
-            ORDER BY query_start NULLS LAST
-            """
+        SELECT pid, usename, datname, state,
+               EXTRACT(EPOCH FROM (now() - query_start))::int AS duration_secs,
+               left(query, 1000) AS query
+        FROM pg_stat_activity
+        WHERE pid <> pg_backend_pid()
+          AND backend_type = 'client backend'
+        ORDER BY query_start NULLS LAST
+        """
         let result = try await execute(sql)
         let col = columnIndex(from: result.columns)
         return result.rows.map { row in
@@ -39,7 +39,8 @@ struct PostgreSQLDashboardProvider: ServerDashboardQueryProvider {
     func fetchMetrics(execute: (String) async throws -> QueryResult) async throws -> [DashboardMetric] {
         var metrics: [DashboardMetric] = []
 
-        let connections = try await execute("SELECT count(*) FROM pg_stat_activity WHERE backend_type = 'client backend'")
+        let connections =
+            try await execute("SELECT count(*) FROM pg_stat_activity WHERE backend_type = 'client backend'")
         if let row = connections.rows.first {
             metrics.append(DashboardMetric(
                 id: "connections",
@@ -51,11 +52,11 @@ struct PostgreSQLDashboardProvider: ServerDashboardQueryProvider {
         }
 
         let cacheHit = try await execute("""
-            SELECT CASE WHEN blks_hit + blks_read = 0 THEN '0'
-                        ELSE round(blks_hit::numeric / (blks_hit + blks_read) * 100, 1)::text
-                   END
-            FROM pg_stat_database WHERE datname = current_database()
-            """)
+        SELECT CASE WHEN blks_hit + blks_read = 0 THEN '0'
+                    ELSE round(blks_hit::numeric / (blks_hit + blks_read) * 100, 1)::text
+               END
+        FROM pg_stat_database WHERE datname = current_database()
+        """)
         if let row = cacheHit.rows.first {
             metrics.append(DashboardMetric(
                 id: "cache_hit",
@@ -91,9 +92,9 @@ struct PostgreSQLDashboardProvider: ServerDashboardQueryProvider {
         }
 
         let activeQueries = try await execute("""
-            SELECT count(*) FROM pg_stat_activity
-            WHERE state = 'active' AND pid <> pg_backend_pid()
-            """)
+        SELECT count(*) FROM pg_stat_activity
+        WHERE state = 'active' AND pid <> pg_backend_pid()
+        """)
         if let row = activeQueries.rows.first {
             metrics.append(DashboardMetric(
                 id: "active_queries",
@@ -109,15 +110,15 @@ struct PostgreSQLDashboardProvider: ServerDashboardQueryProvider {
 
     func fetchSlowQueries(execute: (String) async throws -> QueryResult) async throws -> [DashboardSlowQuery] {
         let sql = """
-            SELECT pid, usename, datname,
-                   EXTRACT(EPOCH FROM (now() - query_start))::int AS duration_secs,
-                   left(query, 1000) AS query
-            FROM pg_stat_activity
-            WHERE state = 'active'
-              AND now() - query_start > interval '1 second'
-              AND pid <> pg_backend_pid()
-            ORDER BY query_start
-            """
+        SELECT pid, usename, datname,
+               EXTRACT(EPOCH FROM (now() - query_start))::int AS duration_secs,
+               left(query, 1000) AS query
+        FROM pg_stat_activity
+        WHERE state = 'active'
+          AND now() - query_start > interval '1 second'
+          AND pid <> pg_backend_pid()
+        ORDER BY query_start
+        """
         let result = try await execute(sql)
         let col = columnIndex(from: result.columns)
         return result.rows.map { row in

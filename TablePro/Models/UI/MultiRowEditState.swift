@@ -122,7 +122,7 @@ final class MultiRowEditState {
             if !columnsChanged, !selectionChanged, colIndex < fields.count {
                 let oldField = fields[colIndex]
                 // Preserve pending edits when original data matches
-                if oldField.originalValue == originalValue && oldField.hasMultipleValues == hasMultipleValues {
+                if oldField.originalValue == originalValue, oldField.hasMultipleValues == hasMultipleValues {
                     preservedId = oldField.id
                     pendingValue = oldField.pendingValue
                     isPendingNull = oldField.isPendingNull
@@ -273,7 +273,7 @@ final class MultiRowEditState {
 
     /// Clear all pending edits
     func clearEdits() {
-        for i in 0..<fields.count {
+        for i in 0 ..< fields.count {
             fields[i].pendingValue = nil
             fields[i].isPendingNull = false
             fields[i].isPendingDefault = false

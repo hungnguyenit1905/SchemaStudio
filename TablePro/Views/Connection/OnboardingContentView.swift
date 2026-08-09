@@ -177,7 +177,7 @@ struct OnboardingContentView: View {
             Spacer()
 
             HStack(spacing: 8) {
-                ForEach(0..<3, id: \.self) { i in
+                ForEach(0 ..< 3, id: \.self) { i in
                     Button { goToPage(i) } label: {
                         Circle()
                             .fill(i == currentPage ? Color.accentColor : Color(nsColor: .tertiaryLabelColor))

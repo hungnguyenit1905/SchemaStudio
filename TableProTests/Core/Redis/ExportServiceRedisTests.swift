@@ -4,13 +4,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Export service state")
 struct ExportServiceRedisTests {
-
     @Test("ExportState initializes with correct defaults")
     func exportStateDefaults() {
         let state = ExportState()

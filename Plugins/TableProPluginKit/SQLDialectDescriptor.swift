@@ -10,10 +10,10 @@ public struct CompletionEntry: Sendable {
 }
 
 public enum AutoLimitStyle: String, Sendable {
-    case limit       // LIMIT n
-    case fetchFirst  // FETCH FIRST n ROWS ONLY (Oracle)
-    case top         // SELECT TOP n ... (MSSQL)
-    case none        // Don't auto-limit (non-SQL)
+    case limit // LIMIT n
+    case fetchFirst // FETCH FIRST n ROWS ONLY (Oracle)
+    case top // SELECT TOP n ... (MSSQL)
+    case none // Don't auto-limit (non-SQL)
 }
 
 public struct SQLDialectDescriptor: Sendable {
@@ -31,22 +31,22 @@ public struct SQLDialectDescriptor: Sendable {
     public let offsetFetchOrderBy: String
     public let requiresBackslashEscaping: Bool
 
-    // Query limit style
+    /// Query limit style
     public let autoLimitStyle: AutoLimitStyle
 
     @frozen
     public enum RegexSyntax: String, Sendable {
-        case regexp        // MySQL: column REGEXP 'pattern'
-        case tilde         // PostgreSQL: column ~ 'pattern'
+        case regexp // MySQL: column REGEXP 'pattern'
+        case tilde // PostgreSQL: column ~ 'pattern'
         case regexpMatches // DuckDB: regexp_matches(column, 'pattern')
-        case match         // ClickHouse: match(column, 'pattern')
-        case regexpLike    // Oracle: REGEXP_LIKE(column, 'pattern')
-        case unsupported   // SQLite, MSSQL, MongoDB, Redis
+        case match // ClickHouse: match(column, 'pattern')
+        case regexpLike // Oracle: REGEXP_LIKE(column, 'pattern')
+        case unsupported // SQLite, MSSQL, MongoDB, Redis
     }
 
     public enum BooleanLiteralStyle: String, Sendable {
         case truefalse // PostgreSQL, DuckDB: TRUE/FALSE
-        case numeric   // MySQL, SQLite, etc: 1/0
+        case numeric // MySQL, SQLite, etc: 1/0
     }
 
     public enum LikeEscapeStyle: String, Sendable {
@@ -56,7 +56,7 @@ public struct SQLDialectDescriptor: Sendable {
 
     @frozen
     public enum PaginationStyle: String, Sendable {
-        case limit       // MySQL, PostgreSQL, SQLite, etc: LIMIT n
+        case limit // MySQL, PostgreSQL, SQLite, etc: LIMIT n
         case offsetFetch // Oracle, MSSQL: OFFSET n ROWS FETCH NEXT m ROWS ONLY
     }
 

@@ -76,21 +76,26 @@ actor CassandraConnectionActor {
                     cass_ssl_free(ssl)
                     cass_cluster_free(cluster)
                     self.cluster = nil
-                    throw SSLHandshakeError.untrustedCertificate(serverMessage: "Verify CA or Verify Identity requires a CA certificate path")
+                    throw SSLHandshakeError
+                        .untrustedCertificate(
+                            serverMessage: "Verify CA or Verify Identity requires a CA certificate path"
+                        )
                 }
                 guard let certData = FileManager.default.contents(atPath: caCertPath),
                       let certString = String(data: certData, encoding: .utf8) else {
                     cass_ssl_free(ssl)
                     cass_cluster_free(cluster)
                     self.cluster = nil
-                    throw SSLHandshakeError.untrustedCertificate(serverMessage: "Could not read CA certificate at \(caCertPath)")
+                    throw SSLHandshakeError
+                        .untrustedCertificate(serverMessage: "Could not read CA certificate at \(caCertPath)")
                 }
                 let rc = cass_ssl_add_trusted_cert(ssl, certString)
                 if rc != CASS_OK {
                     cass_ssl_free(ssl)
                     cass_cluster_free(cluster)
                     self.cluster = nil
-                    throw SSLHandshakeError.untrustedCertificate(serverMessage: "CA certificate at \(caCertPath) is not a valid PEM")
+                    throw SSLHandshakeError
+                        .untrustedCertificate(serverMessage: "CA certificate at \(caCertPath) is not a valid PEM")
                 }
             }
 
@@ -170,22 +175,26 @@ actor CassandraConnectionActor {
     ) throws {
         guard !certPath.isEmpty else {
             cleanup()
-            throw SSLHandshakeError.clientCertRequired(serverMessage: "A client certificate is required when a client key is set")
+            throw SSLHandshakeError
+                .clientCertRequired(serverMessage: "A client certificate is required when a client key is set")
         }
         guard !keyPath.isEmpty else {
             cleanup()
-            throw SSLHandshakeError.clientCertRequired(serverMessage: "A client key is required when a client certificate is set")
+            throw SSLHandshakeError
+                .clientCertRequired(serverMessage: "A client key is required when a client certificate is set")
         }
 
         guard let certData = FileManager.default.contents(atPath: certPath),
               let certString = String(data: certData, encoding: .utf8) else {
             cleanup()
-            throw SSLHandshakeError.clientCertRequired(serverMessage: "Could not read client certificate at \(certPath)")
+            throw SSLHandshakeError
+                .clientCertRequired(serverMessage: "Could not read client certificate at \(certPath)")
         }
         let certResult = cass_ssl_set_cert(ssl, certString)
         if certResult != CASS_OK {
             cleanup()
-            throw SSLHandshakeError.clientCertRequired(serverMessage: "Client certificate at \(certPath) is not a valid PEM")
+            throw SSLHandshakeError
+                .clientCertRequired(serverMessage: "Client certificate at \(certPath) is not a valid PEM")
         }
 
         guard let keyData = FileManager.default.contents(atPath: keyPath),
@@ -197,7 +206,11 @@ actor CassandraConnectionActor {
         let keyResult = cass_ssl_set_private_key(ssl, keyString, passphrase)
         if keyResult != CASS_OK {
             cleanup()
-            throw CassandraClientKeyClassifier.privateKeyLoadError(keyPEM: keyString, hasPassphrase: passphrase != nil, keyPath: keyPath)
+            throw CassandraClientKeyClassifier.privateKeyLoadError(
+                keyPEM: keyString,
+                hasPassphrase: passphrase != nil,
+                keyPath: keyPath
+            )
         }
     }
 
@@ -369,9 +382,9 @@ actor CassandraConnectionActor {
         var columns: [String] = []
         var columnTypeNames: [String] = []
 
-        for i in 0..<colCount {
+        for i in 0 ..< colCount {
             var namePtr: UnsafePointer<CChar>?
-            var nameLength: Int = 0
+            var nameLength = 0
             cass_result_column_name(result, i, &namePtr, &nameLength)
             if let namePtr {
                 columns.append(String(cString: namePtr))
@@ -403,12 +416,12 @@ actor CassandraConnectionActor {
         let maxRows = min(Int(rowCount), 100_000)
         var count = 0
 
-        while cass_iterator_next(iterator) == cass_true && count < maxRows {
+        while cass_iterator_next(iterator) == cass_true, count < maxRows {
             let row = cass_iterator_get_row(iterator)
             guard let row else { continue }
 
             var rowData: [PluginCellValue] = []
-            for col in 0..<colCount {
+            for col in 0 ..< colCount {
                 let value = cass_row_get_column(row, col)
                 if let value, cass_value_is_null(value) == cass_false {
                     if cass_value_type(value) == CASS_VALUE_TYPE_BLOB,
@@ -438,7 +451,7 @@ actor CassandraConnectionActor {
 
     private static func extractBlobValue(_ value: OpaquePointer) -> Data? {
         var bytes: UnsafePointer<UInt8>?
-        var length: Int = 0
+        var length = 0
         guard cass_value_get_bytes(value, &bytes, &length) == CASS_OK, let bytes else {
             return nil
         }
@@ -451,7 +464,7 @@ actor CassandraConnectionActor {
         switch valueType {
         case CASS_VALUE_TYPE_ASCII, CASS_VALUE_TYPE_TEXT, CASS_VALUE_TYPE_VARCHAR:
             var output: UnsafePointer<CChar>?
-            var outputLength: Int = 0
+            var outputLength = 0
             let rc = cass_value_get_string(value, &output, &outputLength)
             if rc == CASS_OK, let output {
                 return String(
@@ -524,7 +537,7 @@ actor CassandraConnectionActor {
         case CASS_VALUE_TYPE_TIMESTAMP:
             var timestamp: Int64 = 0
             if cass_value_get_int64(value, &timestamp) == CASS_OK {
-                let date = Date(timeIntervalSince1970: Double(timestamp) / 1000.0)
+                let date = Date(timeIntervalSince1970: Double(timestamp) / 1_000.0)
                 return isoFormatter.string(from: date)
             }
             return nil
@@ -557,7 +570,7 @@ actor CassandraConnectionActor {
             var dateVal: UInt32 = 0
             if cass_value_get_uint32(value, &dateVal) == CASS_OK {
                 let daysSinceEpoch = Int64(dateVal) - Int64(1 << 31)
-                let epochSeconds = daysSinceEpoch * 86400
+                let epochSeconds = daysSinceEpoch * 86_400
                 let date = Date(timeIntervalSince1970: Double(epochSeconds))
                 return dateFormatter.string(from: date)
             }
@@ -568,8 +581,8 @@ actor CassandraConnectionActor {
             if cass_value_get_int64(value, &timeVal) == CASS_OK {
                 // Cassandra time is nanoseconds since midnight
                 let totalSeconds = timeVal / 1_000_000_000
-                let hours = totalSeconds / 3600
-                let minutes = (totalSeconds % 3600) / 60
+                let hours = totalSeconds / 3_600
+                let minutes = (totalSeconds % 3_600) / 60
                 let seconds = totalSeconds % 60
                 let nanos = timeVal % 1_000_000_000
                 if nanos > 0 {
@@ -584,7 +597,7 @@ actor CassandraConnectionActor {
             // Read as bytes and display as hex since proper numeric decoding
             // requires BigInteger support not available in the C driver API
             var bytes: UnsafePointer<UInt8>?
-            var length: Int = 0
+            var length = 0
             if cass_value_get_bytes(value, &bytes, &length) == CASS_OK, let bytes {
                 let data = Data(bytes: bytes, count: length)
                 return "0x" + data.map { String(format: "%02x", $0) }.joined()
@@ -594,7 +607,7 @@ actor CassandraConnectionActor {
         default:
             // Fallback: try reading as string
             var output: UnsafePointer<CChar>?
-            var outputLength: Int = 0
+            var outputLength = 0
             if cass_value_get_string(value, &output, &outputLength) == CASS_OK, let output {
                 return String(
                     bytesNoCopy: UnsafeMutableRawPointer(mutating: output),
@@ -676,7 +689,7 @@ actor CassandraConnectionActor {
 
     private func extractFutureError(_ future: OpaquePointer) -> String {
         var message: UnsafePointer<CChar>?
-        var messageLength: Int = 0
+        var messageLength = 0
         cass_future_error_message(future, &message, &messageLength)
         if let message {
             return String(
@@ -734,9 +747,9 @@ actor CassandraConnectionActor {
                 var columns: [String] = []
                 var columnTypeNames: [String] = []
 
-                for i in 0..<colCount {
+                for i in 0 ..< colCount {
                     var namePtr: UnsafePointer<CChar>?
-                    var nameLength: Int = 0
+                    var nameLength = 0
                     cass_result_column_name(result, i, &namePtr, &nameLength)
                     if let namePtr {
                         columns.append(String(cString: namePtr))
@@ -764,7 +777,7 @@ actor CassandraConnectionActor {
                     guard let row else { continue }
 
                     var rowData: [PluginCellValue] = []
-                    for col in 0..<colCount {
+                    for col in 0 ..< colCount {
                         let value = cass_row_get_column(row, col)
                         if let value, cass_value_is_null(value) == cass_false {
                             if cass_value_type(value) == CASS_VALUE_TYPE_BLOB,

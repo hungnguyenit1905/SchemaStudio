@@ -19,11 +19,23 @@ enum PasswordSource: Codable, Hashable, Sendable {
     private static let logger = Logger(subsystem: "com.SchemaStudio", category: "PasswordSource")
 
     private enum CodingKeys: String, CodingKey {
-        case kind, path, variable, shell, reference, field, secretId, jsonKey
+        case kind
+        case path
+        case variable
+        case shell
+        case reference
+        case field
+        case secretId
+        case jsonKey
     }
 
     private enum Kind: String {
-        case file, env, command, onePassword, vault, awsSecretsManager
+        case file
+        case env
+        case command
+        case onePassword
+        case vault
+        case awsSecretsManager
     }
 
     init(from decoder: Decoder) throws {
@@ -31,22 +43,22 @@ enum PasswordSource: Codable, Hashable, Sendable {
         let kind = try container.decode(String.self, forKey: .kind)
         switch kind {
         case Kind.file.rawValue:
-            self = .file(path: try container.decode(String.self, forKey: .path))
+            self = try .file(path: container.decode(String.self, forKey: .path))
         case Kind.env.rawValue:
-            self = .env(variable: try container.decode(String.self, forKey: .variable))
+            self = try .env(variable: container.decode(String.self, forKey: .variable))
         case Kind.command.rawValue:
-            self = .command(shell: try container.decode(String.self, forKey: .shell))
+            self = try .command(shell: container.decode(String.self, forKey: .shell))
         case Kind.onePassword.rawValue:
-            self = .onePassword(reference: try container.decode(String.self, forKey: .reference))
+            self = try .onePassword(reference: container.decode(String.self, forKey: .reference))
         case Kind.vault.rawValue:
-            self = .vault(
-                path: try container.decode(String.self, forKey: .path),
-                field: try container.decode(String.self, forKey: .field)
+            self = try .vault(
+                path: container.decode(String.self, forKey: .path),
+                field: container.decode(String.self, forKey: .field)
             )
         case Kind.awsSecretsManager.rawValue:
-            self = .awsSecretsManager(
-                secretId: try container.decode(String.self, forKey: .secretId),
-                jsonKey: try container.decodeIfPresent(String.self, forKey: .jsonKey)
+            self = try .awsSecretsManager(
+                secretId: container.decode(String.self, forKey: .secretId),
+                jsonKey: container.decodeIfPresent(String.self, forKey: .jsonKey)
             )
         default:
             throw DecodingError.dataCorruptedError(
@@ -60,23 +72,23 @@ enum PasswordSource: Codable, Hashable, Sendable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
-        case let .file(path):
+        case .file(let path):
             try container.encode(Kind.file.rawValue, forKey: .kind)
             try container.encode(path, forKey: .path)
-        case let .env(variable):
+        case .env(let variable):
             try container.encode(Kind.env.rawValue, forKey: .kind)
             try container.encode(variable, forKey: .variable)
-        case let .command(shell):
+        case .command(let shell):
             try container.encode(Kind.command.rawValue, forKey: .kind)
             try container.encode(shell, forKey: .shell)
-        case let .onePassword(reference):
+        case .onePassword(let reference):
             try container.encode(Kind.onePassword.rawValue, forKey: .kind)
             try container.encode(reference, forKey: .reference)
-        case let .vault(path, field):
+        case .vault(let path, let field):
             try container.encode(Kind.vault.rawValue, forKey: .kind)
             try container.encode(path, forKey: .path)
             try container.encode(field, forKey: .field)
-        case let .awsSecretsManager(secretId, jsonKey):
+        case .awsSecretsManager(let secretId, let jsonKey):
             try container.encode(Kind.awsSecretsManager.rawValue, forKey: .kind)
             try container.encode(secretId, forKey: .secretId)
             try container.encodeIfPresent(jsonKey, forKey: .jsonKey)

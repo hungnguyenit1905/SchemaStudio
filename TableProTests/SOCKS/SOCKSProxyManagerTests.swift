@@ -17,7 +17,7 @@ struct SOCKSProxyManagerTests {
     }
 
     private func expectPortEventuallyFree(_ port: Int, host: String = "127.0.0.1") async {
-        for _ in 0..<100 {
+        for _ in 0 ..< 100 {
             if await !LoopbackPort.isReachable(host: host, port: port) { return }
             try? await Task.sleep(for: .milliseconds(50))
         }

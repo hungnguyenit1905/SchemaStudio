@@ -27,7 +27,7 @@ struct DatabaseScopeTests {
     }
 
     @Test("A blank schema normalises to nil")
-    func blankSchemaNormalisesToNil() throws {
+    func blankSchemaNormalisesToNil() {
         let connectionId = UUID()
 
         let blank = DatabaseScope(connectionId: connectionId, database: "shop", schema: "")
@@ -41,7 +41,7 @@ struct DatabaseScopeTests {
     }
 
     @Test("qualifiedDescription names the schema only when there is one")
-    func qualifiedDescription() throws {
+    func qualifiedDescription() {
         let connectionId = UUID()
 
         let flat = DatabaseScope(connectionId: connectionId, database: "shop", schema: nil)
@@ -52,7 +52,7 @@ struct DatabaseScopeTests {
     }
 
     @Test("Two scopes on different databases are never equal")
-    func scopesOnDifferentDatabasesDiffer() throws {
+    func scopesOnDifferentDatabasesDiffer() {
         let connectionId = UUID()
 
         let alpha = DatabaseScope(connectionId: connectionId, database: "alpha", schema: nil)

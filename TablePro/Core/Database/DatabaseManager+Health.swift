@@ -14,15 +14,16 @@ import TableProPluginKit
 // MARK: - Health Monitoring
 
 extension DatabaseManager {
-    internal enum ReconnectCredentialResolution: Equatable {
+    enum ReconnectCredentialResolution: Equatable {
         case fail
         case retry(String)
         case abort
     }
 
     /// Start health monitoring for a connection
-    internal func startHealthMonitor(for connectionId: UUID) async {
-        Self.logger.info("startHealthMonitor called for \(connectionId) (existing monitors: \(self.healthMonitors.count))")
+    func startHealthMonitor(for connectionId: UUID) async {
+        Self.logger
+            .info("startHealthMonitor called for \(connectionId) (existing monitors: \(self.healthMonitors.count))")
         await stopHealthMonitor(for: connectionId)
 
         let monitor = ConnectionHealthMonitor(
@@ -40,7 +41,10 @@ extension DatabaseManager {
                         Self.logger.debug("Ping skipped — query in-flight for \(connectionId)")
                         return true // Query still within expected time
                     }
-                    Self.logger.warning("Ping proceeding despite in-flight query (stale after \(maxStale)s) for \(connectionId)")
+                    Self.logger
+                        .warning(
+                            "Ping proceeding despite in-flight query (stale after \(maxStale)s) for \(connectionId)"
+                        )
                 }
                 guard let mainDriver = await self.activeSessions[connectionId]?.driver else {
                     Self.logger.debug("Ping skipped — no active driver for \(connectionId)")
@@ -76,8 +80,7 @@ extension DatabaseManager {
                             session.browseSchema = schemaDriver.currentSchema
                         }
                         if let cachedPassword = result.cachedPassword,
-                           !session.connection.usesAWSIAM
-                        {
+                           !session.connection.usesAWSIAM {
                             session.cachedPassword = cachedPassword
                         }
                     }
@@ -118,7 +121,7 @@ extension DatabaseManager {
                             }
                         }
                     case .checking:
-                        break  // No UI update needed
+                        break // No UI update needed
                     }
                 }
             }
@@ -129,7 +132,7 @@ extension DatabaseManager {
     }
 
     /// Result of a driver reconnect, containing the new driver and its effective connection.
-    internal struct ReconnectResult {
+    struct ReconnectResult {
         let driver: DatabaseDriver
         let effectiveConnection: DatabaseConnection
         let cachedPassword: String?
@@ -137,7 +140,7 @@ extension DatabaseManager {
 
     /// Creates a fresh driver, connects, and applies timeout for the given session.
     /// For SSH-tunneled sessions, rebuilds the tunnel before connecting the driver.
-    internal func reconnectDriver(for session: ConnectionSession) async throws -> ReconnectResult? {
+    func reconnectDriver(for session: ConnectionSession) async throws -> ReconnectResult? {
         session.driver?.disconnect()
 
         // Rebuild the tunnel if needed; otherwise reuse effective connection
@@ -206,7 +209,8 @@ extension DatabaseManager {
             do {
                 try await schemaDriver.switchSchema(to: savedSchema)
             } catch {
-                Self.logger.warning("Failed to restore schema '\(savedSchema)' on reconnect: \(error.localizedDescription)")
+                Self.logger
+                    .warning("Failed to restore schema '\(savedSchema)' on reconnect: \(error.localizedDescription)")
             }
         }
 
@@ -214,15 +218,21 @@ extension DatabaseManager {
             do {
                 try await adapter.switchDatabase(to: savedDatabase)
             } catch {
-                Self.logger.warning("Failed to restore database '\(savedDatabase)' on reconnect: \(error.localizedDescription)")
+                Self.logger
+                    .warning(
+                        "Failed to restore database '\(savedDatabase)' on reconnect: \(error.localizedDescription)"
+                    )
             }
         }
     }
 
     /// Stop health monitoring for a connection
-    internal func stopHealthMonitor(for connectionId: UUID) async {
+    func stopHealthMonitor(for connectionId: UUID) async {
         if let monitor = healthMonitors.removeValue(forKey: connectionId) {
-            Self.logger.info("stopHealthMonitor: stopping monitor for \(connectionId) (remaining: \(self.healthMonitors.count))")
+            Self.logger
+                .info(
+                    "stopHealthMonitor: stopping monitor for \(connectionId) (remaining: \(self.healthMonitors.count))"
+                )
             await monitor.stopMonitoring()
         }
     }
@@ -253,8 +263,7 @@ extension DatabaseManager {
             var passwordOverride = activeSessions[sessionId]?.cachedPassword
             if session.connection.promptForPassword,
                !pluginManager.hidesPassword(for: session.connection),
-               passwordOverride == nil
-            {
+               passwordOverride == nil {
                 let isApiOnly = pluginManager.connectionMode(for: session.connection.type) == .apiOnly
                 guard let prompted = await PasswordPromptHelper.prompt(
                     connectionName: session.connection.name,
@@ -285,7 +294,8 @@ extension DatabaseManager {
             await restoreSchemaAndDatabase(
                 on: driver,
                 savedSchema: activeSessions[sessionId]?.browseSchema,
-                savedDatabase: databaseSwitchRequiresReconnect(session.connection) ? nil : activeSessions[sessionId]?.browseDatabase
+                savedDatabase: databaseSwitchRequiresReconnect(session.connection) ? nil : activeSessions[sessionId]?
+                    .browseDatabase
             )
 
             updateSession(sessionId) { session in
@@ -296,8 +306,7 @@ extension DatabaseManager {
                     session.browseSchema = schemaDriver.currentSchema
                 }
                 if let cachedPassword = connectResult.cachedPassword,
-                   !session.connection.usesAWSIAM
-                {
+                   !session.connection.usesAWSIAM {
                     session.cachedPassword = cachedPassword
                 }
             }
@@ -318,13 +327,14 @@ extension DatabaseManager {
             Self.logger.error("Manual reconnect failed: \(error.localizedDescription)")
             updateSession(sessionId) { session in
                 session.status = .error(
-                    String(format: String(localized: "Reconnect failed: %@"), error.localizedDescription))
+                    String(format: String(localized: "Reconnect failed: %@"), error.localizedDescription)
+                )
                 session.clearCachedData()
             }
         }
     }
 
-    internal func connectReconnectDriver(
+    func connectReconnectDriver(
         for session: ConnectionSession,
         effectiveConnection: DatabaseConnection,
         passwordOverride initialPasswordOverride: String?
@@ -362,16 +372,16 @@ extension DatabaseManager {
         }
     }
 
-    internal func reconnectCredentialResolution(
+    func reconnectCredentialResolution(
         for session: ConnectionSession,
         error: Error,
         currentPassword: String?,
-        prompt: @escaping @MainActor (_ connectionName: String, _ isAPIToken: Bool, _ window: NSWindow?) async -> String? = PasswordPromptHelper.prompt
+        prompt: @escaping @MainActor (_ connectionName: String, _ isAPIToken: Bool, _ window: NSWindow?) async
+            -> String? = PasswordPromptHelper.prompt
     ) async -> ReconnectCredentialResolution {
         guard session.connection.promptForPassword,
               !pluginManager.hidesPassword(for: session.connection),
-              isAuthenticationFailure(error)
-        else {
+              isAuthenticationFailure(error) else {
             return .fail
         }
 
@@ -394,7 +404,7 @@ extension DatabaseManager {
     private static let invalidAuthorizationSQLState = "28000"
     private static let mysqlAccessDeniedErrorCode = 1_045
 
-    internal func isAuthenticationFailure(_ error: Error) -> Bool {
+    func isAuthenticationFailure(_ error: Error) -> Bool {
         if let pluginError = error as? any PluginDriverError {
             if pluginError.pluginSqlState == Self.invalidAuthorizationSQLState {
                 return true

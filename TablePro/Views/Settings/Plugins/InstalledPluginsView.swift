@@ -27,10 +27,10 @@ struct InstalledPluginsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if !pluginManager.rejectedPlugins.isEmpty && !dismissedRejectedBanner {
+            if !pluginManager.rejectedPlugins.isEmpty, !dismissedRejectedBanner {
                 rejectedPluginsBanner
             }
-            if pluginManager.needsRestart && !dismissedRestartBanner {
+            if pluginManager.needsRestart, !dismissedRestartBanner {
                 restartBanner
             }
 
@@ -145,7 +145,6 @@ struct InstalledPluginsView: View {
             : String(format: String(localized: "%d plugins could not be loaded."), count)
     }
 
-    @ViewBuilder
     private func rejectedPluginRow(_ plugin: RejectedPlugin, action: RejectedPluginAction) -> some View {
         HStack(spacing: 8) {
             PluginIconView(name: rejectedIconName(for: plugin))
@@ -302,7 +301,6 @@ struct InstalledPluginsView: View {
 
     // MARK: - Plugin Row
 
-    @ViewBuilder
     private func pluginRow(_ plugin: PluginEntry) -> some View {
         HStack(spacing: 8) {
             PluginIconView(name: plugin.pluginIconName)
@@ -348,8 +346,7 @@ struct InstalledPluginsView: View {
         return pluginManager.plugins.first { $0.id == id }
     }
 
-    @ViewBuilder
-    private var detailPane: some View {
+    @ViewBuilder private var detailPane: some View {
         if let selected = selectedPlugin {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -367,9 +364,11 @@ struct InstalledPluginsView: View {
                         .accessibilityLabel(String(format: String(localized: "Enable %@"), selected.name))
                     }
 
-                    Text("v\(selected.version) · \(selected.source == .builtIn ? String(localized: "Built-in") : String(localized: "User-installed"))")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "v\(selected.version) · \(selected.source == .builtIn ? String(localized: "Built-in") : String(localized: "User-installed"))"
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
 
                     if let registryPlugin = pluginManager.registryUpdate(for: selected.id) {
                         updateActionView(for: selected, registryPlugin: registryPlugin)
@@ -583,7 +582,10 @@ struct InstalledPluginsView: View {
         Task {
             let confirmed = await AlertHelper.confirmDestructive(
                 title: String(localized: "Uninstall Plugin?"),
-                message: String(format: String(localized: "\"%@\" will be removed from your system. This action cannot be undone."), plugin.name),
+                message: String(
+                    format: String(localized: "\"%@\" will be removed from your system. This action cannot be undone."),
+                    plugin.name
+                ),
                 confirmButton: String(localized: "Uninstall"),
                 cancelButton: String(localized: "Cancel")
             )

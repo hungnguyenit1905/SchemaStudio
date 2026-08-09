@@ -114,7 +114,10 @@ final class RowOperationsManager {
                 insertedRowsToDelete.append(rowIndex)
             } else if !changeManager.isRowDeleted(rowIndex) {
                 if rowIndex < tableRows.count {
-                    existingRowsToDelete.append((rowIndex: rowIndex, originalRow: Array(tableRows.rows[rowIndex].values)))
+                    existingRowsToDelete.append((
+                        rowIndex: rowIndex,
+                        originalRow: Array(tableRows.rows[rowIndex].values)
+                    ))
                 }
             }
         }
@@ -237,7 +240,7 @@ final class RowOperationsManager {
         tableRows: inout TableRows,
         selectedIndices: Set<Int>
     ) -> UndoInsertRowResult {
-        guard rowIndex >= 0 && rowIndex < tableRows.count else {
+        guard rowIndex >= 0, rowIndex < tableRows.count else {
             return UndoInsertRowResult(adjustedSelection: selectedIndices, delta: .none)
         }
 
@@ -294,8 +297,7 @@ final class RowOperationsManager {
         }
 
         for displayIndex in indicesToCopy {
-            guard let row = DisplayRowMapping.row(forDisplay: displayIndex, displayIDs: displayIDs, in: tableRows)
-            else { continue }
+            guard let row = DisplayRowMapping.row(forDisplay: displayIndex, displayIDs: displayIDs, in: tableRows) else { continue }
             if !result.isEmpty { result.append("\n") }
             let cells = projection.values(Array(row.values))
             structuredRows.append(cells)

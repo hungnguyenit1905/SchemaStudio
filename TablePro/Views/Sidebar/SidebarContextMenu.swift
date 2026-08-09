@@ -35,11 +35,11 @@ enum SidebarContextMenuLogic {
 
     static func deleteLabel(for type: TableInfo.TableType?) -> String {
         switch type {
-        case .view:             return String(localized: "Drop View")
+        case .view: return String(localized: "Drop View")
         case .materializedView: return String(localized: "Drop Materialized View")
-        case .foreignTable:     return String(localized: "Drop Foreign Table")
-        case .systemTable:      return String(localized: "Drop")
-        case .externalTable:    return String(localized: "Drop External Table")
+        case .foreignTable: return String(localized: "Drop Foreign Table")
+        case .systemTable: return String(localized: "Drop")
+        case .externalTable: return String(localized: "Drop External Table")
         case .table, .partitionedTable, .none: return String(localized: "Delete")
         }
     }

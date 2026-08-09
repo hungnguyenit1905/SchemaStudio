@@ -35,7 +35,7 @@ final class MainContentCommandActions {
     // MARK: - Bindings
 
     @ObservationIgnored private let selectionState: GridSelectionState
-    @ObservationIgnored private let selectedTables: Binding<Set<TableInfo>>
+    @ObservationIgnored private let selectedTables: Binding<Set<DatabaseTreeTableRef>>
     @ObservationIgnored private let pendingTruncates: Binding<Set<String>>
     @ObservationIgnored private let pendingDeletes: Binding<Set<String>>
     @ObservationIgnored private let tableOperationOptions: Binding<[String: TableOperationOptions]>
@@ -72,7 +72,7 @@ final class MainContentCommandActions {
         coordinator: MainContentCoordinator,
         connection: DatabaseConnection,
         selectionState: GridSelectionState,
-        selectedTables: Binding<Set<TableInfo>>,
+        selectedTables: Binding<Set<DatabaseTreeTableRef>>,
         pendingTruncates: Binding<Set<String>>,
         pendingDeletes: Binding<Set<String>>,
         tableOperationOptions: Binding<[String: TableOperationOptions]>,
@@ -228,12 +228,13 @@ final class MainContentCommandActions {
             var updatedDeletes = pendingDeletes.wrappedValue
             var updatedTruncates = pendingTruncates.wrappedValue
 
-            for table in selectedTables.wrappedValue {
-                updatedTruncates.remove(table.name)
-                if updatedDeletes.contains(table.name) {
-                    updatedDeletes.remove(table.name)
+            for ref in selectedTables.wrappedValue where ref.connectionId == connection.id {
+                let name = ref.table.name
+                updatedTruncates.remove(name)
+                if updatedDeletes.contains(name) {
+                    updatedDeletes.remove(name)
                 } else {
-                    updatedDeletes.insert(table.name)
+                    updatedDeletes.insert(name)
                 }
             }
 
@@ -297,18 +298,6 @@ final class MainContentCommandActions {
 
     var supportsContainerSwitching: Bool {
         PluginManager.shared.supportsContainerSwitching(for: connection.type)
-    }
-
-    var canSwitchSidebarLayout: Bool {
-        PluginManager.shared.supportsDatabaseTree(for: connection.type)
-    }
-
-    var sidebarLayout: SidebarLayout {
-        SharedSidebarState.forConnection(connection.id).sidebarLayout
-    }
-
-    func setSidebarLayout(_ layout: SidebarLayout) {
-        SharedSidebarState.forConnection(connection.id).sidebarLayout = layout
     }
 
     var isCurrentTabEditable: Bool {
@@ -479,7 +468,10 @@ final class MainContentCommandActions {
         }
 
         let visibleTabbedWindows = (window.tabbedWindows ?? [window]).filter(\.isVisible)
-        Self.logger.info("[close] finish visibleTabs=\(visibleTabbedWindows.count) tabManagerTabs=\(self.coordinator?.tabManager.tabs.count ?? 0)")
+        Self.logger
+            .info(
+                "[close] finish visibleTabs=\(visibleTabbedWindows.count) tabManagerTabs=\(self.coordinator?.tabManager.tabs.count ?? 0)"
+            )
 
         if visibleTabbedWindows.count > 1 || coordinator?.tabManager.tabs.isEmpty == true {
             window.close()
@@ -505,7 +497,7 @@ final class MainContentCommandActions {
     }
 
     private func saveAndClose(asBatchSurvivor: Bool?) async -> Bool {
-        guard let coordinator = coordinator else {
+        guard let coordinator else {
             finish(asBatchSurvivor: asBatchSurvivor)
             return true
         }
@@ -590,7 +582,8 @@ final class MainContentCommandActions {
 
     private func isExternallyModified(tab: QueryTab, url: URL) -> Bool {
         guard let loadMtime = tab.content.loadMtime,
-              let currentMtime = (try? FileManager.default.attributesOfItem(atPath: url.path)[.modificationDate]) as? Date else {
+              let currentMtime = (try? FileManager.default
+                  .attributesOfItem(atPath: url.path)[.modificationDate]) as? Date else {
             return false
         }
         return currentMtime > loadMtime.addingTimeInterval(0.5)
@@ -641,7 +634,7 @@ final class MainContentCommandActions {
 
     func truncateTables() {
         guard !(selectedTables.wrappedValue.isEmpty) else { return }
-        coordinator?.sidebarViewModel?.batchToggleTruncate()
+        coordinator?.sidebarViewModel?.batchToggleTruncate(connectionId: connection.id)
     }
 
     func createView() {
@@ -671,8 +664,7 @@ final class MainContentCommandActions {
 
     var supportsUserManagement: Bool {
         guard let connectionId = coordinator?.connectionId,
-              let adapter = DatabaseManager.shared.driver(for: connectionId) as? PluginDriverAdapter
-        else { return false }
+              let adapter = DatabaseManager.shared.driver(for: connectionId) as? PluginDriverAdapter else { return false }
         return adapter.schemaPluginDriver.capabilities.contains(.userManagement)
     }
 
@@ -702,7 +694,7 @@ final class MainContentCommandActions {
     // MARK: - Filter Operations (Group A — Called Directly)
 
     func toggleFilterPanel() {
-        guard let coordinator = coordinator,
+        guard let coordinator,
               coordinator.tabManager.selectedTab?.tabType == .table else { return }
         coordinator.toggleFilterPanel()
     }
@@ -809,6 +801,10 @@ final class MainContentCommandActions {
 
     func exportQueryResults() {
         coordinator?.openExportQueryResultsDialog()
+    }
+
+    func openDataTransfer() {
+        coordinator?.openDataTransferWizard(preselectedScope: nil)
     }
 
     func importTables(formatId: String) {

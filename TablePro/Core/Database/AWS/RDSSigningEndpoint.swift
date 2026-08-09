@@ -56,7 +56,7 @@ enum RDSSigningEndpointResolver {
         }
 
         let portText = String(text[text.index(after: separatorIndex)...])
-        guard let port = Int(portText), (1...65_535).contains(port) else {
+        guard let port = Int(portText), (1 ... 65_535).contains(port) else {
             throw AWSAuthError.rdsEndpointInvalid(value)
         }
         return try makeEndpoint(host: String(text[..<separatorIndex]), port: port, rawValue: value)

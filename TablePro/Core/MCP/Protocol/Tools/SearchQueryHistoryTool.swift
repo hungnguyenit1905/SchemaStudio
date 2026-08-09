@@ -31,11 +31,15 @@ public struct SearchQueryHistoryTool: MCPToolImplementation {
             ]),
             "since": .object([
                 "type": .string("number"),
-                "description": .string(String(localized: "Earliest executed_at to include, Unix epoch seconds (inclusive, optional)"))
+                "description": .string(
+                    String(localized: "Earliest executed_at to include, Unix epoch seconds (inclusive, optional)")
+                )
             ]),
             "until": .object([
                 "type": .string("number"),
-                "description": .string(String(localized: "Latest executed_at to include, Unix epoch seconds (inclusive, optional)"))
+                "description": .string(
+                    String(localized: "Latest executed_at to include, Unix epoch seconds (inclusive, optional)")
+                )
             ])
         ]),
         "required": .array([.string("query")])
@@ -50,7 +54,7 @@ public struct SearchQueryHistoryTool: MCPToolImplementation {
     ) async throws -> MCPToolCallResult {
         let query = try MCPArgumentDecoder.requireString(arguments, key: "query")
         let connectionId = try MCPArgumentDecoder.optionalUuid(arguments, key: "connection_id")
-        let limit = MCPArgumentDecoder.optionalInt(arguments, key: "limit", default: 50, clamp: 1...500) ?? 50
+        let limit = MCPArgumentDecoder.optionalInt(arguments, key: "limit", default: 50, clamp: 1 ... 500) ?? 50
         let since = MCPArgumentDecoder.optionalDouble(arguments, key: "since").map { Date(timeIntervalSince1970: $0) }
         let until = MCPArgumentDecoder.optionalDouble(arguments, key: "until").map { Date(timeIntervalSince1970: $0) }
 

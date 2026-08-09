@@ -12,33 +12,33 @@ public extension SurrealValue {
         switch self {
         case .null, .none:
             return ""
-        case let .bool(flag):
+        case .bool(let flag):
             return flag ? "true" : "false"
-        case let .int(number):
+        case .int(let number):
             return String(number)
-        case let .double(number):
+        case .double(let number):
             return Self.formatDouble(number)
-        case let .string(text):
+        case .string(let text):
             return text
-        case let .bytes(data):
+        case .bytes(let data):
             return data.base64EncodedString()
         case .array, .object:
             return jsonText
-        case let .recordId(record):
+        case .recordId(let record):
             return record.literal
-        case let .table(name):
+        case .table(let name):
             return name
-        case let .uuid(value):
+        case .uuid(let value):
             return value.uuidString.lowercased()
-        case let .decimal(text):
+        case .decimal(let text):
             return text
-        case let .datetime(seconds, nanoseconds):
+        case .datetime(let seconds, let nanoseconds):
             return Self.formatDatetime(seconds: seconds, nanoseconds: nanoseconds)
-        case let .duration(seconds, nanoseconds):
+        case .duration(let seconds, let nanoseconds):
             return Self.formatDuration(seconds: seconds, nanoseconds: nanoseconds)
         case .tagged:
             return jsonText
-        case let .range(from, to):
+        case .range(let from, let to):
             return Self.formatRange(from: from, to: to)
         }
     }
@@ -98,22 +98,22 @@ public extension SurrealValue {
         switch value {
         case .null, .none:
             return "null"
-        case let .bool(flag):
+        case .bool(let flag):
             return flag ? "true" : "false"
-        case let .int(number):
+        case .int(let number):
             return String(number)
-        case let .double(number):
+        case .double(let number):
             return formatDouble(number)
-        case let .decimal(text):
+        case .decimal(let text):
             return text
-        case let .array(items):
+        case .array(let items):
             return "[" + items.map(jsonFragment).joined(separator: ",") + "]"
-        case let .object(pairs):
+        case .object(let pairs):
             let body = pairs
                 .map { quoted($0.key) + ":" + jsonFragment($0.value) }
                 .joined(separator: ",")
             return "{" + body + "}"
-        case let .tagged(tag, inner):
+        case .tagged(let tag, let inner):
             guard isGeometryTag(tag) else { return jsonFragment(inner) }
             return geometryJson(tag: tag, value: inner)
         default:
@@ -185,8 +185,8 @@ public extension SurrealValue {
         }
 
         let civil = civilFromDays(days)
-        let hour = remainder / 3600
-        let minute = (remainder % 3600) / 60
+        let hour = remainder / 3_600
+        let minute = (remainder % 3_600) / 60
         let second = remainder % 60
 
         var text = String(
@@ -207,7 +207,7 @@ public extension SurrealValue {
         let shifted = days + 719_468
         let era = (shifted >= 0 ? shifted : shifted - 146_096) / 146_097
         let dayOfEra = shifted - era * 146_097
-        let yearOfEra = (dayOfEra - dayOfEra / 1460 + dayOfEra / 36_524 - dayOfEra / 146_096) / 365
+        let yearOfEra = (dayOfEra - dayOfEra / 1_460 + dayOfEra / 36_524 - dayOfEra / 146_096) / 365
         let year = yearOfEra + era * 400
         let dayOfYear = dayOfEra - (365 * yearOfEra + yearOfEra / 4 - yearOfEra / 100)
         let monthPrime = (5 * dayOfYear + 2) / 153
@@ -221,7 +221,7 @@ public extension SurrealValue {
 
         var remaining = seconds
         var text = ""
-        let units: [(Int64, String)] = [(604_800, "w"), (86_400, "d"), (3600, "h"), (60, "m"), (1, "s")]
+        let units: [(Int64, String)] = [(604_800, "w"), (86_400, "d"), (3_600, "h"), (60, "m"), (1, "s")]
         for (size, suffix) in units where remaining >= size {
             text += "\(remaining / size)\(suffix)"
             remaining %= size
@@ -232,9 +232,9 @@ public extension SurrealValue {
             text += "\(nanos / 1_000_000)ms"
             nanos %= 1_000_000
         }
-        if nanos >= 1000 {
-            text += "\(nanos / 1000)µs"
-            nanos %= 1000
+        if nanos >= 1_000 {
+            text += "\(nanos / 1_000)µs"
+            nanos %= 1_000
         }
         if nanos > 0 {
             text += "\(nanos)ns"

@@ -25,7 +25,7 @@ struct CalendarMonth: Equatable {
         let leadingBlanks = (firstWeekday - calendar.firstWeekday + 7) % 7
 
         var days: [Date?] = Array(repeating: nil, count: leadingBlanks)
-        for offset in 0..<dayCount {
+        for offset in 0 ..< dayCount {
             days.append(calendar.date(byAdding: .day, value: offset, to: monthInterval.start))
         }
 

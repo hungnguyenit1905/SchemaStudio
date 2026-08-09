@@ -16,10 +16,17 @@ final class MySQLDriver: DatabaseDriver, @unchecked Sendable {
     var currentSchema: String? { nil }
     var supportsTransactions: Bool { true }
 
-    // Set once during connect() before the driver is shared — safe for concurrent reads
+    /// Set once during connect() before the driver is shared — safe for concurrent reads
     nonisolated(unsafe) private(set) var serverVersion: String?
 
-    init(host: String, port: Int, user: String, password: String, database: String, ssl: DriverSSLConfiguration = .disabled) {
+    init(
+        host: String,
+        port: Int,
+        user: String,
+        password: String,
+        database: String,
+        ssl: DriverSSLConfiguration = .disabled
+    ) {
         self.host = host
         self.port = port
         self.user = user
@@ -187,22 +194,22 @@ final class MySQLDriver: DatabaseDriver, @unchecked Sendable {
         let safe = table.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "''")
         let dbSafe = database.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "''")
         let query = """
-            SELECT
-                kcu.CONSTRAINT_NAME,
-                kcu.COLUMN_NAME,
-                kcu.REFERENCED_TABLE_NAME,
-                kcu.REFERENCED_COLUMN_NAME,
-                rc.DELETE_RULE,
-                rc.UPDATE_RULE
-            FROM information_schema.KEY_COLUMN_USAGE kcu
-            JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
-                ON kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
-                AND kcu.CONSTRAINT_SCHEMA = rc.CONSTRAINT_SCHEMA
-            WHERE kcu.TABLE_SCHEMA = '\(dbSafe)'
-                AND kcu.TABLE_NAME = '\(safe)'
-                AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
-            ORDER BY kcu.CONSTRAINT_NAME, kcu.ORDINAL_POSITION
-            """
+        SELECT
+            kcu.CONSTRAINT_NAME,
+            kcu.COLUMN_NAME,
+            kcu.REFERENCED_TABLE_NAME,
+            kcu.REFERENCED_COLUMN_NAME,
+            rc.DELETE_RULE,
+            rc.UPDATE_RULE
+        FROM information_schema.KEY_COLUMN_USAGE kcu
+        JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
+            ON kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+            AND kcu.CONSTRAINT_SCHEMA = rc.CONSTRAINT_SCHEMA
+        WHERE kcu.TABLE_SCHEMA = '\(dbSafe)'
+            AND kcu.TABLE_NAME = '\(safe)'
+            AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
+        ORDER BY kcu.CONSTRAINT_NAME, kcu.ORDINAL_POSITION
+        """
         let raw = try await actor.execute(query)
 
         return raw.rows.compactMap { row in
@@ -256,9 +263,18 @@ final class MySQLDriver: DatabaseDriver, @unchecked Sendable {
 private actor MySQLActor {
     private var mysql: UnsafeMutablePointer<MYSQL>?
 
-    func connect(host: String, port: Int, user: String, password: String, database: String, ssl: DriverSSLConfiguration) throws {
+    func connect(
+        host: String,
+        port: Int,
+        user: String,
+        password: String,
+        database: String,
+        ssl: DriverSSLConfiguration
+    ) throws {
         // Close existing connection if reconnecting
-        if let mysql { mysql_close(mysql); self.mysql = nil }
+        if let mysql { mysql_close(mysql)
+            self.mysql = nil
+        }
 
         guard let handle = mysql_init(nil) else {
             throw MySQLError.connectionFailed("Failed to initialize MySQL client")
@@ -284,7 +300,7 @@ private actor MySQLActor {
             _ = caPath.withCString { mysql_options(handle, MYSQL_OPT_SSL_CA, $0) }
         }
 
-        guard let portU32 = UInt32(exactly: port), (1...65_535).contains(port) else {
+        guard let portU32 = UInt32(exactly: port), (1 ... 65_535).contains(port) else {
             mysql_close(handle)
             throw MySQLError.connectionFailed(
                 "Port \(port) is out of range. Use a value between 1 and 65535."
@@ -348,7 +364,7 @@ private actor MySQLActor {
         var columnTypes: [String] = []
 
         if let fields = mysql_fetch_fields(result) {
-            for i in 0..<fieldCount {
+            for i in 0 ..< fieldCount {
                 let field = fields[i]
                 columns.append(String(cString: field.name))
                 columnTypes.append(mysqlFieldTypeName(field.type.rawValue))
@@ -365,7 +381,7 @@ private actor MySQLActor {
 
             let lengths = mysql_fetch_lengths(result)
             var rowData: [String?] = []
-            for i in 0..<fieldCount {
+            for i in 0 ..< fieldCount {
                 if let value = row[i] {
                     let len = Int(clamping: lengths?[i] ?? 0)
                     let data = Data(bytes: value, count: len)
@@ -420,7 +436,7 @@ private actor MySQLActor {
         let fieldCount = Int(mysql_num_fields(result))
         var columns: [ColumnInfo] = []
         if let fields = mysql_fetch_fields(result) {
-            for i in 0..<fieldCount {
+            for i in 0 ..< fieldCount {
                 let field = fields[i]
                 let name = field.name.map { String(cString: $0) } ?? ""
                 columns.append(ColumnInfo(
@@ -447,7 +463,7 @@ private actor MySQLActor {
         var cells: [Cell] = []
         cells.reserveCapacity(columns.count)
 
-        for i in 0..<columns.count {
+        for i in 0 ..< columns.count {
             if let value = row[i] {
                 let len = Int(clamping: lengths?[i] ?? 0)
                 let data = Data(bytes: value, count: len)
@@ -474,7 +490,12 @@ private actor MySQLActor {
         streamingColumns = []
     }
 
-    private func makeCellRef(column: String, row: MYSQL_ROW, options: StreamOptions, columns: [ColumnInfo]) -> CellRef? {
+    private func makeCellRef(
+        column: String,
+        row: MYSQL_ROW,
+        options: StreamOptions,
+        columns: [ColumnInfo]
+    ) -> CellRef? {
         guard let lazyContext = options.lazyContext, !lazyContext.primaryKeyColumns.isEmpty else { return nil }
 
         var pkComponents: [PrimaryKeyComponent] = []

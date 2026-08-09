@@ -88,7 +88,7 @@ struct ConnectionURLParser {
             return .failure(.invalidURL)
         }
 
-        var scheme = trimmed[trimmed.startIndex..<schemeEnd.lowerBound].lowercased()
+        var scheme = trimmed[trimmed.startIndex ..< schemeEnd.lowerBound].lowercased()
 
         var isSSH = false
         if scheme.hasSuffix("+ssh") {
@@ -96,7 +96,7 @@ struct ConnectionURLParser {
             scheme = String(scheme.dropLast(4))
         } else if let plusIdx = scheme.lastIndex(of: "+"),
                   !scheme.hasSuffix("+srv") {
-            scheme = String(scheme[scheme.startIndex..<plusIdx])
+            scheme = String(scheme[scheme.startIndex ..< plusIdx])
         }
 
         guard let dbType = resolveDBType(from: scheme) else {
@@ -286,8 +286,8 @@ struct ConnectionURLParser {
         }
     }
 
-    // SSH URL format: scheme+ssh://ssh_user@ssh_host:ssh_port/db_user:db_pass@db_host:db_port/db_name?params
-    // URLComponents can't handle two user@host segments, so we parse manually.
+    /// SSH URL format: scheme+ssh://ssh_user@ssh_host:ssh_port/db_user:db_pass@db_host:db_port/db_name?params
+    /// URLComponents can't handle two user@host segments, so we parse manually.
     private static func parseSSHURL(
         _ urlString: String,
         schemeEnd: Range<String.Index>,
@@ -298,7 +298,7 @@ struct ConnectionURLParser {
         var mainPart = afterScheme
         var queryString: String?
         if let questionIndex = afterScheme.firstIndex(of: "?") {
-            mainPart = String(afterScheme[afterScheme.startIndex..<questionIndex])
+            mainPart = String(afterScheme[afterScheme.startIndex ..< questionIndex])
             queryString = String(afterScheme[afterScheme.index(after: questionIndex)...])
         }
 
@@ -306,16 +306,16 @@ struct ConnectionURLParser {
             return .failure(.invalidURL)
         }
 
-        let sshPart = String(mainPart[mainPart.startIndex..<firstSlash])
+        let sshPart = String(mainPart[mainPart.startIndex ..< firstSlash])
         let dbPart = String(mainPart[mainPart.index(after: firstSlash)...])
 
         var sshUsername: String?
         var sshPassword: String?
         var sshHostPort: String
         if let atIndex = sshPart.firstIndex(of: "@") {
-            let userinfo = String(sshPart[sshPart.startIndex..<atIndex])
+            let userinfo = String(sshPart[sshPart.startIndex ..< atIndex])
             if let colonIndex = userinfo.firstIndex(of: ":") {
-                sshUsername = String(userinfo[userinfo.startIndex..<colonIndex])
+                sshUsername = String(userinfo[userinfo.startIndex ..< colonIndex])
                     .removingPercentEncoding
                 let rawPass = String(userinfo[userinfo.index(after: colonIndex)...])
                     .removingPercentEncoding ?? ""
@@ -347,11 +347,11 @@ struct ConnectionURLParser {
         var database = ""
 
         if let atIndex = dbPart.lastIndex(of: "@") {
-            let credentials = String(dbPart[dbPart.startIndex..<atIndex])
+            let credentials = String(dbPart[dbPart.startIndex ..< atIndex])
             let afterAt = String(dbPart[dbPart.index(after: atIndex)...])
 
             if let colonIndex = credentials.firstIndex(of: ":") {
-                dbUsername = String(credentials[credentials.startIndex..<colonIndex])
+                dbUsername = String(credentials[credentials.startIndex ..< colonIndex])
                     .removingPercentEncoding ?? ""
                 dbPassword = String(credentials[credentials.index(after: colonIndex)...])
                     .removingPercentEncoding ?? ""
@@ -360,14 +360,14 @@ struct ConnectionURLParser {
             }
 
             if let slashIndex = afterAt.firstIndex(of: "/") {
-                dbHostPort = String(afterAt[afterAt.startIndex..<slashIndex])
+                dbHostPort = String(afterAt[afterAt.startIndex ..< slashIndex])
                 database = String(afterAt[afterAt.index(after: slashIndex)...])
             } else {
                 dbHostPort = afterAt
             }
         } else {
             if let slashIndex = dbPart.firstIndex(of: "/") {
-                dbHostPort = String(dbPart[dbPart.startIndex..<slashIndex])
+                dbHostPort = String(dbPart[dbPart.startIndex ..< slashIndex])
                 database = String(dbPart[dbPart.index(after: slashIndex)...])
             } else {
                 dbHostPort = dbPart
@@ -391,7 +391,7 @@ struct ConnectionURLParser {
 
         // Oracle-specific: path component is the service name, not the database name
         var oracleServiceName: String?
-        if dbType == .oracle && !database.isEmpty {
+        if dbType == .oracle, !database.isEmpty {
             oracleServiceName = database
             database = ""
         }
@@ -442,14 +442,14 @@ struct ConnectionURLParser {
         var mainPart = afterScheme
         var queryString: String?
         if let questionIndex = afterScheme.firstIndex(of: "?") {
-            mainPart = String(afterScheme[afterScheme.startIndex..<questionIndex])
+            mainPart = String(afterScheme[afterScheme.startIndex ..< questionIndex])
             queryString = String(afterScheme[afterScheme.index(after: questionIndex)...])
         }
 
         var authority = mainPart
         var database = ""
         if let slashIndex = mainPart.firstIndex(of: "/") {
-            authority = String(mainPart[mainPart.startIndex..<slashIndex])
+            authority = String(mainPart[mainPart.startIndex ..< slashIndex])
             database = String(mainPart[mainPart.index(after: slashIndex)...])
                 .removingPercentEncoding ?? String(mainPart[mainPart.index(after: slashIndex)...])
         }
@@ -457,7 +457,7 @@ struct ConnectionURLParser {
         var credentials = ""
         var hostPortion = authority
         if let atIndex = authority.lastIndex(of: "@") {
-            credentials = String(authority[authority.startIndex..<atIndex])
+            credentials = String(authority[authority.startIndex ..< atIndex])
             hostPortion = String(authority[authority.index(after: atIndex)...])
         }
 
@@ -467,7 +467,7 @@ struct ConnectionURLParser {
         var password = ""
         if !credentials.isEmpty {
             if let colonIndex = credentials.firstIndex(of: ":") {
-                username = String(credentials[credentials.startIndex..<colonIndex])
+                username = String(credentials[credentials.startIndex ..< colonIndex])
                     .removingPercentEncoding ?? ""
                 password = String(credentials[credentials.index(after: colonIndex)...])
                     .removingPercentEncoding ?? ""
@@ -596,7 +596,12 @@ struct ConnectionURLParser {
         return ext
     }
 
-    private static func applyQueryParam(key rawKey: String, value: String, to ext: inout ExtendedParams, dbType: DatabaseType? = nil) {
+    private static func applyQueryParam(
+        key rawKey: String,
+        value: String,
+        to ext: inout ExtendedParams,
+        dbType: DatabaseType? = nil
+    ) {
         let key = rawKey.lowercased()
         switch key {
         case "sslmode":
@@ -634,7 +639,7 @@ struct ConnectionURLParser {
                 ext.sslMode = parseTlsModeInteger(intValue)
             }
         case "tls", "ssl":
-            if value.lowercased() == "true" && ext.sslMode == nil {
+            if value.lowercased() == "true", ext.sslMode == nil {
                 ext.sslMode = .required
             }
         case "authmechanism":
@@ -658,7 +663,7 @@ struct ConnectionURLParser {
         guard !hostPort.isEmpty else { return nil }
 
         if hostPort.hasPrefix("["), let closeBracket = hostPort.firstIndex(of: "]") {
-            let host = String(hostPort[hostPort.index(after: hostPort.startIndex)..<closeBracket])
+            let host = String(hostPort[hostPort.index(after: hostPort.startIndex) ..< closeBracket])
             let afterBracket = hostPort.index(after: closeBracket)
             if afterBracket < hostPort.endIndex, hostPort[afterBracket] == ":" {
                 let port = Int(hostPort[hostPort.index(after: afterBracket)...])
@@ -668,7 +673,7 @@ struct ConnectionURLParser {
         }
 
         if let colonIndex = hostPort.lastIndex(of: ":") {
-            let host = String(hostPort[hostPort.startIndex..<colonIndex])
+            let host = String(hostPort[hostPort.startIndex ..< colonIndex])
             let port = Int(hostPort[hostPort.index(after: colonIndex)...])
             return (host, port)
         }
@@ -741,7 +746,8 @@ struct ConnectionURLParser {
         return bestColor
     }
 
-    @MainActor internal static func tagId(fromEnvName name: String) -> UUID? {
+    @MainActor
+    internal static func tagId(fromEnvName name: String) -> UUID? {
         let tags = TagStorage.shared.loadTags()
         return tags.first(where: { $0.name.lowercased() == name.lowercased() })?.id
     }

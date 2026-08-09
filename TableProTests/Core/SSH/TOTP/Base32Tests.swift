@@ -3,8 +3,8 @@
 //  TableProTests
 //
 
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import XCTest
 
 final class Base32Tests: XCTestCase {

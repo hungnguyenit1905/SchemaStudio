@@ -1,14 +1,13 @@
 import Foundation
-import Testing
 import TableProDatabase
+@testable import TableProMobile
 import TableProModels
 import TableProQuery
-@testable import TableProMobile
+import Testing
 
 @MainActor
 @Suite("DataBrowserViewModel")
 struct DataBrowserViewModelTests {
-
     private func makeSession(driver: MockDatabaseDriver) -> ConnectionSession {
         ConnectionSession(
             connectionId: UUID(),
@@ -51,7 +50,12 @@ struct DataBrowserViewModelTests {
         ]
 
         let vm = DataBrowserViewModel()
-        vm.attach(session: makeSession(driver: driver), table: TableInfo(name: "users"), databaseType: .mysql, host: "localhost")
+        vm.attach(
+            session: makeSession(driver: driver),
+            table: TableInfo(name: "users"),
+            databaseType: .mysql,
+            host: "localhost"
+        )
         await vm.load(isInitial: true)
 
         #expect(vm.legacyRows.count == 2)
@@ -70,7 +74,12 @@ struct DataBrowserViewModelTests {
             .success(QueryResult(columns: [], rows: [["0"]], rowsAffected: 0, executionTime: 0))
         ]
         let vm = DataBrowserViewModel()
-        vm.attach(session: makeSession(driver: driver), table: TableInfo(name: "users"), databaseType: .mysql, host: "localhost")
+        vm.attach(
+            session: makeSession(driver: driver),
+            table: TableInfo(name: "users"),
+            databaseType: .mysql,
+            host: "localhost"
+        )
         await vm.load(isInitial: true)
 
         #expect(vm.hasActiveSearch == false)
@@ -101,14 +110,24 @@ struct DataBrowserViewModelTests {
             .success(QueryResult(columns: [], rows: [["1"]], rowsAffected: 0, executionTime: 0))
         ]
         let vm = DataBrowserViewModel()
-        vm.attach(session: makeSession(driver: driver), table: TableInfo(name: "users"), databaseType: .mysql, host: "localhost")
+        vm.attach(
+            session: makeSession(driver: driver),
+            table: TableInfo(name: "users"),
+            databaseType: .mysql,
+            host: "localhost"
+        )
         await vm.load(isInitial: true)
         #expect(vm.legacyRows.count == 1)
         #expect(vm.isLoading == false)
         #expect(vm.isPageLoading == false)
 
         driver.scriptedExecuteResults = [
-            .success(QueryResult(columns: makeColumns(), rows: [["1", "Alice"], ["2", "Bob"]], rowsAffected: 0, executionTime: 0)),
+            .success(QueryResult(
+                columns: makeColumns(),
+                rows: [["1", "Alice"], ["2", "Bob"]],
+                rowsAffected: 0,
+                executionTime: 0
+            )),
             .success(QueryResult(columns: [], rows: [["2"]], rowsAffected: 0, executionTime: 0))
         ]
         await vm.clearSearch()
@@ -122,7 +141,12 @@ struct DataBrowserViewModelTests {
     func paginationClamps() async {
         let driver = MockDatabaseDriver()
         let vm = DataBrowserViewModel()
-        vm.attach(session: makeSession(driver: driver), table: TableInfo(name: "users"), databaseType: .mysql, host: "localhost")
+        vm.attach(
+            session: makeSession(driver: driver),
+            table: TableInfo(name: "users"),
+            databaseType: .mysql,
+            host: "localhost"
+        )
 
         #expect(vm.pagination.currentPage == 0)
         await vm.goToPreviousPage()
@@ -138,7 +162,12 @@ struct DataBrowserViewModelTests {
             .success(QueryResult(columns: [], rows: [["1"]], rowsAffected: 0, executionTime: 0))
         ]
         let vm = DataBrowserViewModel()
-        vm.attach(session: makeSession(driver: driver), table: TableInfo(name: "users"), databaseType: .mysql, host: "localhost")
+        vm.attach(
+            session: makeSession(driver: driver),
+            table: TableInfo(name: "users"),
+            databaseType: .mysql,
+            host: "localhost"
+        )
         await vm.load(isInitial: true)
 
         let pks = vm.primaryKeyValues(for: ["42", "Alice"])
@@ -156,7 +185,12 @@ struct DataBrowserViewModelTests {
             .success(QueryResult(columns: [], rows: [["1"]], rowsAffected: 0, executionTime: 0))
         ]
         let vm = DataBrowserViewModel()
-        vm.attach(session: makeSession(driver: driver), table: TableInfo(name: "users"), databaseType: .mysql, host: "localhost")
+        vm.attach(
+            session: makeSession(driver: driver),
+            table: TableInfo(name: "users"),
+            databaseType: .mysql,
+            host: "localhost"
+        )
         await vm.load(isInitial: true)
 
         driver.scriptedExecuteResults = [
@@ -180,7 +214,12 @@ struct DataBrowserViewModelTests {
             .success(QueryResult(columns: [], rows: [["1"]], rowsAffected: 0, executionTime: 0))
         ]
         let vm = DataBrowserViewModel()
-        vm.attach(session: makeSession(driver: driver), table: TableInfo(name: "users"), databaseType: .mysql, host: "localhost")
+        vm.attach(
+            session: makeSession(driver: driver),
+            table: TableInfo(name: "users"),
+            databaseType: .mysql,
+            host: "localhost"
+        )
         await vm.load(isInitial: true)
 
         driver.scriptedExecuteResults = [.failure(MockDatabaseDriver.MockError.scripted)]
@@ -201,7 +240,12 @@ struct DataBrowserViewModelTests {
             .success(QueryResult(columns: [], rows: [["0"]], rowsAffected: 0, executionTime: 0))
         ]
         let vm = DataBrowserViewModel()
-        vm.attach(session: makeSession(driver: driver), table: TableInfo(name: "users"), databaseType: .mysql, host: "localhost")
+        vm.attach(
+            session: makeSession(driver: driver),
+            table: TableInfo(name: "users"),
+            databaseType: .mysql,
+            host: "localhost"
+        )
         await vm.load(isInitial: true)
 
         await vm.changePageSize(50)

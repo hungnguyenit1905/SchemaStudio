@@ -69,15 +69,14 @@ struct BackupProgressSheet: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .interactiveDismissDisabled()
         .alert(cancelAlertTitle, isPresented: $showCancelConfirmation) {
-            Button(keepGoingLabel, role: .cancel) { }
+            Button(keepGoingLabel, role: .cancel) {}
             Button(cancelAlertConfirmLabel, role: .destructive) { onCancel() }
         } message: {
             Text(cancelAlertMessage)
         }
     }
 
-    @ViewBuilder
-    private var progressBar: some View {
+    @ViewBuilder private var progressBar: some View {
         if let totalBytes, totalBytes > 0 {
             ProgressView(value: progressFraction)
                 .progressViewStyle(.linear)

@@ -70,7 +70,7 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     private static let postingsQuery =
         "SELECT id, date, flag, payee, narration, account, number, currency, cost_number, cost_currency "
-        + "FROM #postings ORDER BY id"
+            + "FROM #postings ORDER BY id"
     private static let accountsQuery = "SELECT account, open, currencies FROM #accounts ORDER BY account"
     private static let pricesQuery = "SELECT date, currency, amount FROM #prices ORDER BY date, currency"
     private static let balancesQuery =
@@ -205,7 +205,7 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     func fetchRows(query: String, offset: Int, limit: Int) async throws -> PluginQueryResult {
         try await perform { [self] in
             if let bql = Self.extractBQLQuery(from: query) {
-                return Self.paginatedResult(try executeBQL(query: bql), offset: offset, limit: limit)
+                return try Self.paginatedResult(executeBQL(query: bql), offset: offset, limit: limit)
             }
             return try executeSQLite(
                 query: "SELECT * FROM (\(query)) LIMIT \(limit) OFFSET \(offset)",
@@ -216,11 +216,11 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     func fetchTables(schema: String?) async throws -> [PluginTableInfo] {
         let result = try await execute(query: """
-            SELECT name, type FROM sqlite_master
-            WHERE type IN ('table', 'view')
-            AND name NOT LIKE 'sqlite_%'
-            ORDER BY name
-            """)
+        SELECT name, type FROM sqlite_master
+        WHERE type IN ('table', 'view')
+        AND name NOT LIKE 'sqlite_%'
+        ORDER BY name
+        """)
         return result.rows.compactMap { row in
             guard let name = row[safe: 0]?.asText else { return nil }
             let type = row[safe: 1]?.asText?.uppercased() ?? "TABLE"
@@ -251,9 +251,9 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     func fetchTableDDL(table: String, schema: String?) async throws -> String {
         let result = try await execute(query: """
-            SELECT sql FROM sqlite_master
-            WHERE type = 'table' AND name = '\(escapeStringLiteral(table))'
-            """)
+        SELECT sql FROM sqlite_master
+        WHERE type = 'table' AND name = '\(escapeStringLiteral(table))'
+        """)
         guard let ddl = result.rows.first?.first?.asText else {
             throw BeancountDriverError.queryFailed(
                 String(format: String(localized: "Failed to fetch DDL for table '%@'"), table)
@@ -264,9 +264,9 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     func fetchViewDefinition(view: String, schema: String?) async throws -> String {
         let result = try await execute(query: """
-            SELECT sql FROM sqlite_master
-            WHERE type = 'view' AND name = '\(escapeStringLiteral(view))'
-            """)
+        SELECT sql FROM sqlite_master
+        WHERE type = 'view' AND name = '\(escapeStringLiteral(view))'
+        """)
         return result.rows.first?.first?.asText ?? ""
     }
 
@@ -381,10 +381,10 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             }
 
             let columnCount = sqlite3_column_count(statement)
-            let columns = (0..<columnCount).map { index -> String in
+            let columns = (0 ..< columnCount).map { index -> String in
                 sqlite3_column_name(statement, index).map { String(cString: $0) } ?? "column_\(index)"
             }
-            let columnTypeNames = (0..<columnCount).map { index -> String in
+            let columnTypeNames = (0 ..< columnCount).map { index -> String in
                 sqlite3_column_decltype(statement, index).map { String(cString: $0) } ?? ""
             }
 
@@ -401,7 +401,7 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                     truncated = true
                     break
                 }
-                rows.append((0..<columnCount).map { Self.cellValue(statement: statement, column: $0) })
+                rows.append((0 ..< columnCount).map { Self.cellValue(statement: statement, column: $0) })
             }
 
             return PluginQueryResult(
@@ -449,7 +449,7 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         return PluginQueryResult(
             columns: result.columns,
             columnTypeNames: result.columnTypeNames,
-            rows: Array(result.rows[start..<end]),
+            rows: Array(result.rows[start ..< end]),
             rowsAffected: result.rowsAffected,
             executionTime: result.executionTime,
             isTruncated: result.isTruncated
@@ -470,12 +470,12 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     private static func projectionRows(ledgerPath: String) throws -> BeancountProjectionRows {
         switch try resolveProjectionBackend() {
         case .rledger:
-            return BeancountProjectionRows(
-                transactionsAndPostings: try query(ledgerPath: ledgerPath, bql: postingsQuery),
-                accounts: try query(ledgerPath: ledgerPath, bql: accountsQuery),
-                prices: try query(ledgerPath: ledgerPath, bql: pricesQuery),
-                balances: try query(ledgerPath: ledgerPath, bql: balancesQuery),
-                balanceAssertions: try query(ledgerPath: ledgerPath, bql: balanceAssertionsQuery)
+            return try BeancountProjectionRows(
+                transactionsAndPostings: query(ledgerPath: ledgerPath, bql: postingsQuery),
+                accounts: query(ledgerPath: ledgerPath, bql: accountsQuery),
+                prices: query(ledgerPath: ledgerPath, bql: pricesQuery),
+                balances: query(ledgerPath: ledgerPath, bql: balancesQuery),
+                balanceAssertions: query(ledgerPath: ledgerPath, bql: balanceAssertionsQuery)
             )
         case .python(let executablePath):
             let rows = try pythonProjectionRows(ledgerPath: ledgerPath, executablePath: executablePath)
@@ -521,52 +521,52 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     private static func createSchema(_ db: OpaquePointer) throws {
         try exec(db, """
-            CREATE TABLE transactions (
-                id INTEGER PRIMARY KEY,
-                date DATE NOT NULL,
-                flag TEXT NOT NULL,
-                payee TEXT,
-                narration TEXT
-            );
-            CREATE TABLE postings (
-                id INTEGER PRIMARY KEY,
-                transaction_id INTEGER NOT NULL,
-                date DATE NOT NULL,
-                account TEXT NOT NULL,
-                amount TEXT,
-                commodity TEXT,
-                cost_number TEXT,
-                cost_currency TEXT
-            );
-            CREATE TABLE accounts (
-                name TEXT PRIMARY KEY,
-                open_date DATE,
-                currencies TEXT
-            );
-            CREATE TABLE prices (
-                id INTEGER PRIMARY KEY,
-                date DATE NOT NULL,
-                commodity TEXT NOT NULL,
-                amount TEXT NOT NULL,
-                currency TEXT NOT NULL
-            );
-            CREATE TABLE balances (
-                id INTEGER PRIMARY KEY,
-                account TEXT NOT NULL,
-                amount TEXT NOT NULL,
-                commodity TEXT NOT NULL
-            );
-            CREATE TABLE balance_assertions (
-                id INTEGER PRIMARY KEY,
-                date DATE NOT NULL,
-                account TEXT NOT NULL,
-                amount TEXT NOT NULL,
-                commodity TEXT NOT NULL
-            );
-            CREATE TABLE source_files (
-                path TEXT PRIMARY KEY
-            );
-            """)
+        CREATE TABLE transactions (
+            id INTEGER PRIMARY KEY,
+            date DATE NOT NULL,
+            flag TEXT NOT NULL,
+            payee TEXT,
+            narration TEXT
+        );
+        CREATE TABLE postings (
+            id INTEGER PRIMARY KEY,
+            transaction_id INTEGER NOT NULL,
+            date DATE NOT NULL,
+            account TEXT NOT NULL,
+            amount TEXT,
+            commodity TEXT,
+            cost_number TEXT,
+            cost_currency TEXT
+        );
+        CREATE TABLE accounts (
+            name TEXT PRIMARY KEY,
+            open_date DATE,
+            currencies TEXT
+        );
+        CREATE TABLE prices (
+            id INTEGER PRIMARY KEY,
+            date DATE NOT NULL,
+            commodity TEXT NOT NULL,
+            amount TEXT NOT NULL,
+            currency TEXT NOT NULL
+        );
+        CREATE TABLE balances (
+            id INTEGER PRIMARY KEY,
+            account TEXT NOT NULL,
+            amount TEXT NOT NULL,
+            commodity TEXT NOT NULL
+        );
+        CREATE TABLE balance_assertions (
+            id INTEGER PRIMARY KEY,
+            date DATE NOT NULL,
+            account TEXT NOT NULL,
+            amount TEXT NOT NULL,
+            commodity TEXT NOT NULL
+        );
+        CREATE TABLE source_files (
+            path TEXT PRIMARY KEY
+        );
+        """)
     }
 
     private static func loadTransactionsAndPostings(_ rows: [[String: Any]], into db: OpaquePointer) throws {
@@ -582,33 +582,33 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
             if seenTransactions.insert(transactionId).inserted {
                 try insert(db, sql: """
-                    INSERT INTO transactions (id, date, flag, payee, narration)
-                    VALUES (?, ?, ?, ?, ?)
-                    """, values: [
-                        String(transactionId),
-                        date,
-                        flag,
-                        stringValue(row["payee"]),
-                        stringValue(row["narration"])
-                    ])
+                INSERT INTO transactions (id, date, flag, payee, narration)
+                VALUES (?, ?, ?, ?, ?)
+                """, values: [
+                    String(transactionId),
+                    date,
+                    flag,
+                    stringValue(row["payee"]),
+                    stringValue(row["narration"])
+                ])
             }
 
             guard let account = stringValue(row["account"]) else { continue }
             postingId += 1
             try insert(db, sql: """
-                INSERT INTO postings
-                (id, transaction_id, date, account, amount, commodity, cost_number, cost_currency)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, values: [
-                    String(postingId),
-                    String(transactionId),
-                    date,
-                    account,
-                    stringValue(row["number"]),
-                    stringValue(row["currency"]),
-                    stringValue(row["cost_number"]),
-                    stringValue(row["cost_currency"])
-                ])
+            INSERT INTO postings
+            (id, transaction_id, date, account, amount, commodity, cost_number, cost_currency)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, values: [
+                String(postingId),
+                String(transactionId),
+                date,
+                account,
+                stringValue(row["number"]),
+                stringValue(row["currency"]),
+                stringValue(row["cost_number"]),
+                stringValue(row["cost_currency"])
+            ])
         }
     }
 
@@ -616,13 +616,13 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         for row in rows {
             guard let name = stringValue(row["account"]) else { continue }
             try insert(db, sql: """
-                INSERT OR REPLACE INTO accounts (name, open_date, currencies)
-                VALUES (?, ?, ?)
-                """, values: [
-                    name,
-                    stringValue(row["open"]),
-                    currencyList(row["currencies"])
-                ])
+            INSERT OR REPLACE INTO accounts (name, open_date, currencies)
+            VALUES (?, ?, ?)
+            """, values: [
+                name,
+                stringValue(row["open"]),
+                currencyList(row["currencies"])
+            ])
         }
     }
 
@@ -637,9 +637,9 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             guard let number = amount.number, let currency = amount.currency else { continue }
             priceId += 1
             try insert(db, sql: """
-                INSERT INTO prices (id, date, commodity, amount, currency)
-                VALUES (?, ?, ?, ?, ?)
-                """, values: [String(priceId), date, commodity, number, currency])
+            INSERT INTO prices (id, date, commodity, amount, currency)
+            VALUES (?, ?, ?, ?, ?)
+            """, values: [String(priceId), date, commodity, number, currency])
         }
     }
 
@@ -650,9 +650,9 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             for position in inventoryPositions(row["balance"]) {
                 balanceId += 1
                 try insert(db, sql: """
-                    INSERT INTO balances (id, account, amount, commodity)
-                    VALUES (?, ?, ?, ?)
-                    """, values: [String(balanceId), account, position.number, position.currency])
+                INSERT INTO balances (id, account, amount, commodity)
+                VALUES (?, ?, ?, ?)
+                """, values: [String(balanceId), account, position.number, position.currency])
             }
         }
     }
@@ -666,9 +666,9 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             guard let number = amount.number, let commodity = amount.currency else { continue }
             balanceId += 1
             try insert(db, sql: """
-                INSERT INTO balance_assertions (id, date, account, amount, commodity)
-                VALUES (?, ?, ?, ?, ?)
-                """, values: [String(balanceId), date, account, number, commodity])
+            INSERT INTO balance_assertions (id, date, account, amount, commodity)
+            VALUES (?, ?, ?, ?, ?)
+            """, values: [String(balanceId), date, account, number, commodity])
         }
     }
 
@@ -687,7 +687,7 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             _ = try rustledgerExecutablePath()
             return .rledger
         case "python", "beancount":
-            return .python(try pythonBeancountExecutablePath())
+            return try .python(pythonBeancountExecutablePath())
         default:
             if try optionalRustledgerExecutablePath() != nil {
                 return .rledger
@@ -696,7 +696,9 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                 return .python(pythonPath)
             }
             throw BeancountDriverError.beancountBackendUnavailable(
-                String(localized: "Beancount needs rledger or Python Beancount. Install one, or set TABLEPRO_RUSTLEDGER_BINARY or TABLEPRO_BEANCOUNT_PYTHON to its path.")
+                String(
+                    localized: "Beancount needs rledger or Python Beancount. Install one, or set TABLEPRO_RUSTLEDGER_BINARY or TABLEPRO_BEANCOUNT_PYTHON to its path."
+                )
             )
         }
     }
@@ -804,7 +806,9 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             return path
         }
         throw BeancountDriverError.beancountBackendUnavailable(
-            String(localized: "BQL queries need rledger. Install rustledger so rledger is on PATH or Homebrew, or set TABLEPRO_RUSTLEDGER_BINARY to its path.")
+            String(
+                localized: "BQL queries need rledger. Install rustledger so rledger is on PATH or Homebrew, or set TABLEPRO_RUSTLEDGER_BINARY to its path."
+            )
         )
     }
 
@@ -816,7 +820,9 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             }
             throw BeancountDriverError.beancountBackendUnavailable(
                 String(
-                    format: String(localized: "TABLEPRO_RUSTLEDGER_BINARY points to a missing or non-executable rledger at %@"),
+                    format: String(
+                        localized: "TABLEPRO_RUSTLEDGER_BINARY points to a missing or non-executable rledger at %@"
+                    ),
                     configured
                 )
             )
@@ -863,7 +869,9 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             return path
         }
         throw BeancountDriverError.beancountBackendUnavailable(
-            String(localized: "Python Beancount backend requires python3 with the beancount package installed. Set TABLEPRO_BEANCOUNT_PYTHON to the Python executable if needed.")
+            String(
+                localized: "Python Beancount backend requires python3 with the beancount package installed. Set TABLEPRO_BEANCOUNT_PYTHON to the Python executable if needed."
+            )
         )
     }
 
@@ -875,7 +883,9 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             }
             throw BeancountDriverError.beancountBackendUnavailable(
                 String(
-                    format: String(localized: "TABLEPRO_BEANCOUNT_PYTHON points to a Python executable that cannot import beancount at %@"),
+                    format: String(
+                        localized: "TABLEPRO_BEANCOUNT_PYTHON points to a Python executable that cannot import beancount at %@"
+                    ),
                     configured
                 )
             )

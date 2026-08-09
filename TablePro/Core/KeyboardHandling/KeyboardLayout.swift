@@ -30,14 +30,15 @@ enum KeyboardLayout {
 
     private static let usFallback: [Character: UInt16] = {
         var result: [Character: UInt16] = [:]
-        for raw in UInt16(0)...127 {
+        for raw in UInt16(0) ... 127 {
             guard let character = KeyCode(rawValue: raw)?.usBaseCharacter else { continue }
             if result[character] == nil { result[character] = raw }
         }
         return result
     }()
 
-    private static func buildMaps() -> (keyCodeToCharacter: [UInt16: Character], characterToKeyCode: [Character: UInt16]) {
+    private static func buildMaps()
+        -> (keyCodeToCharacter: [UInt16: Character], characterToKeyCode: [Character: UInt16]) {
         guard let source = TISCopyCurrentASCIICapableKeyboardLayoutInputSource()?.takeRetainedValue(),
               let layoutPointer = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else {
             return ([:], [:])
@@ -50,7 +51,7 @@ enum KeyboardLayout {
         var toCharacter: [UInt16: Character] = [:]
         var toKeyCode: [Character: UInt16] = [:]
 
-        for keyCode in UInt16(0)...127 {
+        for keyCode in UInt16(0) ... 127 {
             var deadKeyState: UInt32 = 0
             var length = 0
             var characters = [UniChar](repeating: 0, count: 4)

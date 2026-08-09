@@ -154,7 +154,7 @@ public struct MongoShellParser {
         // Find the last "." before the first "(". Everything before it is the collection name,
         // and everything from it onward is the method chain.
         // This correctly handles dotted collection names like "system.version".
-        let beforeParen = afterDb[afterDb.startIndex..<firstParen]
+        let beforeParen = afterDb[afterDb.startIndex ..< firstParen]
         guard let lastDot = beforeParen.lastIndex(of: ".") else {
             if beforeParen.trimmingCharacters(in: .whitespacesAndNewlines) == "getCollection" {
                 return try parseGetCollectionExpression(afterDb, openParen: firstParen)
@@ -163,7 +163,7 @@ public struct MongoShellParser {
             return try parseDbLevelMethod(afterDb)
         }
 
-        let collection = String(afterDb[afterDb.startIndex..<lastDot])
+        let collection = String(afterDb[afterDb.startIndex ..< lastDot])
         let remainder = String(afterDb[afterDb.index(after: lastDot)...])
 
         return try parseMethodChain(collection: collection, chain: remainder)
@@ -221,7 +221,7 @@ public struct MongoShellParser {
             throw MongoShellParseError.invalidSyntax("Expected method call with parentheses")
         }
 
-        let methodName = String(input[input.startIndex..<parenIndex])
+        let methodName = String(input[input.startIndex ..< parenIndex])
         let argAndRest = try extractParenthesizedArgAndRemainder(from: input, startingAt: parenIndex)
         let arg = argAndRest.arg
 
@@ -256,7 +256,7 @@ public struct MongoShellParser {
             throw MongoShellParseError.invalidSyntax("Expected method call with parentheses")
         }
 
-        let methodName = String(chain[chain.startIndex..<parenIndex])
+        let methodName = String(chain[chain.startIndex ..< parenIndex])
 
         let argAndRest = try extractParenthesizedArgAndRemainder(from: chain, startingAt: parenIndex)
         let arg = argAndRest.arg
@@ -359,7 +359,7 @@ public struct MongoShellParser {
             remaining = String(remaining.dropFirst())
 
             guard let parenIndex = remaining.firstIndex(of: "(") else { break }
-            let method = String(remaining[remaining.startIndex..<parenIndex])
+            let method = String(remaining[remaining.startIndex ..< parenIndex])
 
             let argAndRest = try extractParenthesizedArgAndRemainder(from: remaining, startingAt: parenIndex)
             let arg = argAndRest.arg
@@ -489,7 +489,7 @@ public struct MongoShellParser {
         }
 
         let argStart = str.index(after: openParen)
-        let arg = String(str[argStart..<close]).trimmingCharacters(in: .whitespacesAndNewlines)
+        let arg = String(str[argStart ..< close]).trimmingCharacters(in: .whitespacesAndNewlines)
         let remainderStart = str.index(after: close)
         let remainder = String(str[remainderStart...]).trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -564,7 +564,7 @@ public struct MongoShellParser {
             if ch == "{" || ch == "[" || ch == "(" { depth += 1 }
             if ch == "}" || ch == "]" || ch == ")" { depth -= 1 }
 
-            if ch == "," && depth == 0 {
+            if ch == ",", depth == 0 {
                 parts.append(current.trimmingCharacters(in: .whitespacesAndNewlines))
                 current = ""
                 continue

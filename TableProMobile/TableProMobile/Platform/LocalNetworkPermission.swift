@@ -6,7 +6,9 @@ enum LocalNetworkPermissionError: Error, LocalizedError {
     case unavailable
 
     var errorDescription: String? {
-        String(localized: "Local Network access is required. Open Settings > Privacy & Security > Local Network and turn TablePro on.")
+        String(
+            localized: "Local Network access is required. Open Settings > Privacy & Security > Local Network and turn TablePro on."
+        )
     }
 }
 
@@ -110,7 +112,7 @@ actor LocalNetworkPermission {
         if let bytes = IPv4Address(host)?.rawValue, bytes.count == 4 {
             let octets = Array(bytes)
             if octets[0] == 10 { return true }
-            if octets[0] == 172, (16...31).contains(octets[1]) { return true }
+            if octets[0] == 172, (16 ... 31).contains(octets[1]) { return true }
             if octets[0] == 192, octets[1] == 168 { return true }
             if octets[0] == 169, octets[1] == 254 { return true }
             return false
@@ -118,8 +120,8 @@ actor LocalNetworkPermission {
 
         if let bytes = IPv6Address(host)?.rawValue, !bytes.isEmpty {
             let octets = Array(bytes)
-            if (octets[0] & 0xfe) == 0xfc { return true }
-            if octets.count >= 2, octets[0] == 0xfe, (octets[1] & 0xc0) == 0x80 { return true }
+            if (octets[0] & 0xFE) == 0xFC { return true }
+            if octets.count >= 2, octets[0] == 0xFE, (octets[1] & 0xC0) == 0x80 { return true }
             return false
         }
 

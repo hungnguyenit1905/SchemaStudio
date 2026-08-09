@@ -53,9 +53,11 @@ struct MCPSection: View {
             helpSection
 
             Section {
-                Text(String(localized: "AI access policies are configured per-connection in each connection's settings."))
-                    .foregroundStyle(.secondary)
-                    .font(.callout)
+                Text(
+                    String(localized: "AI access policies are configured per-connection in each connection's settings.")
+                )
+                .foregroundStyle(.secondary)
+                .font(.callout)
             }
         }
     }
@@ -102,8 +104,12 @@ struct MCPSection: View {
                 MCPTokenListView(
                     tokens: tokenList,
                     onGenerate: { showCreateSheet = true },
-                    onRevoke: { id in Task { await manager.tokenStore?.revoke(tokenId: id); await refreshTokens() } },
-                    onDelete: { id in Task { await manager.tokenStore?.delete(tokenId: id); await refreshTokens() } }
+                    onRevoke: { id in Task { await manager.tokenStore?.revoke(tokenId: id)
+                        await refreshTokens()
+                    } },
+                    onDelete: { id in Task { await manager.tokenStore?.delete(tokenId: id)
+                        await refreshTokens()
+                    } }
                 )
             }
         }
@@ -129,7 +135,11 @@ struct MCPSection: View {
 
             if settings.allowRemoteConnections {
                 Label {
-                    Text(String(localized: "The server will be accessible from other devices on your network. Authentication and TLS are enabled automatically."))
+                    Text(
+                        String(
+                            localized: "The server will be accessible from other devices on your network. Authentication and TLS are enabled automatically."
+                        )
+                    )
                 } icon: {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
@@ -153,7 +163,12 @@ struct MCPSection: View {
         }
     }
 
-    private func handleGenerate(name: String, permissions: TokenPermissions, connectionIds: Set<UUID>?, expiresAt: Date?) {
+    private func handleGenerate(
+        name: String,
+        permissions: TokenPermissions,
+        connectionIds: Set<UUID>?,
+        expiresAt: Date?
+    ) {
         Task {
             guard let store = manager.tokenStore else { return }
             let access: ConnectionAccess = connectionIds.map { .limited($0) } ?? .all

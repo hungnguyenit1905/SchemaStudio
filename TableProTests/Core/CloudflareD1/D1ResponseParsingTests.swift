@@ -9,7 +9,6 @@ import Testing
 
 @Suite("D1 API Response Parsing")
 struct D1ResponseParsingTests {
-
     // MARK: - Local copies of Codable types for testing
 
     private struct D1ApiResponse<T: Decodable>: Decodable {
@@ -41,7 +40,8 @@ struct D1ResponseParsingTests {
         let rowsWritten: Int?
 
         enum CodingKeys: String, CodingKey {
-            case duration, changes
+            case duration
+            case changes
             case rowsRead = "rows_read"
             case rowsWritten = "rows_written"
         }
@@ -54,7 +54,9 @@ struct D1ResponseParsingTests {
         let version: String?
 
         enum CodingKeys: String, CodingKey {
-            case uuid, name, version
+            case uuid
+            case name
+            case version
             case createdAt = "created_at"
         }
     }
@@ -83,11 +85,21 @@ struct D1ResponseParsingTests {
 
         init(from decoder: Decoder) throws {
             let container = try decoder.singleValueContainer()
-            if container.decodeNil() { self = .null; return }
-            if let v = try? container.decode(Int.self) { self = .int(v); return }
-            if let v = try? container.decode(Double.self) { self = .double(v); return }
-            if let v = try? container.decode(Bool.self) { self = .bool(v); return }
-            if let v = try? container.decode(String.self) { self = .string(v); return }
+            if container.decodeNil() { self = .null
+                return
+            }
+            if let v = try? container.decode(Int.self) { self = .int(v)
+                return
+            }
+            if let v = try? container.decode(Double.self) { self = .double(v)
+                return
+            }
+            if let v = try? container.decode(Bool.self) { self = .bool(v)
+                return
+            }
+            if let v = try? container.decode(String.self) { self = .string(v)
+                return
+            }
             self = .null
         }
     }
@@ -221,7 +233,7 @@ struct D1ResponseParsingTests {
         #expect(!envelope.success)
         #expect(envelope.result == nil)
         #expect(envelope.errors?.count == 1)
-        #expect(envelope.errors?.first?.code == 7500)
+        #expect(envelope.errors?.first?.code == 7_500)
         #expect(envelope.errors?.first?.message == "no such table: nonexistent")
     }
 

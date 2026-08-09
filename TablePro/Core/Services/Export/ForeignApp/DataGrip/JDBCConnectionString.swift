@@ -155,7 +155,7 @@ enum JDBCConnectionString {
             guard let closing = authority.firstIndex(of: "]") else {
                 return (authority, nil)
             }
-            let host = String(authority[authority.index(after: authority.startIndex)..<closing])
+            let host = String(authority[authority.index(after: authority.startIndex) ..< closing])
             let after = authority[authority.index(after: closing)...]
             if after.hasPrefix(":") {
                 return (host, Int(after.dropFirst()))

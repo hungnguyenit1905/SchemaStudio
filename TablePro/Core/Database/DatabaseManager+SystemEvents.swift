@@ -24,7 +24,8 @@ extension DatabaseManager {
         )
     }
 
-    @objc private func handleSystemDidWake(_ notification: Notification) {
+    @objc
+    private func handleSystemDidWake(_ notification: Notification) {
         Self.logger.info("System woke from sleep, validating tunneled sessions")
 
         Task { @MainActor [weak self] in

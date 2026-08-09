@@ -111,8 +111,7 @@ struct DeeplinkImportSheet: View {
         return ssh.host
     }
 
-    @ViewBuilder
-    private var sshSection: some View {
+    @ViewBuilder private var sshSection: some View {
         if let ssh = connection.sshConfig {
             Section("SSH") {
                 LabeledContent(String(localized: "Host")) {
@@ -127,8 +126,7 @@ struct DeeplinkImportSheet: View {
         }
     }
 
-    @ViewBuilder
-    private var sslSection: some View {
+    @ViewBuilder private var sslSection: some View {
         if let ssl = connection.sslConfig {
             Section("SSL") {
                 LabeledContent(String(localized: "Mode")) {
@@ -143,7 +141,6 @@ struct DeeplinkImportSheet: View {
         connection.color != nil || connection.tagName != nil || connection.groupName != nil
     }
 
-    @ViewBuilder
     private var metadataSection: some View {
         Section {
             if let color = connection.color,

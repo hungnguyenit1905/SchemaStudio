@@ -110,7 +110,8 @@ struct SQLRowToStatementConverterTests {
     func insertSpecialCharactersSingleQuotes() throws {
         let converter = try makeConverter()
         let result = converter.generateInserts(rows: [["1", "O'Brien", "o'brien@example.com"]])
-        #expect(result == "INSERT INTO `users` (`id`, `name`, `email`) VALUES ('1', 'O''Brien', 'o''brien@example.com');")
+        #expect(result ==
+            "INSERT INTO `users` (`id`, `name`, `email`) VALUES ('1', 'O''Brien', 'o''brien@example.com');")
     }
 
     // MARK: - UPDATE Generation
@@ -126,14 +127,16 @@ struct SQLRowToStatementConverterTests {
     func updateWithoutPrimaryKey() throws {
         let converter = try makeConverter(primaryKeyColumn: nil)
         let result = converter.generateUpdates(rows: [["1", "Alice", "alice@example.com"]])
-        #expect(result == "UPDATE `users` SET `id` = '1', `name` = 'Alice', `email` = 'alice@example.com' WHERE `id` = '1' AND `name` = 'Alice' AND `email` = 'alice@example.com';")
+        #expect(result ==
+            "UPDATE `users` SET `id` = '1', `name` = 'Alice', `email` = 'alice@example.com' WHERE `id` = '1' AND `name` = 'Alice' AND `email` = 'alice@example.com';")
     }
 
     @Test("UPDATE without PK uses IS NULL in WHERE clause for NULL values")
     func updateNullValuesInWhereClauseNoPK() throws {
         let converter = try makeConverter(primaryKeyColumn: nil)
         let result = converter.generateUpdates(rows: [["1", nil, "alice@example.com"]])
-        #expect(result == "UPDATE `users` SET `id` = '1', `name` = NULL, `email` = 'alice@example.com' WHERE `id` = '1' AND `name` IS NULL AND `email` = 'alice@example.com';")
+        #expect(result ==
+            "UPDATE `users` SET `id` = '1', `name` = NULL, `email` = 'alice@example.com' WHERE `id` = '1' AND `name` IS NULL AND `email` = 'alice@example.com';")
     }
 
     @Test("UPDATE with PK uses IS NULL in WHERE when PK value is NULL")
@@ -163,7 +166,8 @@ struct SQLRowToStatementConverterTests {
     func postgresqlUsesDoubleQuoteQuoting() throws {
         let converter = try makeConverter(databaseType: .postgresql, dialect: Self.postgresDialect)
         let result = converter.generateInserts(rows: [["1", "Alice", "alice@example.com"]])
-        #expect(result == "INSERT INTO \"users\" (\"id\", \"name\", \"email\") VALUES ('1', 'Alice', 'alice@example.com');")
+        #expect(result ==
+            "INSERT INTO \"users\" (\"id\", \"name\", \"email\") VALUES ('1', 'Alice', 'alice@example.com');")
     }
 
     @Test("MySQL uses backtick quoting")
@@ -177,9 +181,11 @@ struct SQLRowToStatementConverterTests {
     func duckdbUsesDoubleQuoteAndStandardUpdate() throws {
         let converter = try makeConverter(databaseType: .duckdb, dialect: Self.duckdbDialect)
         let insert = converter.generateInserts(rows: [["1", "Alice", "alice@example.com"]])
-        #expect(insert == "INSERT INTO \"users\" (\"id\", \"name\", \"email\") VALUES ('1', 'Alice', 'alice@example.com');")
+        #expect(insert ==
+            "INSERT INTO \"users\" (\"id\", \"name\", \"email\") VALUES ('1', 'Alice', 'alice@example.com');")
         let update = converter.generateUpdates(rows: [["1", "Alice", "alice@example.com"]])
-        #expect(update == "UPDATE \"users\" SET \"name\" = 'Alice', \"email\" = 'alice@example.com' WHERE \"id\" = '1';")
+        #expect(update ==
+            "UPDATE \"users\" SET \"name\" = 'Alice', \"email\" = 'alice@example.com' WHERE \"id\" = '1';")
     }
 
     @Test("MySQL escapes backslashes in values")
@@ -193,7 +199,8 @@ struct SQLRowToStatementConverterTests {
     func postgresqlNoBackslashEscaping() throws {
         let converter = try makeConverter(databaseType: .postgresql, dialect: Self.postgresDialect)
         let result = converter.generateInserts(rows: [["1", "C:\\Users\\test", "a@b.com"]])
-        #expect(result == "INSERT INTO \"users\" (\"id\", \"name\", \"email\") VALUES ('1', 'C:\\Users\\test', 'a@b.com');")
+        #expect(result ==
+            "INSERT INTO \"users\" (\"id\", \"name\", \"email\") VALUES ('1', 'C:\\Users\\test', 'a@b.com');")
     }
 
     @Test("UPDATE falls back to all-column WHERE when PK not in columns")
@@ -204,7 +211,8 @@ struct SQLRowToStatementConverterTests {
             databaseType: .mysql
         )
         let result = converter.generateUpdates(rows: [["Alice", "alice@example.com"]])
-        #expect(result == "UPDATE `users` SET `name` = 'Alice', `email` = 'alice@example.com' WHERE `name` = 'Alice' AND `email` = 'alice@example.com';")
+        #expect(result ==
+            "UPDATE `users` SET `name` = 'Alice', `email` = 'alice@example.com' WHERE `name` = 'Alice' AND `email` = 'alice@example.com';")
     }
 
     @Test("UPDATE restricts SET to settable columns and keys WHERE on the primary key")
@@ -232,7 +240,8 @@ struct SQLRowToStatementConverterTests {
             dialect: Self.mysqlDialect
         )
         let result = converter.generateUpdates(rows: [["1", "Alice", "alice@example.com"]])
-        #expect(result == "UPDATE `users` SET `email` = 'alice@example.com' WHERE `id` = '1' AND `name` = 'Alice' AND `email` = 'alice@example.com';")
+        #expect(result ==
+            "UPDATE `users` SET `email` = 'alice@example.com' WHERE `id` = '1' AND `name` = 'Alice' AND `email` = 'alice@example.com';")
     }
 
     @Test("UPDATE emits no statement when only the primary key is settable")
@@ -264,7 +273,7 @@ struct SQLRowToStatementConverterTests {
             columns: ["id", "name"],
             primaryKeyColumn: "id"
         )
-        let rows: [[PluginCellValue]] = (1...50_001).map { i in [.text("\(i)"), .text("name\(i)")] }
+        let rows: [[PluginCellValue]] = (1 ... 50_001).map { i in [.text("\(i)"), .text("name\(i)")] }
         let result = converter.generateInserts(rows: rows)
         let lines = result.components(separatedBy: "\n")
         #expect(lines.count == 50_000)

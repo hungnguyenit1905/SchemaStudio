@@ -30,10 +30,13 @@ extension TableViewCoordinator {
 
     @discardableResult
     func recordCellEdit(row: Int, columnIndex: Int, newValue typedNewValue: PluginCellValue) -> Delta? {
-        cellCommitLogger.debug("recordCellEdit(row: \(row, privacy: .public), columnIndex: \(columnIndex, privacy: .public)) isCommitting=\(self.isCommittingCellEdit, privacy: .public) delegate=\(self.delegate == nil ? "nil" : "present", privacy: .public)")
+        cellCommitLogger
+            .debug(
+                "recordCellEdit(row: \(row, privacy: .public), columnIndex: \(columnIndex, privacy: .public)) isCommitting=\(self.isCommittingCellEdit, privacy: .public) delegate=\(self.delegate == nil ? "nil" : "present", privacy: .public)"
+            )
         guard !isCommittingCellEdit else { return nil }
         let tableRows = tableRowsProvider()
-        guard columnIndex >= 0 && columnIndex < tableRows.columns.count else { return nil }
+        guard columnIndex >= 0, columnIndex < tableRows.columns.count else { return nil }
         guard let displayRowValues = displayRow(at: row) else { return nil }
         guard columnIndex < displayRowValues.values.count else { return nil }
         let oldValue = displayRowValues.values[columnIndex]
@@ -63,7 +66,10 @@ extension TableViewCoordinator {
                 delta = tableRows.edit(row: storageRow, column: columnIndex, value: typedNewValue)
             }
         }
-        cellCommitLogger.debug("recordCellEdit - about to call delegate.dataGridDidEditCell, delegate=\(self.delegate == nil ? "nil" : "present", privacy: .public)")
+        cellCommitLogger
+            .debug(
+                "recordCellEdit - about to call delegate.dataGridDidEditCell, delegate=\(self.delegate == nil ? "nil" : "present", privacy: .public)"
+            )
         delegate?.dataGridDidEditCell(row: row, column: columnIndex, newValue: typedNewValue.asText)
         return delta
     }

@@ -26,9 +26,9 @@ public enum PluginSQLLiteral {
             guard let next = iter.next() else { return false }
             first = next
         }
-        guard first >= "0" && first <= "9" else { return false }
+        guard first >= "0", first <= "9" else { return false }
         while let next = iter.next() {
-            guard next >= "0" && next <= "9" else { return false }
+            guard next >= "0", next <= "9" else { return false }
         }
         return true
     }

@@ -57,7 +57,7 @@ internal struct JSONViewerView: View {
         }
         .alert("Invalid JSON", isPresented: $showInvalidAlert) {
             Button(String(localized: "Save Anyway")) { commitAndClose(displayText) }
-            Button(String(localized: "Cancel"), role: .cancel) { }
+            Button(String(localized: "Cancel"), role: .cancel) {}
         } message: {
             Text("The text is not valid JSON. Save anyway?")
         }
@@ -88,8 +88,7 @@ internal struct JSONViewerView: View {
 
     // MARK: - Content
 
-    @ViewBuilder
-    private var viewerContent: some View {
+    @ViewBuilder private var viewerContent: some View {
         switch viewMode {
         case .text:
             JSONCodeEditor(text: $displayText, isEditable: isEditable)

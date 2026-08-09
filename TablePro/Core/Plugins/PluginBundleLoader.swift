@@ -28,7 +28,9 @@ enum PluginBundleLoader {
         case NSFileNoSuchFileError:
             return String(localized: "The plugin's executable file is missing.")
         case NSExecutableNotLoadableError:
-            return String(localized: "The plugin's executable couldn't be loaded. It may be damaged or improperly signed.")
+            return String(
+                localized: "The plugin's executable couldn't be loaded. It may be damaged or improperly signed."
+            )
         case NSExecutableArchitectureMismatchError:
             return String(localized: "The plugin doesn't include a build for this Mac's processor architecture.")
         case NSExecutableRuntimeMismatchError:
@@ -36,7 +38,9 @@ enum PluginBundleLoader {
         case NSExecutableLoadError:
             return String(localized: "The plugin depends on a component that's missing or incompatible with this Mac.")
         case NSExecutableLinkError:
-            return String(localized: "The plugin isn't compatible with this version of SchemaStudio. Update the app or reinstall the plugin.")
+            return String(
+                localized: "The plugin isn't compatible with this version of SchemaStudio. Update the app or reinstall the plugin."
+            )
         default:
             return error.localizedFailureReason ?? error.localizedDescription
         }

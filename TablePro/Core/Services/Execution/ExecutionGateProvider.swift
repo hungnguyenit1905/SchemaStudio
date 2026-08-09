@@ -25,6 +25,13 @@ internal enum ExecutionGateProvider {
             await MainActor.run {
                 !PluginManager.shared.supportsReadOnlyMode(for: databaseType)
             }
+        },
+        affectedRowEstimator: { connectionId, sql, databaseType in
+            await AffectedRowEstimator().estimate(
+                connectionId: connectionId,
+                sql: sql,
+                databaseType: databaseType
+            )
         }
     )
 }

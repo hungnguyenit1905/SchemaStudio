@@ -17,8 +17,8 @@ struct MSSQLCapabilities: Sendable, Equatable {
         let pattern = #"(\d+)\.\d+\.\d+"#
         guard let regex = try? NSRegularExpression(pattern: pattern),
               let match = regex.firstMatch(
-                in: versionString,
-                range: NSRange(versionString.startIndex..., in: versionString)
+                  in: versionString,
+                  range: NSRange(versionString.startIndex..., in: versionString)
               ),
               let range = Range(match.range(at: 1), in: versionString),
               let major = Int(versionString[range]) else {

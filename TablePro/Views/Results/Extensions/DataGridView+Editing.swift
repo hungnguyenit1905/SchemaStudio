@@ -100,7 +100,7 @@ extension TableViewCoordinator {
     }
 
     func handleOverlayTabNavigation(row: Int, column: Int, forward: Bool) {
-        guard let tableView = tableView else { return }
+        guard let tableView else { return }
 
         var nextColumn = forward ? column + 1 : column - 1
         var nextRow = row
@@ -128,13 +128,12 @@ extension TableViewCoordinator {
         tableView.selectRowIndexes(IndexSet(integer: nextRow), byExtendingSelection: false)
 
         guard let nextColumnIndex = DataGridView.dataColumnIndex(
-                for: nextColumn,
-                in: tableView,
-                schema: identitySchema
-              ),
-              nextColumnIndex >= 0,
-              case .editable(let value) = editEligibility(row: nextRow, columnIndex: nextColumnIndex)
-        else { return }
+            for: nextColumn,
+            in: tableView,
+            schema: identitySchema
+        ),
+            nextColumnIndex >= 0,
+            case .editable(let value) = editEligibility(row: nextRow, columnIndex: nextColumnIndex) else { return }
 
         showOverlayEditor(
             tableView: tableView,

@@ -28,7 +28,10 @@ struct MCPPairingServiceTests {
         let verifier = "test-verifier-1"
         let challenge = base64UrlSha256(of: verifier)
         let store = makeStore()
-        try await store.insert(code: "code-1", record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: 60))
+        try await store.insert(
+            code: "code-1",
+            record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: 60)
+        )
 
         let token = try await store.consume(code: "code-1", verifier: verifier)
 
@@ -40,7 +43,10 @@ struct MCPPairingServiceTests {
         let verifier = "test-verifier-2"
         let challenge = base64UrlSha256(of: verifier)
         let store = makeStore()
-        try await store.insert(code: "code-2", record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: 60))
+        try await store.insert(
+            code: "code-2",
+            record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: 60)
+        )
 
         _ = try await store.consume(code: "code-2", verifier: verifier)
 
@@ -53,7 +59,10 @@ struct MCPPairingServiceTests {
         let verifier = "test-verifier-3"
         let challenge = base64UrlSha256(of: verifier)
         let store = makeStore()
-        try await store.insert(code: "code-3", record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: 60))
+        try await store.insert(
+            code: "code-3",
+            record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: 60)
+        )
 
         _ = try await store.consume(code: "code-3", verifier: verifier)
 
@@ -84,7 +93,10 @@ struct MCPPairingServiceTests {
         let verifier = "test-verifier-4"
         let challenge = base64UrlSha256(of: verifier)
         let store = makeStore()
-        try await store.insert(code: "code-4", record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: -1))
+        try await store.insert(
+            code: "code-4",
+            record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: -1)
+        )
 
         do {
             _ = try await store.consume(code: "code-4", verifier: verifier, now: Date.now)
@@ -103,7 +115,10 @@ struct MCPPairingServiceTests {
     func consumeMismatchedChallengeReturnsForbidden() async throws {
         let store = makeStore()
         let challenge = base64UrlSha256(of: "intended-verifier")
-        try await store.insert(code: "code-5", record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: 60))
+        try await store.insert(
+            code: "code-5",
+            record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: 60)
+        )
 
         do {
             _ = try await store.consume(code: "code-5", verifier: "attacker-verifier")
@@ -123,7 +138,10 @@ struct MCPPairingServiceTests {
         let verifier = "test-verifier-6"
         let challenge = base64UrlSha256(of: verifier)
         let store = makeStore()
-        try await store.insert(code: "code-6", record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: -1))
+        try await store.insert(
+            code: "code-6",
+            record: record(plaintext: "tp_secret", challenge: challenge, expiresIn: -1)
+        )
 
         _ = try? await store.consume(code: "code-6", verifier: verifier)
 
@@ -189,7 +207,7 @@ struct MCPPairingServiceTests {
     @Test("insert throws after maxPendingCodes consecutive inserts")
     func insertThrowsWhenPendingCapReached() async throws {
         let store = makeStore()
-        for index in 0..<PairingExchangeStore.maxPendingCodes {
+        for index in 0 ..< PairingExchangeStore.maxPendingCodes {
             try await store.insert(
                 code: "code-cap-\(index)",
                 record: record(plaintext: "tp_x", challenge: "challenge", expiresIn: 60)

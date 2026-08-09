@@ -4,13 +4,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Filter SQL Generator Column Types")
 struct FilterSQLGeneratorColumnTypeTests {
-
     private static let mysqlDialect = SQLDialectDescriptor(
         identifierQuote: "`", keywords: [], functions: [], dataTypes: [],
         regexSyntax: .regexp, booleanLiteralStyle: .numeric,

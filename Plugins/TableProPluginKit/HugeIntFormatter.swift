@@ -32,7 +32,7 @@ public enum HugeIntFormatter {
         var chunks: [UInt32] = []
         while limbs.contains(where: { $0 != 0 }) {
             var rem: UInt64 = 0
-            for i in 0..<limbs.count {
+            for i in 0 ..< limbs.count {
                 let acc = (rem << 32) | UInt64(limbs[i])
                 limbs[i] = UInt32(acc / divisor)
                 rem = acc % divisor

@@ -6,8 +6,8 @@
 //  for each database type that previously had broken PK detection.
 //
 
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("SQL Statement Generator PK Regression")
@@ -47,7 +47,13 @@ struct SQLStatementGeneratorPKRegressionTests {
         RowChange(
             rowIndex: rowIndex,
             type: .update,
-            cellChanges: [CellChange(rowIndex: rowIndex, columnIndex: columnIndex, columnName: columnName, oldValue: PluginCellValue.fromOptional(oldValue), newValue: PluginCellValue.fromOptional(newValue))],
+            cellChanges: [CellChange(
+                rowIndex: rowIndex,
+                columnIndex: columnIndex,
+                columnName: columnName,
+                oldValue: PluginCellValue.fromOptional(oldValue),
+                newValue: PluginCellValue.fromOptional(newValue)
+            )],
             originalRow: originalRow.map(PluginCellValue.fromOptional)
         )
     }

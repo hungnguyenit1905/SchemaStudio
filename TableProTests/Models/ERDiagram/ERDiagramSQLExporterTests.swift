@@ -246,7 +246,12 @@ struct ERDiagramSQLExporterTests {
                 "users": [column("id", primaryKey: true)],
                 "orders": [column("id", primaryKey: true), column("user_id")]
             ],
-            allForeignKeys: ["orders": [foreignKey("fk_user", column: "user_id", references: "users", onDelete: "CASCADE")]],
+            allForeignKeys: ["orders": [foreignKey(
+                "fk_user",
+                column: "user_id",
+                references: "users",
+                onDelete: "CASCADE"
+            )]],
             isSQLite: false,
             quoteIdentifier: quote
         )

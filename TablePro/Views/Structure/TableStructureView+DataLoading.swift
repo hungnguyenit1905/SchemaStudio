@@ -58,7 +58,7 @@ extension TableStructureView {
                     let sequences = try await driver.fetchDependentSequences(forTable: table)
                     let enumTypes = try await driver.fetchDependentTypes(forTable: table)
                     let baseDDL = try await driver.fetchTableDDL(table: table)
-                    if sequences.isEmpty && enumTypes.isEmpty {
+                    if sequences.isEmpty, enumTypes.isEmpty {
                         return baseDDL
                     }
                     var preamble = ""
@@ -84,7 +84,10 @@ extension TableStructureView {
             }
             tabData.markFetched(tab)
         } catch {
-            Self.logger.error("Failed to load \(tab.rawValue, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Self.logger
+                .error(
+                    "Failed to load \(tab.rawValue, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
         }
     }
 
@@ -139,12 +142,14 @@ extension TableStructureView {
         // Skip warning if we just saved (within 2 seconds)
         let justSaved = lastSaveTime.map { Date().timeIntervalSince($0) < 2.0 } ?? false
 
-        if structureChangeManager.hasChanges && !justSaved {
+        if structureChangeManager.hasChanges, !justSaved {
             Task { @MainActor in
                 let window = coordinator?.contentWindow
                 let confirmed = await AlertHelper.confirmDestructive(
                     title: String(localized: "Discard Changes?"),
-                    message: String(localized: "You have unsaved changes to the table structure. Refreshing will discard these changes."),
+                    message: String(
+                        localized: "You have unsaved changes to the table structure. Refreshing will discard these changes."
+                    ),
                     confirmButton: String(localized: "Discard"),
                     cancelButton: String(localized: "Cancel"),
                     window: window

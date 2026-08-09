@@ -14,18 +14,20 @@ internal struct ThemeStorage {
 
     private static let userThemesDirectory: URL = {
         guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            return FileManager.default.temporaryDirectory.appendingPathComponent("SchemaStudio/Themes", isDirectory: true)
+            return FileManager.default.temporaryDirectory.appendingPathComponent(
+                "SchemaStudio/Themes",
+                isDirectory: true
+            )
         }
         return appSupport.appendingPathComponent("SchemaStudio/Themes", isDirectory: true)
     }()
 
-    private static let bundledThemesDirectory: URL? = {
-        Bundle.main.resourceURL
-    }()
+    private static let bundledThemesDirectory: URL? = Bundle.main.resourceURL
 
-    private static let registryThemesDirectory: URL = {
-        userThemesDirectory.appendingPathComponent("Registry", isDirectory: true)
-    }()
+    private static let registryThemesDirectory: URL = userThemesDirectory.appendingPathComponent(
+        "Registry",
+        isDirectory: true
+    )
 
     private static func themeFileURL(in directory: URL, id: String) throws -> URL {
         let allowed = #"^[A-Za-z0-9._-]+$"#
@@ -131,9 +133,7 @@ internal struct ThemeStorage {
 
     // MARK: - Registry Meta
 
-    private static let registryMetaURL: URL = {
-        registryThemesDirectory.appendingPathComponent("registry-meta.json")
-    }()
+    private static let registryMetaURL: URL = registryThemesDirectory.appendingPathComponent("registry-meta.json")
 
     static func loadRegistryMeta() -> RegistryThemeMeta {
         guard FileManager.default.fileExists(atPath: registryMetaURL.path) else {

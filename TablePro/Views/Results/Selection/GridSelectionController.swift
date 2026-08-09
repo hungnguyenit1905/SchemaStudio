@@ -44,7 +44,7 @@ final class GridSelectionController {
         if newSelection.isEmpty {
             announcement = String(localized: "Cell selection cleared")
         } else if let rect = newSelection.boundingRectangle {
-            let cellCount = newSelection.rectangles.reduce(0) { $0 + ($1.rows.count * $1.columns.count) }
+            let cellCount = newSelection.approximateCellCount
             announcement = String(
                 format: String(localized: "%d cells selected, rows %d to %d, columns %d to %d"),
                 cellCount,
@@ -73,13 +73,13 @@ final class GridSelectionController {
 
     func beginDrag(at coord: GridCoord, modifiers: NSEvent.ModifierFlags) -> MouseDisposition {
         let cleanModifiers = modifiers.intersection([.command, .shift, .option, .control])
-        if cleanModifiers.contains(.command) && !cleanModifiers.contains(.shift) {
+        if cleanModifiers.contains(.command), !cleanModifiers.contains(.shift) {
             dragOrigin = coord
             dragMode = .additive
             dragBaseSelection = selection
             return .replaceFocus(coord)
         }
-        if cleanModifiers.contains(.shift) && !cleanModifiers.contains(.command) {
+        if cleanModifiers.contains(.shift), !cleanModifiers.contains(.command) {
             let anchor = selection.anchor ?? coord
             dragOrigin = anchor
             dragMode = .replace
@@ -140,21 +140,21 @@ final class GridSelectionController {
 
     func selectAll(totalRows: Int, totalColumns: Int) {
         guard totalRows > 0, totalColumns > 0 else { return }
-        let rect = GridRect(rows: 0...(totalRows - 1), columns: 0...(totalColumns - 1))
+        let rect = GridRect(rows: 0 ... (totalRows - 1), columns: 0 ... (totalColumns - 1))
         let active = GridCoord(row: 0, column: 0)
         update(.single(rect, anchor: active, active: active))
     }
 
     func selectEntireColumn(_ column: Int, totalRows: Int) {
         guard column >= 0, totalRows > 0 else { return }
-        let rect = GridRect(rows: 0...(totalRows - 1), columns: column...column)
+        let rect = GridRect(rows: 0 ... (totalRows - 1), columns: column ... column)
         let anchor = GridCoord(row: 0, column: column)
         update(.single(rect, anchor: anchor, active: anchor))
     }
 
     func addEntireColumn(_ column: Int, totalRows: Int) {
         guard column >= 0, totalRows > 0 else { return }
-        let rect = GridRect(rows: 0...(totalRows - 1), columns: column...column)
+        let rect = GridRect(rows: 0 ... (totalRows - 1), columns: column ... column)
         let anchor = GridCoord(row: 0, column: column)
         let addition = GridSelection.single(rect, anchor: anchor, active: anchor)
         update(selection.isEmpty ? addition : selection.union(addition))
@@ -166,35 +166,65 @@ final class GridSelectionController {
 
     func selectEntireRow(_ row: Int, totalColumns: Int) {
         guard row >= 0, totalColumns > 0 else { return }
-        let rect = GridRect(rows: row...row, columns: 0...(totalColumns - 1))
+        let rect = GridRect(rows: row ... row, columns: 0 ... (totalColumns - 1))
         let anchor = GridCoord(row: row, column: 0)
         update(.single(rect, anchor: anchor, active: anchor))
     }
 
-    func extendActiveCell(from seed: GridCoord? = nil, direction: Direction, jumpToEdge: Bool, totalRows: Int, totalColumns: Int) {
+    func extendActiveCell(
+        from seed: GridCoord? = nil,
+        direction: Direction,
+        jumpToEdge: Bool,
+        totalRows: Int,
+        totalColumns: Int
+    ) {
         guard let active = selection.activeCell ?? seed else { return }
         let origin = selection.anchor ?? seed ?? active
-        let next = step(from: active, direction: direction, jumpToEdge: jumpToEdge, totalRows: totalRows, totalColumns: totalColumns)
+        let next = step(
+            from: active,
+            direction: direction,
+            jumpToEdge: jumpToEdge,
+            totalRows: totalRows,
+            totalColumns: totalColumns
+        )
         update(.single(GridRect.between(origin, next), anchor: origin, active: next))
     }
 
     func moveActiveCell(direction: Direction, jumpToEdge: Bool, totalRows: Int, totalColumns: Int) -> GridCoord? {
         guard let active = selection.activeCell else { return nil }
-        let next = step(from: active, direction: direction, jumpToEdge: jumpToEdge, totalRows: totalRows, totalColumns: totalColumns)
+        let next = step(
+            from: active,
+            direction: direction,
+            jumpToEdge: jumpToEdge,
+            totalRows: totalRows,
+            totalColumns: totalColumns
+        )
         update(.single(GridRect(cell: next), anchor: next, active: next))
         return next
     }
 
-    private func step(from coord: GridCoord, direction: Direction, jumpToEdge: Bool, totalRows: Int, totalColumns: Int) -> GridCoord {
+    private func step(
+        from coord: GridCoord,
+        direction: Direction,
+        jumpToEdge: Bool,
+        totalRows: Int,
+        totalColumns: Int
+    ) -> GridCoord {
         switch direction {
         case .up:
             return GridCoord(row: jumpToEdge ? 0 : max(0, coord.row - 1), column: coord.column)
         case .down:
-            return GridCoord(row: jumpToEdge ? max(0, totalRows - 1) : min(totalRows - 1, coord.row + 1), column: coord.column)
+            return GridCoord(
+                row: jumpToEdge ? max(0, totalRows - 1) : min(totalRows - 1, coord.row + 1),
+                column: coord.column
+            )
         case .left:
             return GridCoord(row: coord.row, column: jumpToEdge ? 0 : max(0, coord.column - 1))
         case .right:
-            return GridCoord(row: coord.row, column: jumpToEdge ? max(0, totalColumns - 1) : min(totalColumns - 1, coord.column + 1))
+            return GridCoord(
+                row: coord.row,
+                column: jumpToEdge ? max(0, totalColumns - 1) : min(totalColumns - 1, coord.column + 1)
+            )
         }
     }
 
@@ -213,18 +243,18 @@ final class GridSelectionController {
         guard let totalRows = tableView?.numberOfRows, totalRows > 0 else { return IndexSet() }
         var fully = IndexSet()
         for rect in selection.rectangles where rect.rows.lowerBound <= 0 && rect.rows.upperBound >= totalRows - 1 {
-            fully.insert(integersIn: rect.columns.lowerBound...rect.columns.upperBound)
+            fully.insert(integersIn: rect.columns.lowerBound ... rect.columns.upperBound)
         }
         return fully
     }
 
     private func reloadRowsForFill(old: GridSelection, new: GridSelection, dirtyColumns: IndexSet) {
-        guard let tableView = tableView else { return }
+        guard let tableView else { return }
         guard tableView.numberOfRows > 0 else { return }
 
         let visible = tableView.rows(in: tableView.visibleRect)
         guard visible.length > 0 else { return }
-        let visibleRange = visible.location..<(visible.location + visible.length)
+        let visibleRange = visible.location ..< (visible.location + visible.length)
 
         var rowsToReload = IndexSet()
         let oldVisible = old.affectedRows.intersection(IndexSet(integersIn: visibleRange))

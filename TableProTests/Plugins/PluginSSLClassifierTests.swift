@@ -60,7 +60,10 @@ struct LibPQClassifierTests {
 struct MariaDBClassifierTests {
     @Test("CR_SSL_CONNECTION_ERROR with cipher message → cipherMismatch")
     func testSSLConnectionError() {
-        guard case .cipherMismatch = MariaDBSSLClassifier.classifySSLError(code: 2_026, message: "SSL connection error: no shared cipher") else {
+        guard case .cipherMismatch = MariaDBSSLClassifier.classifySSLError(
+            code: 2_026,
+            message: "SSL connection error: no shared cipher"
+        ) else {
             Issue.record("Expected cipherMismatch")
             return
         }
@@ -68,7 +71,10 @@ struct MariaDBClassifierTests {
 
     @Test("CR_SSL_CONNECTION_ERROR with certificate keyword → untrustedCertificate")
     func testSSLCertError() {
-        guard case .untrustedCertificate = MariaDBSSLClassifier.classifySSLError(code: 2_026, message: "SSL certificate not trusted") else {
+        guard case .untrustedCertificate = MariaDBSSLClassifier.classifySSLError(
+            code: 2_026,
+            message: "SSL certificate not trusted"
+        ) else {
             Issue.record("Expected untrustedCertificate")
             return
         }
@@ -85,7 +91,8 @@ struct MariaDBClassifierTests {
 
     @Test("Auth error 1045 not retried (returns nil)")
     func testAuthError() {
-        #expect(MariaDBSSLClassifier.classifySSLError(code: 1_045, message: "Access denied for user 'foo'@'bar'") == nil)
+        #expect(MariaDBSSLClassifier
+            .classifySSLError(code: 1_045, message: "Access denied for user 'foo'@'bar'") == nil)
     }
 
     @Test("Network error 2002 not retried")
@@ -108,7 +115,8 @@ struct MongoDBClassifierTests {
 
     @Test("Genuine cipher/protocol failure → cipherMismatch")
     func testGenuineCipherMismatch() {
-        guard case .cipherMismatch = MongoDBSSLClassifier.classifySSLError("TLS handshake failed: sslv3 alert handshake failure: no shared cipher") else {
+        guard case .cipherMismatch = MongoDBSSLClassifier
+            .classifySSLError("TLS handshake failed: sslv3 alert handshake failure: no shared cipher") else {
             Issue.record("Expected cipherMismatch")
             return
         }
@@ -116,7 +124,8 @@ struct MongoDBClassifierTests {
 
     @Test("Certificate verify failure → untrustedCertificate")
     func testCertificateVerifyFailed() {
-        guard case .untrustedCertificate = MongoDBSSLClassifier.classifySSLError("TLS handshake failed: certificate verify failed") else {
+        guard case .untrustedCertificate = MongoDBSSLClassifier
+            .classifySSLError("TLS handshake failed: certificate verify failed") else {
             Issue.record("Expected untrustedCertificate")
             return
         }
@@ -151,7 +160,8 @@ struct RedisClassifierTests {
 
     @Test("Cert verify failed → untrustedCertificate")
     func testCertVerify() {
-        guard case .untrustedCertificate = RedisSSLClassifier.classifySSLError("certificate verify failed (self-signed)") else {
+        guard case .untrustedCertificate = RedisSSLClassifier
+            .classifySSLError("certificate verify failed (self-signed)") else {
             Issue.record("Expected untrustedCertificate")
             return
         }
@@ -232,7 +242,8 @@ struct CassandraClassifierTests {
     @Test("Encrypted key with no passphrase → clientKeyPassphraseRequired")
     func testEncryptedNoPassphrase() {
         let error = CassandraClientKeyClassifier.privateKeyLoadError(
-            keyPEM: encryptedPkcs8, hasPassphrase: false, keyPath: "/k.pem")
+            keyPEM: encryptedPkcs8, hasPassphrase: false, keyPath: "/k.pem"
+        )
         guard case .clientKeyPassphraseRequired = error else {
             Issue.record("Expected clientKeyPassphraseRequired")
             return
@@ -242,7 +253,8 @@ struct CassandraClassifierTests {
     @Test("Encrypted key with wrong passphrase → clientKeyPassphraseIncorrect")
     func testEncryptedWrongPassphrase() {
         let error = CassandraClientKeyClassifier.privateKeyLoadError(
-            keyPEM: encryptedPkcs1, hasPassphrase: true, keyPath: "/k.pem")
+            keyPEM: encryptedPkcs1, hasPassphrase: true, keyPath: "/k.pem"
+        )
         guard case .clientKeyPassphraseIncorrect = error else {
             Issue.record("Expected clientKeyPassphraseIncorrect")
             return
@@ -252,9 +264,11 @@ struct CassandraClassifierTests {
     @Test("Unencrypted but unreadable key → clientKeyInvalid, never a passphrase error")
     func testUnencryptedInvalid() {
         let withoutPassphrase = CassandraClientKeyClassifier.privateKeyLoadError(
-            keyPEM: unencryptedPkcs8, hasPassphrase: false, keyPath: "/k.pem")
+            keyPEM: unencryptedPkcs8, hasPassphrase: false, keyPath: "/k.pem"
+        )
         let withPassphrase = CassandraClientKeyClassifier.privateKeyLoadError(
-            keyPEM: unencryptedPkcs8, hasPassphrase: true, keyPath: "/k.pem")
+            keyPEM: unencryptedPkcs8, hasPassphrase: true, keyPath: "/k.pem"
+        )
         guard case .clientKeyInvalid = withoutPassphrase else {
             Issue.record("Expected clientKeyInvalid without passphrase")
             return

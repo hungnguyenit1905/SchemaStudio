@@ -143,10 +143,10 @@ private extension MySQLPluginDriver {
 
     func fetchCharsetDefaults() async throws -> [CharsetDefault] {
         let query = """
-            SELECT character_set_name, default_collate_name
-            FROM information_schema.character_sets
-            ORDER BY character_set_name
-            """
+        SELECT character_set_name, default_collate_name
+        FROM information_schema.character_sets
+        ORDER BY character_set_name
+        """
         let result = try await execute(query: query)
         return result.rows.compactMap { row in
             guard let charset = row[safe: 0]?.asText,
@@ -159,10 +159,10 @@ private extension MySQLPluginDriver {
 
     func fetchCollationCatalog() async throws -> [CollationEntry] {
         let query = """
-            SELECT collation_name, character_set_name
-            FROM information_schema.collations
-            ORDER BY collation_name
-            """
+        SELECT collation_name, character_set_name
+        FROM information_schema.collations
+        ORDER BY collation_name
+        """
         let result = try await execute(query: query)
         return result.rows.compactMap { row in
             guard let collation = row[safe: 0]?.asText,

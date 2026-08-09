@@ -6,13 +6,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Pagination State")
 struct PaginationStateTests {
-
     @Test("Default page size is 1000")
     func defaultPageSize() {
         #expect(PaginationState.defaultPageSize == 1_000)

@@ -6,7 +6,11 @@
 import Foundation
 
 extension VimEngine {
-    func processNormal(_ char: Character, shift: Bool) -> Bool { // swiftlint:disable:this function_body_length cyclomatic_complexity
+    // swiftlint:disable function_body_length cyclomatic_complexity
+    func processNormal(
+        _ char: Character,
+        shift: Bool
+    ) -> Bool {
         guard let buffer else { return false }
 
         if let consumed = handleNormalControl(char, in: buffer) {
@@ -63,8 +67,10 @@ extension VimEngine {
             pendingBracket = nil
             if char == "\u{1B}" { return true }
             switch (bracketKind, char) {
-            case (.openBracket, "["): sectionBackward(in: buffer); return true
-            case (.closeBracket, "]"): sectionForward(in: buffer); return true
+            case (.openBracket, "["): sectionBackward(in: buffer)
+                return true
+            case (.closeBracket, "]"): sectionForward(in: buffer)
+                return true
             default: return true
             }
         }
@@ -119,7 +125,12 @@ extension VimEngine {
         case "e":
             let count = consumeCount()
             if let op = pendingOperator {
-                executeOperatorWithMotion(op, motion: { self.wordEndMotion(count, in: buffer) }, inclusive: true, in: buffer)
+                executeOperatorWithMotion(
+                    op,
+                    motion: { self.wordEndMotion(count, in: buffer) },
+                    inclusive: true,
+                    in: buffer
+                )
             } else {
                 wordEndMotion(count, in: buffer)
             }
@@ -170,7 +181,6 @@ extension VimEngine {
             let count = consumeCount()
             executeMotion(in: buffer, inclusive: true) { self.bigWordEndMotion(count, in: buffer) }
             return true
-
         case "i":
             if pendingOperator != nil {
                 pendingTextObject = true
@@ -230,7 +240,6 @@ extension VimEngine {
             buffer.setSelectedRange(NSRange(location: lineRange.location, length: 0))
             setMode(.insert)
             return true
-
         case "v":
             countPrefix = 0
             let pos = buffer.selectedRange().location
@@ -249,7 +258,6 @@ extension VimEngine {
             buffer.setSelectedRange(lineRange)
             setMode(.visual(linewise: true))
             return true
-
         case "d":
             if pendingOperator == .delete {
                 deleteLine(consumeCount(), in: buffer)
@@ -274,7 +282,6 @@ extension VimEngine {
             }
             beginOperator(.change)
             return true
-
         case "D":
             beginOperator(.delete)
             executeMotion(in: buffer, inclusive: true) { self.moveToLineEnd(in: buffer) }
@@ -286,11 +293,9 @@ extension VimEngine {
             beginOperator(.change)
             executeMotion(in: buffer, inclusive: true) { self.moveToLineEnd(in: buffer) }
             return true
-
         case "X":
             deleteCharBeforeCursor(consumeCount(), in: buffer)
             return true
-
         case "s":
             let count = consumeCount()
             substituteChars(count, in: buffer)
@@ -298,11 +303,9 @@ extension VimEngine {
         case "S":
             changeLine(consumeCount(), in: buffer)
             return true
-
         case "J":
             joinLines(consumeCount(), withSpace: true, in: buffer)
             return true
-
         case "f":
             pendingFindChar = VimFindCharRequest(forward: true, till: false)
             return true
@@ -325,7 +328,6 @@ extension VimEngine {
             let req = VimFindCharRequest(forward: !last.forward, till: last.till)
             _ = executeFindChar(last.char, request: req, in: buffer)
             return true
-
         case "r":
             pendingReplaceChar = true
             return true
@@ -334,7 +336,6 @@ extension VimEngine {
             operatorCount = 0
             setMode(.replace)
             return true
-
         case "~":
             if pendingOperator == .toggleCase {
                 applyCaseToLine(.toggleCase, count: consumeCount(), in: buffer)
@@ -343,7 +344,6 @@ extension VimEngine {
             }
             toggleCaseUnderCursor(consumeCount(), in: buffer)
             return true
-
         case ">":
             if pendingOperator == .indent {
                 indentLine(consumeCount(), outdent: false, in: buffer)
@@ -360,24 +360,25 @@ extension VimEngine {
             }
             beginOperator(.outdent)
             return true
-
         case "?":
             countPrefix = 0
             operatorCount = 0
             setMode(.commandLine(buffer: "?"))
             return true
-
         case "%":
             jumpToMatchingBracket(in: buffer)
             return true
-
         case "n":
             let count = consumeCount()
-            for _ in 0..<count { searchNext(in: buffer, reverseDirection: false) }
+            for _ in 0 ..< count {
+                searchNext(in: buffer, reverseDirection: false)
+            }
             return true
         case "N":
             let count = consumeCount()
-            for _ in 0..<count { searchNext(in: buffer, reverseDirection: true) }
+            for _ in 0 ..< count {
+                searchNext(in: buffer, reverseDirection: true)
+            }
             return true
         case "*":
             searchWordUnderCursor(forward: true, in: buffer)
@@ -385,7 +386,6 @@ extension VimEngine {
         case "#":
             searchWordUnderCursor(forward: false, in: buffer)
             return true
-
         case "m":
             pendingMarkSet = true
             return true
@@ -398,12 +398,10 @@ extension VimEngine {
         case "\"":
             pendingRegisterSelect = true
             return true
-
         case ".":
             let count = consumeCount()
             replayLastDot(count: count, in: buffer)
             return true
-
         case "(":
             sentenceBackward(consumeCount(), in: buffer)
             return true
@@ -422,7 +420,6 @@ extension VimEngine {
         case "]":
             pendingBracket = .closeBracket
             return true
-
         case "q":
             if macroRecording != nil {
                 macroRecording = nil
@@ -434,7 +431,6 @@ extension VimEngine {
             pendingMacroCount = consumeCount()
             pendingMacroTarget = .replayTarget
             return true
-
         case "H":
             jumpToVisibleLine(.top, in: buffer)
             return true
@@ -444,20 +440,21 @@ extension VimEngine {
         case "L":
             jumpToVisibleLine(.bottom, in: buffer)
             return true
-
         case "z":
             pendingZ = true
             return true
-
         case "p":
             let count = consumeCount()
-            for _ in 0..<count { paste(after: true, in: buffer) }
+            for _ in 0 ..< count {
+                paste(after: true, in: buffer)
+            }
             return true
         case "P":
             let count = consumeCount()
-            for _ in 0..<count { paste(after: false, in: buffer) }
+            for _ in 0 ..< count {
+                paste(after: false, in: buffer)
+            }
             return true
-
         case "/":
             countPrefix = 0
             setMode(.commandLine(buffer: "/"))
@@ -466,7 +463,6 @@ extension VimEngine {
             countPrefix = 0
             setMode(.commandLine(buffer: ":"))
             return true
-
         case "u":
             if pendingOperator == .lowercase {
                 applyCaseToLine(.lowercase, count: consumeCount(), in: buffer)
@@ -474,7 +470,9 @@ extension VimEngine {
                 return true
             }
             let count = consumeCount()
-            for _ in 0..<count { buffer.undo() }
+            for _ in 0 ..< count {
+                buffer.undo()
+            }
             return true
         case "U":
             if pendingOperator == .uppercase {
@@ -493,16 +491,16 @@ extension VimEngine {
             } else {
                 undoCount = 1
             }
-            for _ in 0..<undoCount { buffer.undo() }
+            for _ in 0 ..< undoCount {
+                buffer.undo()
+            }
             editsOnCurrentLine = 0
             return true
-
         case "x":
             let count = consumeCount()
             deleteCharUnderCursor(count, in: buffer)
             recordDot(.deleteCharForward(count: count))
             return true
-
         default:
             if char == "\u{1B}" {
                 pendingOperator = nil
@@ -516,6 +514,8 @@ extension VimEngine {
         }
     }
 
+    // swiftlint:enable function_body_length cyclomatic_complexity
+
     func handlePendingG(_ char: Character, in buffer: VimTextBuffer) -> Bool {
         switch char {
         case "g":
@@ -523,8 +523,12 @@ extension VimEngine {
             countPrefix = 0
             operatorCount = 0
             if let op = pendingOperator {
-                executeLinewiseOperator(op, fromOffset: buffer.selectedRange().location,
-                                        toLine: count > 0 ? count - 1 : 0, in: buffer)
+                executeLinewiseOperator(
+                    op,
+                    fromOffset: buffer.selectedRange().location,
+                    toLine: count > 0 ? count - 1 : 0,
+                    in: buffer
+                )
                 pendingOperator = nil
             } else {
                 if count > 1 {
@@ -611,8 +615,12 @@ extension VimEngine {
             targetLine = max(0, buffer.lineCount - 1)
         }
         if let op = pendingOperator {
-            executeLinewiseOperator(op, fromOffset: buffer.selectedRange().location,
-                                    toLine: targetLine, in: buffer)
+            executeLinewiseOperator(
+                op,
+                fromOffset: buffer.selectedRange().location,
+                toLine: targetLine,
+                in: buffer
+            )
             pendingOperator = nil
             operatorCount = 0
         } else {

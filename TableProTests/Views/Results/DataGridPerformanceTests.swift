@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("Sort Key Caching")
@@ -21,10 +21,10 @@ struct SortKeyCachingTests {
             sortColumnIndex < row.count ? (row[sortColumnIndex] ?? "") : ""
         }
 
-        var indices1 = Array(0..<rows.count)
+        var indices1 = Array(0 ..< rows.count)
         indices1.sort { keys[$0].compare(keys[$1], options: [.numeric]) == .orderedAscending }
 
-        var indices2 = Array(0..<rows.count)
+        var indices2 = Array(0 ..< rows.count)
         indices2.sort {
             let v1 = sortColumnIndex < rows[$0].count ? (rows[$0][sortColumnIndex] ?? "") : ""
             let v2 = sortColumnIndex < rows[$1].count ? (rows[$1][sortColumnIndex] ?? "") : ""
@@ -43,7 +43,7 @@ struct SortKeyCachingTests {
             ["Bob", "35"],
         ]
 
-        var indices = Array(0..<rows.count)
+        var indices = Array(0 ..< rows.count)
         indices.sort { i1, i2 in
             let v1 = rows[i1][0] ?? ""
             let v2 = rows[i2][0] ?? ""
@@ -78,7 +78,7 @@ struct SortKeyCachingTests {
             sortColumnIndex < row.count ? (row[sortColumnIndex] ?? "") : ""
         }
 
-        var indices = Array(0..<rows.count)
+        var indices = Array(0 ..< rows.count)
         indices.sort { keys[$0].compare(keys[$1], options: [.numeric]) == .orderedAscending }
 
         // Empty string (nil) sorts first, then Alice, then Charlie

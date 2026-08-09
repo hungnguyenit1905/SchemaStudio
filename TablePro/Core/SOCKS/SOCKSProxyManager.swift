@@ -21,7 +21,9 @@ enum SOCKSProxyError: Error, LocalizedError, Equatable {
             return String(format: String(localized: "Could not open a local port for the SOCKS proxy: %@"), reason)
         case .connectTimedOut(let proxyHost, let proxyPort):
             return String(
-                format: String(localized: "Timed out connecting through the SOCKS proxy at %@:%@. Check that the proxy is reachable and the credentials are correct."),
+                format: String(
+                    localized: "Timed out connecting through the SOCKS proxy at %@:%@. Check that the proxy is reachable and the credentials are correct."
+                ),
                 proxyHost, String(proxyPort)
             )
         case .connectFailed(let proxyHost, let proxyPort, let underlying):
@@ -73,7 +75,12 @@ actor SOCKSProxyManager: TunnelManaging {
         }
 
         let privacyContext = Self.makePrivacyContext(connectionId: connectionId, config: config, password: password)
-        try await probeProxyPath(config: config, privacyContext: privacyContext, targetHost: targetHost, targetPort: targetPort)
+        try await probeProxyPath(
+            config: config,
+            privacyContext: privacyContext,
+            targetHost: targetHost,
+            targetPort: targetPort
+        )
 
         let listener = try makeListener()
         listener.newConnectionHandler = { [weak self] inbound in
@@ -100,7 +107,8 @@ actor SOCKSProxyManager: TunnelManaging {
         let localPort = try await Self.startListener(listener)
         tunnels[connectionId] = TunnelState(listener: listener, localPort: localPort)
         updateAppNapState()
-        Self.logger.info("SOCKS proxy tunnel ready for \(connectionId.uuidString, privacy: .public) on 127.0.0.1:\(localPort)")
+        Self.logger
+            .info("SOCKS proxy tunnel ready for \(connectionId.uuidString, privacy: .public) on 127.0.0.1:\(localPort)")
         return localPort
     }
 
@@ -147,7 +155,11 @@ actor SOCKSProxyManager: TunnelManaging {
         targetHost: String,
         targetPort: Int
     ) async throws {
-        let probe = Self.makeProxiedConnection(privacyContext: privacyContext, targetHost: targetHost, targetPort: targetPort)
+        let probe = Self.makeProxiedConnection(
+            privacyContext: privacyContext,
+            targetHost: targetHost,
+            targetPort: targetPort
+        )
         defer { probe.cancel() }
         try await Self.waitUntilReady(probe, timeout: connectTimeout, proxyHost: config.host, proxyPort: config.port)
     }
@@ -166,7 +178,11 @@ actor SOCKSProxyManager: TunnelManaging {
         }
 
         let relayId = UUID()
-        let outbound = Self.makeProxiedConnection(privacyContext: privacyContext, targetHost: targetHost, targetPort: targetPort)
+        let outbound = Self.makeProxiedConnection(
+            privacyContext: privacyContext,
+            targetHost: targetHost,
+            targetPort: targetPort
+        )
         tunnels[connectionId]?.relays[relayId] = RelayPair(inbound: inbound, outbound: outbound)
 
         inbound.stateUpdateHandler = { [weak self] state in
@@ -181,7 +197,12 @@ actor SOCKSProxyManager: TunnelManaging {
 
         Task { [connectTimeout] in
             do {
-                try await Self.waitUntilReady(outbound, timeout: connectTimeout, proxyHost: config.host, proxyPort: config.port)
+                try await Self.waitUntilReady(
+                    outbound,
+                    timeout: connectTimeout,
+                    proxyHost: config.host,
+                    proxyPort: config.port
+                )
                 outbound.stateUpdateHandler = { [weak self] state in
                     switch state {
                     case .failed, .cancelled:
@@ -202,7 +223,10 @@ actor SOCKSProxyManager: TunnelManaging {
                 Self.pump(inbound, into: outbound, onFinished: onDirectionFinished)
                 Self.pump(outbound, into: inbound, onFinished: onDirectionFinished)
             } catch {
-                Self.logger.warning("SOCKS relay setup failed for \(connectionId.uuidString, privacy: .public): \(error.localizedDescription)")
+                Self.logger
+                    .warning(
+                        "SOCKS relay setup failed for \(connectionId.uuidString, privacy: .public): \(error.localizedDescription)"
+                    )
                 await self.removeRelay(connectionId: connectionId, relayId: relayId)
             }
         }
@@ -222,7 +246,10 @@ actor SOCKSProxyManager: TunnelManaging {
             relay.inbound.cancel()
             relay.outbound.cancel()
         }
-        Self.logger.warning("SOCKS proxy listener died for \(connectionId.uuidString, privacy: .public): \(error.localizedDescription)")
+        Self.logger
+            .warning(
+                "SOCKS proxy listener died for \(connectionId.uuidString, privacy: .public): \(error.localizedDescription)"
+            )
         await DatabaseManager.shared.handleSOCKSProxyTunnelDied(connectionId: connectionId)
     }
 
@@ -358,7 +385,10 @@ actor SOCKSProxyManager: TunnelManaging {
                     }
                     guard timedOut else { return }
                     connection.cancel()
-                    continuation.resume(throwing: SOCKSProxyError.connectTimedOut(proxyHost: proxyHost, proxyPort: proxyPort))
+                    continuation.resume(throwing: SOCKSProxyError.connectTimedOut(
+                        proxyHost: proxyHost,
+                        proxyPort: proxyPort
+                    ))
                 }
                 connection.start(queue: networkQueue)
             }
@@ -382,7 +412,12 @@ actor SOCKSProxyManager: TunnelManaging {
                         return
                     }
                     if isComplete {
-                        destination.send(content: nil, contentContext: .finalMessage, isComplete: true, completion: .idempotent)
+                        destination.send(
+                            content: nil,
+                            contentContext: .finalMessage,
+                            isComplete: true,
+                            completion: .idempotent
+                        )
                         onFinished()
                         return
                     }

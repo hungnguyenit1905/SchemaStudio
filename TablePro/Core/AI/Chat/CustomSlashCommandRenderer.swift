@@ -28,22 +28,22 @@ enum CustomSlashCommandRenderer {
         var result = ""
         var index = template.startIndex
         while index < template.endIndex {
-            if let openRange = template.range(of: "{{", range: index..<template.endIndex) {
-                result.append(contentsOf: template[index..<openRange.lowerBound])
-                if let closeRange = template.range(of: "}}", range: openRange.upperBound..<template.endIndex) {
-                    let name = String(template[openRange.upperBound..<closeRange.lowerBound])
+            if let openRange = template.range(of: "{{", range: index ..< template.endIndex) {
+                result.append(contentsOf: template[index ..< openRange.lowerBound])
+                if let closeRange = template.range(of: "}}", range: openRange.upperBound ..< template.endIndex) {
+                    let name = String(template[openRange.upperBound ..< closeRange.lowerBound])
                     if let value = values[name] {
                         result.append(value)
                     } else {
-                        result.append(contentsOf: template[openRange.lowerBound..<closeRange.upperBound])
+                        result.append(contentsOf: template[openRange.lowerBound ..< closeRange.upperBound])
                     }
                     index = closeRange.upperBound
                 } else {
-                    result.append(contentsOf: template[openRange.lowerBound..<template.endIndex])
+                    result.append(contentsOf: template[openRange.lowerBound ..< template.endIndex])
                     break
                 }
             } else {
-                result.append(contentsOf: template[index..<template.endIndex])
+                result.append(contentsOf: template[index ..< template.endIndex])
                 break
             }
         }

@@ -6,9 +6,9 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("SQL Completion Provider")
 struct SQLCompletionProviderTests {
@@ -203,7 +203,7 @@ struct SQLCompletionProviderTests {
         let (items, _) = await provider.getCompletions(text: text, cursorPosition: text.count)
         let selectIndex = items.firstIndex { $0.label == "SELECT" }
         #expect(selectIndex != nil)
-        if let selectIndex = selectIndex {
+        if let selectIndex {
             #expect(selectIndex < 5)
         }
     }
@@ -673,7 +673,8 @@ struct SQLCompletionProviderTests {
         let text = "SELECT * FROM users "
         let (items, _) = await provider.getCompletions(text: text, cursorPosition: text.count)
         let keywordLabels = items.filter { $0.kind == .keyword }.map(\.label)
-        let hasTransition = keywordLabels.contains("WHERE") || keywordLabels.contains("JOIN") || keywordLabels.contains("LEFT JOIN")
+        let hasTransition = keywordLabels.contains("WHERE") || keywordLabels.contains("JOIN") || keywordLabels
+            .contains("LEFT JOIN")
         #expect(hasTransition, "Keywords should be visible at FROM boundary, got: \(keywordLabels)")
     }
 
@@ -682,7 +683,8 @@ struct SQLCompletionProviderTests {
         let text = "SELECT * FROM users WHERE id = 1 "
         let (items, _) = await provider.getCompletions(text: text, cursorPosition: text.count)
         let keywordLabels = items.filter { $0.kind == .keyword }.map(\.label)
-        let hasTransition = keywordLabels.contains("AND") || keywordLabels.contains("OR") || keywordLabels.contains("ORDER BY")
+        let hasTransition = keywordLabels.contains("AND") || keywordLabels.contains("OR") || keywordLabels
+            .contains("ORDER BY")
         #expect(hasTransition, "Keywords should be visible at WHERE boundary, got: \(keywordLabels)")
     }
 
@@ -752,8 +754,10 @@ struct SQLCompletionProviderTests {
         let hasUnique = items.contains { $0.label == "UNIQUE" }
         let hasForeign = items.contains { $0.label == "FOREIGN" || $0.label == "FOREIGN KEY" }
         let hasCheck = items.contains { $0.label == "CHECK" }
-        #expect(hasPrimary || hasUnique || hasForeign || hasCheck,
-               "ADD CONSTRAINT should suggest constraint types")
+        #expect(
+            hasPrimary || hasUnique || hasForeign || hasCheck,
+            "ADD CONSTRAINT should suggest constraint types"
+        )
     }
 
     // MARK: - P2: MP-5 - INSERT Statement Improvements
@@ -799,8 +803,10 @@ struct SQLCompletionProviderTests {
         let hasOnDelete = items.contains { $0.label == "ON DELETE" }
         let hasOnUpdate = items.contains { $0.label == "ON UPDATE" }
         let hasCascade = items.contains { $0.label == "CASCADE" }
-        #expect(hasOnDelete || hasOnUpdate || hasCascade,
-               "Column definition should include FK action keywords")
+        #expect(
+            hasOnDelete || hasOnUpdate || hasCascade,
+            "Column definition should include FK action keywords"
+        )
     }
 
     @Test("MySQL CREATE TABLE after closing paren suggests table options")
@@ -874,13 +880,24 @@ struct SQLCompletionProviderTests {
 
     @Test("Column with comment shows comment in documentation")
     func testColumnCommentInDocs() {
-        let item = SQLCompletionItem.column("email", dataType: "VARCHAR(255)", tableName: "users", comment: "User email address")
+        let item = SQLCompletionItem.column(
+            "email",
+            dataType: "VARCHAR(255)",
+            tableName: "users",
+            comment: "User email address"
+        )
         #expect(item.documentation?.contains("User email address") == true)
     }
 
     @Test("Column detail combines PK, NOT NULL, and data type")
     func testColumnDetailCombined() {
-        let item = SQLCompletionItem.column("id", dataType: "INT", tableName: "users", isPrimaryKey: true, isNullable: false)
+        let item = SQLCompletionItem.column(
+            "id",
+            dataType: "INT",
+            tableName: "users",
+            isPrimaryKey: true,
+            isNullable: false
+        )
         let detail = item.detail ?? ""
         #expect(detail.contains("PK"))
         #expect(detail.contains("NOT NULL"))

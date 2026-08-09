@@ -27,17 +27,28 @@ internal struct FileConflictDiffSheet: View {
             Divider()
             footer
         }
-        .frame(minWidth: 600, idealWidth: 760, maxWidth: .infinity,
-               minHeight: 400, idealHeight: 540, maxHeight: .infinity)
+        .frame(
+            minWidth: 600,
+            idealWidth: 760,
+            maxWidth: .infinity,
+            minHeight: 400,
+            idealHeight: 540,
+            maxHeight: .infinity
+        )
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(String(localized: "File Modified Externally"))
                 .font(.headline)
-            Text(String(format: String(localized: "\"%@\" was changed since you opened it. Review the diff and choose how to resolve."), fileName))
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(String(
+                format: String(
+                    localized: "\"%@\" was changed since you opened it. Review the diff and choose how to resolve."
+                ),
+                fileName
+            ))
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)

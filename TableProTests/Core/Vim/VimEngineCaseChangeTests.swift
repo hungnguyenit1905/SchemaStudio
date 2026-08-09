@@ -5,9 +5,9 @@
 //  Specification tests for ~ toggle case and the gu / gU / g~ case operators.
 //
 
-import XCTest
-import TableProPluginKit
 @testable import SchemaStudio
+import TableProPluginKit
+import XCTest
 
 @MainActor
 final class VimEngineCaseChangeTests: XCTestCase {
@@ -27,7 +27,9 @@ final class VimEngineCaseChangeTests: XCTestCase {
     }
 
     private func keys(_ chars: String) {
-        for char in chars { _ = engine.process(char, shift: false) }
+        for char in chars {
+            _ = engine.process(char, shift: false)
+        }
     }
 
     private func key(_ char: Character, shift: Bool = false) {
@@ -41,8 +43,11 @@ final class VimEngineCaseChangeTests: XCTestCase {
     func testTildeTogglesSingleCharCase() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("~")
-        XCTAssertEqual(buffer.text, "hello World\nsecond LINE\n",
-            "~ should flip case of the char under the cursor")
+        XCTAssertEqual(
+            buffer.text,
+            "hello World\nsecond LINE\n",
+            "~ should flip case of the char under the cursor"
+        )
     }
 
     func testTildeAdvancesCursor() {
@@ -54,8 +59,11 @@ final class VimEngineCaseChangeTests: XCTestCase {
     func testTildeWithCount() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("5~")
-        XCTAssertEqual(buffer.text, "hELLO World\nsecond LINE\n",
-            "5~ should toggle case of 5 chars starting at cursor")
+        XCTAssertEqual(
+            buffer.text,
+            "hELLO World\nsecond LINE\n",
+            "5~ should toggle case of 5 chars starting at cursor"
+        )
     }
 
     func testTildeDoesNotCrossNewline() {
@@ -63,8 +71,11 @@ final class VimEngineCaseChangeTests: XCTestCase {
         // line — 'r','l','d' → 'R','L','D'. The newline must not be consumed.
         buffer.setSelectedRange(NSRange(location: 8, length: 0))
         keys("99~")
-        XCTAssertEqual(buffer.text, "Hello WoRLD\nsecond LINE\n",
-            "~ with count should clamp at end of current line")
+        XCTAssertEqual(
+            buffer.text,
+            "Hello WoRLD\nsecond LINE\n",
+            "~ with count should clamp at end of current line"
+        )
     }
 
     func testTildeOnNonLetterCharacterIsNoChange() {
@@ -72,8 +83,11 @@ final class VimEngineCaseChangeTests: XCTestCase {
         engine = VimEngine(buffer: buffer)
         buffer.setSelectedRange(NSRange(location: 1, length: 0))
         keys("~")
-        XCTAssertEqual(buffer.text, "a 1 b\n",
-            "~ on whitespace/digit should not change content")
+        XCTAssertEqual(
+            buffer.text,
+            "a 1 b\n",
+            "~ on whitespace/digit should not change content"
+        )
         XCTAssertEqual(pos, 2)
     }
 
@@ -82,22 +96,31 @@ final class VimEngineCaseChangeTests: XCTestCase {
     func testGTildeWordTogglesWord() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("g~w")
-        XCTAssertEqual(buffer.text, "hELLO World\nsecond LINE\n",
-            "g~w should toggle case for the word range")
+        XCTAssertEqual(
+            buffer.text,
+            "hELLO World\nsecond LINE\n",
+            "g~w should toggle case for the word range"
+        )
     }
 
     func testGTildeTildeTogglesLine() {
         buffer.setSelectedRange(NSRange(location: 3, length: 0))
         keys("g~~")
-        XCTAssertEqual(buffer.text, "hELLO wORLD\nsecond LINE\n",
-            "g~~ should toggle case of the entire current line")
+        XCTAssertEqual(
+            buffer.text,
+            "hELLO wORLD\nsecond LINE\n",
+            "g~~ should toggle case of the entire current line"
+        )
     }
 
     func testGTildeDollarTogglesToEndOfLine() {
         buffer.setSelectedRange(NSRange(location: 6, length: 0))
         keys("g~$")
-        XCTAssertEqual(buffer.text, "Hello wORLD\nsecond LINE\n",
-            "g~$ should toggle case from cursor to end of line")
+        XCTAssertEqual(
+            buffer.text,
+            "Hello wORLD\nsecond LINE\n",
+            "g~$ should toggle case from cursor to end of line"
+        )
     }
 
     // MARK: - gu: Lowercase Operator
@@ -105,22 +128,31 @@ final class VimEngineCaseChangeTests: XCTestCase {
     func testGUWordLowercasesWord() {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("guw")
-        XCTAssertEqual(buffer.text, "hello World\nsecond LINE\n",
-            "guw should lowercase the word range")
+        XCTAssertEqual(
+            buffer.text,
+            "hello World\nsecond LINE\n",
+            "guw should lowercase the word range"
+        )
     }
 
     func testGUUlowercasesLine() {
         buffer.setSelectedRange(NSRange(location: 12, length: 0))
         keys("guu")
-        XCTAssertEqual(buffer.text, "Hello World\nsecond line\n",
-            "guu should lowercase the entire current line")
+        XCTAssertEqual(
+            buffer.text,
+            "Hello World\nsecond line\n",
+            "guu should lowercase the entire current line"
+        )
     }
 
     func testGUDollarLowercasesToEndOfLine() {
         buffer.setSelectedRange(NSRange(location: 6, length: 0))
         keys("gu$")
-        XCTAssertEqual(buffer.text, "Hello world\nsecond LINE\n",
-            "gu$ should lowercase from cursor to end of line")
+        XCTAssertEqual(
+            buffer.text,
+            "Hello world\nsecond LINE\n",
+            "gu$ should lowercase from cursor to end of line"
+        )
     }
 
     // MARK: - gU: Uppercase Operator
@@ -129,23 +161,32 @@ final class VimEngineCaseChangeTests: XCTestCase {
         buffer.setSelectedRange(NSRange(location: 0, length: 0))
         keys("gU")
         keys("w")
-        XCTAssertEqual(buffer.text, "HELLO World\nsecond LINE\n",
-            "gUw should uppercase the word range")
+        XCTAssertEqual(
+            buffer.text,
+            "HELLO World\nsecond LINE\n",
+            "gUw should uppercase the word range"
+        )
     }
 
     func testGUUUppercasesLine() {
         buffer.setSelectedRange(NSRange(location: 12, length: 0))
         keys("gU")
         keys("U")
-        XCTAssertEqual(buffer.text, "Hello World\nSECOND LINE\n",
-            "gUU should uppercase the entire current line")
+        XCTAssertEqual(
+            buffer.text,
+            "Hello World\nSECOND LINE\n",
+            "gUU should uppercase the entire current line"
+        )
     }
 
     func testGUUppercaseDollarUppercasesToEndOfLine() {
         buffer.setSelectedRange(NSRange(location: 6, length: 0))
         keys("gU$")
-        XCTAssertEqual(buffer.text, "Hello WORLD\nsecond LINE\n",
-            "gU$ should uppercase from cursor to end of line")
+        XCTAssertEqual(
+            buffer.text,
+            "Hello WORLD\nsecond LINE\n",
+            "gU$ should uppercase from cursor to end of line"
+        )
     }
 
     // MARK: - Pending Cancellation

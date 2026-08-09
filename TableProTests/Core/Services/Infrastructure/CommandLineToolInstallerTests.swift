@@ -40,7 +40,7 @@ struct CommandLineToolInstallerTests {
 
     @Test("Reports not installed on a clean directory")
     func notInstalledByDefault() throws {
-        let installer = CommandLineToolInstaller(directory: try makeDirectory())
+        let installer = try CommandLineToolInstaller(directory: makeDirectory())
         #expect(installer.status == .notInstalled)
     }
 
@@ -63,7 +63,7 @@ struct CommandLineToolInstallerTests {
     @Test("A writable directory never asks for an administrator password")
     func writableDirectoryDoesNotEscalate() throws {
         let shell = CancellingShell()
-        let installer = CommandLineToolInstaller(directory: try makeDirectory(), privilegedShell: shell)
+        let installer = try CommandLineToolInstaller(directory: makeDirectory(), privilegedShell: shell)
 
         try installer.install()
 
@@ -73,7 +73,7 @@ struct CommandLineToolInstallerTests {
 
     @Test("Uninstall removes the shim")
     func uninstallRemovesShim() throws {
-        let installer = CommandLineToolInstaller(directory: try makeDirectory())
+        let installer = try CommandLineToolInstaller(directory: makeDirectory())
         try installer.install()
 
         try installer.uninstall()
@@ -84,14 +84,14 @@ struct CommandLineToolInstallerTests {
 
     @Test("Uninstalling when nothing is installed is a no-op")
     func uninstallWithoutInstallIsNoOp() throws {
-        let installer = CommandLineToolInstaller(directory: try makeDirectory())
+        let installer = try CommandLineToolInstaller(directory: makeDirectory())
         try installer.uninstall()
         #expect(installer.status == .notInstalled)
     }
 
     @Test("A foreign file at the same path is reported as a conflict and never overwritten")
     func foreignFileConflicts() throws {
-        let installer = CommandLineToolInstaller(directory: try makeDirectory())
+        let installer = try CommandLineToolInstaller(directory: makeDirectory())
         try "#!/bin/sh\necho not ours\n".write(toFile: installer.toolPath, atomically: true, encoding: .utf8)
 
         #expect(installer.status == .conflict)
@@ -105,7 +105,7 @@ struct CommandLineToolInstallerTests {
 
     @Test("A foreign file is never removed by uninstall")
     func foreignFileSurvivesUninstall() throws {
-        let installer = CommandLineToolInstaller(directory: try makeDirectory())
+        let installer = try CommandLineToolInstaller(directory: makeDirectory())
         try "echo not ours\n".write(toFile: installer.toolPath, atomically: true, encoding: .utf8)
 
         #expect(throws: CommandLineToolError.conflict(installer.toolPath)) {
@@ -180,7 +180,7 @@ struct CommandLineToolInstallerTests {
 
     @Test("Both manual commands run the same thing the app would run")
     func manualCommandsMirrorTheAppCommands() throws {
-        let installer = CommandLineToolInstaller(directory: try makeDirectory())
+        let installer = try CommandLineToolInstaller(directory: makeDirectory())
 
         #expect(installer.manualInstallCommand.hasPrefix("sudo sh -c "))
         #expect(installer.manualInstallCommand.contains("open -b com.SchemaStudio"))

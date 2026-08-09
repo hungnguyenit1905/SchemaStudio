@@ -38,7 +38,10 @@ extension AIChatViewModel {
                     try await driver.fetchColumns(table: tableName)
                 }
             } catch {
-                Self.logger.warning("Column fetch failed for \(tableName, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                Self.logger
+                    .warning(
+                        "Column fetch failed for \(tableName, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                    )
                 columns = []
             }
             let fkMap: [String: [ForeignKeyInfo]]
@@ -47,7 +50,10 @@ extension AIChatViewModel {
                     try await driver.fetchForeignKeys(forTables: [tableName])
                 }
             } catch {
-                Self.logger.warning("Foreign key fetch failed for \(tableName, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                Self.logger
+                    .warning(
+                        "Foreign key fetch failed for \(tableName, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                    )
                 fkMap = [:]
             }
             guard !Task.isCancelled, let self else { return }
@@ -107,12 +113,18 @@ extension AIChatViewModel {
                 let name = table.name
                 group.addTask {
                     do {
-                        let cols = try await DatabaseManager.shared.withBrowseMetadataDriver(connectionId: connId, workload: .bulk) { driver in
+                        let cols = try await DatabaseManager.shared.withBrowseMetadataDriver(
+                            connectionId: connId,
+                            workload: .bulk
+                        ) { driver in
                             try await driver.fetchColumns(table: name)
                         }
                         return (name, cols)
                     } catch {
-                        Self.logger.warning("Schema column fetch failed for \(name, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                        Self.logger
+                            .warning(
+                                "Schema column fetch failed for \(name, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                            )
                         return (name, [])
                     }
                 }
@@ -127,7 +139,10 @@ extension AIChatViewModel {
         let needsFKFetch = tablesToFetch.contains { foreignKeysByTable[$0.name] == nil }
         guard needsFKFetch else { return }
         do {
-            let fkMap = try await DatabaseManager.shared.withBrowseMetadataDriver(connectionId: connId, workload: .bulk) { driver in
+            let fkMap = try await DatabaseManager.shared.withBrowseMetadataDriver(
+                connectionId: connId,
+                workload: .bulk
+            ) { driver in
                 try await driver.fetchForeignKeys(forTables: tablesToFetch.map(\.name))
             }
             for (name, fks) in fkMap {

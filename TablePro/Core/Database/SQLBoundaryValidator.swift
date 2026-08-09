@@ -12,9 +12,10 @@ enum SQLBoundaryValidator {
         return try? NSRegularExpression(pattern: pattern, options: .caseInsensitive)
     }()
 
-    private static let commentInjectionPattern: NSRegularExpression? = {
-        try? NSRegularExpression(pattern: "(?:^|\\s)--|\\/\\*", options: [])
-    }()
+    private static let commentInjectionPattern: NSRegularExpression? = try? NSRegularExpression(
+        pattern: "(?:^|\\s)--|\\/\\*",
+        options: []
+    )
 
     static func isRawFilterConditionSafe(_ sql: String) -> Bool {
         let range = NSRange(sql.startIndex..., in: sql)

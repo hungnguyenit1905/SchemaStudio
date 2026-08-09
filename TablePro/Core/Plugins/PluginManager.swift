@@ -165,8 +165,7 @@ final class PluginManager {
 
     nonisolated static func bundleVersion(at pluginURL: URL) -> String? {
         guard let bundle = Bundle(url: pluginURL),
-              let info = bundle.infoDictionary
-        else { return nil }
+              let info = bundle.infoDictionary else { return nil }
         return info["CFBundleShortVersionString"] as? String
     }
 
@@ -188,7 +187,8 @@ final class PluginManager {
         } catch CocoaError.fileNoSuchFile {
             // Already gone, nothing to log.
         } catch {
-            Self.logger.error("Failed to remove registry metadata at \(url.lastPathComponent): \(error.localizedDescription)")
+            Self.logger
+                .error("Failed to remove registry metadata at \(url.lastPathComponent): \(error.localizedDescription)")
         }
     }
 
@@ -218,7 +218,10 @@ final class PluginManager {
             } else {
                 eagerPending.append(entry)
                 if entry.source == .userInstalled, let bundleId = Bundle(url: entry.url)?.bundleIdentifier {
-                    Self.logger.warning("Plugin '\(bundleId)' declared no SchemaStudioProvides* capability keys in Info.plist; eager loading will block startup. Add SchemaStudioProvidesDatabaseTypeIds / ExportFormatIds / ImportFormatIds for lazy load.")
+                    Self.logger
+                        .warning(
+                            "Plugin '\(bundleId)' declared no SchemaStudioProvides* capability keys in Info.plist; eager loading will block startup. Add SchemaStudioProvidesDatabaseTypeIds / ExportFormatIds / ImportFormatIds for lazy load."
+                        )
                 }
             }
         }
@@ -235,7 +238,10 @@ final class PluginManager {
             self.validateDependencies()
             self.hasFinishedInitialLoad = true
             let eagerCount = validated.count
-            Self.logger.info("Loaded \(self.plugins.count) plugin(s): \(lazyCount) lazy + \(eagerCount) eager (\(self.driverPlugins.count) driver(s) active, \(self.exportPlugins.count) export(s) active, \(self.importPlugins.count) import(s) active)")
+            Self.logger
+                .info(
+                    "Loaded \(self.plugins.count) plugin(s): \(lazyCount) lazy + \(eagerCount) eager (\(self.driverPlugins.count) driver(s) active, \(self.exportPlugins.count) export(s) active, \(self.importPlugins.count) import(s) active)"
+                )
 
             self.refreshRegistryUpdateSet()
             self.subscribeToConnectionStatusChanges()
@@ -307,7 +313,8 @@ final class PluginManager {
             do {
                 try verifyCodeSignature(bundle: bundle)
             } catch {
-                Self.logger.error("Lazy plugin '\(manifest.bundleId)' failed code-sign check: \(error.localizedDescription)")
+                Self.logger
+                    .error("Lazy plugin '\(manifest.bundleId)' failed code-sign check: \(error.localizedDescription)")
                 rejectedPlugins.append(RejectedPlugin(
                     url: url,
                     bundleId: manifest.bundleId,
@@ -381,7 +388,10 @@ final class PluginManager {
         for uti in manifest.providedInspectorUTIs {
             lazyInspectorUTIs[uti] = url
         }
-        Self.logger.debug("Registered lazy plugin '\(bundleId)': drivers=\(manifest.providedDatabaseTypeIds), exports=\(manifest.providedExportFormatIds), imports=\(manifest.providedImportFormatIds), inspectors=\(manifest.providedInspectorIds)")
+        Self.logger
+            .debug(
+                "Registered lazy plugin '\(bundleId)': drivers=\(manifest.providedDatabaseTypeIds), exports=\(manifest.providedExportFormatIds), imports=\(manifest.providedImportFormatIds), inspectors=\(manifest.providedInspectorIds)"
+            )
     }
 
     func activateDriver(databaseTypeId typeId: String) {
@@ -431,7 +441,10 @@ final class PluginManager {
             do {
                 try verifyCodeSignature(bundle: bundle)
             } catch {
-                Self.logger.error("Refusing to activate lazy plugin '\(bundleId)': code-signature re-check failed before load: \(error.localizedDescription)")
+                Self.logger
+                    .error(
+                        "Refusing to activate lazy plugin '\(bundleId)': code-signature re-check failed before load: \(error.localizedDescription)"
+                    )
                 recordLazyActivationRejection(url: url, bundleId: bundleId, entry: entry, error: error)
                 return
             }
@@ -440,7 +453,10 @@ final class PluginManager {
         do {
             try PluginBundleLoader.load(bundle)
         } catch {
-            Self.logger.error("Failed to load lazy bundle '\(bundleId)' at \(url.lastPathComponent): \(error.localizedDescription)")
+            Self.logger
+                .error(
+                    "Failed to load lazy bundle '\(bundleId)' at \(url.lastPathComponent): \(error.localizedDescription)"
+                )
             recordLazyActivationRejection(url: url, bundleId: bundleId, entry: entry, error: error)
             return
         }
@@ -494,7 +510,7 @@ final class PluginManager {
         let declaredPluginKit = infoPlist["TableProPluginKitVersion"] as? Int
         let declaredInspectorKit = infoPlist["TableProInspectorKitVersion"] as? Int
 
-        if declaredPluginKit == nil && declaredInspectorKit == nil {
+        if declaredPluginKit == nil, declaredInspectorKit == nil {
             throw PluginError.pluginOutdated(
                 pluginVersion: 0,
                 requiredVersion: currentPluginKitVersion
@@ -627,7 +643,8 @@ final class PluginManager {
             registerCapabilities(instance, pluginId: bundleId)
         }
 
-        Self.logger.info("Loaded plugin '\(entry.name)' v\(entry.version) [\(source == .builtIn ? "built-in" : "user")]")
+        Self.logger
+            .info("Loaded plugin '\(entry.name)' v\(entry.version) [\(source == .builtIn ? "built-in" : "user")]")
         return entry
     }
 
@@ -661,7 +678,10 @@ final class PluginManager {
             do {
                 try discoverPlugin(at: winner.url, source: winner.source)
             } catch {
-                Self.logger.error("Failed to discover plugin at \(winner.url.lastPathComponent): \(error.localizedDescription)")
+                Self.logger
+                    .error(
+                        "Failed to discover plugin at \(winner.url.lastPathComponent): \(error.localizedDescription)"
+                    )
                 if winner.source == .userInstalled {
                     let bundle = Bundle(url: winner.url)
                     rejectedPlugins.append(RejectedPlugin(
@@ -671,7 +691,8 @@ final class PluginManager {
                         name: winner.url.deletingPathExtension().lastPathComponent,
                         reason: error.localizedDescription,
                         isOutdated: (error as? PluginError)?.isOutdated ?? false,
-                        providedDatabaseTypeIds: bundle.flatMap { PluginManifest(bundle: $0)?.providedDatabaseTypeIds } ?? []
+                        providedDatabaseTypeIds: bundle
+                            .flatMap { PluginManifest(bundle: $0)?.providedDatabaseTypeIds } ?? []
                     ))
                 }
             }
@@ -703,8 +724,7 @@ final class PluginManager {
         var results: [PluginCandidate] = []
         for itemURL in contents where itemURL.pathExtension == "tableplugin" {
             guard let bundle = Bundle(url: itemURL),
-                  let bundleId = bundle.bundleIdentifier
-            else { continue }
+                  let bundleId = bundle.bundleIdentifier else { continue }
             let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "0.0.0"
             results.append(PluginCandidate(url: itemURL, source: source, bundleId: bundleId, version: version))
         }
@@ -760,7 +780,8 @@ final class PluginManager {
         } catch CocoaError.fileNoSuchFile {
             return
         } catch {
-            logger.warning("Failed to remove metadata sidecar at \(url.lastPathComponent): \(error.localizedDescription)")
+            logger
+                .warning("Failed to remove metadata sidecar at \(url.lastPathComponent): \(error.localizedDescription)")
         }
     }
 
@@ -776,7 +797,10 @@ final class PluginManager {
         registerValidatedBundles(validated)
         hasFinishedInitialLoad = true
         validateDependencies()
-        Self.logger.info("Loaded \(self.plugins.count) plugin(s): \(self.driverPlugins.count) driver(s), \(self.exportPlugins.count) export format(s), \(self.importPlugins.count) import format(s)")
+        Self.logger
+            .info(
+                "Loaded \(self.plugins.count) plugin(s): \(self.driverPlugins.count) driver(s), \(self.exportPlugins.count) export format(s), \(self.importPlugins.count) import format(s)"
+            )
     }
 
     private func discoverPlugin(at url: URL, source: PluginSource) throws {

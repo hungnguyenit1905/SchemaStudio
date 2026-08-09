@@ -4,13 +4,12 @@
 //
 
 import Foundation
+@testable import SchemaStudio
 import TableProPluginKit
 import Testing
-@testable import SchemaStudio
 
 @Suite("Column Type SQL Quoting")
 struct ColumnTypeSQLQuotingTests {
-
     @Test("An integer column only treats a plain integer as numeric")
     func integerColumnNumericShapes() {
         let expectations: [String: Bool] = [

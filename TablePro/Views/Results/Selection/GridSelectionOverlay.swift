@@ -51,7 +51,9 @@ final class GridSelectionOverlay: NSView {
 
         if let active = selection.activeCell,
            editingCell != active,
-           selection.rectangles.count > 1 || (selection.rectangles.first?.rows.count ?? 0) > 1 || (selection.rectangles.first?.columns.count ?? 0) > 1,
+           selection.rectangles
+           .count > 1 || (selection.rectangles.first?.rows.count ?? 0) > 1 ||
+           (selection.rectangles.first?.columns.count ?? 0) > 1,
            let frame = frame(for: GridRect(cell: active), in: tableView, coordinator: coordinator),
            frame.intersects(dirtyRect) {
             NSColor.controlAccentColor.setStroke()
@@ -90,7 +92,7 @@ final class GridSelectionOverlay: NSView {
 
         var leadingX = CGFloat.infinity
         var trailingX = -CGFloat.infinity
-        for dataColumn in rect.columns.lowerBound...rect.columns.upperBound {
+        for dataColumn in rect.columns.lowerBound ... rect.columns.upperBound {
             guard let tableColumnIndex = coordinator.tableColumnIndex(for: dataColumn) else { continue }
             let columnRect = tableView.rect(ofColumn: tableColumnIndex)
             leadingX = min(leadingX, columnRect.minX)
