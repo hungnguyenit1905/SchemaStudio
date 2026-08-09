@@ -77,7 +77,8 @@ final class QueryExecutionCoordinator {
             kind: OperationKind.worst(of: statements, databaseType: parent.connection.type),
             caller: .userInterface,
             capabilities: .interactiveUser,
-            operationDescription: String(localized: "Execute Query")
+            operationDescription: String(localized: "Execute Query"),
+            previewsAffectedRows: true
         )
     }
 

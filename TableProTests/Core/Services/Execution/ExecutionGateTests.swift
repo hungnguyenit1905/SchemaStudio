@@ -11,6 +11,7 @@ import Testing
 final class StubConfirming: OperationConfirming {
     private(set) var callCount = 0
     private(set) var lastDestructive = false
+    private(set) var lastAffectedRows: AffectedRowEstimate = .undetermined(.notACountableStatement)
     private let answer: Bool
 
     init(answer: Bool) {
@@ -18,8 +19,44 @@ final class StubConfirming: OperationConfirming {
     }
 
     func confirm(sql: String, operationDescription: String, connectionId: UUID, isDestructive: Bool) async -> Bool {
+        await confirm(
+            sql: sql,
+            operationDescription: operationDescription,
+            connectionId: connectionId,
+            isDestructive: isDestructive,
+            affectedRows: .undetermined(.notACountableStatement)
+        )
+    }
+
+    func confirm(
+        sql: String,
+        operationDescription: String,
+        connectionId: UUID,
+        isDestructive: Bool,
+        affectedRows: AffectedRowEstimate
+    ) async -> Bool {
         callCount += 1
         lastDestructive = isDestructive
+        lastAffectedRows = affectedRows
+        return answer
+    }
+}
+
+final class StubAffectedRowEstimating: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storedCallCount = 0
+    private let answer: AffectedRowEstimate
+
+    var callCount: Int {
+        lock.withLock { storedCallCount }
+    }
+
+    init(answer: AffectedRowEstimate = .undetermined(.notACountableStatement)) {
+        self.answer = answer
+    }
+
+    func estimate(_ connectionId: UUID, _ sql: String, _ databaseType: DatabaseType) async -> AffectedRowEstimate {
+        lock.withLock { storedCallCount += 1 }
         return answer
     }
 }
@@ -50,13 +87,17 @@ struct ExecutionGateTests {
         level: SafeModeLevel,
         forcesWrite: Bool = false,
         confirm: StubConfirming,
-        auth: StubAuthenticating
+        auth: StubAuthenticating,
+        estimator: StubAffectedRowEstimating = StubAffectedRowEstimating()
     ) -> DefaultExecutionGate {
         DefaultExecutionGate(
             confirming: confirm,
             authenticating: auth,
             safeModeLevelResolver: { _ in level },
-            forcesWriteResolver: { _ in forcesWrite }
+            forcesWriteResolver: { _ in forcesWrite },
+            affectedRowEstimator: { connectionId, sql, databaseType in
+                await estimator.estimate(connectionId, sql, databaseType)
+            }
         )
     }
 
@@ -65,7 +106,8 @@ struct ExecutionGateTests {
         kind: OperationKind,
         capabilities: CallerCapabilities = .interactiveUser,
         databaseType: DatabaseType = .mysql,
-        caller: OperationCaller = .userInterface
+        caller: OperationCaller = .userInterface,
+        previewsAffectedRows: Bool = true
     ) -> OperationRequest {
         OperationRequest(
             connectionId: UUID(),
@@ -74,7 +116,8 @@ struct ExecutionGateTests {
             kind: kind,
             caller: caller,
             capabilities: capabilities,
-            operationDescription: "Execute Query"
+            operationDescription: "Execute Query",
+            previewsAffectedRows: previewsAffectedRows
         )
     }
 
@@ -519,5 +562,85 @@ struct ExecutionGateTests {
         await #expect(throws: ExecutionGateError.self) {
             try await gate.authorizing(makeRequest(sql: "DELETE FROM t", kind: .writeQuery)) {}
         }
+    }
+
+    // MARK: - Affected Row Preview
+
+    @Test("A confirmed write is counted and the estimate reaches the dialog")
+    func confirmedWriteIsCounted() async {
+        let confirm = StubConfirming(answer: true)
+        let auth = StubAuthenticating(answer: true)
+        let estimator = StubAffectedRowEstimating(answer: .exact(12))
+        let gate = makeGate(
+            level: .alert,
+            confirm: confirm,
+            auth: auth,
+            estimator: estimator
+        )
+
+        _ = await gate.authorize(makeRequest(sql: "UPDATE t SET a = 1 WHERE b = 2", kind: .writeQuery))
+
+        #expect(estimator.callCount == 1)
+        #expect(confirm.lastAffectedRows == .exact(12))
+    }
+
+    @Test("A caller that cannot prompt runs no count query")
+    func cannotPromptRunsNoCount() async {
+        let confirm = StubConfirming(answer: true)
+        let auth = StubAuthenticating(answer: true)
+        let estimator = StubAffectedRowEstimating(answer: .exact(12))
+        let gate = makeGate(
+            level: .alert,
+            confirm: confirm,
+            auth: auth,
+            estimator: estimator
+        )
+
+        _ = await gate.authorize(
+            makeRequest(
+                sql: "DELETE FROM t WHERE id = 1",
+                kind: .writeQuery,
+                capabilities: [.mayWrite, .mayRunDestructive, .cannotPrompt]
+            )
+        )
+
+        #expect(estimator.callCount == 0)
+    }
+
+    @Test("A caller that did not opt in, such as a grid save, runs no count query")
+    func callerWithoutPreviewRunsNoCount() async {
+        let confirm = StubConfirming(answer: true)
+        let auth = StubAuthenticating(answer: true)
+        let estimator = StubAffectedRowEstimating(answer: .exact(12))
+        let gate = makeGate(
+            level: .alert,
+            confirm: confirm,
+            auth: auth,
+            estimator: estimator
+        )
+
+        _ = await gate.authorize(
+            makeRequest(
+                sql: "DELETE FROM t WHERE pk = 1",
+                kind: .writeQuery,
+                previewsAffectedRows: false
+            )
+        )
+
+        #expect(confirm.callCount == 1)
+        #expect(estimator.callCount == 0)
+        #expect(confirm.lastAffectedRows == .undetermined(.notACountableStatement))
+    }
+
+    @Test("A silent connection that never confirms runs no count query")
+    func silentRunsNoCount() async {
+        let confirm = StubConfirming(answer: true)
+        let auth = StubAuthenticating(answer: true)
+        let estimator = StubAffectedRowEstimating(answer: .exact(12))
+        let gate = makeGate(level: .silent, confirm: confirm, auth: auth, estimator: estimator)
+
+        _ = await gate.authorize(makeRequest(sql: "INSERT INTO t VALUES (1)", kind: .writeQuery))
+
+        #expect(estimator.callCount == 0)
     }
 }

@@ -53,6 +53,21 @@ All write operations are blocked. The UI disables:
 
 Read queries (SELECT) execute normally.
 
+## Affected Row Preview
+
+When a confirmation dialog appears for an UPDATE or DELETE you wrote in the editor, it leads with how many rows the statement's WHERE clause matches right now. A statement with no WHERE clause is called out as affecting every row in the table, with the table's row count when it can be read in time.
+
+The number is what the WHERE clause matches at the moment you are asked, not a promise. Rows can change between the check and the statement running.
+
+SchemaStudio says it could not work out the number rather than showing one it is not sure of. That happens when:
+
+- The statement joins or reads another table, uses a subquery in its WHERE clause, or is prefixed by a CTE.
+- More than one statement was submitted at once.
+- The connection is to a database that has no equivalent count, such as Redis, DynamoDB, or Elasticsearch.
+- The count fails, is cancelled, or takes longer than 1.5 seconds. On a very large table without a useful index this is the expected outcome, and the dialog still appears without delay.
+
+The count is a read-only query and runs only for an UPDATE or DELETE that actually reaches a confirmation dialog. Statements of any other kind run no extra query, and neither do the AI assistant or MCP clients, which are never prompted in the first place. Deleting rows from the grid keeps its own exact count and is unaffected.
+
 ## Drivers Without Read-Only Support
 
 The Redis, MongoDB, and etcd drivers do not support read-only mode, so Safe Mode treats every query on these connections as a write. Alert and Safe Mode levels confirm every query; Read-Only blocks everything. Other non-SQL drivers (Cassandra, Elasticsearch, DynamoDB) classify reads and writes normally.
