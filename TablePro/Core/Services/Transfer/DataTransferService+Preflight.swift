@@ -63,12 +63,14 @@ extension DataTransferService {
 
         let indexes = try await source.fetchIndexes(table: table)
         let foreignKeys = try await source.fetchForeignKeys(table: table)
+        let mapper = TransferTypeMapper(sourceType: source.databaseType, targetType: target.databaseType)
         let structure = TransferStructureBuilder.build(
             table: table,
             columns: columns,
             indexes: indexes,
             foreignKeys: foreignKeys,
-            targetSchema: target.schema
+            targetSchema: target.schema,
+            mapper: mapper.isSameDialect ? nil : mapper
         )
 
         let steps = TransferModePlanner.plan(mode: mode, options: options, targetExists: targetExists)

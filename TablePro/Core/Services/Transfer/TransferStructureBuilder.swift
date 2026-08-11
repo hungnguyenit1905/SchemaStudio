@@ -10,6 +10,10 @@ enum TransferStructureWarning: Sendable, Hashable {
     case generatedColumn(String)
     case identityColumn(String)
     case checkConstraintNotCarried
+    case typeNotMapped(table: String, column: String, native: String)
+    case typeLossy(table: String, column: String, from: String, to: String, reason: String)
+    case indexNotMapped(table: String, index: String, reason: String)
+    case indexSilentlyIgnored(table: String, index: String, reason: String)
 
     var message: String {
         switch self {
@@ -25,6 +29,28 @@ enum TransferStructureWarning: Sendable, Hashable {
             )
         case .checkConstraintNotCarried:
             return String(localized: "CHECK constraints and partitioning are not carried to the target.")
+        case .typeNotMapped(_, let column, let native):
+            return String(
+                format: String(localized: "Column '%@' keeps the source type '%@' because the target has no match for it."),
+                column,
+                native
+            )
+        case .typeLossy(_, let column, let from, let to, let reason):
+            return String(
+                format: String(localized: "Column '%@' changes from '%@' to '%@'. %@"),
+                column,
+                from,
+                to,
+                reason
+            )
+        case .indexNotMapped(_, let index, let reason):
+            return String(format: String(localized: "Index '%@' changes at the target. %@"), index, reason)
+        case .indexSilentlyIgnored(_, let index, let reason):
+            return String(
+                format: String(localized: "Index '%@' is accepted but ignored by the target server. %@"),
+                index,
+                reason
+            )
         }
     }
 }
@@ -38,6 +64,7 @@ struct TransferTableStructure: Sendable {
     let primaryKeyColumns: [String]
     let autoIncrementColumns: [String]
     let warnings: [TransferStructureWarning]
+    let conversions: [String: TransferValueConversion]
 
     var writableColumns: [String] {
         definition.columns.map(\.name)
@@ -45,17 +72,22 @@ struct TransferTableStructure: Sendable {
 }
 
 enum TransferStructureBuilder {
+    /// `mapper` is nil for a same-dialect transfer, where the source type string
+    /// is already valid at the target. A cross-vendor transfer passes a mapper
+    /// so every type goes through the IR.
     static func build(
         table: String,
         columns: [PluginColumnInfo],
         indexes: [PluginIndexInfo],
         foreignKeys: [PluginForeignKeyInfo],
-        targetSchema: String?
+        targetSchema: String?,
+        mapper: TransferTypeMapper? = nil
     ) -> TransferTableStructure {
         var warnings: [TransferStructureWarning] = []
         var definitions: [PluginColumnDefinition] = []
         var generatedColumns: Set<String> = []
         var autoIncrementColumns: [String] = []
+        var conversions: [String: TransferValueConversion] = [:]
 
         for column in columns {
             if column.isGenerated {
@@ -72,10 +104,18 @@ enum TransferStructureBuilder {
                 autoIncrementColumns.append(column.name)
             }
 
+            var dataType = column.dataType
+            if let mapper {
+                let plan = mapper.plan(for: column, table: table)
+                dataType = plan.targetType
+                warnings.append(contentsOf: plan.warnings)
+                if let conversion = plan.conversion { conversions[column.name] = conversion }
+            }
+
             definitions.append(
                 PluginColumnDefinition(
                     name: column.name,
-                    dataType: column.dataType,
+                    dataType: dataType,
                     isNullable: column.isNullable,
                     defaultValue: autoIncrement ? nil : column.defaultValue,
                     isPrimaryKey: column.isPrimaryKey,
@@ -98,15 +138,27 @@ enum TransferStructureBuilder {
             ifNotExists: false
         )
 
+        var mappedIndexes = indexDefinitions(from: indexes, generatedColumns: generatedColumns)
+        if let mapper {
+            var kept: [PluginIndexDefinition] = []
+            for index in mappedIndexes {
+                let plan = mapper.plan(for: index, table: table)
+                warnings.append(contentsOf: plan.warnings)
+                if let mapped = plan.index { kept.append(mapped) }
+            }
+            mappedIndexes = kept
+        }
+
         return TransferTableStructure(
             table: table,
             definition: definition,
-            indexes: indexDefinitions(from: indexes, generatedColumns: generatedColumns),
+            indexes: mappedIndexes,
             foreignKeys: foreignKeyDefinitions(from: foreignKeys, targetSchema: targetSchema),
             generatedColumns: generatedColumns,
             primaryKeyColumns: primaryKeyColumns,
             autoIncrementColumns: autoIncrementColumns,
-            warnings: warnings
+            warnings: warnings,
+            conversions: conversions
         )
     }
 
