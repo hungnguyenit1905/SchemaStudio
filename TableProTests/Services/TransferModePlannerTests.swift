@@ -18,6 +18,8 @@ struct TransferModePlannerTests {
             )
             #expect(steps == [
                 .dropTargetTable,
+                .dropTargetTypes,
+                .createTargetTypes,
                 .createTargetTable,
                 .transferRows,
                 .createIndexes,
@@ -36,7 +38,8 @@ struct TransferModePlannerTests {
                 targetExists: false
             )
             #expect(!steps.contains(.dropTargetTable))
-            #expect(steps.first == .createTargetTable)
+            #expect(!steps.contains(.dropTargetTypes))
+            #expect(steps.first == .createTargetTypes)
         }
     }
 
@@ -63,6 +66,7 @@ struct TransferModePlannerTests {
             targetExists: false
         )
         #expect(steps == [
+            .createTargetTypes,
             .createTargetTable,
             .transferRows,
             .createIndexes,

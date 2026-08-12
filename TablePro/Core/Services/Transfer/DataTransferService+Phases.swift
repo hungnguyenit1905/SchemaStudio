@@ -194,6 +194,16 @@ extension DataTransferService {
             switch step {
             case .dropTargetTable:
                 try await target.execute(target.dropTableStatement(plan.table))
+            case .dropTargetTypes:
+                for type in plan.structure.enumTypes {
+                    guard let sql = target.dropEnumTypeStatement(type) else { continue }
+                    try await target.execute(sql)
+                }
+            case .createTargetTypes:
+                for type in plan.structure.enumTypes {
+                    guard let sql = target.createEnumTypeStatement(type) else { continue }
+                    try await target.execute(sql)
+                }
             case .createTargetTable:
                 guard let sql = target.createTableStatement(plan.structure.definition) else {
                     throw TransferError.createTableUnsupported(plan.table)
@@ -236,7 +246,8 @@ extension DataTransferService {
                     guard let sql = target.resetSequenceStatement(table: plan.table, column: column) else { continue }
                     await Self.appendFailure(of: sql, on: target, to: &messages)
                 }
-            case .dropTargetTable, .createTargetTable, .truncateTarget, .transferRows, .failMissingTarget:
+            case .dropTargetTable, .dropTargetTypes, .createTargetTypes, .createTargetTable,
+                 .truncateTarget, .transferRows, .failMissingTarget:
                 continue
             }
         }

@@ -1147,7 +1147,28 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         if inlinePK, col.isPrimaryKey {
             def += " PRIMARY KEY"
         }
+        if let allowed = col.allowedValues, !allowed.isEmpty {
+            let list = allowed.map { "'\(escapeLiteral($0))'" }.joined(separator: ", ")
+            def += " CHECK (\(quoteIdentifier(col.name)) IN (\(list)))"
+        }
         return def
+    }
+
+    func generateCreateEnumTypeSQL(name: String, schema: String?, values: [String]) -> String? {
+        guard !values.isEmpty else { return nil }
+        let list = values.map { "'\(escapeLiteral($0))'" }.joined(separator: ", ")
+        return "CREATE TYPE \(qualifiedTypeName(name, schema: schema)) AS ENUM (\(list));"
+    }
+
+    func generateDropEnumTypeSQL(name: String, schema: String?) -> String? {
+        "DROP TYPE IF EXISTS \(qualifiedTypeName(name, schema: schema));"
+    }
+
+    private func qualifiedTypeName(_ name: String, schema: String?) -> String {
+        guard let schema, !schema.isEmpty else {
+            return "\(quoteIdentifier(core.currentSchema)).\(quoteIdentifier(name))"
+        }
+        return "\(quoteIdentifier(schema)).\(quoteIdentifier(name))"
     }
 
     private func pgDefaultValue(_ value: String) -> String {

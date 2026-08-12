@@ -79,11 +79,42 @@ enum TransferValueConversion: Sendable, Hashable {
     case jsonValidate
 }
 
+/// A standalone enumerated type the target has to declare before the table that
+/// names it.
+struct TransferEnumType: Sendable, Hashable {
+    let name: String
+    let values: [String]
+}
+
 struct TransferColumnPlan: Sendable {
     let sourceColumn: PluginColumnInfo
     let targetType: String
     let conversion: TransferValueConversion?
     let warnings: [TransferStructureWarning]
+
+    /// Carried to the target as a CHECK constraint when the target has no
+    /// enumerated type of its own.
+    let allowedValues: [String]?
+
+    /// Set only when the target declares the value list as a named type and
+    /// `targetType` is that type's name.
+    let enumType: TransferEnumType?
+
+    init(
+        sourceColumn: PluginColumnInfo,
+        targetType: String,
+        conversion: TransferValueConversion? = nil,
+        warnings: [TransferStructureWarning] = [],
+        allowedValues: [String]? = nil,
+        enumType: TransferEnumType? = nil
+    ) {
+        self.sourceColumn = sourceColumn
+        self.targetType = targetType
+        self.conversion = conversion
+        self.warnings = warnings
+        self.allowedValues = allowedValues
+        self.enumType = enumType
+    }
 }
 
 /// A dropped index carries `index == nil`; the warnings explain why.

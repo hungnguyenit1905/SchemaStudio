@@ -1030,6 +1030,10 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         if let defaultValue = col.defaultValue {
             def += " DEFAULT \(sqliteDefaultValue(defaultValue))"
         }
+        if let allowed = col.allowedValues, !allowed.isEmpty {
+            let list = allowed.map { "'\(escapeStringLiteral($0))'" }.joined(separator: ", ")
+            def += " CHECK (\(quoteIdentifier(col.name)) IN (\(list)))"
+        }
         return def
     }
 

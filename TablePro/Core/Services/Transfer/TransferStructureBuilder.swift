@@ -14,6 +14,10 @@ enum TransferStructureWarning: Sendable, Hashable {
     case typeLossy(table: String, column: String, from: String, to: String, reason: String)
     case indexNotMapped(table: String, index: String, reason: String)
     case indexSilentlyIgnored(table: String, index: String, reason: String)
+    case identifierShortened(original: String, mapped: String)
+    case identifierCollision(first: String, second: String, mapped: String)
+    case identifierTooLong(name: String, limit: Int)
+    case caseOnlyNameClash(first: String, second: String)
 
     var message: String {
         switch self {
@@ -51,6 +55,31 @@ enum TransferStructureWarning: Sendable, Hashable {
                 index,
                 reason
             )
+        case .identifierShortened(let original, let mapped):
+            return String(
+                format: String(localized: "Name '%@' is too long for the target and becomes '%@'."),
+                original,
+                mapped
+            )
+        case .identifierCollision(let first, let second, let mapped):
+            return String(
+                format: String(localized: "Names '%@' and '%@' both become '%@' at the target."),
+                first,
+                second,
+                mapped
+            )
+        case .identifierTooLong(let name, let limit):
+            return String(
+                format: String(localized: "Name '%@' is longer than the %d bytes the target allows and is not renamed."),
+                name,
+                limit
+            )
+        case .caseOnlyNameClash(let first, let second):
+            return String(
+                format: String(localized: "Names '%@' and '%@' differ only in capitalization and stay separate because the target quotes them."),
+                first,
+                second
+            )
         }
     }
 }
@@ -65,6 +94,7 @@ struct TransferTableStructure: Sendable {
     let autoIncrementColumns: [String]
     let warnings: [TransferStructureWarning]
     let conversions: [String: TransferValueConversion]
+    let enumTypes: [TransferEnumType]
 
     var writableColumns: [String] {
         definition.columns.map(\.name)
@@ -88,6 +118,9 @@ enum TransferStructureBuilder {
         var generatedColumns: Set<String> = []
         var autoIncrementColumns: [String] = []
         var conversions: [String: TransferValueConversion] = [:]
+        var enumTypes: [TransferEnumType] = []
+
+        let policy = TransferIdentifierPolicy.policy(for: mapper?.targetVendor)
 
         for column in columns {
             if column.isGenerated {
@@ -105,11 +138,14 @@ enum TransferStructureBuilder {
             }
 
             var dataType = column.dataType
+            var allowedValues: [String]?
             if let mapper {
                 let plan = mapper.plan(for: column, table: table)
                 dataType = plan.targetType
+                allowedValues = plan.allowedValues
                 warnings.append(contentsOf: plan.warnings)
                 if let conversion = plan.conversion { conversions[column.name] = conversion }
+                if let enumType = plan.enumType, !enumTypes.contains(enumType) { enumTypes.append(enumType) }
             }
 
             definitions.append(
@@ -121,11 +157,18 @@ enum TransferStructureBuilder {
                     isPrimaryKey: column.isPrimaryKey,
                     autoIncrement: autoIncrement,
                     comment: column.comment,
+                    unsigned: false,
+                    onUpdate: nil,
                     charset: column.charset,
-                    collation: column.collation
+                    collation: column.collation,
+                    allowedValues: allowedValues,
+                    generatedExpression: nil,
+                    identityKind: nil
                 )
             )
         }
+
+        warnings.append(contentsOf: nameWarnings(table: table, columns: definitions.map(\.name), policy: policy))
 
         let primaryKeyColumns = columns.filter { $0.isPrimaryKey && !$0.isGenerated }.map(\.name)
 
@@ -149,17 +192,50 @@ enum TransferStructureBuilder {
             mappedIndexes = kept
         }
 
+        let mappedForeignKeys = foreignKeyDefinitions(from: foreignKeys, targetSchema: targetSchema)
+        let names = TransferIdentifierMap(
+            names: mappedIndexes.map(\.name) + mappedForeignKeys.map(\.name),
+            policy: policy
+        )
+        warnings.append(contentsOf: names.warnings)
+
         return TransferTableStructure(
             table: table,
             definition: definition,
-            indexes: mappedIndexes,
-            foreignKeys: foreignKeyDefinitions(from: foreignKeys, targetSchema: targetSchema),
+            indexes: mappedIndexes.map { $0.renamed(to: names.resolve($0.name)) },
+            foreignKeys: mappedForeignKeys.map { $0.renamed(to: names.resolve($0.name)) },
             generatedColumns: generatedColumns,
             primaryKeyColumns: primaryKeyColumns,
             autoIncrementColumns: autoIncrementColumns,
             warnings: warnings,
-            conversions: conversions
+            conversions: conversions,
+            enumTypes: enumTypes
         )
+    }
+
+    /// A table or column keeps its source name, so an overrun here is reported
+    /// rather than repaired: renaming either one would leave the INSERT
+    /// statements pointing at something that does not exist.
+    static func nameWarnings(
+        table: String,
+        columns: [String],
+        policy: TransferIdentifierPolicy
+    ) -> [TransferStructureWarning] {
+        var warnings: [TransferStructureWarning] = []
+        for name in [table] + columns where !policy.fits(name) {
+            warnings.append(.identifierTooLong(name: name, limit: policy.maxLengthBytes))
+        }
+
+        var seen: [String: String] = [:]
+        for name in columns {
+            let key = name.lowercased()
+            if let existing = seen[key], existing != name {
+                warnings.append(.caseOnlyNameClash(first: existing, second: name))
+                continue
+            }
+            seen[key] = name
+        }
+        return warnings
     }
 
     static func isAutoIncrement(_ column: PluginColumnInfo) -> Bool {

@@ -80,12 +80,60 @@ struct TransferTypeMapper: Sendable {
             )
         }
 
+        let enumeration = enumPresentation(
+            type: mapping.type,
+            table: table,
+            column: column,
+            target: target,
+            rendered: rendered
+        )
+
         return TransferColumnPlan(
             sourceColumn: column,
-            targetType: rendered,
+            targetType: enumeration.targetType,
             conversion: mapping.conversion,
-            warnings: mapping.warnings
+            warnings: mapping.warnings,
+            allowedValues: enumeration.allowedValues,
+            enumType: enumeration.enumType
         )
+    }
+
+    private struct EnumPresentation {
+        let targetType: String
+        let allowedValues: [String]?
+        let enumType: TransferEnumType?
+    }
+
+    /// MySQL writes the value list into the type itself, so its renderer has
+    /// already produced a complete `enum(...)`. Every other target needs the
+    /// list carried beside the type, either as a CHECK or as a named type.
+    private func enumPresentation(
+        type: TransferColumnType,
+        table: String,
+        column: PluginColumnInfo,
+        target: TransferVendor,
+        rendered: String
+    ) -> EnumPresentation {
+        let plain = EnumPresentation(targetType: rendered, allowedValues: nil, enumType: nil)
+        guard type.base == .enumeration, target != .mysql else { return plain }
+        guard let values = type.allowedValues, !values.isEmpty else { return plain }
+
+        let constrained = EnumPresentation(targetType: rendered, allowedValues: values, enumType: nil)
+
+        switch options.mysqlEnumAs {
+        case .plainText:
+            return plain
+        case .check:
+            return constrained
+        case .nativeType:
+            guard target == .postgresql else { return constrained }
+            let name = TransferIdentifierPolicy.policy(for: target).shorten("\(table)_\(column.name)")
+            return EnumPresentation(
+                targetType: name,
+                allowedValues: nil,
+                enumType: TransferEnumType(name: name, values: values)
+            )
+        }
     }
 
     private func passthrough(
@@ -205,12 +253,7 @@ struct TransferTypeMapper: Sendable {
         let native = mapping.type.native.lowercased()
 
         if mapping.type.base == .enumeration, target != .mysql {
-            let reason = options.mysqlEnumAs == .check
-                ? String(localized: "The allowed value list is not carried as a CHECK constraint yet.")
-                : String(localized: "The column becomes free text and no longer restricts its values.")
-            mapping.warnings.append(
-                .typeLossy(table: table, column: column.name, from: column.dataType, to: "varchar", reason: reason)
-            )
+            appendEnumNote(&mapping, table: table, column: column, target: target)
         }
 
         if mapping.type.base == .set, target != .mysql {
@@ -272,6 +315,40 @@ struct TransferTypeMapper: Sendable {
                     from: column.dataType,
                     to: "decimal(65,30)",
                     reason: String(localized: "MySQL requires a fixed precision, so the widest supported one is used.")
+                )
+            )
+        }
+    }
+
+    /// A named type on PostgreSQL keeps the value list intact, so it is the one
+    /// enumerated mapping that loses nothing and needs no note.
+    private func appendEnumNote(
+        _ mapping: inout Mapping,
+        table: String,
+        column: PluginColumnInfo,
+        target: TransferVendor
+    ) {
+        switch options.mysqlEnumAs {
+        case .nativeType where target == .postgresql:
+            return
+        case .check, .nativeType:
+            mapping.warnings.append(
+                .typeLossy(
+                    table: table,
+                    column: column.name,
+                    from: column.dataType,
+                    to: "varchar",
+                    reason: String(localized: "The allowed values become a CHECK constraint instead of a type.")
+                )
+            )
+        case .plainText:
+            mapping.warnings.append(
+                .typeLossy(
+                    table: table,
+                    column: column.name,
+                    from: column.dataType,
+                    to: "varchar",
+                    reason: String(localized: "The column becomes free text and no longer restricts its values.")
                 )
             )
         }

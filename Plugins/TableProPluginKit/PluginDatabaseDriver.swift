@@ -236,6 +236,15 @@ public protocol PluginDatabaseDriver: AnyObject, Sendable {
     func generateMoveColumnSQL(table: String, column: PluginColumnDefinition, afterColumn: String?) -> String?
     func generateCreateTableSQL(definition: PluginCreateTableDefinition) -> String?
 
+    /// Statement that declares a standalone enumerated type, for an engine that
+    /// has one. A column then names the type instead of carrying its own value
+    /// list. Return nil where the engine has no such type.
+    func generateCreateEnumTypeSQL(name: String, schema: String?, values: [String]) -> String?
+
+    /// Counterpart to `generateCreateEnumTypeSQL`. A dropped table does not take
+    /// its types with it, so a re-run has to remove them explicitly.
+    func generateDropEnumTypeSQL(name: String, schema: String?) -> String?
+
     // Definition SQL for clipboard copy (optional — return nil if not supported)
     func generateColumnDefinitionSQL(column: PluginColumnDefinition) -> String?
     func generateIndexDefinitionSQL(index: PluginIndexDefinition, tableName: String?) -> String?
@@ -551,6 +560,8 @@ public extension PluginDatabaseDriver {
     ) -> [String]? { nil }
     func generateMoveColumnSQL(table: String, column: PluginColumnDefinition, afterColumn: String?) -> String? { nil }
     func generateCreateTableSQL(definition: PluginCreateTableDefinition) -> String? { nil }
+    func generateCreateEnumTypeSQL(name: String, schema: String?, values: [String]) -> String? { nil }
+    func generateDropEnumTypeSQL(name: String, schema: String?) -> String? { nil }
 
     func generateColumnDefinitionSQL(column: PluginColumnDefinition) -> String? { nil }
     func generateIndexDefinitionSQL(index: PluginIndexDefinition, tableName: String?) -> String? { nil }

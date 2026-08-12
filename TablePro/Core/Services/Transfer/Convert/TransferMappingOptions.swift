@@ -6,7 +6,15 @@
 import Foundation
 
 enum MysqlEnumTarget: String, Sendable, Hashable, CaseIterable {
+    /// `varchar(n)` plus a CHECK holding the value list. Alterable later, and
+    /// every supported target understands it.
     case check
+
+    /// A named enumerated type on a target that has one. Nothing else can be
+    /// altered as cheaply, and the type outlives the table it belongs to.
+    case nativeType
+
+    /// `varchar(n)` with no constraint. The column stops restricting values.
     case plainText
 }
 

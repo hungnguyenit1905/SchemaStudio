@@ -73,6 +73,14 @@ struct TransferDriverContext: Sendable {
         adapter.generateCreateTableSQL(definition: definition)
     }
 
+    func createEnumTypeStatement(_ type: TransferEnumType) -> String? {
+        pluginDriver.generateCreateEnumTypeSQL(name: type.name, schema: schema, values: type.values)
+    }
+
+    func dropEnumTypeStatement(_ type: TransferEnumType) -> String? {
+        pluginDriver.generateDropEnumTypeSQL(name: type.name, schema: schema)
+    }
+
     func addIndexStatement(table: String, index: PluginIndexDefinition) -> String? {
         adapter.generateAddIndexSQL(table: table, index: index)
     }

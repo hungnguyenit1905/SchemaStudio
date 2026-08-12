@@ -7,6 +7,13 @@
 
 import Foundation
 
+/// How a column produces its own key values, when the engine has a first-class
+/// notion of that separate from a plain auto-increment.
+public enum PluginIdentityKind: String, Sendable, Hashable, CaseIterable {
+    case alwaysGenerated
+    case byDefaultGenerated
+}
+
 /// Column definition for plugin DDL generation
 public struct PluginColumnDefinition: Sendable {
     public let name: String
@@ -21,6 +28,20 @@ public struct PluginColumnDefinition: Sendable {
     public let charset: String?
     public let collation: String?
 
+    /// The closed value list of an enumerated column. A target that has no
+    /// enumerated type renders this as a CHECK constraint instead.
+    public let allowedValues: [String]?
+
+    /// The expression a server-computed column is defined by. `nil` means the
+    /// column holds written values.
+    public let generatedExpression: String?
+
+    public let identityKind: PluginIdentityKind?
+
+    /// Kept at its published signature so plugins built against an earlier
+    /// PluginKit keep resolving the symbol their witness table references.
+    /// `@_disfavoredOverload` steers new call sites to the full initializer.
+    @_disfavoredOverload
     public init(
         name: String,
         dataType: String,
@@ -45,6 +66,41 @@ public struct PluginColumnDefinition: Sendable {
         self.onUpdate = onUpdate
         self.charset = charset
         self.collation = collation
+        self.allowedValues = nil
+        self.generatedExpression = nil
+        self.identityKind = nil
+    }
+
+    public init(
+        name: String,
+        dataType: String,
+        isNullable: Bool,
+        defaultValue: String?,
+        isPrimaryKey: Bool,
+        autoIncrement: Bool,
+        comment: String?,
+        unsigned: Bool,
+        onUpdate: String?,
+        charset: String?,
+        collation: String?,
+        allowedValues: [String]?,
+        generatedExpression: String?,
+        identityKind: PluginIdentityKind?
+    ) {
+        self.name = name
+        self.dataType = dataType
+        self.isNullable = isNullable
+        self.defaultValue = defaultValue
+        self.isPrimaryKey = isPrimaryKey
+        self.autoIncrement = autoIncrement
+        self.comment = comment
+        self.unsigned = unsigned
+        self.onUpdate = onUpdate
+        self.charset = charset
+        self.collation = collation
+        self.allowedValues = allowedValues
+        self.generatedExpression = generatedExpression
+        self.identityKind = identityKind
     }
 }
 
