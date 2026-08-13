@@ -77,6 +77,22 @@ struct GeneralSettingsView: View {
                 )
             }
 
+            Section("Diagnostics") {
+                Toggle("Send crash reports", isOn: $settings.crashReporting)
+                    .help(
+                        String(
+                            localized: "Sends anonymous crash reports so crashes can be fixed. No connection details, queries, or table data are included."
+                        )
+                    )
+
+                Toggle("Share anonymous usage data", isOn: $settings.shareAnalytics)
+                    .help(
+                        String(
+                            localized: "When enabled, SchemaStudio may send app version, OS version, and which database types you use. Never connection details or query data."
+                        )
+                    )
+            }
+
             CommandLineToolSection()
 
             TrustedExternalConnectionsSection()
