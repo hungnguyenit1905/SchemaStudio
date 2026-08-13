@@ -18,6 +18,9 @@ struct TransferReportView: View {
                     TableColumn(String(localized: "Rows")) { result in
                         Text(result.rowsTransferred.formatted())
                     }
+                    TableColumn(String(localized: "Counts")) { result in
+                        countsText(result)
+                    }
                     TableColumn(String(localized: "Time")) { result in
                         Text(String(format: "%.1fs", result.duration))
                     }
@@ -59,9 +62,46 @@ struct TransferReportView: View {
                     .font(.callout)
                     .foregroundStyle(.orange)
             }
+            Text(report.consistency.displayName)
+                .font(.callout)
+                .foregroundStyle(consistencyColor(report.consistency))
+            if !report.mismatchedCounts.isEmpty {
+                Text(String(
+                    format: String(localized: "%d table(s) have different row counts at the source and the target."),
+                    report.mismatchedCounts.count
+                ))
+                .font(.callout)
+                .foregroundStyle(.orange)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
+    }
+
+    private func consistencyColor(_ consistency: TransferConsistency) -> Color {
+        switch consistency {
+        case .databaseWide:
+            return Color(nsColor: .secondaryLabelColor)
+        case .perTable:
+            return .orange
+        }
+    }
+
+    @ViewBuilder
+    private func countsText(_ result: TransferTableResult) -> some View {
+        if let sourceCount = result.sourceCount, let targetCount = result.targetCount {
+            let label = "\(sourceCount.formatted()) = \(targetCount.formatted())"
+            let matches = sourceCount == targetCount
+            Text(label)
+                .foregroundStyle(matches ? Color.secondary : Color.orange)
+                .help(matches ? "" : String(
+                    format: String(localized: "Source has %d rows, target has %d."),
+                    sourceCount,
+                    targetCount
+                ))
+        } else {
+            Text("\u{2014}").foregroundStyle(.secondary)
+        }
     }
 
     private func statusText(_ result: TransferTableResult) -> String {

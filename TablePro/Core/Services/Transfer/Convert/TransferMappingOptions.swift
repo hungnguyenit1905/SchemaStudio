@@ -28,6 +28,17 @@ struct TransferMappingOptions: Sendable, Hashable {
     var tinyint1AsBool: Bool = true
     var mysqlEnumAs: MysqlEnumTarget = .check
     var zeroDateAsNull: Bool = true
+
+    /// A zero date in a NOT NULL column has no correct answer, so the transfer
+    /// stops on it. Setting a replacement here says the user would rather have
+    /// a wrong-but-known date than a failed table.
+    var zeroDateNotNullSentinel: String?
+
+    /// A value with more fractional digits than the target column keeps fails by
+    /// default. Rounding it is a real answer for money-shaped data, so it stays
+    /// available, and every rounded value is logged.
+    var roundOverflowingDecimals: Bool = false
+
     var overrides: [TransferTypeOverride] = []
 
     func override(table: String, column: String) -> TransferTypeOverride? {

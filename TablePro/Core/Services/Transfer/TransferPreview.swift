@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import TableProPluginKit
 
 struct TransferTablePlan: Sendable, Identifiable {
     let table: String
@@ -24,9 +25,15 @@ struct TransferPreflightFailure: Sendable, Identifiable, Hashable {
     var id: String { table }
 }
 
+struct TransferTargetCapabilities: Sendable {
+    let limits: PluginServerLimits?
+    let constraintDisable: PluginConstraintDisableCapability
+}
+
 struct TransferPreview: Sendable {
     let plans: [TransferTablePlan]
     let failures: [TransferPreflightFailure]
+    let targetCapabilities: TransferTargetCapabilities
 
     var tablesToDrop: [String] {
         plans.filter { $0.steps.contains(.dropTargetTable) }.map(\.table)

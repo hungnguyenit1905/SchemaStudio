@@ -38,6 +38,22 @@ struct DataTransferWizard: View {
         } message: {
             Text("The transfer stops after the current batch. Rows already written stay at the target.")
         }
+        .alert(
+            String(localized: "Resume the transfer?"),
+            isPresented: $model.resumePromptShown
+        ) {
+            Button(String(localized: "Resume")) {
+                Task { await model.run(resume: true) }
+            }
+            Button(String(localized: "Start Over")) {
+                Task { await model.run(resume: false) }
+            }
+            Button(String(localized: "Cancel"), role: .cancel) {
+                model.resumePromptShown = false
+            }
+        } message: {
+            Text(resumeMessage)
+        }
     }
 
     // MARK: - Chrome
@@ -150,6 +166,24 @@ struct DataTransferWizard: View {
         guard !model.isPreparingPreview, let preview = model.preview else { return false }
         guard !preview.plans.isEmpty else { return false }
         return preview.isClean || model.options.continueOnError
+    }
+
+    private var resumeMessage: String {
+        let tables = model.resumedTableNames
+        guard !tables.isEmpty else {
+            return String(
+                localized: "A previous transfer for these tables did not finish. Resume where it stopped, or start over."
+            )
+        }
+        let names = tables.prefix(3).joined(separator: ", ")
+        let suffix = tables.count > 3 ? String(format: String(localized: " and %d more"), tables.count - 3) : ""
+        return String(
+            format: String(
+                localized: "A previous transfer left progress for %@%@. Resume from where it stopped, or start over."
+            ),
+            names,
+            suffix
+        )
     }
 
     private func requestClose() {

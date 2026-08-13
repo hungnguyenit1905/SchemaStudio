@@ -71,6 +71,8 @@ struct TransferTypeMapper: Sendable {
         applyLossyNotes(&mapping, table: table, column: column, source: source, target: target)
         applyBoolRepresentation(&mapping, source: source, target: target)
         applyZeroDate(&mapping, column: column, source: source, target: target)
+        applyDecimalLimits(&mapping, table: table, column: column, target: target)
+        applyTimestampRange(&mapping, target: target)
 
         guard let rendered = NativeTypeParserRegistry.parser(for: target).render(mapping.type) else {
             return passthrough(
@@ -382,9 +384,67 @@ struct TransferTypeMapper: Sendable {
         }
 
         guard options.zeroDateAsNull, column.isNullable else {
-            mapping.conversion = .zeroDateToSentinel("1970-01-01 00:00:00")
+            mapping.conversion = options.zeroDateNotNullSentinel
+                .map(TransferValueConversion.zeroDateToSentinel) ?? .zeroDateReject
             return
         }
         mapping.conversion = .zeroDateToNull
     }
+
+    /// MySQL caps a decimal at 65 digits with at most 30 after the point, well
+    /// under what PostgreSQL allows, so a wider source type has to be clamped
+    /// before it is rendered or the CREATE TABLE itself is invalid. The clamp
+    /// changes what fits, so the values are checked at write time too.
+    private func applyDecimalLimits(
+        _ mapping: inout Mapping,
+        table: String,
+        column: PluginColumnInfo,
+        target: TransferVendor
+    ) {
+        guard target == .mysql, mapping.type.base == .decimal, mapping.conversion == nil else { return }
+
+        let sourcePrecision = mapping.type.precision
+        let precision = min(sourcePrecision ?? Self.mysqlMaxDecimalPrecision, Self.mysqlMaxDecimalPrecision)
+        let scale = min(
+            mapping.type.scale ?? (sourcePrecision == nil ? Self.mysqlMaxDecimalScale : 0),
+            min(Self.mysqlMaxDecimalScale, precision)
+        )
+
+        let clamped = (sourcePrecision ?? 0) > Self.mysqlMaxDecimalPrecision
+            || (mapping.type.scale ?? 0) > Self.mysqlMaxDecimalScale
+        guard clamped || sourcePrecision == nil else { return }
+
+        mapping.type = TransferColumnType(
+            base: .decimal,
+            precision: precision,
+            scale: scale,
+            unsigned: mapping.type.unsigned,
+            native: mapping.type.native
+        )
+        mapping.conversion = options.roundOverflowingDecimals
+            ? .decimalRound(precision: precision, scale: scale)
+            : .decimalFit(precision: precision, scale: scale)
+
+        guard clamped else { return }
+        mapping.warnings.append(
+            .typeLossy(
+                table: table,
+                column: column.name,
+                from: column.dataType,
+                to: "decimal(\(precision),\(scale))",
+                reason: String(localized: "MySQL stores at most 65 digits with 30 after the point.")
+            )
+        )
+    }
+
+    /// MySQL `TIMESTAMP` covers 1970 to 2038 only. The structure warning already
+    /// says so; this makes an out-of-range value fail on its row instead of
+    /// landing as a zero timestamp on a non-strict server.
+    private func applyTimestampRange(_ mapping: inout Mapping, target: TransferVendor) {
+        guard target == .mysql, mapping.type.base == .timestampTZ, mapping.conversion == nil else { return }
+        mapping.conversion = .mysqlTimestampRange
+    }
+
+    private static let mysqlMaxDecimalPrecision = 65
+    private static let mysqlMaxDecimalScale = 30
 }

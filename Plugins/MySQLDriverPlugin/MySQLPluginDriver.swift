@@ -937,6 +937,38 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         ["SET FOREIGN_KEY_CHECKS=1"]
     }
 
+    // MARK: - Bulk Load
+
+    func bulkLoadWriter(
+        table: String,
+        schema: String?,
+        columns: [String]
+    ) async throws -> PluginBulkLoadWriter? {
+        nil
+    }
+
+    func serverLimits() async throws -> PluginServerLimits? {
+        let result = try await execute(query: "SELECT @@max_allowed_packet, @@local_infile")
+        guard let row = result.rows.first else { return nil }
+        let maxPacket = row[safe: 0]?.asText.flatMap { Int($0) }
+        let localInfile = row[safe: 1]?.asText == "1"
+        return PluginServerLimits(
+            maxPacketBytes: maxPacket,
+            maxBindParameters: 65_535,
+            supportsLocalInfile: localInfile
+        )
+    }
+
+    func constraintDisableCapability() async -> PluginConstraintDisableCapability {
+        do {
+            _ = try await execute(query: "SET FOREIGN_KEY_CHECKS=0")
+            _ = try await execute(query: "SET FOREIGN_KEY_CHECKS=1")
+            return .supported
+        } catch {
+            return .notPermitted
+        }
+    }
+
     // MARK: - All Tables Metadata
 
     func allTablesMetadataSQL(schema: String?) -> String? {

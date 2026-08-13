@@ -48,6 +48,8 @@ final class DataTransferWizardModel {
     var isPreparingPreview = false
     var report: TransferReport?
     var errorMessage: String?
+    var pendingResume: TransferResumeState?
+    var resumePromptShown = false
 
     let service = DataTransferService()
 
@@ -335,22 +337,43 @@ final class DataTransferWizardModel {
 
     func start() async {
         guard let sourceEndpoint, let targetEndpoint else { return }
+        pendingResume = await service.pendingResume(
+            source: sourceEndpoint,
+            target: targetEndpoint,
+            mode: mode
+        )
+        if let pendingResume, !pendingResume.entries.isEmpty {
+            resumePromptShown = true
+        } else {
+            await run(resume: false)
+        }
+    }
+
+    func run(resume: Bool) async {
+        guard let sourceEndpoint, let targetEndpoint else { return }
         rowCountTask?.cancel()
         step = .running
         errorMessage = nil
+        pendingResume = nil
         do {
             report = try await service.transfer(
                 selections: selectedTables,
                 source: sourceEndpoint,
                 target: targetEndpoint,
                 mode: mode,
-                options: options
+                options: options,
+                resume: resume
             )
             step = .report
         } catch {
             errorMessage = error.localizedDescription
             step = .options
         }
+    }
+
+    var resumedTableNames: [String] {
+        guard let pendingResume else { return [] }
+        return Array(Set(pendingResume.entries.map(\.table))).sorted()
     }
 
     func cancelRun() {

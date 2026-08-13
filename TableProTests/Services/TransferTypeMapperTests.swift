@@ -151,9 +151,18 @@ struct TransferTypeMapperTests {
         #expect(plan.conversion == .zeroDateToNull)
     }
 
-    @Test("A non-null MySQL date maps its zero date to a sentinel instead")
+    @Test("A non-null MySQL date has nowhere to put its zero date and fails the row")
     func zeroDateNotNull() {
         let plan = mapper(.mysql, .postgresql).plan(for: column("d", "date", isNullable: false), table: "t")
+        #expect(plan.conversion == .zeroDateReject)
+    }
+
+    @Test("A configured sentinel replaces the zero date in a non-null column")
+    func zeroDateSentinel() {
+        var options = TransferMappingOptions()
+        options.zeroDateNotNullSentinel = "1970-01-01 00:00:00"
+        let plan = mapper(.mysql, .postgresql, options: options)
+            .plan(for: column("d", "date", isNullable: false), table: "t")
         #expect(plan.conversion == .zeroDateToSentinel("1970-01-01 00:00:00"))
     }
 
@@ -207,10 +216,43 @@ struct TransferTypeMapperTests {
         #expect(plan.conversion == .arrayToJson)
     }
 
-    @Test("A timestamptz into MySQL warns about the 1970 to 2038 range")
+    @Test("A timestamptz into MySQL warns about the 1970 to 2038 range and checks every value")
     func timestampRangeWarning() {
         let plan = mapper(.postgresql, .mysql).plan(for: column("v", "timestamptz"), table: "t")
         #expect(plan.warnings.contains { if case .typeLossy = $0 { return true } else { return false } })
+        #expect(plan.conversion == .mysqlTimestampRange)
+    }
+
+    @Test("A timestamp without a time zone needs no range check, since MySQL stores it as datetime")
+    func timestampWithoutZoneNeedsNoCheck() {
+        #expect(mapper(.postgresql, .mysql).plan(for: column("v", "timestamp"), table: "t").conversion == nil)
+    }
+
+    @Test("A bare numeric carries a value check because its target precision is a guess")
+    func bareNumericChecksValues() {
+        let plan = mapper(.postgresql, .mysql).plan(for: column("v", "numeric"), table: "t")
+        #expect(plan.conversion == .decimalFit(precision: 65, scale: 30))
+    }
+
+    @Test("A numeric wider than MySQL allows is clamped, warned about, and checked per value")
+    func wideNumericToMysql() {
+        let plan = mapper(.postgresql, .mysql).plan(for: column("v", "numeric(80,35)"), table: "t")
+        #expect(plan.targetType == "decimal(65,30)")
+        #expect(plan.conversion == .decimalFit(precision: 65, scale: 30))
+        #expect(plan.warnings.contains { if case .typeLossy = $0 { return true } else { return false } })
+    }
+
+    @Test("A numeric MySQL can hold exactly needs no per value check")
+    func narrowNumericToMysql() {
+        #expect(mapper(.postgresql, .mysql).plan(for: column("v", "numeric(8,3)"), table: "t").conversion == nil)
+    }
+
+    @Test("Rounding is opt in and replaces the failing check")
+    func decimalRounding() {
+        var options = TransferMappingOptions()
+        options.roundOverflowingDecimals = true
+        let plan = mapper(.postgresql, .mysql, options: options).plan(for: column("v", "numeric"), table: "t")
+        #expect(plan.conversion == .decimalRound(precision: 65, scale: 30))
     }
 
     // MARK: - Boolean representation

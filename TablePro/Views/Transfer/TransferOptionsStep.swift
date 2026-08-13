@@ -38,11 +38,49 @@ struct TransferOptionsStep: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 Toggle(String(localized: "Continue when a table fails"), isOn: $model.options.continueOnError)
+                Divider()
+                parallelTableStepper
+                Divider()
+                inTableStepper
             }
 
             Spacer()
         }
         .padding(20)
+    }
+
+    private var parallelTableStepper: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Parallel tables")
+                    .font(.callout)
+                Text("Copies several tables at once. Needs its own connections, capped by the pool.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Stepper(value: $model.options.parallelTables, in: 1 ... 3) {
+                Text("\(model.options.parallelTables)")
+                    .frame(minWidth: 24)
+            }
+        }
+    }
+
+    private var inTableStepper: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Parallel reads inside one table")
+                    .font(.callout)
+                Text("Splits a large numeric primary key into ranges. Only runs past one million estimated rows.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Stepper(value: $model.options.inTableParallelism, in: 1 ... 4) {
+                Text("\(model.options.inTableParallelism)")
+                    .frame(minWidth: 24)
+            }
+        }
     }
 
     private var createTargetBinding: Binding<Bool> {

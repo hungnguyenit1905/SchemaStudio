@@ -93,6 +93,21 @@ struct TransferDriverContext: Sendable {
         pluginDriver.generateResetSequenceSQL(table: table, schema: schema, column: column)
     }
 
+    func bulkLoadWriter(
+        table: String,
+        columns: [String]
+    ) async throws -> PluginBulkLoadWriter? {
+        try await pluginDriver.bulkLoadWriter(table: table, schema: schema, columns: columns)
+    }
+
+    func serverLimits() async throws -> PluginServerLimits? {
+        try await pluginDriver.serverLimits()
+    }
+
+    func constraintDisableCapability() async -> PluginConstraintDisableCapability {
+        await pluginDriver.constraintDisableCapability()
+    }
+
     func dropTableStatement(_ table: String) -> String {
         adapter.dropObjectStatement(name: table, objectType: "TABLE", schema: schema, cascade: false)
     }
@@ -115,6 +130,63 @@ struct TransferDriverContext: Sendable {
 
     func execute(_ statement: String) async throws {
         _ = try await driver.execute(query: statement)
+    }
+
+    func streamRows(query: String) -> AsyncThrowingStream<PluginStreamElement, Error> {
+        pluginDriver.streamRows(query: query)
+    }
+
+    var quoteIdentifier: (String) -> String {
+        { pluginDriver.quoteIdentifier($0) }
+    }
+
+    var escapeStringLiteral: (String) -> String {
+        { pluginDriver.escapeStringLiteral($0) }
+    }
+
+    /// Row constructors exist on MySQL and PostgreSQL; SQLite and SQL Server
+    /// spell a composite key out as an OR chain instead.
+    var chunkComparison: TransferChunkPlanner.Comparison {
+        switch databaseType {
+        case .mysql, .postgresql:
+            return .rowConstructor
+        default:
+            return .tupleOr
+        }
+    }
+
+    func qualifiedTableRef(table: String) -> String {
+        let quoted = pluginDriver.quoteIdentifier(table)
+        guard !containerName.isEmpty else { return quoted }
+        return "\(pluginDriver.quoteIdentifier(containerName)).\(quoted)"
+    }
+
+    func countRows(table: String) async throws -> Int {
+        let result = try await driver.execute(query: "SELECT COUNT(*) FROM \(qualifiedTableRef(table: table))")
+        guard let value = result.rows.first?.first else { return 0 }
+        if case .text(let text) = value, let count = Int(text) { return count }
+        return 0
+    }
+
+    func exportSnapshotToken() async throws -> String? {
+        try await pluginDriver.exportSnapshotToken()
+    }
+
+    func adoptSnapshotToken(_ token: String) async throws -> Bool {
+        try await pluginDriver.adoptSnapshotToken(token)
+    }
+
+    func primaryKeyRangeBoundaries(
+        table: String,
+        column: String,
+        partitions: Int
+    ) async throws -> [String]? {
+        try await pluginDriver.primaryKeyRangeBoundaries(
+            table: table,
+            schema: schema,
+            column: column,
+            partitions: partitions
+        )
     }
 
     func applyQueryTimeout(_ seconds: Int) async {

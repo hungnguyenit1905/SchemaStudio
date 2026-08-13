@@ -18,7 +18,7 @@ extension RowEditingCoordinator {
             throw DatabaseError.notConnected
         }
 
-        let sqlPreview = statements.map(\.sql).joined(separator: "\n")
+        let sqlPreview = statements.map(\.sql).joined(separator: ";\n")
         let kind = OperationKind.from(QueryClassifier.classifyTier(sqlPreview, databaseType: parent.connection.type))
         let decision = await ExecutionGateProvider.shared.authorize(
             OperationRequest(

@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import os
 import TableProPluginKit
 
 extension DataTransferService {
@@ -21,6 +22,12 @@ extension DataTransferService {
         let targetTables = try await target.fetchTableNames()
         let selectedTables = Set(selections.map(\.table))
         let inbound = mode == .copy ? try await inboundForeignKeys(at: target) : [:]
+
+        let limits = try? await target.serverLimits()
+        let constraintDisable = await target.constraintDisableCapability()
+        if constraintDisable == .notPermitted {
+            Self.logger.warning("Target cannot disable constraint checks; drops and truncates may run slower")
+        }
 
         var plans: [TransferTablePlan] = []
         var failures: [TransferPreflightFailure] = []
@@ -45,7 +52,11 @@ extension DataTransferService {
             }
         }
 
-        return TransferPreview(plans: plans, failures: failures)
+        return TransferPreview(
+            plans: plans,
+            failures: failures,
+            targetCapabilities: TransferTargetCapabilities(limits: limits, constraintDisable: constraintDisable)
+        )
     }
 
     private func preflightTable(

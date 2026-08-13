@@ -74,9 +74,13 @@ enum TransferValueConversion: Sendable, Hashable {
     case intToBool
     case zeroDateToNull
     case zeroDateToSentinel(String)
+    case zeroDateReject
     case unsignedToDecimalText
     case arrayToJson
     case jsonValidate
+    case mysqlTimestampRange
+    case decimalFit(precision: Int, scale: Int)
+    case decimalRound(precision: Int, scale: Int)
 }
 
 /// A standalone enumerated type the target has to declare before the table that

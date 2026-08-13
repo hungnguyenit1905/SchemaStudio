@@ -40,6 +40,12 @@ target in this version. The target connection also has to allow writes, so a rea
   table stay outside it, because most engines commit those on their own.
 - **Continue when a table fails**: moves on to the next table instead of stopping the run. The
   report lists every failure at the end.
+- **Parallel tables**: copies up to three tables at once, each on its own connections. The number
+  is capped by the connection pool, and the extra connections are released when the run ends.
+- **Parallel reads inside one table**: splits a large table with a single numeric primary key into
+  ranges and reads each range on its own connection. It only engages past a million estimated rows,
+  because working out the ranges costs a scan of the key. UUID, text and composite keys stay
+  sequential.
 
 ## What runs, and in what order
 
@@ -62,6 +68,10 @@ rows already in the table. That is what a dump and restore does. It means the ta
 holding a foreign key its rows violate, but only where the source already violated the same one:
 the transfer mirrors the source rather than cleaning it up.
 
+The row pass uses the target's native bulk path when one exists (PostgreSQL `COPY`), and falls back
+to prepared batches otherwise. Batches are sized by the target's own limits, so a single row that is
+larger than the limit is sent on its own instead of failing the batch.
+
 ## When a constraint cannot be created
 
 An index, foreign key or sequence reset that the target rejects does not fail the table and does not
@@ -69,6 +79,37 @@ stop the run. The rows are already at the target, so the table is listed as **Do
 and the reason shows in the tooltip on its status. Every other constraint on that table, and every
 table after it, still runs. This is separate from **Continue when a table fails**, which covers a
 table that could not be created or whose rows could not be copied.
+
+## Large tables
+
+A table with a primary key is copied in bounded chunks, each one a keyset read over the key, never
+an `OFFSET` scan, so chunk 1000 costs the same as chunk 1. The reader and the writer run ahead of
+each other through a buffer that holds a handful of chunks, so memory stays flat no matter how big
+the table is. A table without a primary key is read in one sequential pass with a warning that it
+cannot resume at chunk level.
+
+Every chunk is committed on its own when **Use a single transaction** is off, and the position of
+the last committed chunk is written to a checkpoint file after each commit. If the app quits or the
+run fails, the next transfer of the same tables asks whether to resume from that checkpoint or
+start over. Chunks committed before the interruption are skipped, and nothing is written twice. The
+checkpoint only applies to *Empty target then transfer*; *Copy (drop and recreate target)* always
+starts over, because it recreates the table. Stopping a run leaves the checkpoint in place, so the
+next launch can pick up where it stopped. A checkpoint is cleared only when the run finishes every
+table without a failure.
+
+Deadlocks, lock timeouts and dropped connections are retried a few times with a backoff. A row that
+violates a constraint is dropped and logged with its key, instead of failing the whole table, when
+**Continue when a table fails** is on. Permission, syntax and missing-table errors fail the run
+right away.
+
+## The result report
+
+The report compares the actual `COUNT(*)` of every copied table at the source and the target and
+flags a mismatch, instead of trusting the estimated row counts shown in the table picker. It also
+says how consistent the reads were: a PostgreSQL run pins one snapshot that every connection reads,
+reported as consistent across the whole database. Every other engine has no way to share a snapshot
+across connections, so the report says the run is consistent per table only, and a table read on
+two connections can see two different points in time.
 
 ## What is not carried over
 
@@ -83,4 +124,6 @@ table that could not be created or whose rows could not be copied.
 interrupted, so a large batch finishes first. An open transaction is rolled back, and the report
 shows which tables completed, which failed, and which never ran. A table whose rows had already
 landed when you pressed Stop is listed as **Done, with warnings**, because its rows are at the
-target but its indexes and foreign keys were never added.
+target but its indexes and foreign keys were never added. What the run already committed stays at
+the target and is kept in the checkpoint, so the next transfer of the same tables can resume from
+it.

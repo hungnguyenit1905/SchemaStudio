@@ -301,6 +301,48 @@ public protocol PluginDatabaseDriver: AnyObject, Sendable {
 
     /// Streaming row fetch for export
     func streamRows(query: String) -> AsyncThrowingStream<PluginStreamElement, Error>
+
+    /// A per-row writer into a native bulk load path, when the engine has one.
+    /// Returning nil falls back to prepared `insertRows` batches.
+    func bulkLoadWriter(
+        table: String,
+        schema: String?,
+        columns: [String]
+    ) async throws -> PluginBulkLoadWriter?
+
+    /// Server-side ceilings for batch sizing. Returning nil leaves the app on
+    /// its conservative defaults.
+    func serverLimits() async throws -> PluginServerLimits?
+
+    /// Whether the connected account can toggle constraint checks. A probe,
+    /// not a capability claim: managed servers often refuse the `SET`.
+    func constraintDisableCapability() async -> PluginConstraintDisableCapability
+
+    /// Boundary values that split the primary key column into roughly equal
+    /// ranges, one per partition. Keyset pagination is inherently sequential:
+    /// finding chunk N+1 requires reading chunk N. Parallel reads inside one
+    /// table need the ranges up front so each worker starts at its own
+    /// boundary. Return nil when the column cannot be split (non-numeric or
+    /// random key material), and the caller falls back to sequential chunks.
+    func primaryKeyRangeBoundaries(
+        table: String,
+        schema: String?,
+        column: String,
+        partitions: Int
+    ) async throws -> [String]?
+
+    /// A token that pins this connection's current snapshot so other
+    /// connections can read the same view. A table read on two connections
+    /// without a shared snapshot sees two different points in time, which can
+    /// orphan a foreign key at the target. Return nil where the engine cannot
+    /// export a snapshot (MySQL, SQLite).
+    func exportSnapshotToken() async throws -> String?
+
+    /// Adopts a snapshot another connection exported. The adopting connection
+    /// must not have read anything yet in its current transaction. Return
+    /// false when the token is not usable (wrong engine, expired, the
+    /// exporting transaction already closed).
+    func adoptSnapshotToken(_ token: String) async throws -> Bool
 }
 
 public extension PluginDatabaseDriver {
@@ -618,6 +660,27 @@ public extension PluginDatabaseDriver {
             }
         }
     }
+
+    func bulkLoadWriter(
+        table: String,
+        schema: String?,
+        columns: [String]
+    ) async throws -> PluginBulkLoadWriter? { nil }
+
+    func serverLimits() async throws -> PluginServerLimits? { nil }
+
+    func constraintDisableCapability() async -> PluginConstraintDisableCapability { .unknown }
+
+    func primaryKeyRangeBoundaries(
+        table: String,
+        schema: String?,
+        column: String,
+        partitions: Int
+    ) async throws -> [String]? { nil }
+
+    func exportSnapshotToken() async throws -> String? { nil }
+
+    func adoptSnapshotToken(_ token: String) async throws -> Bool { false }
 
     func escapeStringLiteral(_ value: String) -> String {
         var result = value

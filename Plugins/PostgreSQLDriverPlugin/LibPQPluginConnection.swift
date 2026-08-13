@@ -765,6 +765,117 @@ final class LibPQPluginConnection: @unchecked Sendable {
         }
     }
 
+    // MARK: - COPY
+
+    func beginCopyFromStdin(_ query: String) async throws {
+        let queryToRun = String(query)
+        try await pluginDispatchAsync(on: queue) { [self] in
+            guard !isShuttingDown, let conn = self.conn else { throw LibPQPluginError.notConnected }
+            guard queryToRun.withCString({ PQsendQuery(conn, $0) }) == 1 else {
+                throw self.getError(from: conn)
+            }
+            var enteredCopy = false
+            while let res = PQgetResult(conn) {
+                let status = PQresultStatus(res)
+                if status == PGRES_COPY_IN {
+                    enteredCopy = true
+                    PQclear(res)
+                    break
+                }
+                if status == PGRES_FATAL_ERROR {
+                    let error = self.getResultError(from: res)
+                    PQclear(res)
+                    throw error
+                }
+                PQclear(res)
+            }
+            guard enteredCopy else {
+                throw LibPQPluginError(
+                    message: "COPY did not enter copy-in state",
+                    sqlState: nil,
+                    detail: nil
+                )
+            }
+        }
+    }
+
+    func copyWrite(_ data: Data) async throws {
+        let buffer = data
+        try await pluginDispatchAsync(on: queue) { [self] in
+            guard !isShuttingDown, let conn = self.conn else { throw LibPQPluginError.notConnected }
+            guard !buffer.isEmpty else { return }
+            try buffer.withUnsafeBytes { raw in
+                guard let base = raw.baseAddress else { return }
+                let pointer = base.assumingMemoryBound(to: CChar.self)
+                while true {
+                    let status = PQputCopyData(conn, pointer, Int32(raw.count))
+                    if status == 1 { return }
+                    if status == 0 {
+                        try self.drainCopyOutput(conn)
+                        continue
+                    }
+                    throw self.getError(from: conn)
+                }
+            }
+        }
+    }
+
+    func copyFinish() async throws -> Int {
+        try await pluginDispatchAsync(on: queue) { [self] in
+            guard !isShuttingDown, let conn = self.conn else { throw LibPQPluginError.notConnected }
+            while true {
+                let status = PQputCopyEnd(conn, nil)
+                if status == 1 { break }
+                if status == 0 {
+                    try self.drainCopyOutput(conn)
+                    continue
+                }
+                throw self.getError(from: conn)
+            }
+            while let res = PQgetResult(conn) {
+                let status = PQresultStatus(res)
+                if status == PGRES_COMMAND_OK {
+                    let affected = self.getAffectedRows(from: res)
+                    PQclear(res)
+                    return affected
+                }
+                if status == PGRES_FATAL_ERROR {
+                    let error = self.getResultError(from: res)
+                    PQclear(res)
+                    throw error
+                }
+                PQclear(res)
+            }
+            throw LibPQPluginError(
+                message: "COPY ended without a command status",
+                sqlState: nil,
+                detail: nil
+            )
+        }
+    }
+
+    func copyAbort() async {
+        try? await pluginDispatchAsync(on: queue) { [self] in
+            guard !isShuttingDown, let conn = self.conn else { return }
+            _ = PQputCopyEnd(conn, "transfer cancelled")
+            while let res = PQgetResult(conn) {
+                PQclear(res)
+            }
+        }
+    }
+
+    private func drainCopyOutput(_ conn: OpaquePointer) throws {
+        while true {
+            let flushStatus = PQflush(conn)
+            if flushStatus == 0 { return }
+            if flushStatus < 0 { throw getError(from: conn) }
+            let socket = PQsocket(conn)
+            guard socket >= 0 else { throw LibPQPluginError.connectionFailed }
+            let ready = PQsocketPoll(socket, 0, 1, 10_000_000)
+            guard ready >= 0 else { throw LibPQPluginError.connectionFailed }
+        }
+    }
+
     // MARK: - Result Parsing
 
     private func fetchResults(from result: OpaquePointer, generation: Int) throws -> LibPQPluginQueryResult {

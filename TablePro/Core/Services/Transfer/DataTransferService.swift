@@ -12,8 +12,6 @@ import TableProPluginKit
 final class DataTransferService {
     static let logger = Logger(subsystem: "com.SchemaStudio", category: "DataTransferService")
 
-    static let batchRowCount = 1_000
-
     var state = TransferState()
 
     private(set) var isCancelled = false
@@ -40,7 +38,7 @@ final class DataTransferService {
         try await ensureConnected(source)
         try await ensureConnected(target)
 
-        return try await withEndpointDrivers(source: source, target: target) { sourceContext, targetContext in
+        return try await withDriverProvider(source: source, target: target) { sourceContext, targetContext, _ in
             try await self.runPreflight(
                 selections: selections,
                 source: sourceContext,
@@ -56,7 +54,8 @@ final class DataTransferService {
         source: TransferEndpoint,
         target: TransferEndpoint,
         mode: TransferMode,
-        options: TransferOptions
+        options: TransferOptions,
+        resume: Bool = false
     ) async throws -> TransferReport {
         try validate(selections: selections, source: source, target: target)
         try await ensureConnected(source)
@@ -71,8 +70,21 @@ final class DataTransferService {
             isCancelled = false
         }
 
+        let store = TransferCheckpointStore.shared
+        let jobId = TransferCheckpointStore.jobId(source: source, target: target, mode: mode)
+        // A run that was told to start over drops whatever the previous run
+        // left behind; a run that resumes reads it instead.
+        if !resume {
+            await store.clear(jobId: jobId)
+        }
+        let resumeState = await Self.resolveResumeState(
+            resume: resume,
+            jobId: jobId,
+            store: store
+        )
+
         do {
-            return try await withEndpointDrivers(source: source, target: target) { sourceContext, targetContext in
+            return try await withDriverProvider(source: source, target: target) { sourceContext, targetContext, provider in
                 self.state.statusMessage = String(localized: "Checking tables\u{2026}")
                 let preview = try await self.runPreflight(
                     selections: selections,
@@ -85,13 +97,25 @@ final class DataTransferService {
                     throw TransferError.preflightFailed(preview.failures)
                 }
                 self.state.statusMessage = ""
-                return try await self.runPhases(
+                var consistency = TransferConsistency.perTable
+                let report = try await self.runPhases(
                     selections: selections,
                     preview: preview,
                     source: sourceContext,
                     target: targetContext,
-                    options: options
+                    options: options,
+                    resume: resumeState,
+                    jobId: jobId,
+                    provider: provider,
+                    consistency: &consistency
                 )
+                // A checkpoint is only cleared when the job finished without
+                // failure or cancellation: an interrupted run leaves it for the
+                // next launch to resume from.
+                if !report.wasCancelled, report.failedCount == 0, report.notRunCount == 0 {
+                    await store.clear(jobId: jobId)
+                }
+                return report
             }
         } catch {
             state.errorMessage = error.localizedDescription
@@ -100,6 +124,31 @@ final class DataTransferService {
             )
             throw error
         }
+    }
+
+    /// What a previous run of the same source/target/mode left behind, for the
+    /// wizard to offer resuming before a new run starts.
+    func pendingResume(
+        source: TransferEndpoint,
+        target: TransferEndpoint,
+        mode: TransferMode
+    ) async -> TransferResumeState? {
+        guard mode == .emptyThenTransfer else { return nil }
+        let store = TransferCheckpointStore.shared
+        let entries = await store.load(
+            jobId: TransferCheckpointStore.jobId(source: source, target: target, mode: mode)
+        )
+        return entries.isEmpty ? nil : TransferResumeState(entries: entries)
+    }
+
+    private static func resolveResumeState(
+        resume: Bool,
+        jobId: UUID,
+        store: TransferCheckpointStore
+    ) async -> TransferResumeState? {
+        guard resume else { return nil }
+        let entries = await store.load(jobId: jobId)
+        return entries.isEmpty ? nil : TransferResumeState(entries: entries)
     }
 
     // MARK: - Guards
@@ -149,54 +198,85 @@ final class DataTransferService {
     /// queues behind, or ahead of, the metadata queries the user's own
     /// browsing depends on. The pool serializes per scope, so the two scopes
     /// have to differ before the nesting is safe.
-    private func withEndpointDrivers<T: Sendable>(
+    ///
+    /// Lane 0 is the pair held for the whole run. Higher lanes open their own
+    /// connections through the same pool, each capped by the pool's connection
+    /// budget, so parallel tables never starve the interactive lanes; their
+    /// query timeout is lifted for the duration and restored on the way out.
+    private func withDriverProvider<T: Sendable>(
         source: TransferEndpoint,
         target: TransferEndpoint,
-        body: @escaping @Sendable @MainActor (TransferDriverContext, TransferDriverContext) async throws -> T
+        body: @escaping @Sendable @MainActor (
+            TransferDriverContext,
+            TransferDriverContext,
+            TransferDriverProvider
+        ) async throws -> T
     ) async throws -> T {
         let pool = MetadataConnectionPool.shared
-        return try await pool.withDriver(scope: target.scope, workload: .bulk) { targetDriver in
-            try await pool.withDriver(scope: source.scope, workload: .bulk) { sourceDriver in
-                try await Self.runWithDrivers(
-                    sourceDriver: sourceDriver,
-                    targetDriver: targetDriver,
-                    source: source,
-                    target: target,
-                    body: body
-                )
+        let configuredTimeout = AppSettingsManager.shared.general.queryTimeoutSeconds
+        return try await pool.withDriver(scope: target.scope, workload: .bulk, lane: 0) { targetDriver in
+            try await pool.withDriver(scope: source.scope, workload: .bulk, lane: 0) { sourceDriver in
+                guard let sourceContext = TransferDriverContext(driver: sourceDriver, endpoint: source),
+                      let targetContext = TransferDriverContext(driver: targetDriver, endpoint: target) else {
+                    throw TransferError.noPluginDriver
+                }
+
+                await sourceContext.applyQueryTimeout(0)
+                await targetContext.applyQueryTimeout(0)
+
+                let provider = TransferDriverProvider { lane in
+                    guard lane > 0 else { return (sourceContext, targetContext) }
+                    return try await pool.withDriver(scope: target.scope, workload: .bulk, lane: lane) { laneTargetDriver in
+                        try await pool.withDriver(scope: source.scope, workload: .bulk, lane: lane) { laneSourceDriver in
+                            guard let laneSource = TransferDriverContext(driver: laneSourceDriver, endpoint: source),
+                                  let laneTarget = TransferDriverContext(driver: laneTargetDriver, endpoint: target) else {
+                                throw TransferError.noPluginDriver
+                            }
+                            await laneSource.applyQueryTimeout(0)
+                            await laneTarget.applyQueryTimeout(0)
+                            return try await Self.withTimeoutRestore(
+                                source: laneSource,
+                                target: laneTarget,
+                                timeout: configuredTimeout
+                            ) {
+                                (laneSource, laneTarget)
+                            }
+                        }
+                    }
+                }
+
+                do {
+                    let result = try await body(sourceContext, targetContext, provider)
+                    await sourceContext.applyQueryTimeout(configuredTimeout)
+                    await targetContext.applyQueryTimeout(configuredTimeout)
+                    return result
+                } catch {
+                    await sourceContext.applyQueryTimeout(configuredTimeout)
+                    await targetContext.applyQueryTimeout(configuredTimeout)
+                    throw error
+                }
             }
         }
     }
 
     /// The pool stamps its own drivers with the user's query timeout, which
-    /// would cut any table that takes longer than one minute to copy. The
+    /// would cut any table that takes longer than one minute to copy. A lane
     /// driver outlives this run inside the pool, so the setting has to go back
     /// on both success and failure.
-    @MainActor
-    private static func runWithDrivers<T: Sendable>(
-        sourceDriver: DatabaseDriver,
-        targetDriver: DatabaseDriver,
-        source: TransferEndpoint,
-        target: TransferEndpoint,
-        body: @escaping @Sendable @MainActor (TransferDriverContext, TransferDriverContext) async throws -> T
+    private static func withTimeoutRestore<T: Sendable>(
+        source: TransferDriverContext,
+        target: TransferDriverContext,
+        timeout: Int,
+        body: @Sendable () async throws -> T
     ) async throws -> T {
-        guard let sourceContext = TransferDriverContext(driver: sourceDriver, endpoint: source),
-              let targetContext = TransferDriverContext(driver: targetDriver, endpoint: target) else {
-            throw TransferError.noPluginDriver
-        }
-
-        let configuredTimeout = AppSettingsManager.shared.general.queryTimeoutSeconds
-        await sourceContext.applyQueryTimeout(0)
-        await targetContext.applyQueryTimeout(0)
-
         do {
-            let result = try await body(sourceContext, targetContext)
-            await sourceContext.applyQueryTimeout(configuredTimeout)
-            await targetContext.applyQueryTimeout(configuredTimeout)
+            let result = try await body()
+            await source.applyQueryTimeout(timeout)
+            await target.applyQueryTimeout(timeout)
             return result
         } catch {
-            await sourceContext.applyQueryTimeout(configuredTimeout)
-            await targetContext.applyQueryTimeout(configuredTimeout)
+            await source.applyQueryTimeout(timeout)
+            await target.applyQueryTimeout(timeout)
             throw error
         }
     }

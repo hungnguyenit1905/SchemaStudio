@@ -575,6 +575,16 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         ["PRAGMA foreign_keys = ON"]
     }
 
+    // MARK: - Bulk Load
+
+    func serverLimits() async throws -> PluginServerLimits? {
+        PluginServerLimits(maxPacketBytes: nil, maxBindParameters: 32_766, supportsLocalInfile: nil)
+    }
+
+    func constraintDisableCapability() async -> PluginConstraintDisableCapability {
+        .supported
+    }
+
     // MARK: - User Query
 
     func executeUserQuery(

@@ -127,6 +127,7 @@ enum DiagnosticEventFactory {
         case .blockingForeignKeys: return "blockingForeignKeys"
         case .emptyColumnMapping: return "emptyColumnMapping"
         case .columnMappingIncomplete: return "columnMappingIncomplete"
+        case .chunkCursorUnavailable: return "chunkCursorUnavailable"
         case .preflightFailed: return "preflightFailed"
         }
     }

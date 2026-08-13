@@ -50,7 +50,7 @@ extension RowEditingCoordinator {
             return
         }
 
-        let sqlPreview = allStatements.map(\.sql).joined(separator: "\n")
+        let sqlPreview = allStatements.map(\.sql).joined(separator: ";\n")
         let snapshotTruncates = pendingTruncates
         let snapshotDeletes = pendingDeletes
         let snapshotOptions = tableOperationOptions
