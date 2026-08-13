@@ -298,6 +298,16 @@ jobs:
           ./scripts/build-plugin.sh "${{ steps.plugin.outputs.target }}" arm64 "${{ steps.plugin.outputs.version }}"
           ./scripts/build-plugin.sh "${{ steps.plugin.outputs.target }}" x86_64 "${{ steps.plugin.outputs.version }}"
 
+      - name: Upload plugin dSYMs to Sentry
+        if: env.SENTRY_AUTH_TOKEN != ''
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          scripts/ci/upload-dsyms.sh build/Plugins/arm64
+          scripts/ci/upload-dsyms.sh build/Plugins/x86_64
+
       - name: Verify built PluginKit version matches the release label
         env:
           MATRIX_PKV: ${{ matrix.pluginKitVersion }}
