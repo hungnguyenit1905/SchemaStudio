@@ -20,6 +20,9 @@
 		5A3BE6FC2F97DB0000611C1F /* TableProPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A860000100000000 /* TableProPluginKit.framework */; };
 		5A5YNCTR000000000000A011 /* TableProSyncTransport in Frameworks */ = {isa = PBXBuildFile; productRef = 5A5YNCTR000000000000A010 /* TableProSyncTransport */; };
 		5A7E78A02F95F02A00EEF236 /* TableProAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 5ACE00012F4F000000000010 /* TableProAnalytics */; };
+		5ADIAG00000000000000A003 /* TableProDiagnostics in Frameworks */ = {isa = PBXBuildFile; productRef = 5ADIAG00000000000000A002 /* TableProDiagnostics */; };
+		5ADIAG00000000000000B003 /* TableProDiagnostics in Frameworks */ = {isa = PBXBuildFile; productRef = 5ADIAG00000000000000B002 /* TableProDiagnostics */; };
+		5ASNTRY0000000000000B003 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 5ASNTRY0000000000000B002 /* Sentry */; };
 		5A860000A00000000 /* TableProPluginKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5A860000100000000 /* TableProPluginKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		5A861000A00000000 /* TableProPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A860000100000000 /* TableProPluginKit.framework */; };
 		5A862000A00000000 /* TableProPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A860000100000000 /* TableProPluginKit.framework */; };
@@ -956,6 +959,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5A7E78A02F95F02A00EEF236 /* TableProAnalytics in Frameworks */,
+				5ADIAG00000000000000A003 /* TableProDiagnostics in Frameworks */,
 				5A1MPORT000000000000A011 /* TableProImport in Frameworks */,
 				5A5YNCTR000000000000A011 /* TableProSyncTransport in Frameworks */,
 				5ACE00012F4F000000000004 /* CodeEditSourceEditor in Frameworks */,
@@ -1164,6 +1168,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5ADIAG00000000000000B003 /* TableProDiagnostics in Frameworks */,
+				5ASNTRY0000000000000B003 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1488,6 +1494,7 @@
 				5ACE00012F4F000000000007 /* CodeEditTextView */,
 				5ACE00012F4F000000000009 /* Sparkle */,
 				5ACE00012F4F000000000010 /* TableProAnalytics */,
+				5ADIAG00000000000000A002 /* TableProDiagnostics */,
 				5A32BBFA2F9D5EAB00BAEB5F /* X509 */,
 				5A1MPORT000000000000A010 /* TableProImport */,
 				5A5YNCTR000000000000A010 /* TableProSyncTransport */,
@@ -2003,6 +2010,10 @@
 				5ABCC5A82F43856700EAF3FC /* TableProTests */,
 			);
 			name = TableProTests;
+			packageProductDependencies = (
+				5ADIAG00000000000000B002 /* TableProDiagnostics */,
+				5ASNTRY0000000000000B002 /* Sentry */,
+			);
 			productName = TableProTests;
 			productReference = 5ABCC5A72F43856700EAF3FC /* TableProTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -5538,6 +5549,21 @@
 		5ACE00012F4F000000000010 /* TableProAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TableProAnalytics;
+		};
+		5ADIAG00000000000000A002 /* TableProDiagnostics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5A0000012F4F000000000102 /* XCLocalSwiftPackageReference "Packages/TableProCore" */;
+			productName = TableProDiagnostics;
+		};
+		5ADIAG00000000000000B002 /* TableProDiagnostics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5A0000012F4F000000000102 /* XCLocalSwiftPackageReference "Packages/TableProCore" */;
+			productName = TableProDiagnostics;
+		};
+		5ASNTRY0000000000000B002 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ASNTRY0000000000000A001 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 		5AD1D8C12FB5000000000002 /* TableProMSSQLCore */ = {
 			isa = XCSwiftPackageProductDependency;

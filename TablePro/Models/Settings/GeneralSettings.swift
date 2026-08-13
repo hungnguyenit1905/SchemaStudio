@@ -62,6 +62,9 @@ struct GeneralSettings: Codable, Equatable {
     /// Whether to share anonymous usage analytics
     var shareAnalytics: Bool
 
+    /// Whether to send anonymous crash reports
+    var crashReporting: Bool
+
     /// Whether the sidebar shows a Recent section with recently opened tables
     var showRecentTables: Bool
 
@@ -73,6 +76,7 @@ struct GeneralSettings: Codable, Equatable {
         language: .system,
         queryTimeoutSeconds: 60,
         shareAnalytics: true,
+        crashReporting: false,
         showRecentTables: false,
         showObjectComments: true
     )
@@ -82,6 +86,7 @@ struct GeneralSettings: Codable, Equatable {
         language: AppLanguage = .system,
         queryTimeoutSeconds: Int = 60,
         shareAnalytics: Bool = true,
+        crashReporting: Bool = false,
         showRecentTables: Bool = false,
         showObjectComments: Bool = true
     ) {
@@ -89,6 +94,7 @@ struct GeneralSettings: Codable, Equatable {
         self.language = language
         self.queryTimeoutSeconds = queryTimeoutSeconds
         self.shareAnalytics = shareAnalytics
+        self.crashReporting = crashReporting
         self.showRecentTables = showRecentTables
         self.showObjectComments = showObjectComments
     }
@@ -99,6 +105,7 @@ struct GeneralSettings: Codable, Equatable {
         language = try container.decodeIfPresent(AppLanguage.self, forKey: .language) ?? .system
         queryTimeoutSeconds = try container.decodeIfPresent(Int.self, forKey: .queryTimeoutSeconds) ?? 60
         shareAnalytics = try container.decodeIfPresent(Bool.self, forKey: .shareAnalytics) ?? true
+        crashReporting = try container.decodeIfPresent(Bool.self, forKey: .crashReporting) ?? false
         showRecentTables = try container.decodeIfPresent(Bool.self, forKey: .showRecentTables) ?? false
         showObjectComments = try container.decodeIfPresent(Bool.self, forKey: .showObjectComments) ?? true
     }
