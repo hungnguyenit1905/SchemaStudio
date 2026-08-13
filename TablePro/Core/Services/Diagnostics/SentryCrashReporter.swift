@@ -43,6 +43,7 @@ final class SentryCrashReporter: CrashReporting {
         SentrySDK.start { options in
             options.dsn = self.configuration.dsn
             options.releaseName = self.configuration.releaseName
+            options.dist = self.configuration.distribution
             options.environment = self.configuration.environment
 
             options.sendDefaultPii = false

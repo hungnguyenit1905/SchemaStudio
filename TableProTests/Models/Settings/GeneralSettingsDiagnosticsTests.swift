@@ -46,7 +46,8 @@ struct GeneralSettingsDiagnosticsTests {
 struct CrashReporterFactoryTests {
     private static let configuration = CrashReporterConfiguration(
         dsn: "https://key@o0.ingest.sentry.io/0",
-        releaseName: "schemastudio@1.0.0+1",
+        releaseName: "schemastudio@1.0.0",
+        distribution: "1",
         environment: "debug"
     )
 

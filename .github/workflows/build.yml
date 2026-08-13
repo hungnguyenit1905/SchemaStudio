@@ -135,6 +135,14 @@ jobs:
       - name: Verify build
         run: scripts/ci/verify-build.sh arm64
 
+      - name: Upload dSYMs to Sentry
+        if: env.SENTRY_AUTH_TOKEN != ''
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: scripts/ci/upload-dsyms.sh
+
       - name: Package artifacts
         env:
           NOTARIZE: "true"
@@ -258,6 +266,14 @@ jobs:
 
       - name: Verify build
         run: scripts/ci/verify-build.sh x86_64
+
+      - name: Upload dSYMs to Sentry
+        if: env.SENTRY_AUTH_TOKEN != ''
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: scripts/ci/upload-dsyms.sh
 
       - name: Package artifacts
         env:
@@ -404,6 +420,20 @@ jobs:
           prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-alpha') || contains(github.ref, '-rc') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Sentry release
+        if: success() && env.SENTRY_AUTH_TOKEN != ''
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          brew install getsentry/tools/sentry-cli
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          RELEASE="schemastudio@${VERSION}"
+          sentry-cli releases new "$RELEASE"
+          sentry-cli releases set-commits "$RELEASE" --auto --ignore-missing
+          sentry-cli releases finalize "$RELEASE"
 
       - name: Notify Telegram
         if: success() && env.TELEGRAM_BOT_TOKEN != ''

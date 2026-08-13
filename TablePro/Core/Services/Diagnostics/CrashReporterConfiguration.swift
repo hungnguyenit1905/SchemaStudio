@@ -7,7 +7,12 @@ import Foundation
 
 struct CrashReporterConfiguration {
     let dsn: String
+
+    /// Must match the release name `build.yml` creates with `sentry-cli releases new`,
+    /// or Sentry cannot tie a crash back to the commits that shipped in it.
     let releaseName: String
+
+    let distribution: String
     let environment: String
 
     static func resolve(bundle: Bundle = .main) -> CrashReporterConfiguration? {
@@ -24,7 +29,8 @@ struct CrashReporterConfiguration {
 
         return CrashReporterConfiguration(
             dsn: dsn,
-            releaseName: "schemastudio@\(shortVersion)+\(build)",
+            releaseName: "schemastudio@\(shortVersion)",
+            distribution: build,
             environment: environment
         )
     }
