@@ -128,6 +128,7 @@ jobs:
       - name: Build ARM64
         env:
           ANALYTICS_HMAC_SECRET: ${{ secrets.ANALYTICS_HMAC_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           NOTARIZE: "true"
         run: scripts/build-release.sh arm64
 
@@ -251,6 +252,7 @@ jobs:
       - name: Build x86_64
         env:
           ANALYTICS_HMAC_SECRET: ${{ secrets.ANALYTICS_HMAC_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           NOTARIZE: "true"
         run: scripts/build-release.sh x86_64
 
