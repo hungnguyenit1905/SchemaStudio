@@ -38,7 +38,7 @@ struct DiagnosticEventTests {
         #expect(DiagnosticEventID.connectCompletedAfterCancel.rawValue == "connect_completed_after_cancel")
         #expect(DiagnosticEventID.pluginLoadFailed.rawValue == "plugin_load_failed")
         #expect(DiagnosticEventID.transferAborted.rawValue == "transfer_aborted")
-        #expect(DiagnosticEventID.reconnectExhausted.rawValue == "reconnect_exhausted")
+        #expect(DiagnosticEventID.reconnectStillFailing.rawValue == "reconnect_still_failing")
 
         #expect(DiagnosticTagKey.databaseType.rawValue == "database_type")
         #expect(DiagnosticTagKey.errorCase.rawValue == "error_case")

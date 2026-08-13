@@ -95,6 +95,9 @@ final class DataTransferService {
             }
         } catch {
             state.errorMessage = error.localizedDescription
+            CrashReporterService.shared.capture(
+                DiagnosticEventFactory.transferAborted(type: source.databaseType, error: error)
+            )
             throw error
         }
     }

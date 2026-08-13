@@ -14,5 +14,5 @@ public enum DiagnosticEventID: String, Sendable, CaseIterable {
     case connectCompletedAfterCancel = "connect_completed_after_cancel"
     case pluginLoadFailed = "plugin_load_failed"
     case transferAborted = "transfer_aborted"
-    case reconnectExhausted = "reconnect_exhausted"
+    case reconnectStillFailing = "reconnect_still_failing"
 }
