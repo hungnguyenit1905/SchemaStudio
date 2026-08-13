@@ -86,11 +86,34 @@ Lists external links you chose to always allow, with **Forget** per entry and **
 
 Powered by [Sparkle](https://sparkle-project.org/). Also available from the **SchemaStudio** menu.
 
-### Privacy
+### Diagnostics
+
+Both settings are off until you turn them on.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| **Share anonymous usage data** | On | Anonymous usage statistics, no personal data or queries |
+| **Send crash reports** | Off | Anonymous crash reports |
+| **Share anonymous usage data** | Off | App version, OS version, database types in use |
+
+Turning a setting off takes effect immediately, with no restart.
+
+**What a crash report contains**
+
+- The crash stack trace and the type of signal or exception
+- App version, build number, and CPU architecture
+- macOS version, device model, and hardware facts such as memory and CPU count
+- A random device identifier, so one crash hitting one machine ten times is not counted as ten machines
+- For a handful of known failures (a connection that fails, a plugin that will not load, a transfer that stops, a reconnect that keeps failing), the name of the failure and the database type
+
+**What it never contains**
+
+- Host names, ports, usernames, passwords, or connection strings
+- Database, schema, table, or column names
+- SQL statements or any data from your tables
+- File paths, your machine's name, or your account name
+- Screenshots or breadcrumbs of what you clicked
+
+Error messages from database drivers are dropped rather than sent, because they routinely quote the host, the user, and the failing statement. Only the name of the error case is reported.
 
 ### Reset
 
