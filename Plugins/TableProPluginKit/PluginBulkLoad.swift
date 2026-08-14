@@ -7,12 +7,28 @@ import Foundation
 public protocol PluginBulkLoadWriter: Sendable {
     func write(row: [PluginCellValue]) async throws
 
+    /// Writes a whole chunk in one call. The per-row entry point costs one
+    /// suspension per row, which on a million-row table outweighs everything
+    /// the bulk protocol saves, so the caller hands over chunks and a driver
+    /// that can encode them in one pass overrides this.
+    func write(rows: [[PluginCellValue]]) async throws
+
     /// Ends the stream and reports how many rows the server accepted.
     func finish() async throws -> Int
 
     /// Tears the stream down after a failure so the connection never stays in
     /// a half-open bulk state. Must be safe to call after `finish`.
     func abort() async
+}
+
+public extension PluginBulkLoadWriter {
+    /// A writer built before this existed keeps working: the chunk is handed
+    /// over one row at a time, exactly as it used to be.
+    func write(rows: [[PluginCellValue]]) async throws {
+        for row in rows {
+            try await write(row: row)
+        }
+    }
 }
 
 /// Server-side ceilings the app reads instead of guessing, so a batch is cut
