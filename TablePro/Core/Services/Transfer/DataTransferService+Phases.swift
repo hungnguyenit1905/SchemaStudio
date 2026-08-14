@@ -18,7 +18,11 @@ extension DataTransferService {
         preview: TransferPreview,
         source: TransferDriverContext,
         target: TransferDriverContext,
-        options: TransferOptions
+        options: TransferOptions,
+        resume: TransferResumeState?,
+        jobId: UUID,
+        lanes: TransferLanePool?,
+        consistency: inout TransferConsistency
     ) async throws -> TransferReport {
         var run = TransferRunState()
         for failure in preview.failures {
@@ -27,18 +31,25 @@ extension DataTransferService {
 
         let estimates = await estimatedRowCounts(for: preview.plans, source: source)
 
-        await runStructurePhase(preview.plans, target: target, options: options, run: &run)
-        await runDataPhase(
+        await runStructurePhase(preview.plans, target: target, options: options, run: &run, resume: resume)
+        consistency = try await runDataPhase(
             preview.plans,
             source: source,
             target: target,
             options: options,
-            estimates: estimates,
+            inputs: TransferRunInputs(
+                estimates: estimates,
+                limits: preview.targetCapabilities.limits,
+                resume: resume,
+                jobId: jobId,
+                lanes: lanes
+            ),
             run: &run
         )
-        await runConstraintPhase(preview.plans, target: target, run: &run)
+        await runConstraintPhase(preview.plans, target: target, run: &run, resume: resume)
 
-        return run.report(for: selections)
+        let counts = await verifyCounts(plans: preview.plans, source: source, target: target)
+        return run.report(for: selections, counts: counts, consistency: consistency)
     }
 
     /// A TRUNCATE or DROP of a table another table points at is refused while
@@ -49,11 +60,12 @@ extension DataTransferService {
         _ plans: [TransferTablePlan],
         target: TransferDriverContext,
         options: TransferOptions,
-        run: inout TransferRunState
+        run: inout TransferRunState,
+        resume: TransferResumeState? = nil
     ) async {
         state.statusMessage = String(localized: "Preparing target tables\u{2026}")
         let foreignKeysDisabled = await disableForeignKeyChecks(on: target)
-        await applyStructurePlans(plans, target: target, options: options, run: &run)
+        await applyStructurePlans(plans, target: target, options: options, run: &run, resume: resume)
         if foreignKeysDisabled {
             await restoreForeignKeyChecks(on: target)
         }
@@ -64,13 +76,19 @@ extension DataTransferService {
         _ plans: [TransferTablePlan],
         target: TransferDriverContext,
         options: TransferOptions,
-        run: inout TransferRunState
+        run: inout TransferRunState,
+        resume: TransferResumeState?
     ) async {
         for plan in plans where !run.isBlocked(plan.table) {
             if run.stopped || shouldStop {
                 run.stopped = true
                 return
             }
+            // A table with checkpoint progress already exists at the target
+            // with committed rows in it. Dropping, truncating or recreating it
+            // would destroy that progress, so a resumed run skips its
+            // structure steps entirely.
+            guard !(resume?.hasProgress(table: plan.table) ?? false) else { continue }
             do {
                 try await applyStructureSteps(plan, target: target)
             } catch {
@@ -105,46 +123,380 @@ extension DataTransferService {
         }
     }
 
+    // MARK: - Data Phase
+
     private func runDataPhase(
         _ plans: [TransferTablePlan],
         source: TransferDriverContext,
         target: TransferDriverContext,
         options: TransferOptions,
-        estimates: [String: Int],
+        inputs: TransferRunInputs,
         run: inout TransferRunState
-    ) async {
+    ) async throws -> TransferConsistency {
+        // PostgreSQL pins one snapshot for the whole data phase, so every
+        // chunk and every lane reads the same point in time. The transaction
+        // is released when the phase ends, awaited, before the driver goes back
+        // to the pool: a rollback that lands later would either roll back
+        // whatever the next consumer of that connection is doing, or leave the
+        // read transaction open under the row counts. Other engines have no
+        // exportable snapshot and report the weaker, honest level instead.
+        let snapshotToken = source.databaseType == .postgresql ? try? await source.exportSnapshotToken() : nil
+        do {
+            let consistency = try await copyTables(
+                plans,
+                source: source,
+                target: target,
+                options: options,
+                inputs: inputs,
+                snapshotToken: snapshotToken,
+                run: &run
+            )
+            if snapshotToken != nil { try? await source.execute("ROLLBACK") }
+            return consistency
+        } catch {
+            if snapshotToken != nil { try? await source.execute("ROLLBACK") }
+            throw error
+        }
+    }
+
+    private func copyTables(
+        _ plans: [TransferTablePlan],
+        source: TransferDriverContext,
+        target: TransferDriverContext,
+        options: TransferOptions,
+        inputs: TransferRunInputs,
+        snapshotToken: String?,
+        run: inout TransferRunState
+    ) async throws -> TransferConsistency {
+        let resume = inputs.resume
+        let limits = inputs.limits
         let transferable = plans.filter { $0.steps.contains(.transferRows) }
         state.totalTables = transferable.count
-        var index = 0
+        var tableIndex = markCompleteTables(transferable, resume: resume, run: &run)
 
-        for plan in transferable where !run.isBlocked(plan.table) {
-            if run.stopped || shouldStop {
-                run.stopped = true
-                return
+        let pending = transferable.filter {
+            !run.isBlocked($0.table) && !(resume?.isComplete(table: $0.table) ?? false)
+        }
+        let gate = TransferRunGate()
+        let parallelTables = inputs.lanes != nil
+            && MetadataConnectionPool.cappedParallelism(options.parallelTables) > 1
+        let context = TransferCopyContext(
+            resume: resume,
+            jobId: inputs.jobId,
+            checkpoint: TransferCheckpointStore.shared,
+            snapshotToken: snapshotToken,
+            gate: gate,
+            lanes: inputs.lanes,
+            boundaries: await partitionBoundaryMap(pending, source: source, options: options),
+            parallelTables: parallelTables
+        )
+
+        if parallelTables {
+            try await withThrowingTaskGroup(of: TransferTableCopyResult.self) { group in
+                for plan in pending {
+                    group.addTask { @MainActor in
+                        if gate.stopped || self.shouldStop {
+                            return TransferTableCopyResult.skipped(plan.table)
+                        }
+                        return await self.copyTableForRun(
+                            plan: plan,
+                            source: source,
+                            target: target,
+                            options: options,
+                            limits: limits,
+                            context: context
+                        )
+                    }
+                }
+                for try await result in group {
+                    // Lanes finish in whatever order the servers answer, so the
+                    // count advances per completed table rather than naming the
+                    // one table a parallel run is on.
+                    if !result.skipped {
+                        tableIndex += 1
+                        state.currentTable = result.table
+                        state.currentTableIndex = tableIndex
+                    }
+                    self.mergeCopyResult(result, run: &run, options: options, target: target, gate: gate)
+                    if run.stopped { group.cancelAll() }
+                }
             }
+        } else {
+            for plan in pending {
+                if run.stopped || shouldStop {
+                    run.stopped = true
+                    return consistency(snapshotToken: snapshotToken, gate: gate)
+                }
+                tableIndex += 1
+                beginTableProgress(plan.table, index: tableIndex, estimates: inputs.estimates)
+                let result = await copyTableForRun(
+                    plan: plan,
+                    source: source,
+                    target: target,
+                    options: options,
+                    limits: limits,
+                    context: context
+                )
+                mergeCopyResult(result, run: &run, options: options, target: target, gate: gate)
+                if run.stopped { return consistency(snapshotToken: snapshotToken, gate: gate) }
+            }
+        }
+        if shouldStop { run.stopped = true }
+        return consistency(snapshotToken: snapshotToken, gate: gate)
+    }
+
+    private func consistency(snapshotToken: String?, gate: TransferRunGate) -> TransferConsistency {
+        snapshotToken != nil && gate.isDatabaseWide ? .databaseWide : .perTable
+    }
+
+    /// Tables whose checkpoint already marks the data phase complete are
+    /// counted as succeeded without touching the source or the target again.
+    /// Returns how many tables the count already covers, so the tables still to
+    /// copy carry on from there.
+    private func markCompleteTables(
+        _ transferable: [TransferTablePlan],
+        resume: TransferResumeState?,
+        run: inout TransferRunState
+    ) -> Int {
+        var index = 0
+        for plan in transferable where resume?.isComplete(table: plan.table) == true {
             index += 1
             state.currentTable = plan.table
             state.currentTableIndex = index
-            state.currentTableProcessedRows = 0
-            state.currentTableEstimatedRows = estimates[plan.table] ?? 0
+            run.succeed(plan.table, rows: resume?.rowsDone(table: plan.table) ?? 0, duration: 0)
+        }
+        return index
+    }
 
-            let startedAt = Date()
-            do {
-                let rows = try await copyRows(plan: plan, source: source, target: target, options: options)
-                run.succeed(plan.table, rows: rows, duration: Date().timeIntervalSince(startedAt))
-                recordHistory(table: plan.table, rows: rows, target: target, startedAt: startedAt, error: nil)
-            } catch is CancellationError {
-                run.stopped = true
-                return
-            } catch {
-                run.fail(plan.table, message: error.localizedDescription, duration: Date().timeIntervalSince(startedAt))
-                recordHistory(table: plan.table, rows: 0, target: target, startedAt: startedAt, error: error)
-                if !options.continueOnError { run.stopped = true
-                    return
+    /// The estimate is the denominator of this table alone, so a table the
+    /// driver could not estimate leaves the fraction at zero rather than
+    /// dividing by a number from another table.
+    private func beginTableProgress(_ table: String, index: Int, estimates: [String: Int]) {
+        state.currentTable = table
+        state.currentTableIndex = index
+        state.currentTableProcessedRows = 0
+        state.currentTableEstimatedRows = estimates[table] ?? 0
+    }
+
+    /// The lane is taken here, at the leaf, and never around work that goes on
+    /// to take another one: a table that partitions hands every lane to its
+    /// partitions instead of holding one of its own, so the lanes cannot
+    /// deadlock against each other.
+    private func copyTableForRun(
+        plan: TransferTablePlan,
+        source: TransferDriverContext,
+        target: TransferDriverContext,
+        options: TransferOptions,
+        limits: PluginServerLimits?,
+        context: TransferCopyContext
+    ) async -> TransferTableCopyResult {
+        let startedAt = Date()
+        do {
+            let rows: Int
+            let boundaries = context.boundaries[plan.table] ?? []
+            if !boundaries.isEmpty, context.lanes != nil {
+                rows = try await copyTablePartitioned(
+                    plan: plan,
+                    boundaries: boundaries,
+                    options: options,
+                    limits: limits,
+                    context: context
+                )
+            } else if let lanes = context.lanes, context.parallelTables {
+                rows = try await lanes.withLane { laneSource, laneTarget in
+                    try await self.withAdoptedSnapshot(source: laneSource, context: context) {
+                        try await self.copyRows(
+                            plan: plan,
+                            source: laneSource,
+                            target: laneTarget,
+                            options: options,
+                            limits: limits,
+                            checkpoint: context.checkpoint,
+                            jobId: context.jobId,
+                            resumeCursor: context.resume?.entry(table: plan.table)?.cursor
+                        )
+                    }
                 }
+            } else {
+                rows = try await copyRows(
+                    plan: plan,
+                    source: source,
+                    target: target,
+                    options: options,
+                    limits: limits,
+                    checkpoint: context.checkpoint,
+                    jobId: context.jobId,
+                    resumeCursor: context.resume?.entry(table: plan.table)?.cursor
+                )
             }
+            return TransferTableCopyResult(
+                table: plan.table,
+                rows: rows,
+                duration: Date().timeIntervalSince(startedAt),
+                error: nil,
+                startedAt: startedAt
+            )
+        } catch {
+            return TransferTableCopyResult(
+                table: plan.table,
+                rows: 0,
+                duration: Date().timeIntervalSince(startedAt),
+                error: error,
+                startedAt: startedAt
+            )
         }
     }
+
+    /// Every table's ranges are probed once, up front, on the run's own source
+    /// driver. Probing from inside a parallel table task would put several
+    /// MIN/MAX queries on that one connection at the same time.
+    private func partitionBoundaryMap(
+        _ plans: [TransferTablePlan],
+        source: TransferDriverContext,
+        options: TransferOptions
+    ) async -> [String: [String]] {
+        guard options.inTableParallelism > 1 else { return [:] }
+        var boundaries: [String: [String]] = [:]
+        for plan in plans {
+            if shouldStop { break }
+            guard let ranges = try? await partitionBoundaries(
+                plan: plan,
+                source: source,
+                options: options
+            ), !ranges.isEmpty else { continue }
+            boundaries[plan.table] = ranges
+        }
+        return boundaries
+    }
+
+    /// Splits one table into parallel ranges when its single numeric primary
+    /// key is large enough that a full index scan for the boundaries pays for
+    /// itself. UUID, composite and unknown-size keys stay sequential.
+    private func partitionBoundaries(
+        plan: TransferTablePlan,
+        source: TransferDriverContext,
+        options: TransferOptions
+    ) async throws -> [String]? {
+        guard plan.structure.primaryKeyColumns.count == 1 else { return nil }
+        let column = plan.structure.primaryKeyColumns[0]
+        guard TransferParallelism.shouldParallelize(
+            estimatedRows: try? await source.approximateRowCount(table: plan.table),
+            threshold: Self.inTableParallelThreshold
+        ) else { return nil }
+        let partitions = MetadataConnectionPool.cappedParallelism(options.inTableParallelism)
+        return try await source.primaryKeyRangeBoundaries(
+            table: plan.table,
+            column: column,
+            partitions: partitions
+        )
+    }
+
+    /// Runs one table as several keyset partitions, each on its own driver
+    /// pair, starting at the previous partition's boundary. Partition 0 reads
+    /// up to the first boundary; the last partition reads to the end of the
+    /// table. Every partition checkpoint carries its own index, so a resume
+    /// restores each range separately.
+    private func copyTablePartitioned(
+        plan: TransferTablePlan,
+        boundaries: [String],
+        options: TransferOptions,
+        limits: PluginServerLimits?,
+        context: TransferCopyContext
+    ) async throws -> Int {
+        let partitionCount = boundaries.count + 1
+        guard let lanes = context.lanes else { return 0 }
+        return try await withThrowingTaskGroup(of: Int.self) { group in
+            for index in 0 ..< partitionCount {
+                let upperBound = index < boundaries.count ? boundaries[index] : nil
+                let lowerBound = index > 0 ? boundaries[index - 1] : nil
+                let resumeCursor = context.resume?.entry(table: plan.table, partition: index)?.cursor
+                    ?? lowerBound.map { TransferChunkCursor(lastKey: [$0], rowsDone: 0) }
+                group.addTask { @MainActor in
+                    try await lanes.withLane { laneSource, laneTarget in
+                        try await self.withAdoptedSnapshot(source: laneSource, context: context) {
+                            try await self.copyRows(
+                                plan: plan,
+                                source: laneSource,
+                                target: laneTarget,
+                                options: options,
+                                limits: limits,
+                                checkpoint: context.checkpoint,
+                                jobId: context.jobId,
+                                resumeCursor: resumeCursor,
+                                partition: index,
+                                upperBound: upperBound
+                            )
+                        }
+                    }
+                }
+            }
+            var total = 0
+            for try await written in group {
+                total += written
+            }
+            return total
+        }
+    }
+
+    /// A lane reads the run's snapshot, and gives the transaction that pins it
+    /// back before the lane is released. The rollback is awaited: a detached
+    /// one lands after the driver is back in the pool, on whatever the next
+    /// consumer is doing.
+    private func withAdoptedSnapshot<T: Sendable>(
+        source: TransferDriverContext,
+        context: TransferCopyContext,
+        body: @Sendable () async throws -> T
+    ) async throws -> T {
+        guard let token = context.snapshotToken else { return try await body() }
+        let adopted = (try? await source.adoptSnapshotToken(token)) ?? false
+        if !adopted { context.gate.downgradeConsistency() }
+        do {
+            let result = try await body()
+            if adopted { try? await source.execute("ROLLBACK") }
+            return result
+        } catch {
+            if adopted { try? await source.execute("ROLLBACK") }
+            throw error
+        }
+    }
+
+    private func mergeCopyResult(
+        _ result: TransferTableCopyResult,
+        run: inout TransferRunState,
+        options: TransferOptions,
+        target: TransferDriverContext,
+        gate: TransferRunGate
+    ) {
+        if result.skipped { return }
+        if let error = result.error {
+            if error is CancellationError {
+                return
+            }
+            run.fail(result.table, message: error.localizedDescription, duration: result.duration)
+            recordHistory(
+                table: result.table,
+                rows: 0,
+                target: target,
+                startedAt: result.startedAt,
+                error: error
+            )
+            if !options.continueOnError {
+                run.stopped = true
+                gate.stop()
+            }
+        } else {
+            run.succeed(result.table, rows: result.rows, duration: result.duration)
+            recordHistory(
+                table: result.table,
+                rows: result.rows,
+                target: target,
+                startedAt: result.startedAt,
+                error: nil
+            )
+        }
+    }
+
+    // MARK: - Constraint Phase
 
     /// `ALTER TABLE ... ADD CONSTRAINT FOREIGN KEY` validates every row already
     /// in the table, so a source that holds an orphan row aborts the statement
@@ -153,14 +505,15 @@ extension DataTransferService {
     func runConstraintPhase(
         _ plans: [TransferTablePlan],
         target: TransferDriverContext,
-        run: inout TransferRunState
+        run: inout TransferRunState,
+        resume: TransferResumeState? = nil
     ) async {
         guard !run.stopped else { return }
         state.statusMessage = String(localized: "Adding indexes and foreign keys\u{2026}")
         defer { state.statusMessage = "" }
 
         let foreignKeysDisabled = await disableForeignKeyChecks(on: target)
-        await applyConstraintPlans(plans, target: target, run: &run)
+        await applyConstraintPlans(plans, target: target, run: &run, resume: resume)
         if foreignKeysDisabled {
             await restoreForeignKeyChecks(on: target)
         }
@@ -172,14 +525,15 @@ extension DataTransferService {
     private func applyConstraintPlans(
         _ plans: [TransferTablePlan],
         target: TransferDriverContext,
-        run: inout TransferRunState
+        run: inout TransferRunState,
+        resume: TransferResumeState?
     ) async {
         for plan in plans where !run.isBlocked(plan.table) {
             if shouldStop {
                 run.stopped = true
                 return
             }
-            let messages = await applyConstraintSteps(plan, target: target)
+            let messages = await applyConstraintSteps(plan, target: target, resume: resume)
             run.finish(plan.table)
             if !messages.isEmpty {
                 run.warn(plan.table, messages: messages)
@@ -194,6 +548,16 @@ extension DataTransferService {
             switch step {
             case .dropTargetTable:
                 try await target.execute(target.dropTableStatement(plan.table))
+            case .dropTargetTypes:
+                for type in plan.structure.enumTypes {
+                    guard let sql = target.dropEnumTypeStatement(type) else { continue }
+                    try await target.execute(sql)
+                }
+            case .createTargetTypes:
+                for type in plan.structure.enumTypes {
+                    guard let sql = target.createEnumTypeStatement(type) else { continue }
+                    try await target.execute(sql)
+                }
             case .createTargetTable:
                 guard let sql = target.createTableStatement(plan.structure.definition) else {
                     throw TransferError.createTableUnsupported(plan.table)
@@ -213,30 +577,53 @@ extension DataTransferService {
     /// so a rejected index never costs the same table its foreign keys.
     private func applyConstraintSteps(
         _ plan: TransferTablePlan,
-        target: TransferDriverContext
+        target: TransferDriverContext,
+        resume: TransferResumeState?
     ) async -> [String] {
         var messages: [String] = []
+        // Only tables with committed progress can collide with objects the
+        // previous run created before it crashed.
+        let tolerateExisting = resume?.hasProgress(table: plan.table) == true
 
         for step in plan.steps {
             switch step {
             case .createIndexes:
                 for index in plan.structure.indexes {
                     guard let sql = target.addIndexStatement(table: plan.table, index: index) else { continue }
-                    await Self.appendFailure(of: sql, on: target, to: &messages)
+                    await appendConstraintFailure(
+                        of: sql,
+                        on: target,
+                        table: plan.table,
+                        tolerateExisting: tolerateExisting,
+                        to: &messages
+                    )
                 }
             case .createForeignKeys:
                 for foreignKey in plan.structure.foreignKeys {
                     guard let sql = target.addForeignKeyStatement(table: plan.table, foreignKey: foreignKey) else {
                         continue
                     }
-                    await Self.appendFailure(of: sql, on: target, to: &messages)
+                    await appendConstraintFailure(
+                        of: sql,
+                        on: target,
+                        table: plan.table,
+                        tolerateExisting: tolerateExisting,
+                        to: &messages
+                    )
                 }
             case .resetSequences:
                 for column in plan.structure.autoIncrementColumns {
                     guard let sql = target.resetSequenceStatement(table: plan.table, column: column) else { continue }
-                    await Self.appendFailure(of: sql, on: target, to: &messages)
+                    await appendConstraintFailure(
+                        of: sql,
+                        on: target,
+                        table: plan.table,
+                        tolerateExisting: tolerateExisting,
+                        to: &messages
+                    )
                 }
-            case .dropTargetTable, .createTargetTable, .truncateTarget, .transferRows, .failMissingTarget:
+            case .dropTargetTable, .dropTargetTypes, .createTargetTypes, .createTargetTable,
+                 .truncateTarget, .transferRows, .failMissingTarget:
                 continue
             }
         }
@@ -244,163 +631,44 @@ extension DataTransferService {
         return messages
     }
 
-    private static func appendFailure(
+    private func appendConstraintFailure(
         of statement: String,
         on target: TransferDriverContext,
+        table: String,
+        tolerateExisting: Bool,
         to messages: inout [String]
     ) async {
         do {
-            try await target.execute(statement)
+            try await runConstraintStatement(
+                statement,
+                target: target,
+                table: table,
+                tolerateExisting: tolerateExisting
+            )
         } catch {
             messages.append(error.localizedDescription)
-            logger.warning(
+            Self.logger.warning(
                 "Transfer constraint statement failed: \(error.localizedDescription, privacy: .public)"
             )
         }
     }
 
-    // MARK: - Row Copy
-
-    private func copyRows(
-        plan: TransferTablePlan,
-        source: TransferDriverContext,
+    /// An index or foreign key a previous run created before it crashed is a
+    /// duplicate on re-run, not a failure: a resumed run skips what is already
+    /// there and reports it instead of failing the table.
+    private func runConstraintStatement(
+        _ sql: String,
         target: TransferDriverContext,
-        options: TransferOptions
-    ) async throws -> Int {
-        let dataSource = ExportDataSourceAdapter(driver: source.driver, databaseType: source.databaseType)
-        let stream = dataSource.streamRows(table: plan.table, databaseName: source.containerName)
-
-        var sink: ImportDataSinkAdapter?
-        var headerColumns: [String] = []
-        var pending: [[String: PluginCellValue]] = []
-        var written = 0
-        var transactionOpen = false
-        var foreignKeysDisabled = false
-
-        do {
-            for try await element in stream {
-                if shouldStop { throw CancellationError() }
-
-                switch element {
-                case .header(let header):
-                    headerColumns = header.columns
-                    sink = try makeSink(plan: plan, header: header, target: target)
-                    if options.useSingleTransaction {
-                        try await target.driver.beginTransaction(mode: .readWrite)
-                        transactionOpen = true
-                    }
-                    try await sink?.disableForeignKeyChecks()
-                    foreignKeysDisabled = true
-                case .rows(let rows):
-                    guard let sink else { throw TransferError.structureUnavailable(plan.table) }
-                    for row in rows {
-                        pending.append(Self.rowDictionary(row, columns: headerColumns))
-                    }
-                    guard pending.count >= Self.batchRowCount else { continue }
-                    written += try await flush(&pending, into: sink)
-                }
-            }
-
-            if let sink, !pending.isEmpty {
-                written += try await flush(&pending, into: sink)
-            }
-            if foreignKeysDisabled {
-                try await sink?.enableForeignKeyChecks()
-            }
-            if transactionOpen {
-                try await target.driver.commitTransaction()
-                transactionOpen = false
-            }
-            return written
-        } catch {
-            if transactionOpen {
-                try? await target.driver.rollbackTransaction()
-            }
-            if foreignKeysDisabled {
-                try? await sink?.enableForeignKeyChecks()
-            }
-            throw error
-        }
-    }
-
-    private func flush(
-        _ pending: inout [[String: PluginCellValue]],
-        into sink: ImportDataSinkAdapter
-    ) async throws -> Int {
-        let batch = pending
-        pending.removeAll(keepingCapacity: true)
-        try await sink.insertRows(batch)
-        state.processedRows += batch.count
-        state.currentTableProcessedRows += batch.count
-        return batch.count
-    }
-
-    private func makeSink(
-        plan: TransferTablePlan,
-        header: PluginStreamHeader,
-        target: TransferDriverContext
-    ) throws -> ImportDataSinkAdapter {
-        let generated = plan.structure.generatedColumns
-        let mapping = Self.identityColumnMapping(headerColumns: header.columns, generatedColumns: generated)
-        try Self.validateColumnMapping(
-            table: plan.table,
-            headerColumns: header.columns,
-            generatedColumns: generated,
-            mapping: mapping
-        )
-
-        let generator = try SQLStatementGenerator(
-            tableName: plan.table,
-            columns: header.columns.filter { !generated.contains($0) },
-            primaryKeyColumns: plan.structure.primaryKeyColumns,
-            databaseType: target.databaseType,
-            generatedColumns: generated,
-            quoteIdentifier: target.driver.quoteIdentifier
-        )
-
-        return ImportDataSinkAdapter(
-            driver: target.driver,
-            databaseType: target.databaseType,
-            targetTable: plan.table,
-            columnMapping: mapping,
-            rowGenerator: generator
-        )
-    }
-
-    static func rowDictionary(_ row: PluginRow, columns: [String]) -> [String: PluginCellValue] {
-        var values: [String: PluginCellValue] = [:]
-        for (index, column) in columns.enumerated() where index < row.count {
-            values[column] = row[index]
-        }
-        return values
-    }
-
-    /// Source and target share a table definition here, so every column maps
-    /// onto itself. Server-computed columns are left out: they reject a
-    /// written value.
-    static func identityColumnMapping(
-        headerColumns: [String],
-        generatedColumns: Set<String>
-    ) -> [String: String] {
-        var mapping: [String: String] = [:]
-        for column in headerColumns where !generatedColumns.contains(column) {
-            mapping[column] = column
-        }
-        return mapping
-    }
-
-    /// A sink with an empty mapping drops every row and reports success, so an
-    /// incomplete mapping has to stop the run rather than write silence.
-    static func validateColumnMapping(
         table: String,
-        headerColumns: [String],
-        generatedColumns: Set<String>,
-        mapping: [String: String]
-    ) throws {
-        guard !mapping.isEmpty else { throw TransferError.emptyColumnMapping(table) }
-        let expected = headerColumns.filter { !generatedColumns.contains($0) }
-        guard mapping.count == Set(expected).count else {
-            throw TransferError.columnMappingIncomplete(table)
+        tolerateExisting: Bool
+    ) async throws {
+        do {
+            try await target.execute(sql)
+        } catch {
+            guard tolerateExisting, TransferErrorClassifier.isDuplicateObject(error) else { throw error }
+            Self.logger.info(
+                "Constraint already exists on \(table, privacy: .public), skipping: \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
 
@@ -436,6 +704,73 @@ extension DataTransferService {
             rowCount: rows,
             wasSuccessful: error == nil,
             errorMessage: error?.localizedDescription
+        )
+    }
+}
+
+// MARK: - Row Copy Support Types
+
+/// What the data phase is given once for the whole run: the estimates behind
+/// the progress bar, the target's limits, the checkpoint to resume from, and
+/// the lanes the run may copy on.
+private struct TransferRunInputs {
+    let estimates: [String: Int]
+    let limits: PluginServerLimits?
+    let resume: TransferResumeState?
+    let jobId: UUID
+    let lanes: TransferLanePool?
+}
+
+/// Everything a table copy needs that is not the pair of drivers it runs on.
+private struct TransferCopyContext {
+    let resume: TransferResumeState?
+    let jobId: UUID
+    let checkpoint: TransferCheckpointStore
+    let snapshotToken: String?
+    let gate: TransferRunGate
+    let lanes: TransferLanePool?
+    let boundaries: [String: [String]]
+    let parallelTables: Bool
+}
+
+@MainActor
+private final class TransferRunGate {
+    private(set) var stopped = false
+    private(set) var isDatabaseWide = true
+
+    func stop() {
+        stopped = true
+    }
+
+    func downgradeConsistency() {
+        isDatabaseWide = false
+    }
+}
+
+private struct TransferTableCopyResult: Sendable {
+    let table: String
+    let rows: Int
+    let duration: TimeInterval
+    let error: Error?
+    let startedAt: Date
+    let skipped: Bool
+
+    init(table: String, rows: Int, duration: TimeInterval, error: Error?, startedAt: Date) {
+        self.table = table
+        self.rows = rows
+        self.duration = duration
+        self.error = error
+        self.startedAt = startedAt
+        skipped = false
+    }
+
+    static func skipped(_ table: String) -> TransferTableCopyResult {
+        TransferTableCopyResult(
+            table: table,
+            rows: 0,
+            duration: 0,
+            error: nil,
+            startedAt: Date()
         )
     }
 }
@@ -477,16 +812,22 @@ struct TransferRunState {
         finished.insert(table)
     }
 
-    func report(for selections: [TransferTableSelection]) -> TransferReport {
+    func report(
+        for selections: [TransferTableSelection],
+        counts: [String: (source: Int, target: Int)] = [:],
+        consistency: TransferConsistency = .perTable
+    ) -> TransferReport {
         let results = selections.map { selection -> TransferTableResult in
             TransferTableResult(
                 table: selection.table,
                 rowsTransferred: rows[selection.table] ?? 0,
                 duration: durations[selection.table] ?? 0,
-                outcome: outcome(for: selection.table)
+                outcome: outcome(for: selection.table),
+                sourceCount: counts[selection.table]?.source,
+                targetCount: counts[selection.table]?.target
             )
         }
-        return TransferReport(results: results, wasCancelled: stopped)
+        return TransferReport(results: results, wasCancelled: stopped, consistency: consistency)
     }
 
     /// A table whose rows landed before the run stopped is not "not completed":
@@ -500,4 +841,9 @@ struct TransferRunState {
         guard rows[table] != nil else { return .notRun }
         return .warned([Self.constraintsNotAppliedMessage])
     }
+}
+
+enum TransferBatchSizing {
+    static let defaultMaxBytes = 4 * 1_048_576
+    static let safetyMargin = 64 * 1_024
 }

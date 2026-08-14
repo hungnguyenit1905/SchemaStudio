@@ -18,6 +18,7 @@ final class MetadataConnectionPool {
     private struct Key: Hashable, Sendable {
         let scope: DatabaseScope
         let workload: Workload
+        let lane: Int
     }
 
     @MainActor
@@ -58,17 +59,27 @@ final class MetadataConnectionPool {
 
     private var entries: [Key: Entry] = [:]
     private var pending: [Key: Task<Void, Error>] = [:]
-    private let maxPerConnection = 6
+    private static let maxPerConnection = 6
     private let operationTimeoutSeconds: Double = 15
+
+    /// Every transfer lane holds one driver on the source connection and one
+    /// on the target connection, so the number of lanes is capped at half the
+    /// per-connection pool size. Beyond that, parallel lanes would queue on
+    /// the pool instead of running, and would crowd out the interactive lanes
+    /// the user's own browsing depends on.
+    static func cappedParallelism(_ requested: Int) -> Int {
+        min(max(1, requested), maxPerConnection / 2)
+    }
 
     private init() {}
 
     func withDriver<T: Sendable>(
         scope: DatabaseScope,
         workload: Workload = .interactive,
+        lane: Int = 0,
         _ body: @Sendable @escaping (DatabaseDriver) async throws -> T
     ) async throws -> T {
-        let entry = try await acquireEntry(scope: scope, workload: workload)
+        let entry = try await acquireEntry(scope: scope, workload: workload, lane: lane)
         entry.inFlightCount += 1
         entry.lastUsed = Date()
         defer { releaseEntry(entry) }
@@ -101,9 +112,9 @@ final class MetadataConnectionPool {
         }
     }
 
-    private func acquireEntry(scope: DatabaseScope, workload: Workload) async throws -> Entry {
+    private func acquireEntry(scope: DatabaseScope, workload: Workload, lane: Int) async throws -> Entry {
         let connectionId = scope.connectionId
-        let key = Key(scope: scope, workload: workload)
+        let key = Key(scope: scope, workload: workload, lane: lane)
         if let entry = entries[key], entry.driver.status == .connected {
             return entry
         }
@@ -244,7 +255,7 @@ final class MetadataConnectionPool {
     private func evictIdleIfNeeded(for connectionId: UUID) {
         let live = entries.filter { $0.key.scope.connectionId == connectionId }
         let pendingCount = pending.keys.filter { $0.scope.connectionId == connectionId }.count
-        guard live.count + pendingCount >= maxPerConnection else { return }
+        guard live.count + pendingCount >= Self.maxPerConnection else { return }
         let oldestIdle = live
             .filter { $0.value.inFlightCount == 0 }
             .min { $0.value.lastUsed < $1.value.lastUsed }

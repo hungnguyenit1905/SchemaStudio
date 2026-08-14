@@ -17,6 +17,10 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     internal var cachedPrivilegeCatalog: PluginPrivilegeCatalog?
 
+    internal var activeConnection: MariaDBPluginConnection? { mariadbConnection }
+    internal var isMariaDBServer: Bool { isMariaDB }
+    internal var activeDatabaseName: String { _activeDatabase }
+
     /// Detected server type from version string after connecting
     private var isMariaDB = false
 
@@ -334,7 +338,7 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         let safeTable = table.replacingOccurrences(of: "`", with: "``")
         let result = try await execute(query: "SHOW INDEX FROM `\(safeTable)`")
 
-        var indexMap: [String: (columns: [String], isUnique: Bool, type: String, prefixes: [String: Int])] = [:]
+        var indexMap: [String: MySQLIndexRows] = [:]
 
         for row in result.rows {
             guard let indexName = row[safe: 2]?.asText,
@@ -343,11 +347,17 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             let nonUnique = (row[safe: 1]?.asText) == "1"
             let indexType = (row[safe: 10]?.asText) ?? "BTREE"
             let subPart = (row[safe: 7]?.asText).flatMap { Int($0) }
+            // SHOW INDEX reports the sort order in Collation: D is descending,
+            // A ascending, and NULL means the index does not sort that column.
+            let isDescending = (row[safe: 5]?.asText) == "D"
 
             if var existing = indexMap[indexName] {
                 existing.columns.append(columnName)
                 if let subPart {
                     existing.prefixes[columnName] = subPart
+                }
+                if isDescending {
+                    existing.descending.insert(columnName)
                 }
                 indexMap[indexName] = existing
             } else {
@@ -355,16 +365,27 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                 if let subPart {
                     prefixes[columnName] = subPart
                 }
-                indexMap[indexName] = (columns: [columnName], isUnique: !nonUnique, type: indexType, prefixes: prefixes)
+                indexMap[indexName] = MySQLIndexRows(
+                    columns: [columnName],
+                    isUnique: !nonUnique,
+                    type: indexType,
+                    prefixes: prefixes,
+                    descending: isDescending ? [columnName] : []
+                )
             }
         }
 
         return indexMap
             .map { name, info in
                 PluginIndexInfo(
-                    name: name, columns: info.columns, isUnique: info.isUnique,
-                    isPrimary: name == "PRIMARY", type: info.type,
-                    columnPrefixes: info.prefixes.isEmpty ? nil : info.prefixes
+                    name: name,
+                    columns: info.columns,
+                    isUnique: info.isUnique,
+                    isPrimary: name == "PRIMARY",
+                    type: info.type,
+                    columnPrefixes: info.prefixes.isEmpty ? nil : info.prefixes,
+                    whereClause: nil,
+                    descendingColumns: info.descending
                 )
             }
             .sorted { $0.isPrimary && !$1.isPrimary }
@@ -770,12 +791,20 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
     }
 
     private func buildIndexDefinitionSQL(_ index: PluginIndexDefinition) -> String {
+        let keepsDirection = MySQLIndexDirection.supportsDescendingIndex(
+            version: _serverVersion,
+            isMariaDB: isMariaDB
+        )
         let cols = index.columns.map { col -> String in
             let quoted = quoteIdentifier(col)
+            var part = quoted
             if let prefixes = index.columnPrefixes, let prefix = prefixes[col] {
-                return "\(quoted)(\(prefix))"
+                part = "\(quoted)(\(prefix))"
             }
-            return quoted
+            if keepsDirection, index.descendingColumns.contains(col) {
+                part += " DESC"
+            }
+            return part
         }.joined(separator: ", ")
         var def = ""
 
@@ -935,6 +964,38 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     func foreignKeyEnableStatements() -> [String]? {
         ["SET FOREIGN_KEY_CHECKS=1"]
+    }
+
+    // MARK: - Bulk Load
+
+    func bulkLoadWriter(
+        table: String,
+        schema: String?,
+        columns: [String]
+    ) async throws -> PluginBulkLoadWriter? {
+        try await makeBulkLoadWriter(table: table, schema: schema, columns: columns)
+    }
+
+    func serverLimits() async throws -> PluginServerLimits? {
+        let result = try await execute(query: "SELECT @@max_allowed_packet, @@local_infile")
+        guard let row = result.rows.first else { return nil }
+        let maxPacket = row[safe: 0]?.asText.flatMap { Int($0) }
+        let localInfile = row[safe: 1]?.asText == "1"
+        return PluginServerLimits(
+            maxPacketBytes: maxPacket,
+            maxBindParameters: 65_535,
+            supportsLocalInfile: localInfile
+        )
+    }
+
+    func constraintDisableCapability() async -> PluginConstraintDisableCapability {
+        do {
+            _ = try await execute(query: "SET FOREIGN_KEY_CHECKS=0")
+            _ = try await execute(query: "SET FOREIGN_KEY_CHECKS=1")
+            return .supported
+        } catch {
+            return .notPermitted
+        }
     }
 
     // MARK: - All Tables Metadata

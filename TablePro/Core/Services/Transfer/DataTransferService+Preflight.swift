@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import os
 import TableProPluginKit
 
 extension DataTransferService {
@@ -22,6 +23,17 @@ extension DataTransferService {
         let selectedTables = Set(selections.map(\.table))
         let inbound = mode == .copy ? try await inboundForeignKeys(at: target) : [:]
 
+        let limits = try? await target.serverLimits()
+        let constraintDisable = await target.constraintDisableCapability()
+        if constraintDisable == .notPermitted {
+            Self.logger.warning("Target cannot disable constraint checks; drops and truncates may run slower")
+        }
+
+        let keepsDescendingIndex = TransferIndexDirectionSupport.keepsDescendingIndex(
+            targetType: target.databaseType,
+            version: target.serverVersion
+        )
+
         var plans: [TransferTablePlan] = []
         var failures: [TransferPreflightFailure] = []
 
@@ -35,7 +47,8 @@ extension DataTransferService {
                     options: options,
                     targetExists: targetTables.contains(selection.table),
                     selectedTables: selectedTables,
-                    inboundForeignKeys: inbound
+                    inboundForeignKeys: inbound,
+                    keepsDescendingIndex: keepsDescendingIndex
                 )
                 plans.append(plan)
             } catch {
@@ -45,7 +58,11 @@ extension DataTransferService {
             }
         }
 
-        return TransferPreview(plans: plans, failures: failures)
+        return TransferPreview(
+            plans: plans,
+            failures: failures,
+            targetCapabilities: TransferTargetCapabilities(limits: limits, constraintDisable: constraintDisable)
+        )
     }
 
     private func preflightTable(
@@ -56,19 +73,23 @@ extension DataTransferService {
         options: TransferOptions,
         targetExists: Bool,
         selectedTables: Set<String>,
-        inboundForeignKeys: [String: [String]]
+        inboundForeignKeys: [String: [String]],
+        keepsDescendingIndex: Bool
     ) async throws -> TransferTablePlan {
         let columns = try await source.fetchColumns(table: table)
         guard !columns.isEmpty else { throw TransferError.structureUnavailable(table) }
 
         let indexes = try await source.fetchIndexes(table: table)
         let foreignKeys = try await source.fetchForeignKeys(table: table)
+        let mapper = TransferTypeMapper(sourceType: source.databaseType, targetType: target.databaseType)
         let structure = TransferStructureBuilder.build(
             table: table,
             columns: columns,
             indexes: indexes,
             foreignKeys: foreignKeys,
-            targetSchema: target.schema
+            targetSchema: target.schema,
+            mapper: mapper.isSameDialect ? nil : mapper,
+            keepsDescendingIndex: keepsDescendingIndex
         )
 
         let steps = TransferModePlanner.plan(mode: mode, options: options, targetExists: targetExists)
@@ -101,7 +122,12 @@ extension DataTransferService {
             structure: structure,
             targetExists: targetExists,
             steps: steps,
-            extraTargetColumns: extraTargetColumns
+            extraTargetColumns: extraTargetColumns,
+            keyLiteralKinds: TransferChunkPlanner.keyLiteralKinds(
+                columns: columns,
+                primaryKeyColumns: structure.primaryKeyColumns,
+                databaseType: source.databaseType
+            )
         )
     }
 

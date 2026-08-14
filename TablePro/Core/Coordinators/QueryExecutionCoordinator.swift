@@ -73,7 +73,7 @@ final class QueryExecutionCoordinator {
         OperationRequest(
             connectionId: parent.connectionId,
             databaseType: parent.connection.type,
-            sql: statements.joined(separator: "\n"),
+            sql: statements.joined(separator: ";\n"),
             kind: OperationKind.worst(of: statements, databaseType: parent.connection.type),
             caller: .userInterface,
             capabilities: .interactiveUser,

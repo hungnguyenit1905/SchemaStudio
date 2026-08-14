@@ -128,6 +128,25 @@ final class LibPQDriverCore: @unchecked Sendable {
         return pqConn.streamQuery(query)
     }
 
+    func beginCopyFromStdin(_ query: String) async throws {
+        guard let pqConn = libpqConnection else { throw LibPQPluginError.notConnected }
+        try await pqConn.beginCopyFromStdin(query)
+    }
+
+    func copyWrite(_ data: Data) async throws {
+        guard let pqConn = libpqConnection else { throw LibPQPluginError.notConnected }
+        try await pqConn.copyWrite(data)
+    }
+
+    func copyFinish() async throws -> Int {
+        guard let pqConn = libpqConnection else { throw LibPQPluginError.notConnected }
+        return try await pqConn.copyFinish()
+    }
+
+    func copyAbort() async {
+        await libpqConnection?.copyAbort()
+    }
+
     func cancelQuery() {
         libpqConnection?.cancelCurrentQuery()
     }

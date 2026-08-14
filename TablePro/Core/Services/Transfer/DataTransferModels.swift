@@ -26,6 +26,8 @@ struct TransferOptions: Sendable, Hashable {
     var createTargetIfNotExists: Bool = true
     var useSingleTransaction: Bool = true
     var continueOnError: Bool = false
+    var parallelTables: Int = 1
+    var inTableParallelism: Int = 2
 }
 
 struct TransferEndpoint: Sendable, Hashable {
@@ -68,6 +70,8 @@ struct TransferTableResult: Sendable, Identifiable, Hashable {
     let rowsTransferred: Int
     let duration: TimeInterval
     let outcome: TransferTableOutcome
+    let sourceCount: Int?
+    let targetCount: Int?
 
     var id: String { table }
 
@@ -82,16 +86,77 @@ struct TransferTableResult: Sendable, Identifiable, Hashable {
     }
 
     var didRun: Bool { outcome != .notRun }
+
+    var countsMatch: Bool? {
+        guard let sourceCount, let targetCount else { return nil }
+        return sourceCount == targetCount
+    }
+}
+
+/// How consistent the source reads were. A PostgreSQL run pins one snapshot
+/// and every connection reads it, which is `databaseWide`. Without a shared
+/// snapshot (MySQL, SQLite, SQL Server), each table is read at its own point
+/// in time and the report says `perTable` rather than implying more.
+enum TransferConsistency: Sendable, Hashable {
+    case databaseWide
+    case perTable
+
+    var displayName: String {
+        switch self {
+        case .databaseWide:
+            return String(localized: "Consistent across the whole database")
+        case .perTable:
+            return String(
+                localized: "Consistent per table only, not across the whole database"
+            )
+        }
+    }
 }
 
 struct TransferReport: Sendable {
     let results: [TransferTableResult]
     let wasCancelled: Bool
+    let consistency: TransferConsistency
+
+    init(results: [TransferTableResult], wasCancelled: Bool, consistency: TransferConsistency = .perTable) {
+        self.results = results
+        self.wasCancelled = wasCancelled
+        self.consistency = consistency
+    }
 
     var failedCount: Int { results.count(where: { $0.errorMessage != nil }) }
     var warningCount: Int { results.count(where: { !$0.warningMessages.isEmpty }) }
     var notRunCount: Int { results.count(where: { !$0.didRun }) }
     var totalRows: Int { results.reduce(0) { $0 + $1.rowsTransferred } }
+    var mismatchedCounts: [TransferTableResult] {
+        results.filter { $0.countsMatch == false }
+    }
+}
+
+/// Where a previous run of the same source/target/mode left off, loaded from
+/// the checkpoint store before the run starts.
+struct TransferResumeState: Sendable {
+    let entries: [TransferCheckpointStore.Entry]
+
+    func entry(table: String, partition: Int = 0) -> TransferCheckpointStore.Entry? {
+        entries.first { $0.table == table && $0.partition == partition }
+    }
+
+    /// A table whose every partition recorded its final chunk is fully copied.
+    func isComplete(table: String) -> Bool {
+        let tableEntries = entries.filter { $0.table == table }
+        return !tableEntries.isEmpty && tableEntries.allSatisfy(\.isComplete)
+    }
+
+    /// Any recorded progress at all, which means the target already holds
+    /// committed rows for this table and must not be dropped or truncated.
+    func hasProgress(table: String) -> Bool {
+        entries.contains { $0.table == table }
+    }
+
+    func rowsDone(table: String) -> Int {
+        entries.filter { $0.table == table }.reduce(0) { $0 + $1.cursor.rowsDone }
+    }
 }
 
 struct TransferState {
@@ -138,6 +203,7 @@ enum TransferError: LocalizedError, Equatable {
     case blockingForeignKeys(table: String, references: [String])
     case emptyColumnMapping(String)
     case columnMappingIncomplete(String)
+    case chunkCursorUnavailable(String)
     case preflightFailed([TransferPreflightFailure])
 
     var errorDescription: String? {
@@ -191,6 +257,13 @@ enum TransferError: LocalizedError, Equatable {
         case .columnMappingIncomplete(let table):
             return String(
                 format: String(localized: "Some columns of '%@' have no match at the target, so rows would lose data."),
+                table
+            )
+        case .chunkCursorUnavailable(let table):
+            return String(
+                format: String(
+                    localized: "Table '%@' has a primary key that never appears in its rows, so chunked transfer cannot continue."
+                ),
                 table
             )
         case .preflightFailed(let failures):

@@ -60,6 +60,10 @@ extension MSSQLPluginDriver {
         if inlinePK, col.isPrimaryKey {
             def += " PRIMARY KEY"
         }
+        if let allowed = col.allowedValues, !allowed.isEmpty {
+            let list = allowed.map { "'\(escapeStringLiteral($0))'" }.joined(separator: ", ")
+            def += " CHECK (\(quoteIdentifier(col.name)) IN (\(list)))"
+        }
         return def
     }
 

@@ -188,6 +188,10 @@ struct IndexInfo: Identifiable, Hashable {
     let columnPrefixes: [String: Int]?
     let whereClause: String?
 
+    /// The columns the index sorts descending. A driver that does not report
+    /// sort direction leaves this empty, which reads as every column ascending.
+    let descendingColumns: Set<String>
+
     init(
         name: String,
         columns: [String],
@@ -195,7 +199,8 @@ struct IndexInfo: Identifiable, Hashable {
         isPrimary: Bool,
         type: String,
         columnPrefixes: [String: Int]? = nil,
-        whereClause: String? = nil
+        whereClause: String? = nil,
+        descendingColumns: Set<String> = []
     ) {
         self.name = name
         self.columns = columns
@@ -204,6 +209,7 @@ struct IndexInfo: Identifiable, Hashable {
         self.type = type
         self.columnPrefixes = columnPrefixes
         self.whereClause = whereClause
+        self.descendingColumns = descendingColumns
     }
 }
 

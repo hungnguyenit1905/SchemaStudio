@@ -20,6 +20,10 @@ struct EditableIndexDefinition: Hashable, Codable, Identifiable {
     var columnPrefixes: [String: Int] = [:]
     var whereClause: String?
 
+    /// Carried through editing so saving an index the editor did not change the
+    /// direction of does not quietly rebuild it ascending.
+    var descendingColumns: Set<String> = []
+
     enum IndexType: String, Codable, CaseIterable {
         case btree = "BTREE"
         case hash = "HASH"
@@ -62,15 +66,20 @@ struct EditableIndexDefinition: Hashable, Codable, Identifiable {
             isPrimary: indexInfo.isPrimary,
             comment: nil,
             columnPrefixes: indexInfo.columnPrefixes ?? [:],
-            whereClause: indexInfo.whereClause
+            whereClause: indexInfo.whereClause,
+            descendingColumns: indexInfo.descendingColumns
         )
     }
 
     func toPlugin() -> PluginIndexDefinition {
         PluginIndexDefinition(
-            name: name, columns: columns, isUnique: isUnique, indexType: type.rawValue,
+            name: name,
+            columns: columns,
+            isUnique: isUnique,
+            indexType: type.rawValue,
             columnPrefixes: columnPrefixes.isEmpty ? nil : columnPrefixes,
-            whereClause: whereClause
+            whereClause: whereClause,
+            descendingColumns: descendingColumns
         )
     }
 
@@ -83,7 +92,8 @@ struct EditableIndexDefinition: Hashable, Codable, Identifiable {
             isPrimary: isPrimary,
             type: type.rawValue,
             columnPrefixes: columnPrefixes.isEmpty ? nil : columnPrefixes,
-            whereClause: whereClause
+            whereClause: whereClause,
+            descendingColumns: descendingColumns
         )
     }
 }

@@ -7,6 +7,8 @@ import Foundation
 
 enum TransferStep: Sendable, Hashable {
     case dropTargetTable
+    case dropTargetTypes
+    case createTargetTypes
     case createTargetTable
     case truncateTarget
     case transferRows
@@ -23,7 +25,9 @@ enum TransferModePlanner {
             var steps: [TransferStep] = []
             if targetExists {
                 steps.append(.dropTargetTable)
+                steps.append(.dropTargetTypes)
             }
+            steps.append(.createTargetTypes)
             steps.append(.createTargetTable)
             steps.append(contentsOf: dataAndConstraintSteps(includeConstraints: true))
             return steps
@@ -32,7 +36,7 @@ enum TransferModePlanner {
                 return [.truncateTarget] + dataAndConstraintSteps(includeConstraints: false)
             }
             guard options.createTargetIfNotExists else { return [.failMissingTarget] }
-            return [.createTargetTable] + dataAndConstraintSteps(includeConstraints: true)
+            return [.createTargetTypes, .createTargetTable] + dataAndConstraintSteps(includeConstraints: true)
         }
     }
 

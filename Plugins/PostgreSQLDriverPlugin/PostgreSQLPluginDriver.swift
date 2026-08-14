@@ -233,6 +233,13 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         let columnOrdering = versionedCapabilities.hasArrayPosition
             ? "ORDER BY array_position(ix.indkey, a.attnum)"
             : "ORDER BY a.attnum"
+        // indoption carries one bit per key column and bit 0 is DESC. Its
+        // subscript is zero-based while array_position counts from one, hence
+        // the offset. A server without array_position cannot line the two up,
+        // so it reports no direction rather than a guessed one.
+        let descendingColumns = versionedCapabilities.hasArrayPosition
+            ? "ARRAY_AGG(a.attname) FILTER (WHERE (ix.indoption[array_position(ix.indkey, a.attnum) - 1] & 1) = 1)"
+            : "NULL"
         let query = """
         SELECT
             i.relname AS index_name,
@@ -240,7 +247,8 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
             ix.indisunique AS is_unique,
             ix.indisprimary AS is_primary,
             am.amname AS index_type,
-            pg_get_expr(ix.indpred, ix.indrelid) AS predicate
+            pg_get_expr(ix.indpred, ix.indrelid) AS predicate,
+            \(descendingColumns) AS descending_columns
         FROM pg_index ix
         JOIN pg_class i ON i.oid = ix.indexrelid
         JOIN pg_class t ON t.oid = ix.indrelid
@@ -257,15 +265,32 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
                 .trimmingCharacters(in: CharacterSet(charactersIn: "{}"))
                 .components(separatedBy: ",")
             let whereClause = row.count > 5 ? row[5].asText : nil
+            let descending = row.count > 6 ? Self.pgTextArray(row[6].asText) : nil
             return PluginIndexInfo(
                 name: name,
                 columns: columns,
                 isUnique: row[2].asText == "t",
                 isPrimary: row[3].asText == "t",
                 type: row[4].asText?.uppercased() ?? "BTREE",
-                whereClause: whereClause
+                columnPrefixes: nil,
+                whereClause: whereClause,
+                descendingColumns: descending
             )
         }
+    }
+
+    /// A `text[]` arrives as `{a,b}`, and an index with no descending column
+    /// arrives as NULL rather than as an empty array.
+    static func pgTextArray(_ text: String?) -> Set<String>? {
+        guard let text, text.hasPrefix("{"), text.hasSuffix("}") else { return nil }
+        let inner = text.dropFirst().dropLast()
+        guard !inner.isEmpty else { return [] }
+        return Set(
+            inner
+                .components(separatedBy: ",")
+                .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "\"")) }
+                .filter { !$0.isEmpty }
+        )
     }
 
     func fetchForeignKeys(table: String, schema: String?) async throws -> [PluginForeignKeyInfo] {
@@ -1147,7 +1172,28 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         if inlinePK, col.isPrimaryKey {
             def += " PRIMARY KEY"
         }
+        if let allowed = col.allowedValues, !allowed.isEmpty {
+            let list = allowed.map { "'\(escapeLiteral($0))'" }.joined(separator: ", ")
+            def += " CHECK (\(quoteIdentifier(col.name)) IN (\(list)))"
+        }
         return def
+    }
+
+    func generateCreateEnumTypeSQL(name: String, schema: String?, values: [String]) -> String? {
+        guard !values.isEmpty else { return nil }
+        let list = values.map { "'\(escapeLiteral($0))'" }.joined(separator: ", ")
+        return "CREATE TYPE \(qualifiedTypeName(name, schema: schema)) AS ENUM (\(list));"
+    }
+
+    func generateDropEnumTypeSQL(name: String, schema: String?) -> String? {
+        "DROP TYPE IF EXISTS \(qualifiedTypeName(name, schema: schema));"
+    }
+
+    private func qualifiedTypeName(_ name: String, schema: String?) -> String {
+        guard let schema, !schema.isEmpty else {
+            return "\(quoteIdentifier(core.currentSchema)).\(quoteIdentifier(name))"
+        }
+        return "\(quoteIdentifier(schema)).\(quoteIdentifier(name))"
     }
 
     private func pgDefaultValue(_ value: String) -> String {
@@ -1162,7 +1208,10 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
     }
 
     private func pgIndexDefinition(_ index: PluginIndexDefinition, qualifiedTable: String) -> String {
-        let cols = index.columns.map { quoteIdentifier($0) }.joined(separator: ", ")
+        let cols = index.columns.map { column -> String in
+            let quoted = quoteIdentifier(column)
+            return index.descendingColumns.contains(column) ? "\(quoted) DESC" : quoted
+        }.joined(separator: ", ")
         let unique = index.isUnique ? "UNIQUE " : ""
         var def = "CREATE \(unique)INDEX \(quoteIdentifier(index.name)) ON \(qualifiedTable)"
         if let type = index.indexType?.uppercased(),

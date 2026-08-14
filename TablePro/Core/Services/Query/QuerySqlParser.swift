@@ -89,6 +89,18 @@ enum QuerySqlParser {
         return nil
     }
 
+    static func containsUnmaskedKeyword(_ keyword: String, in sql: String) -> Bool {
+        let masked = maskQuotedRegions(in: sql)
+        guard let regex = try? NSRegularExpression(
+            pattern: #"(?i)\b\#(NSRegularExpression.escapedPattern(for: keyword))\b"#,
+            options: []
+        ) else {
+            return true
+        }
+        let range = NSRange(masked.startIndex..., in: masked)
+        return regex.firstMatch(in: masked, options: [], range: range) != nil
+    }
+
     static func leadingWriteKind(from sql: String) -> SingleTableWriteStatement.Kind? {
         let masked = maskQuotedRegions(in: sql.trimmingCharacters(in: .whitespacesAndNewlines))
         if !matches(of: leadingDeleteRegex, in: masked).isEmpty { return .delete }

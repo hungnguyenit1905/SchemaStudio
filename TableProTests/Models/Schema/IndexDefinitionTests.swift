@@ -96,6 +96,36 @@ struct IndexDefinitionTests {
         #expect(editable.type == .btree)
     }
 
+    @Test("A descending column survives loading, editing and generating again")
+    func descendingColumnSurvivesEdit() {
+        let indexInfo = IndexInfo(
+            name: "idx_events_recent",
+            columns: ["created_at", "kind"],
+            isUnique: false,
+            isPrimary: false,
+            type: "BTREE",
+            descendingColumns: ["created_at"]
+        )
+
+        var editable = EditableIndexDefinition.from(indexInfo)
+        #expect(editable.descendingColumns == ["created_at"])
+
+        editable.name = "idx_events_recent_v2"
+        let plugin = editable.toPlugin()
+
+        #expect(plugin.descendingColumns == ["created_at"])
+        #expect(editable.toIndexInfo().descendingColumns == ["created_at"])
+    }
+
+    @Test("An index with no descending column reports none rather than nil")
+    func ascendingIndexHasNoDirection() {
+        let editable = EditableIndexDefinition.from(
+            IndexInfo(name: "idx_id", columns: ["id"], isUnique: false, isPrimary: false, type: "BTREE")
+        )
+        #expect(editable.descendingColumns.isEmpty)
+        #expect(editable.toPlugin().descendingColumns.isEmpty)
+    }
+
     @Test("toIndexInfo creates IndexInfo with matching fields")
     func toIndexInfoRoundTrip() {
         let editable = EditableIndexDefinition(

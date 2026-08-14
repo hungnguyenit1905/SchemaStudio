@@ -34,7 +34,9 @@ enum QueryClassifier {
 
     private static let explainPrefixes: [String] = ["EXPLAIN", "ANALYZE"]
 
-    private static let whereClauseRegex = try? NSRegularExpression(pattern: "\\sWHERE\\s", options: [])
+    private static let sqlLengthCap = 10_000
+
+    private static let rawWhereTokenRegex = try? NSRegularExpression(pattern: #"(?i)\bWHERE\b"#, options: [])
 
     static func isWriteQuery(_ sql: String, databaseType: DatabaseType) -> Bool {
         let trimmed = strippingLeadingComments(sql).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -76,20 +78,59 @@ enum QueryClassifier {
             return redisDangerousCommands.contains(firstToken)
         }
 
+        return statements(in: trimmed, databaseType: databaseType).contains(where: isDangerousStatement)
+    }
+
+    /// Broader than `isDangerousQuery`: also flags `UPDATE` with no `WHERE`. Feeds
+    /// `needsConfirmation`, never `capabilityDenial`, so MCP `execute_query` for an
+    /// unbounded `UPDATE` keeps behaving as it does today.
+    static func isUnboundedWrite(_ sql: String, databaseType: DatabaseType) -> Bool {
+        let trimmed = strippingLeadingComments(sql).trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if databaseType == .redis {
+            return false
+        }
+
+        return statements(in: trimmed, databaseType: databaseType).contains(where: isUnboundedWriteStatement)
+    }
+
+    private static func statements(in sql: String, databaseType: DatabaseType) -> [String] {
+        let dialect = SqlDialect.from(databaseTypeId: databaseType.rawValue)
+        let split = SQLStatementScanner.allStatements(in: sql, dialect: dialect)
+        return split.isEmpty ? [sql] : split
+    }
+
+    private static func isDangerousStatement(_ statement: String) -> Bool {
+        let trimmed = statement.trimmingCharacters(in: .whitespacesAndNewlines)
         let keyword = leadingKeyword(of: trimmed)
 
         if keyword == "DROP" || keyword == "TRUNCATE" {
             return true
         }
-
         if keyword == "DELETE" {
-            let uppercased = trimmed.uppercased()
-            let range = NSRange(uppercased.startIndex..., in: uppercased)
-            let hasWhere = whereClauseRegex?.firstMatch(in: uppercased, options: [], range: range) != nil
-            return !hasWhere
+            return !hasWhereToken(in: trimmed)
         }
-
         return false
+    }
+
+    private static func isUnboundedWriteStatement(_ statement: String) -> Bool {
+        let trimmed = statement.trimmingCharacters(in: .whitespacesAndNewlines)
+        let keyword = leadingKeyword(of: trimmed)
+        guard keyword == "UPDATE" || keyword == "DELETE" else { return false }
+        return !hasWhereToken(in: trimmed)
+    }
+
+    private static func hasWhereToken(in statement: String) -> Bool {
+        guard statement.utf16.count <= sqlLengthCap else {
+            return matchesRawWhereToken(statement)
+        }
+        return QuerySqlParser.containsUnmaskedKeyword("WHERE", in: statement)
+    }
+
+    private static func matchesRawWhereToken(_ sql: String) -> Bool {
+        guard let regex = rawWhereTokenRegex else { return true }
+        let range = NSRange(sql.startIndex..., in: sql)
+        return regex.firstMatch(in: sql, options: [], range: range) != nil
     }
 
     static func classifyTier(_ sql: String, databaseType: DatabaseType) -> QueryTier {

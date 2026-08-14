@@ -236,6 +236,15 @@ public protocol PluginDatabaseDriver: AnyObject, Sendable {
     func generateMoveColumnSQL(table: String, column: PluginColumnDefinition, afterColumn: String?) -> String?
     func generateCreateTableSQL(definition: PluginCreateTableDefinition) -> String?
 
+    /// Statement that declares a standalone enumerated type, for an engine that
+    /// has one. A column then names the type instead of carrying its own value
+    /// list. Return nil where the engine has no such type.
+    func generateCreateEnumTypeSQL(name: String, schema: String?, values: [String]) -> String?
+
+    /// Counterpart to `generateCreateEnumTypeSQL`. A dropped table does not take
+    /// its types with it, so a re-run has to remove them explicitly.
+    func generateDropEnumTypeSQL(name: String, schema: String?) -> String?
+
     // Definition SQL for clipboard copy (optional — return nil if not supported)
     func generateColumnDefinitionSQL(column: PluginColumnDefinition) -> String?
     func generateIndexDefinitionSQL(index: PluginIndexDefinition, tableName: String?) -> String?
@@ -292,6 +301,53 @@ public protocol PluginDatabaseDriver: AnyObject, Sendable {
 
     /// Streaming row fetch for export
     func streamRows(query: String) -> AsyncThrowingStream<PluginStreamElement, Error>
+
+    /// Whether `bulkLoadWriter` can hand back a writer for this driver. The
+    /// caller has to know before it commits to the bulk path: creating the
+    /// writer opens a load on the connection, so it cannot be used as a probe.
+    var supportsBulkLoad: Bool { get }
+
+    /// A per-row writer into a native bulk load path, when the engine has one.
+    /// Returning nil falls back to prepared `insertRows` batches.
+    func bulkLoadWriter(
+        table: String,
+        schema: String?,
+        columns: [String]
+    ) async throws -> PluginBulkLoadWriter?
+
+    /// Server-side ceilings for batch sizing. Returning nil leaves the app on
+    /// its conservative defaults.
+    func serverLimits() async throws -> PluginServerLimits?
+
+    /// Whether the connected account can toggle constraint checks. A probe,
+    /// not a capability claim: managed servers often refuse the `SET`.
+    func constraintDisableCapability() async -> PluginConstraintDisableCapability
+
+    /// Boundary values that split the primary key column into roughly equal
+    /// ranges, one per partition. Keyset pagination is inherently sequential:
+    /// finding chunk N+1 requires reading chunk N. Parallel reads inside one
+    /// table need the ranges up front so each worker starts at its own
+    /// boundary. Return nil when the column cannot be split (non-numeric or
+    /// random key material), and the caller falls back to sequential chunks.
+    func primaryKeyRangeBoundaries(
+        table: String,
+        schema: String?,
+        column: String,
+        partitions: Int
+    ) async throws -> [String]?
+
+    /// A token that pins this connection's current snapshot so other
+    /// connections can read the same view. A table read on two connections
+    /// without a shared snapshot sees two different points in time, which can
+    /// orphan a foreign key at the target. Return nil where the engine cannot
+    /// export a snapshot (MySQL, SQLite).
+    func exportSnapshotToken() async throws -> String?
+
+    /// Adopts a snapshot another connection exported. The adopting connection
+    /// must not have read anything yet in its current transaction. Return
+    /// false when the token is not usable (wrong engine, expired, the
+    /// exporting transaction already closed).
+    func adoptSnapshotToken(_ token: String) async throws -> Bool
 }
 
 public extension PluginDatabaseDriver {
@@ -551,6 +607,8 @@ public extension PluginDatabaseDriver {
     ) -> [String]? { nil }
     func generateMoveColumnSQL(table: String, column: PluginColumnDefinition, afterColumn: String?) -> String? { nil }
     func generateCreateTableSQL(definition: PluginCreateTableDefinition) -> String? { nil }
+    func generateCreateEnumTypeSQL(name: String, schema: String?, values: [String]) -> String? { nil }
+    func generateDropEnumTypeSQL(name: String, schema: String?) -> String? { nil }
 
     func generateColumnDefinitionSQL(column: PluginColumnDefinition) -> String? { nil }
     func generateIndexDefinitionSQL(index: PluginIndexDefinition, tableName: String?) -> String? { nil }
@@ -607,6 +665,29 @@ public extension PluginDatabaseDriver {
             }
         }
     }
+
+    var supportsBulkLoad: Bool { false }
+
+    func bulkLoadWriter(
+        table: String,
+        schema: String?,
+        columns: [String]
+    ) async throws -> PluginBulkLoadWriter? { nil }
+
+    func serverLimits() async throws -> PluginServerLimits? { nil }
+
+    func constraintDisableCapability() async -> PluginConstraintDisableCapability { .unknown }
+
+    func primaryKeyRangeBoundaries(
+        table: String,
+        schema: String?,
+        column: String,
+        partitions: Int
+    ) async throws -> [String]? { nil }
+
+    func exportSnapshotToken() async throws -> String? { nil }
+
+    func adoptSnapshotToken(_ token: String) async throws -> Bool { false }
 
     func escapeStringLiteral(_ value: String) -> String {
         var result = value
