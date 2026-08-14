@@ -14,6 +14,10 @@ final class AppSettingsManager {
             general.language.apply()
             storage.saveGeneral(general)
             syncTracker.markDirty(.settings, id: "general")
+
+            if general.crashReporting != oldValue.crashReporting {
+                CrashReporterService.shared.applyConsentChange(isEnabled: general.crashReporting)
+            }
         }
     }
 

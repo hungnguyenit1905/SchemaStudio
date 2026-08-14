@@ -297,7 +297,7 @@ final class PluginManager {
         } catch {
             Self.logger.error("Lazy plugin '\(manifest.bundleId)' failed version check: \(error.localizedDescription)")
             if source == .userInstalled {
-                rejectedPlugins.append(RejectedPlugin(
+                recordRejection(error: error, RejectedPlugin(
                     url: url,
                     bundleId: manifest.bundleId,
                     registryId: Self.readRegistryMetadata(for: url)?.pluginId,
@@ -315,7 +315,7 @@ final class PluginManager {
             } catch {
                 Self.logger
                     .error("Lazy plugin '\(manifest.bundleId)' failed code-sign check: \(error.localizedDescription)")
-                rejectedPlugins.append(RejectedPlugin(
+                recordRejection(error: error, RejectedPlugin(
                     url: url,
                     bundleId: manifest.bundleId,
                     registryId: Self.readRegistryMetadata(for: url)?.pluginId,
@@ -479,6 +479,13 @@ final class PluginManager {
         Self.logger.info("Activated plugin '\(bundleId)' on demand")
     }
 
+    private func recordRejection(error: Error, _ plugin: RejectedPlugin) {
+        rejectedPlugins.append(plugin)
+        CrashReporterService.shared.capture(
+            DiagnosticEventFactory.pluginLoadFailed(bundleId: plugin.bundleId, error: error)
+        )
+    }
+
     private func recordLazyActivationRejection(url: URL, bundleId: String, entry: PluginEntry?, error: Error) {
         guard !rejectedPlugins.contains(where: { $0.url == url }) else { return }
         var providedDatabaseTypeIds: [String] = []
@@ -488,7 +495,7 @@ final class PluginManager {
             }
             providedDatabaseTypeIds.append(contentsOf: entry.additionalTypeIds)
         }
-        rejectedPlugins.append(RejectedPlugin(
+        recordRejection(error: error, RejectedPlugin(
             url: url,
             bundleId: bundleId,
             registryId: Self.readRegistryMetadata(for: url)?.pluginId,
@@ -684,7 +691,7 @@ final class PluginManager {
                     )
                 if winner.source == .userInstalled {
                     let bundle = Bundle(url: winner.url)
-                    rejectedPlugins.append(RejectedPlugin(
+                    recordRejection(error: error, RejectedPlugin(
                         url: winner.url,
                         bundleId: bundle?.bundleIdentifier,
                         registryId: Self.readRegistryMetadata(for: winner.url)?.pluginId,

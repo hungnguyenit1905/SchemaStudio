@@ -58,6 +58,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        CrashReporterService.shared.startIfEnabled()
+
         let appearanceSettings = AppSettingsManager.shared.appearance
         ThemeEngine.shared.updateAppearanceAndTheme(
             mode: appearanceSettings.appearanceMode,

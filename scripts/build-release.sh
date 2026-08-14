@@ -355,6 +355,7 @@ build_for_arch() {
         CLANG_COVERAGE_MAPPING=NO \
         ENABLE_CODE_COVERAGE=NO \
         ${ANALYTICS_HMAC_SECRET:+ANALYTICS_HMAC_SECRET="$ANALYTICS_HMAC_SECRET"} \
+        ${SENTRY_DSN:+SENTRY_DSN="$SENTRY_DSN"} \
         -skipPackagePluginValidation \
         -clonedSourcePackagesDirPath "$SPM_CACHE_DIR" \
         -derivedDataPath build/DerivedData \

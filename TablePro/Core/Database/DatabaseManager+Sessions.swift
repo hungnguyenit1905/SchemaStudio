@@ -165,6 +165,12 @@ extension DatabaseManager {
                 closeActiveTunnel(for: connection)
             }
 
+            if !cancelled {
+                CrashReporterService.shared.capture(
+                    DiagnosticEventFactory.connectFailed(type: connection.type, error: reportedError)
+                )
+            }
+
             finalizeConnectionFailure(for: connection.id, cancelled: cancelled)
             throw reportedError
         }
@@ -180,6 +186,11 @@ extension DatabaseManager {
         driver: DatabaseDriver
     ) throws {
         guard !isAttemptCancelled(attempt, for: connectionId) else {
+            if let type = activeSessions[connectionId]?.connection.type {
+                CrashReporterService.shared.capture(
+                    DiagnosticEventFactory.connectCompletedAfterCancel(type: type)
+                )
+            }
             driver.disconnect()
             throw CancellationError()
         }

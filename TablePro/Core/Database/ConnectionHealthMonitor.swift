@@ -42,6 +42,11 @@ actor ConnectionHealthMonitor {
     private static let pingInterval: TimeInterval = 30.0
     private static let maxBackoffDelay: TimeInterval = 120.0
 
+    /// The reconnect loop runs until it succeeds or the task is cancelled, so there
+    /// is no exhausted state to report. This reports once, the first time a
+    /// connection has failed to come back after roughly a minute of retries.
+    private static let reportReconnectFailureAtAttempt = 5
+
     // MARK: - Dependencies
 
     private let connectionId: UUID
@@ -210,6 +215,14 @@ actor ConnectionHealthMonitor {
                 return
             case .retry:
                 Self.logger.warning("Reconnect attempt \(attempt) failed for connection \(self.connectionId)")
+                if attempt == Self.reportReconnectFailureAtAttempt {
+                    let reportedAttempt = attempt
+                    Task { @MainActor in
+                        CrashReporterService.shared.capture(
+                            DiagnosticEventFactory.reconnectStillFailing(attempt: reportedAttempt)
+                        )
+                    }
+                }
             }
         }
 
