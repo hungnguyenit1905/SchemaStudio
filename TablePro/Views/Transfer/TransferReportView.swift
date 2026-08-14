@@ -24,7 +24,7 @@ struct TransferReportView: View {
                     TableColumn(String(localized: "Status")) { result in
                         Text(statusText(result))
                             .foregroundStyle(statusColor(result))
-                            .help(result.errorMessage ?? "")
+                            .help(statusDetail(result))
                     }
                 }
             } else {
@@ -49,6 +49,11 @@ struct TransferReportView: View {
                     .font(.callout)
                     .foregroundStyle(.red)
             }
+            if report.warningCount > 0 {
+                Text(String(format: String(localized: "%d table(s) finished with warnings"), report.warningCount))
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+            }
             if report.wasCancelled {
                 Text("The transfer was stopped before it finished.")
                     .font(.callout)
@@ -63,6 +68,8 @@ struct TransferReportView: View {
         switch result.outcome {
         case .succeeded:
             return String(localized: "Done")
+        case .warned:
+            return String(localized: "Done, with warnings")
         case .failed(let message):
             return message
         case .notRun:
@@ -70,10 +77,17 @@ struct TransferReportView: View {
         }
     }
 
+    private func statusDetail(_ result: TransferTableResult) -> String {
+        if let message = result.errorMessage { return message }
+        return result.warningMessages.joined(separator: "\n")
+    }
+
     private func statusColor(_ result: TransferTableResult) -> Color {
         switch result.outcome {
         case .succeeded:
             return .primary
+        case .warned:
+            return .orange
         case .failed:
             return .red
         case .notRun:

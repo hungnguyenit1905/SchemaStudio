@@ -58,6 +58,7 @@ struct TransferTableSelection: Identifiable, Hashable, Sendable {
 
 enum TransferTableOutcome: Sendable, Hashable {
     case succeeded
+    case warned([String])
     case failed(String)
     case notRun
 }
@@ -75,6 +76,11 @@ struct TransferTableResult: Sendable, Identifiable, Hashable {
         return nil
     }
 
+    var warningMessages: [String] {
+        if case .warned(let messages) = outcome { return messages }
+        return []
+    }
+
     var didRun: Bool { outcome != .notRun }
 }
 
@@ -83,6 +89,7 @@ struct TransferReport: Sendable {
     let wasCancelled: Bool
 
     var failedCount: Int { results.count(where: { $0.errorMessage != nil }) }
+    var warningCount: Int { results.count(where: { !$0.warningMessages.isEmpty }) }
     var notRunCount: Int { results.count(where: { !$0.didRun }) }
     var totalRows: Int { results.reduce(0) { $0 + $1.rowsTransferred } }
 }
@@ -94,9 +101,28 @@ struct TransferState {
     var currentTableIndex: Int = 0
     var totalTables: Int = 0
     var processedRows: Int = 0
-    var totalRows: Int = 0
+    var currentTableProcessedRows: Int = 0
+    var currentTableEstimatedRows: Int = 0
     var statusMessage: String = ""
     var errorMessage: String?
+}
+
+extension TransferState {
+    /// Progress is measured in tables, which is exact, with the table currently
+    /// copying contributing its own fraction. An approximate row count is only
+    /// ever that one fraction, so it can no longer push the bar past 100%.
+    /// `nil` means there is nothing to measure against, so show an
+    /// indeterminate bar.
+    var progressFraction: Double? {
+        guard totalTables > 0 else { return nil }
+        let completedTables = Double(max(0, currentTableIndex - 1))
+        return min(1, (completedTables + currentTableFraction) / Double(totalTables))
+    }
+
+    private var currentTableFraction: Double {
+        guard currentTableEstimatedRows > 0 else { return 0 }
+        return min(1, Double(currentTableProcessedRows) / Double(currentTableEstimatedRows))
+    }
 }
 
 enum TransferError: LocalizedError, Equatable {

@@ -8,6 +8,17 @@ import Foundation
 import TableProPluginKit
 import Testing
 
+private enum RecordingDriverError: LocalizedError {
+    case statementRejected(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .statementRejected(let query):
+            return "Rejected: \(query)"
+        }
+    }
+}
+
 private final class RecordingStructureDriver: PluginDatabaseDriver, @unchecked Sendable {
     var supportsSchemas: Bool { false }
     var supportsTransactions: Bool { true }
@@ -15,6 +26,7 @@ private final class RecordingStructureDriver: PluginDatabaseDriver, @unchecked S
     var serverVersion: String? { nil }
 
     var supportsForeignKeyToggle = true
+    var failingQueries: Set<String> = []
     private(set) var executedQueries: [String] = []
 
     func foreignKeyDisableStatements() -> [String]? {
@@ -39,7 +51,19 @@ private final class RecordingStructureDriver: PluginDatabaseDriver, @unchecked S
 
     func execute(query: String) async throws -> PluginQueryResult {
         executedQueries.append(query)
+        if failingQueries.contains(query) {
+            throw RecordingDriverError.statementRejected(query)
+        }
         return PluginQueryResult(columns: [], columnTypeNames: [], rows: [], rowsAffected: 0, executionTime: 0)
+    }
+
+    func generateAddIndexSQL(table: String, index: PluginIndexDefinition) -> String? {
+        "CREATE INDEX `\(index.name)` ON `\(table)` (\(index.columns.joined(separator: ", ")))"
+    }
+
+    func generateAddForeignKeySQL(table: String, fk: PluginForeignKeyDefinition) -> String? {
+        "ALTER TABLE `\(table)` ADD CONSTRAINT `\(fk.name)` FOREIGN KEY (\(fk.columns.joined(separator: ", ")))"
+            + " REFERENCES `\(fk.referencedTable)` (\(fk.referencedColumns.joined(separator: ", ")))"
     }
 
     func fetchTables(schema: String?) async throws -> [PluginTableInfo] { [] }
@@ -76,12 +100,17 @@ struct DataTransferStructurePhaseTests {
         return context
     }
 
-    private func makePlan(table: String, steps: [TransferStep]) -> TransferTablePlan {
+    private func makePlan(
+        table: String,
+        steps: [TransferStep],
+        indexes: [PluginIndexInfo] = [],
+        foreignKeys: [PluginForeignKeyInfo] = []
+    ) -> TransferTablePlan {
         let structure = TransferStructureBuilder.build(
             table: table,
             columns: [PluginColumnInfo(name: "id", dataType: "int", isNullable: false, isPrimaryKey: true)],
-            indexes: [],
-            foreignKeys: [],
+            indexes: indexes,
+            foreignKeys: foreignKeys,
             targetSchema: nil
         )
         return TransferTablePlan(
@@ -150,5 +179,160 @@ struct DataTransferStructurePhaseTests {
         )
 
         #expect(driver.executedQueries == ["TRUNCATE TABLE `orders`"])
+    }
+
+    private func constraintPlan(table: String = "orders") -> TransferTablePlan {
+        makePlan(
+            table: table,
+            steps: [.createIndexes, .createForeignKeys],
+            indexes: [PluginIndexInfo(name: "idx_customer", columns: ["customer_id"])],
+            foreignKeys: [
+                PluginForeignKeyInfo(
+                    name: "fk_customer",
+                    column: "customer_id",
+                    referencedTable: "customers",
+                    referencedColumn: "id"
+                )
+            ]
+        )
+    }
+
+    private var addForeignKeySQL: String {
+        "ALTER TABLE `orders` ADD CONSTRAINT `fk_customer` FOREIGN KEY (customer_id) REFERENCES `customers` (id)"
+    }
+
+    private var addIndexSQL: String {
+        "CREATE INDEX `idx_customer` ON `orders` (customer_id)"
+    }
+
+    @Test("Constraints are added with foreign key checks off, then restored")
+    func constraintsRunWithoutForeignKeyChecks() async {
+        let driver = RecordingStructureDriver()
+        let context = makeContext(driver: driver)
+        var run = TransferRunState()
+
+        await DataTransferService().runConstraintPhase([constraintPlan()], target: context, run: &run)
+
+        #expect(driver.executedQueries == [
+            "SET FOREIGN_KEY_CHECKS=0",
+            addIndexSQL,
+            addForeignKeySQL,
+            "SET FOREIGN_KEY_CHECKS=1"
+        ])
+    }
+
+    @Test("Checks are restored when the phase stops early")
+    func checksRestoredOnEarlyStop() async {
+        let driver = RecordingStructureDriver()
+        let context = makeContext(driver: driver)
+        var run = TransferRunState()
+        let service = DataTransferService()
+        service.state.isTransferring = true
+        service.cancel()
+
+        await service.runConstraintPhase([constraintPlan()], target: context, run: &run)
+
+        #expect(driver.executedQueries == ["SET FOREIGN_KEY_CHECKS=0", "SET FOREIGN_KEY_CHECKS=1"])
+        #expect(run.stopped)
+    }
+
+    @Test("Checks are restored when a constraint statement fails")
+    func checksRestoredOnFailure() async {
+        let driver = RecordingStructureDriver()
+        driver.failingQueries = [addForeignKeySQL]
+        let context = makeContext(driver: driver)
+        var run = TransferRunState()
+
+        await DataTransferService().runConstraintPhase([constraintPlan()], target: context, run: &run)
+
+        #expect(driver.executedQueries.last == "SET FOREIGN_KEY_CHECKS=1")
+    }
+
+    @Test("A driver with no foreign key toggle still applies the constraints")
+    func constraintsWithoutToggle() async {
+        let driver = RecordingStructureDriver()
+        driver.supportsForeignKeyToggle = false
+        let context = makeContext(driver: driver)
+        var run = TransferRunState()
+
+        await DataTransferService().runConstraintPhase([constraintPlan()], target: context, run: &run)
+
+        #expect(driver.executedQueries == [addIndexSQL, addForeignKeySQL])
+    }
+
+    @Test("A rejected foreign key becomes a warning and keeps the copied row count")
+    func rejectedForeignKeyWarns() async {
+        let driver = RecordingStructureDriver()
+        driver.failingQueries = [addForeignKeySQL]
+        let context = makeContext(driver: driver)
+        var run = TransferRunState()
+        run.succeed("orders", rows: 36_284, duration: 1)
+
+        await DataTransferService().runConstraintPhase([constraintPlan()], target: context, run: &run)
+
+        let report = run.report(for: [TransferTableSelection(table: "orders")])
+        #expect(report.results[0].warningMessages == ["Rejected: \(addForeignKeySQL)"])
+        #expect(report.results[0].rowsTransferred == 36_284)
+        #expect(report.warningCount == 1)
+        #expect(report.failedCount == 0)
+        #expect(!run.stopped)
+    }
+
+    @Test("A rejected index still lets the same table's foreign keys be created")
+    func rejectedIndexDoesNotSkipForeignKeys() async {
+        let driver = RecordingStructureDriver()
+        driver.failingQueries = [addIndexSQL]
+        let context = makeContext(driver: driver)
+        var run = TransferRunState()
+
+        await DataTransferService().runConstraintPhase([constraintPlan()], target: context, run: &run)
+
+        #expect(driver.executedQueries.contains(addForeignKeySQL))
+    }
+
+    @Test("Tables after a rejected constraint still run when continueOnError is off")
+    func laterTablesStillRunAfterRejectedConstraint() async {
+        let driver = RecordingStructureDriver()
+        driver.failingQueries = [addForeignKeySQL]
+        let context = makeContext(driver: driver)
+        var run = TransferRunState()
+
+        await DataTransferService().runConstraintPhase(
+            [constraintPlan(), constraintPlan(table: "invoices")],
+            target: context,
+            run: &run
+        )
+
+        #expect(driver.executedQueries.contains("CREATE INDEX `idx_customer` ON `invoices` (customer_id)"))
+        #expect(!run.stopped)
+    }
+
+    @Test("A data phase failure outranks a constraint warning")
+    func dataFailureOutranksWarning() async {
+        var run = TransferRunState()
+        run.fail("orders", message: "insert failed")
+        run.warn("orders", messages: ["constraint rejected"])
+        run.finish("orders")
+
+        let report = run.report(for: [TransferTableSelection(table: "orders")])
+        #expect(report.results[0].outcome == .failed("insert failed"))
+    }
+
+    @Test("Rows copied before the run stopped are reported as a warning, not as not completed")
+    func stoppedRunReportsCopiedRowsAsWarning() {
+        var run = TransferRunState()
+        run.succeed("orders", rows: 695, duration: 1)
+        run.stopped = true
+
+        let report = run.report(for: [
+            TransferTableSelection(table: "orders"),
+            TransferTableSelection(table: "invoices")
+        ])
+
+        #expect(report.results[0].warningMessages.count == 1)
+        #expect(report.results[0].rowsTransferred == 695)
+        #expect(report.results[1].outcome == .notRun)
+        #expect(report.warningCount == 1)
+        #expect(report.notRunCount == 1)
     }
 }
