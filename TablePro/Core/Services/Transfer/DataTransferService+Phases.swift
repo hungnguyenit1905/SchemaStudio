@@ -25,10 +25,17 @@ extension DataTransferService {
             run.fail(failure.table, message: failure.message)
         }
 
-        state.totalRows = await estimatedRowCount(for: preview.plans, source: source)
+        let estimates = await estimatedRowCounts(for: preview.plans, source: source)
 
         await runStructurePhase(preview.plans, target: target, options: options, run: &run)
-        await runDataPhase(preview.plans, source: source, target: target, options: options, run: &run)
+        await runDataPhase(
+            preview.plans,
+            source: source,
+            target: target,
+            options: options,
+            estimates: estimates,
+            run: &run
+        )
         await runConstraintPhase(preview.plans, target: target, run: &run)
 
         return run.report(for: selections)
@@ -103,6 +110,7 @@ extension DataTransferService {
         source: TransferDriverContext,
         target: TransferDriverContext,
         options: TransferOptions,
+        estimates: [String: Int],
         run: inout TransferRunState
     ) async {
         let transferable = plans.filter { $0.steps.contains(.transferRows) }
@@ -117,6 +125,8 @@ extension DataTransferService {
             index += 1
             state.currentTable = plan.table
             state.currentTableIndex = index
+            state.currentTableProcessedRows = 0
+            state.currentTableEstimatedRows = estimates[plan.table] ?? 0
 
             let startedAt = Date()
             do {
@@ -321,6 +331,7 @@ extension DataTransferService {
         pending.removeAll(keepingCapacity: true)
         try await sink.insertRows(batch)
         state.processedRows += batch.count
+        state.currentTableProcessedRows += batch.count
         return batch.count
     }
 
@@ -395,13 +406,19 @@ extension DataTransferService {
 
     // MARK: - Helpers
 
-    private func estimatedRowCount(for plans: [TransferTablePlan], source: TransferDriverContext) async -> Int {
-        var total = 0
+    /// The estimate is only ever the denominator of the table currently
+    /// copying, so a table the driver cannot estimate is absent rather than
+    /// counted as zero.
+    private func estimatedRowCounts(
+        for plans: [TransferTablePlan],
+        source: TransferDriverContext
+    ) async -> [String: Int] {
+        var counts: [String: Int] = [:]
         for plan in plans where plan.steps.contains(.transferRows) {
             guard let count = try? await source.approximateRowCount(table: plan.table) else { continue }
-            total += count ?? 0
+            counts[plan.table] = count
         }
-        return total
+        return counts
     }
 
     private func recordHistory(

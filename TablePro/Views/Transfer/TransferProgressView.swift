@@ -27,13 +27,13 @@ struct TransferProgressView: View {
 
                     Spacer()
 
-                    Text("\(state.processedRows.formatted())/\(state.totalRows.formatted()) rows")
+                    Text("\(state.processedRows.formatted()) rows")
                         .font(.system(.body, design: .monospaced))
                         .foregroundStyle(.secondary)
                 }
 
-                if state.totalRows > 0 {
-                    ProgressView(value: progressValue)
+                if let progressFraction = state.progressFraction {
+                    ProgressView(value: progressFraction)
                         .progressViewStyle(.linear)
                 } else {
                     ProgressView()
@@ -54,10 +54,5 @@ struct TransferProgressView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(20)
-    }
-
-    private var progressValue: Double {
-        guard state.totalRows > 0 else { return 0 }
-        return min(1, Double(state.processedRows) / Double(state.totalRows))
     }
 }
