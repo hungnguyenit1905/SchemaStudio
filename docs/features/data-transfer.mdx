@@ -57,6 +57,19 @@ be loaded before its parent, which removes the need to order tables at all. Afte
 sequences are lifted to the largest value in the table, so the first insert after a transfer does
 not collide with an existing key.
 
+The last pass runs with foreign key checks off too, so a constraint is added without validating the
+rows already in the table. That is what a dump and restore does. It means the target can end up
+holding a foreign key its rows violate, but only where the source already violated the same one:
+the transfer mirrors the source rather than cleaning it up.
+
+## When a constraint cannot be created
+
+An index, foreign key or sequence reset that the target rejects does not fail the table and does not
+stop the run. The rows are already at the target, so the table is listed as **Done, with warnings**
+and the reason shows in the tooltip on its status. Every other constraint on that table, and every
+table after it, still runs. This is separate from **Continue when a table fails**, which covers a
+table that could not be created or whose rows could not be copied.
+
 ## What is not carried over
 
 - **Generated columns.** They are computed by the server and reject a written value, so they are
@@ -68,4 +81,6 @@ not collide with an existing key.
 
 **Stop** ends the run after the current batch. A statement already running on the server cannot be
 interrupted, so a large batch finishes first. An open transaction is rolled back, and the report
-shows which tables completed, which failed, and which never ran.
+shows which tables completed, which failed, and which never ran. A table whose rows had already
+landed when you pressed Stop is listed as **Done, with warnings**, because its rows are at the
+target but its indexes and foreign keys were never added.
