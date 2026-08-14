@@ -11,6 +11,11 @@ import TableProPluginKit
 /// strategy, and it falls back to prepared batches by returning `nil` rather
 /// than failing the run.
 extension MySQLPluginDriver {
+    /// Claiming the capability is what makes the transfer ask for a writer at
+    /// all. Whether one is handed back still depends on `local_infile` at the
+    /// server, which is probed per table.
+    var supportsBulkLoad: Bool { true }
+
     func makeBulkLoadWriter(
         table: String,
         schema: String?,
