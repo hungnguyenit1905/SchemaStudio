@@ -10,7 +10,8 @@ struct TransferChunkPlannerTests {
         schema: String? = nil,
         primaryKey: [String],
         comparison: TransferChunkPlanner.Comparison = .rowConstructor,
-        chunkSize: Int = 1_000
+        chunkSize: Int = 1_000,
+        keyLiteralKinds: [String: TransferKeyLiteralKind] = [:]
     ) -> TransferChunkPlanner {
         let qualified = schema.map { "\"\($0)\".\"\(table)\"" } ?? "\"\(table)\""
         return TransferChunkPlanner(
@@ -19,7 +20,8 @@ struct TransferChunkPlannerTests {
             chunkSize: chunkSize,
             comparison: comparison,
             quoteIdentifier: { "\"\($0)\"" },
-            escapeStringLiteral: { "'\($0.replacingOccurrences(of: "'", with: "''"))'" }
+            escapeStringLiteral: { "'\($0.replacingOccurrences(of: "'", with: "''"))'" },
+            keyLiteralKinds: keyLiteralKinds
         )
     }
 
@@ -150,6 +152,63 @@ struct TransferChunkPlannerTests {
             previous: nil
         )
         #expect(cursor == nil)
+    }
+
+    @Test("a numeric-looking value from a text key stays quoted")
+    func numericLookingTextKeyIsQuoted() {
+        let cursor = TransferChunkCursor(lastKey: ["10"], rowsDone: 1)
+        let sql = planner(primaryKey: ["code"], keyLiteralKinds: ["code": .textual]).chunkQuery(after: cursor)
+        #expect(sql == "SELECT * FROM \"users\" WHERE \"code\" > '10' ORDER BY \"code\" ASC LIMIT 1000")
+    }
+
+    @Test("a numeric key is still emitted unquoted")
+    func numericKeyStaysUnquoted() {
+        let cursor = TransferChunkCursor(lastKey: ["10"], rowsDone: 1)
+        let sql = planner(primaryKey: ["id"], keyLiteralKinds: ["id": .numeric]).chunkQuery(after: cursor)
+        #expect(sql == "SELECT * FROM \"users\" WHERE \"id\" > 10 ORDER BY \"id\" ASC LIMIT 1000")
+    }
+
+    @Test("a composite key quotes only the columns whose type is textual")
+    func compositeKeyQuotesPerColumn() {
+        let cursor = TransferChunkCursor(lastKey: ["10", "20"], rowsDone: 1)
+        let sql = planner(
+            primaryKey: ["tenant", "code"],
+            keyLiteralKinds: ["tenant": .numeric, "code": .textual]
+        ).chunkQuery(after: cursor)
+        #expect(sql ==
+            "SELECT * FROM \"users\" WHERE (\"tenant\", \"code\") > (10, '20') "
+            + "ORDER BY \"tenant\" ASC, \"code\" ASC LIMIT 1000")
+    }
+
+    @Test("an upper bound is quoted the same way as the key it bounds")
+    func upperBoundFollowsKeyKind() {
+        let sql = planner(primaryKey: ["code"], keyLiteralKinds: ["code": .textual])
+            .chunkQuery(after: nil, upperBound: "500")
+        #expect(sql == "SELECT * FROM \"users\" WHERE \"code\" <= '500' ORDER BY \"code\" ASC LIMIT 1000")
+    }
+
+    @Test("a declared text column is read as a textual key")
+    func textColumnResolvesToTextualKind() {
+        let kinds = TransferChunkPlanner.keyLiteralKinds(
+            columns: [
+                PluginColumnInfo(name: "code", dataType: "varchar(32)", isPrimaryKey: true),
+                PluginColumnInfo(name: "id", dataType: "bigint", isPrimaryKey: true),
+                PluginColumnInfo(name: "name", dataType: "varchar(32)")
+            ],
+            primaryKeyColumns: ["code", "id"],
+            databaseType: .mysql
+        )
+        #expect(kinds == ["code": .textual, "id": .numeric])
+    }
+
+    @Test("an SQLite column with no declared type keeps the value-shape fallback")
+    func undeclaredColumnHasNoKind() {
+        let kinds = TransferChunkPlanner.keyLiteralKinds(
+            columns: [PluginColumnInfo(name: "id", dataType: "", isPrimaryKey: true)],
+            primaryKeyColumns: ["id"],
+            databaseType: .sqlite
+        )
+        #expect(kinds.isEmpty)
     }
 
     @Test("estimated row counts of -1 and 0 mean unknown, not empty, for parallelism")

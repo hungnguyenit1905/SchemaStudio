@@ -114,7 +114,12 @@ extension DataTransferService {
             structure: structure,
             targetExists: targetExists,
             steps: steps,
-            extraTargetColumns: extraTargetColumns
+            extraTargetColumns: extraTargetColumns,
+            keyLiteralKinds: TransferChunkPlanner.keyLiteralKinds(
+                columns: columns,
+                primaryKeyColumns: structure.primaryKeyColumns,
+                databaseType: source.databaseType
+            )
         )
     }
 

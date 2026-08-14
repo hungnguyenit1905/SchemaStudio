@@ -13,6 +13,26 @@ struct TransferTablePlan: Sendable, Identifiable {
     let steps: [TransferStep]
     let extraTargetColumns: [String]
 
+    /// How each primary key value has to be written into a chunk predicate,
+    /// read from the source column's declared type.
+    let keyLiteralKinds: [String: TransferKeyLiteralKind]
+
+    init(
+        table: String,
+        structure: TransferTableStructure,
+        targetExists: Bool,
+        steps: [TransferStep],
+        extraTargetColumns: [String],
+        keyLiteralKinds: [String: TransferKeyLiteralKind] = [:]
+    ) {
+        self.table = table
+        self.structure = structure
+        self.targetExists = targetExists
+        self.steps = steps
+        self.extraTargetColumns = extraTargetColumns
+        self.keyLiteralKinds = keyLiteralKinds
+    }
+
     var id: String { table }
 
     var warnings: [TransferStructureWarning] { structure.warnings }

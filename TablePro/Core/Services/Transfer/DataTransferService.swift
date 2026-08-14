@@ -38,7 +38,11 @@ final class DataTransferService {
         try await ensureConnected(source)
         try await ensureConnected(target)
 
-        return try await withDriverProvider(source: source, target: target) { sourceContext, targetContext, _ in
+        return try await withDriverProvider(
+            source: source,
+            target: target,
+            laneCount: Self.laneCount(for: options)
+        ) { sourceContext, targetContext, _ in
             try await self.runPreflight(
                 selections: selections,
                 source: sourceContext,
@@ -84,7 +88,11 @@ final class DataTransferService {
         )
 
         do {
-            return try await withDriverProvider(source: source, target: target) { sourceContext, targetContext, provider in
+            return try await withDriverProvider(
+                source: source,
+                target: target,
+                laneCount: Self.laneCount(for: options)
+            ) { sourceContext, targetContext, lanes in
                 self.state.statusMessage = String(localized: "Checking tables\u{2026}")
                 let preview = try await self.runPreflight(
                     selections: selections,
@@ -106,7 +114,7 @@ final class DataTransferService {
                     options: options,
                     resume: resumeState,
                     jobId: jobId,
-                    provider: provider,
+                    lanes: lanes,
                     consistency: &consistency
                 )
                 // A checkpoint is only cleared when the job finished without
@@ -199,17 +207,17 @@ final class DataTransferService {
     /// browsing depends on. The pool serializes per scope, so the two scopes
     /// have to differ before the nesting is safe.
     ///
-    /// Lane 0 is the pair held for the whole run. Higher lanes open their own
-    /// connections through the same pool, each capped by the pool's connection
-    /// budget, so parallel tables never starve the interactive lanes; their
-    /// query timeout is lifted for the duration and restored on the way out.
+    /// Lane 0 is the pair held for the whole run. `TransferLanePool` opens the
+    /// higher lanes through the same pool, each capped by the pool's connection
+    /// budget, so parallel tables never starve the interactive lanes.
     private func withDriverProvider<T: Sendable>(
         source: TransferEndpoint,
         target: TransferEndpoint,
+        laneCount: Int,
         body: @escaping @Sendable @MainActor (
             TransferDriverContext,
             TransferDriverContext,
-            TransferDriverProvider
+            TransferLanePool
         ) async throws -> T
     ) async throws -> T {
         let pool = MetadataConnectionPool.shared
@@ -224,29 +232,15 @@ final class DataTransferService {
                 await sourceContext.applyQueryTimeout(0)
                 await targetContext.applyQueryTimeout(0)
 
-                let provider = TransferDriverProvider { lane in
-                    guard lane > 0 else { return (sourceContext, targetContext) }
-                    return try await pool.withDriver(scope: target.scope, workload: .bulk, lane: lane) { laneTargetDriver in
-                        try await pool.withDriver(scope: source.scope, workload: .bulk, lane: lane) { laneSourceDriver in
-                            guard let laneSource = TransferDriverContext(driver: laneSourceDriver, endpoint: source),
-                                  let laneTarget = TransferDriverContext(driver: laneTargetDriver, endpoint: target) else {
-                                throw TransferError.noPluginDriver
-                            }
-                            await laneSource.applyQueryTimeout(0)
-                            await laneTarget.applyQueryTimeout(0)
-                            return try await Self.withTimeoutRestore(
-                                source: laneSource,
-                                target: laneTarget,
-                                timeout: configuredTimeout
-                            ) {
-                                (laneSource, laneTarget)
-                            }
-                        }
-                    }
-                }
+                let lanes = TransferLanePool(
+                    source: source,
+                    target: target,
+                    laneCount: laneCount,
+                    restoreTimeout: configuredTimeout
+                )
 
                 do {
-                    let result = try await body(sourceContext, targetContext, provider)
+                    let result = try await body(sourceContext, targetContext, lanes)
                     await sourceContext.applyQueryTimeout(configuredTimeout)
                     await targetContext.applyQueryTimeout(configuredTimeout)
                     return result
@@ -259,25 +253,11 @@ final class DataTransferService {
         }
     }
 
-    /// The pool stamps its own drivers with the user's query timeout, which
-    /// would cut any table that takes longer than one minute to copy. A lane
-    /// driver outlives this run inside the pool, so the setting has to go back
-    /// on both success and failure.
-    private static func withTimeoutRestore<T: Sendable>(
-        source: TransferDriverContext,
-        target: TransferDriverContext,
-        timeout: Int,
-        body: @Sendable () async throws -> T
-    ) async throws -> T {
-        do {
-            let result = try await body()
-            await source.applyQueryTimeout(timeout)
-            await target.applyQueryTimeout(timeout)
-            return result
-        } catch {
-            await source.applyQueryTimeout(timeout)
-            await target.applyQueryTimeout(timeout)
-            throw error
-        }
+    /// One lane per parallel table and one per partition come out of the same
+    /// budget, so the allocator is sized for whichever dimension asks for more.
+    private static func laneCount(for options: TransferOptions) -> Int {
+        MetadataConnectionPool.cappedParallelism(
+            max(options.parallelTables, options.inTableParallelism)
+        )
     }
 }

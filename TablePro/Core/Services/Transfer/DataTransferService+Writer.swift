@@ -54,6 +54,7 @@ extension DataTransferService {
                             chunk,
                             plan: plan,
                             target: target,
+                            limits: limits,
                             options: options,
                             generatedColumns: generatedColumns,
                             checkpoint: checkpoint,
@@ -61,24 +62,31 @@ extension DataTransferService {
                             state: &state
                         )
                     } else {
-                        written += try await writeBufferedChunk(
+                        let rows = try await writeBufferedChunk(
                             chunk,
                             plan: plan,
                             target: target,
+                            limits: limits,
                             generatedColumns: generatedColumns,
                             state: &state
                         )
+                        // A buffered bulk load reports its total once, from
+                        // `finish()`, so counting the chunk here as well would
+                        // report every row twice.
+                        if !state.useBulk { written += rows }
                     }
                     // A chunk is counted once here, after its retries and its
                     // trailing partial batch have settled, so a retried chunk
                     // never counts twice.
                     recordWrittenRows(written - before)
                     lastCursor = chunk.cursor
+                    await gate.release()
                 }
             }
 
             if !commitPerChunk {
-                let tail = try await finishBufferedTable(
+                let beforeFinish = written
+                let finished = try await finishBufferedTable(
                     plan: plan,
                     target: target,
                     checkpoint: checkpoint,
@@ -87,8 +95,8 @@ extension DataTransferService {
                     cursor: lastCursor,
                     state: &state
                 )
-                written += tail
-                recordWrittenRows(tail)
+                written = state.useBulk ? finished : written + finished
+                recordWrittenRows(written - beforeFinish)
             }
 
             try await restoreWriter(target: target, state: &state)
@@ -110,7 +118,7 @@ extension DataTransferService {
     ) async throws {
         let targetColumns = header.columns.filter { !generatedColumns.contains($0) }
         let decision = TransferLoadStrategyResolver.resolve(
-            bulkWriterAvailable: true,
+            bulkWriterAvailable: target.supportsBulkLoad,
             supportsLocalInfile: limits?.supportsLocalInfile,
             localInfileRequired: target.databaseType == .mysql,
             continueOnError: options.continueOnError
@@ -122,31 +130,56 @@ extension DataTransferService {
             Self.logger.info("Bulk load path active for \(plan.table, privacy: .public)")
             if target.supportsForeignKeyCheckToggle {
                 try await target.setForeignKeyChecks(enabled: false)
-                state.foreignKeysDisabled = true
+                state.foreignKeyScope = .driver
             }
         } else {
             let reason = decision.reason?.rawValue ?? TransferLoadFallbackReason.noBulkWriter.rawValue
             Self.logger.info(
                 "Prepared batch path for \(plan.table, privacy: .public): \(reason, privacy: .public)"
             )
-            let header = PluginStreamHeader(columns: header.columns, columnTypeNames: [])
-            state.sink = try makeSink(plan: plan, header: header, target: target)
-            state.splitter = TransferBatchSplitter(
-                maxBytes: Self.batchMaxBytes(from: limits),
-                maxBindParameters: Self.maxBindParameters(
-                    for: target.databaseType,
-                    limits: limits
-                ),
-                columnCount: max(targetColumns.count, 1)
+            try await usePreparedPath(
+                plan: plan,
+                target: target,
+                limits: limits,
+                headerColumns: header.columns,
+                targetColumns: targetColumns,
+                state: &state
             )
-            try await state.sink?.disableForeignKeyChecks()
-            state.foreignKeysDisabled = true
         }
 
         if options.useSingleTransaction {
             try await target.driver.beginTransaction(mode: .readWrite)
             state.transactionOpen = true
         }
+    }
+
+    /// The prepared-statement sink, used both when the resolver picks it up
+    /// front and when a driver that claimed bulk load hands back no writer.
+    /// The foreign key checks are left alone when they are already off through
+    /// the driver, so a downgrade never toggles them twice.
+    private func usePreparedPath(
+        plan: TransferTablePlan,
+        target: TransferDriverContext,
+        limits: PluginServerLimits?,
+        headerColumns: [String],
+        targetColumns: [String],
+        state: inout TransferWriterState
+    ) async throws {
+        state.useBulk = false
+        state.bulkWriter = nil
+        state.sink = try makeSink(
+            plan: plan,
+            header: PluginStreamHeader(columns: headerColumns, columnTypeNames: []),
+            target: target
+        )
+        state.splitter = TransferBatchSplitter(
+            maxBytes: Self.batchMaxBytes(from: limits),
+            maxBindParameters: Self.maxBindParameters(for: target.databaseType, limits: limits),
+            columnCount: max(targetColumns.count, 1)
+        )
+        guard state.foreignKeyScope == .none else { return }
+        try await state.sink?.disableForeignKeyChecks()
+        state.foreignKeyScope = .sink
     }
 
     /// One chunk inside its own transaction: begin, write, commit, then
@@ -156,6 +189,7 @@ extension DataTransferService {
         _ chunk: TransferPipelineChunk,
         plan: TransferTablePlan,
         target: TransferDriverContext,
+        limits: PluginServerLimits?,
         options: TransferOptions,
         generatedColumns: Set<String>,
         checkpoint: TransferCheckpointStore?,
@@ -170,6 +204,7 @@ extension DataTransferService {
                     chunk,
                     plan: plan,
                     target: target,
+                    limits: limits,
                     generatedColumns: generatedColumns,
                     state: &state
                 )
@@ -196,7 +231,7 @@ extension DataTransferService {
                     chunk,
                     plan: plan,
                     target: target,
-                    options: options,
+                    limits: limits,
                     generatedColumns: generatedColumns,
                     state: &state
                 )
@@ -224,10 +259,18 @@ extension DataTransferService {
         _ chunk: TransferPipelineChunk,
         plan: TransferTablePlan,
         target: TransferDriverContext,
+        limits: PluginServerLimits?,
         generatedColumns: Set<String>,
         state: inout TransferWriterState
     ) async throws -> Int {
-        try await writeChunkRows(chunk, plan: plan, target: target, generatedColumns: generatedColumns, state: &state)
+        try await writeChunkRows(
+            chunk,
+            plan: plan,
+            target: target,
+            limits: limits,
+            generatedColumns: generatedColumns,
+            state: &state
+        )
     }
 
     private func finishBufferedTable(
@@ -267,6 +310,7 @@ extension DataTransferService {
         _ chunk: TransferPipelineChunk,
         plan: TransferTablePlan,
         target: TransferDriverContext,
+        limits: PluginServerLimits?,
         generatedColumns: Set<String>,
         state: inout TransferWriterState
     ) async throws -> Int {
@@ -274,12 +318,35 @@ extension DataTransferService {
             if state.bulkWriter == nil {
                 state.bulkWriter = try await target.bulkLoadWriter(table: plan.table, columns: state.bulkColumns)
             }
-            guard let writer = state.bulkWriter else { return 0 }
+            // A driver that reports bulk load but hands back no writer would
+            // otherwise drop the chunk and still mark the table complete.
+            guard let writer = state.bulkWriter else {
+                Self.logger.warning(
+                    "No bulk writer for \(plan.table, privacy: .public), falling back to prepared batches"
+                )
+                try await usePreparedPath(
+                    plan: plan,
+                    target: target,
+                    limits: limits,
+                    headerColumns: chunk.headerColumns,
+                    targetColumns: chunk.headerColumns.filter { !generatedColumns.contains($0) },
+                    state: &state
+                )
+                return try await writeChunkRows(
+                    chunk,
+                    plan: plan,
+                    target: target,
+                    limits: limits,
+                    generatedColumns: generatedColumns,
+                    state: &state
+                )
+            }
             var written = 0
             for row in chunk.rows {
                 try await writer.write(row: row)
                 written += 1
             }
+            self.state.processedRows += written
             return written
         }
         guard let sink = state.sink, let currentSplitter = state.splitter else {
@@ -304,7 +371,7 @@ extension DataTransferService {
         _ chunk: TransferPipelineChunk,
         plan: TransferTablePlan,
         target: TransferDriverContext,
-        options: TransferOptions,
+        limits: PluginServerLimits?,
         generatedColumns: Set<String>,
         state: inout TransferWriterState
     ) async throws -> Int {
@@ -312,17 +379,13 @@ extension DataTransferService {
         var written = 0
         do {
             if state.useBulk {
-                state.bulkWriter = nil
-                state.useBulk = false
-                state.sink = try makeSink(
+                try await usePreparedPath(
                     plan: plan,
-                    header: PluginStreamHeader(columns: chunk.headerColumns, columnTypeNames: []),
-                    target: target
-                )
-                state.splitter = TransferBatchSplitter(
-                    maxBytes: Self.batchMaxBytes(from: nil),
-                    maxBindParameters: Self.maxBindParameters(for: target.databaseType, limits: nil),
-                    columnCount: max(chunk.headerColumns.count, 1)
+                    target: target,
+                    limits: limits,
+                    headerColumns: chunk.headerColumns,
+                    targetColumns: chunk.headerColumns.filter { !generatedColumns.contains($0) },
+                    state: &state
                 )
             }
             guard let sink = state.sink else { throw TransferError.structureUnavailable(plan.table) }
@@ -352,14 +415,15 @@ extension DataTransferService {
             try await target.driver.commitTransaction()
             state.transactionOpen = false
         }
-        if state.foreignKeysDisabled {
-            if state.useBulk {
-                try await target.setForeignKeyChecks(enabled: true)
-            } else {
-                try await state.sink?.enableForeignKeyChecks()
-            }
-            state.foreignKeysDisabled = false
+        switch state.foreignKeyScope {
+        case .driver:
+            try await target.setForeignKeyChecks(enabled: true)
+        case .sink:
+            try await state.sink?.enableForeignKeyChecks()
+        case .none:
+            break
         }
+        state.foreignKeyScope = .none
     }
 
     private func abortWriter(target: TransferDriverContext, state: inout TransferWriterState) async {
@@ -369,14 +433,15 @@ extension DataTransferService {
             try? await target.driver.rollbackTransaction()
             state.transactionOpen = false
         }
-        if state.foreignKeysDisabled {
-            if state.useBulk {
-                try? await target.setForeignKeyChecks(enabled: true)
-            } else {
-                try? await state.sink?.enableForeignKeyChecks()
-            }
-            state.foreignKeysDisabled = false
+        switch state.foreignKeyScope {
+        case .driver:
+            try? await target.setForeignKeyChecks(enabled: true)
+        case .sink:
+            try? await state.sink?.enableForeignKeyChecks()
+        case .none:
+            break
         }
+        state.foreignKeyScope = .none
     }
 
     // MARK: - Verify
@@ -563,6 +628,14 @@ extension DataTransferService {
     internal static let inTableParallelThreshold = 1_000_000
 }
 
+/// Which side turned the target's foreign key checks off, so the same side
+/// turns them back on after a mid-table downgrade from bulk to prepared.
+private enum TransferForeignKeyScope {
+    case none
+    case driver
+    case sink
+}
+
 /// All mutable writer state for one table, held by the writer task.
 private struct TransferWriterState {
     var sink: ImportDataSinkAdapter?
@@ -572,5 +645,5 @@ private struct TransferWriterState {
     var useBulk = false
     var bulkColumns: [String] = []
     var transactionOpen = false
-    var foreignKeysDisabled = false
+    var foreignKeyScope = TransferForeignKeyScope.none
 }

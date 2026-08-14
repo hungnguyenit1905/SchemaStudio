@@ -302,6 +302,11 @@ public protocol PluginDatabaseDriver: AnyObject, Sendable {
     /// Streaming row fetch for export
     func streamRows(query: String) -> AsyncThrowingStream<PluginStreamElement, Error>
 
+    /// Whether `bulkLoadWriter` can hand back a writer for this driver. The
+    /// caller has to know before it commits to the bulk path: creating the
+    /// writer opens a load on the connection, so it cannot be used as a probe.
+    var supportsBulkLoad: Bool { get }
+
     /// A per-row writer into a native bulk load path, when the engine has one.
     /// Returning nil falls back to prepared `insertRows` batches.
     func bulkLoadWriter(
@@ -660,6 +665,8 @@ public extension PluginDatabaseDriver {
             }
         }
     }
+
+    var supportsBulkLoad: Bool { false }
 
     func bulkLoadWriter(
         table: String,

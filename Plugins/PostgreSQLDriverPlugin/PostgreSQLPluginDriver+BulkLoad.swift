@@ -7,6 +7,8 @@ import Foundation
 import TableProPluginKit
 
 extension PostgreSQLPluginDriver {
+    var supportsBulkLoad: Bool { true }
+
     func bulkLoadWriter(
         table: String,
         schema: String?,

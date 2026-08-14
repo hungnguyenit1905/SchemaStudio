@@ -93,6 +93,8 @@ struct TransferDriverContext: Sendable {
         pluginDriver.generateResetSequenceSQL(table: table, schema: schema, column: column)
     }
 
+    var supportsBulkLoad: Bool { pluginDriver.supportsBulkLoad }
+
     func bulkLoadWriter(
         table: String,
         columns: [String]

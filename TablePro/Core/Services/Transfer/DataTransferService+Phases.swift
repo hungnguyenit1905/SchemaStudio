@@ -21,7 +21,7 @@ extension DataTransferService {
         options: TransferOptions,
         resume: TransferResumeState?,
         jobId: UUID,
-        provider: TransferDriverProvider?,
+        lanes: TransferLanePool?,
         consistency: inout TransferConsistency
     ) async throws -> TransferReport {
         var run = TransferRunState()
@@ -37,11 +37,13 @@ extension DataTransferService {
             source: source,
             target: target,
             options: options,
-            estimates: estimates,
-            limits: preview.targetCapabilities.limits,
-            resume: resume,
-            jobId: jobId,
-            provider: provider,
+            inputs: TransferRunInputs(
+                estimates: estimates,
+                limits: preview.targetCapabilities.limits,
+                resume: resume,
+                jobId: jobId,
+                lanes: lanes
+            ),
             run: &run
         )
         await runConstraintPhase(preview.plans, target: target, run: &run, resume: resume)
@@ -128,69 +130,78 @@ extension DataTransferService {
         source: TransferDriverContext,
         target: TransferDriverContext,
         options: TransferOptions,
-        estimates: [String: Int],
-        limits: PluginServerLimits?,
-        resume: TransferResumeState?,
-        jobId: UUID,
-        provider: TransferDriverProvider?,
+        inputs: TransferRunInputs,
         run: inout TransferRunState
     ) async throws -> TransferConsistency {
-        let transferable = plans.filter { $0.steps.contains(.transferRows) }
-        state.totalTables = transferable.count
-        let lanes = provider != nil ? MetadataConnectionPool.cappedParallelism(options.parallelTables) : 1
-
         // PostgreSQL pins one snapshot for the whole data phase, so every
         // chunk and every lane reads the same point in time. The transaction
-        // is released when the phase ends, before the driver goes back to the
-        // pool. Other engines have no exportable snapshot and report the
-        // weaker, honest level instead.
+        // is released when the phase ends, awaited, before the driver goes back
+        // to the pool: a rollback that lands later would either roll back
+        // whatever the next consumer of that connection is doing, or leave the
+        // read transaction open under the row counts. Other engines have no
+        // exportable snapshot and report the weaker, honest level instead.
         let snapshotToken = source.databaseType == .postgresql ? try? await source.exportSnapshotToken() : nil
-        defer {
-            if snapshotToken != nil {
-                Task { @MainActor in
-                    try? await source.execute("ROLLBACK")
-                }
-            }
+        do {
+            let consistency = try await copyTables(
+                plans,
+                source: source,
+                target: target,
+                options: options,
+                inputs: inputs,
+                snapshotToken: snapshotToken,
+                run: &run
+            )
+            if snapshotToken != nil { try? await source.execute("ROLLBACK") }
+            return consistency
+        } catch {
+            if snapshotToken != nil { try? await source.execute("ROLLBACK") }
+            throw error
         }
+    }
 
+    private func copyTables(
+        _ plans: [TransferTablePlan],
+        source: TransferDriverContext,
+        target: TransferDriverContext,
+        options: TransferOptions,
+        inputs: TransferRunInputs,
+        snapshotToken: String?,
+        run: inout TransferRunState
+    ) async throws -> TransferConsistency {
+        let resume = inputs.resume
+        let limits = inputs.limits
+        let transferable = plans.filter { $0.steps.contains(.transferRows) }
+        state.totalTables = transferable.count
         var tableIndex = markCompleteTables(transferable, resume: resume, run: &run)
-        let gate = TransferRunGate()
 
+        let pending = transferable.filter {
+            !run.isBlocked($0.table) && !(resume?.isComplete(table: $0.table) ?? false)
+        }
+        let gate = TransferRunGate()
+        let parallelTables = inputs.lanes != nil
+            && MetadataConnectionPool.cappedParallelism(options.parallelTables) > 1
         let context = TransferCopyContext(
             resume: resume,
-            jobId: jobId,
+            jobId: inputs.jobId,
             checkpoint: TransferCheckpointStore.shared,
             snapshotToken: snapshotToken,
             gate: gate,
-            provider: provider
+            lanes: inputs.lanes,
+            boundaries: await partitionBoundaryMap(pending, source: source, options: options),
+            parallelTables: parallelTables
         )
 
-        if lanes > 1, let provider {
+        if parallelTables {
             try await withThrowingTaskGroup(of: TransferTableCopyResult.self) { group in
-                var lane = 0
-                for plan in transferable where !run.isBlocked(plan.table) && !(resume?.isComplete(table: plan.table) ?? false) {
-                    let currentLane = lane % lanes
-                    lane += 1
+                for plan in pending {
                     group.addTask { @MainActor in
                         if gate.stopped || self.shouldStop {
                             return TransferTableCopyResult.skipped(plan.table)
                         }
-                        let pair = try await provider.pair(lane: currentLane)
-                        if currentLane > 0, let snapshotToken {
-                            let adopted = (try? await pair.source.adoptSnapshotToken(snapshotToken)) ?? false
-                            if !adopted {
-                                gate.downgradeConsistency()
-                            }
-                        }
-                        defer {
-                            if currentLane > 0 {
-                                Task { @MainActor in try? await pair.source.execute("ROLLBACK") }
-                            }
-                        }
                         return await self.copyTableForRun(
                             plan: plan,
-                            source: pair.source,
-                            target: pair.target,
+                            source: source,
+                            target: target,
                             options: options,
                             limits: limits,
                             context: context
@@ -211,13 +222,13 @@ extension DataTransferService {
                 }
             }
         } else {
-            for plan in transferable where !run.isBlocked(plan.table) && !(resume?.isComplete(table: plan.table) ?? false) {
+            for plan in pending {
                 if run.stopped || shouldStop {
                     run.stopped = true
-                    return snapshotToken != nil && gate.isDatabaseWide ? .databaseWide : .perTable
+                    return consistency(snapshotToken: snapshotToken, gate: gate)
                 }
                 tableIndex += 1
-                beginTableProgress(plan.table, index: tableIndex, estimates: estimates)
+                beginTableProgress(plan.table, index: tableIndex, estimates: inputs.estimates)
                 let result = await copyTableForRun(
                     plan: plan,
                     source: source,
@@ -227,11 +238,15 @@ extension DataTransferService {
                     context: context
                 )
                 mergeCopyResult(result, run: &run, options: options, target: target, gate: gate)
-                if run.stopped { return snapshotToken != nil && gate.isDatabaseWide ? .databaseWide : .perTable }
+                if run.stopped { return consistency(snapshotToken: snapshotToken, gate: gate) }
             }
         }
         if shouldStop { run.stopped = true }
-        return snapshotToken != nil && gate.isDatabaseWide ? .databaseWide : .perTable
+        return consistency(snapshotToken: snapshotToken, gate: gate)
+    }
+
+    private func consistency(snapshotToken: String?, gate: TransferRunGate) -> TransferConsistency {
+        snapshotToken != nil && gate.isDatabaseWide ? .databaseWide : .perTable
     }
 
     /// Tables whose checkpoint already marks the data phase complete are
@@ -263,6 +278,10 @@ extension DataTransferService {
         state.currentTableEstimatedRows = estimates[table] ?? 0
     }
 
+    /// The lane is taken here, at the leaf, and never around work that goes on
+    /// to take another one: a table that partitions hands every lane to its
+    /// partitions instead of holding one of its own, so the lanes cannot
+    /// deadlock against each other.
     private func copyTableForRun(
         plan: TransferTablePlan,
         source: TransferDriverContext,
@@ -274,11 +293,8 @@ extension DataTransferService {
         let startedAt = Date()
         do {
             let rows: Int
-            if let boundaries = try await partitionBoundaries(
-                plan: plan,
-                source: source,
-                options: options
-            ), !boundaries.isEmpty, let provider = context.provider {
+            let boundaries = context.boundaries[plan.table] ?? []
+            if !boundaries.isEmpty, context.lanes != nil {
                 rows = try await copyTablePartitioned(
                     plan: plan,
                     boundaries: boundaries,
@@ -286,6 +302,21 @@ extension DataTransferService {
                     limits: limits,
                     context: context
                 )
+            } else if let lanes = context.lanes, context.parallelTables {
+                rows = try await lanes.withLane { laneSource, laneTarget in
+                    try await self.withAdoptedSnapshot(source: laneSource, context: context) {
+                        try await self.copyRows(
+                            plan: plan,
+                            source: laneSource,
+                            target: laneTarget,
+                            options: options,
+                            limits: limits,
+                            checkpoint: context.checkpoint,
+                            jobId: context.jobId,
+                            resumeCursor: context.resume?.entry(table: plan.table)?.cursor
+                        )
+                    }
+                }
             } else {
                 rows = try await copyRows(
                     plan: plan,
@@ -316,6 +347,28 @@ extension DataTransferService {
         }
     }
 
+    /// Every table's ranges are probed once, up front, on the run's own source
+    /// driver. Probing from inside a parallel table task would put several
+    /// MIN/MAX queries on that one connection at the same time.
+    private func partitionBoundaryMap(
+        _ plans: [TransferTablePlan],
+        source: TransferDriverContext,
+        options: TransferOptions
+    ) async -> [String: [String]] {
+        guard options.inTableParallelism > 1 else { return [:] }
+        var boundaries: [String: [String]] = [:]
+        for plan in plans {
+            if shouldStop { break }
+            guard let ranges = try? await partitionBoundaries(
+                plan: plan,
+                source: source,
+                options: options
+            ), !ranges.isEmpty else { continue }
+            boundaries[plan.table] = ranges
+        }
+        return boundaries
+    }
+
     /// Splits one table into parallel ranges when its single numeric primary
     /// key is large enough that a full index scan for the boundaries pays for
     /// itself. UUID, composite and unknown-size keys stay sequential.
@@ -324,8 +377,7 @@ extension DataTransferService {
         source: TransferDriverContext,
         options: TransferOptions
     ) async throws -> [String]? {
-        guard options.inTableParallelism > 1,
-              plan.structure.primaryKeyColumns.count == 1 else { return nil }
+        guard plan.structure.primaryKeyColumns.count == 1 else { return nil }
         let column = plan.structure.primaryKeyColumns[0]
         guard TransferParallelism.shouldParallelize(
             estimatedRows: try? await source.approximateRowCount(table: plan.table),
@@ -352,7 +404,7 @@ extension DataTransferService {
         context: TransferCopyContext
     ) async throws -> Int {
         let partitionCount = boundaries.count + 1
-        guard let provider = context.provider else { return 0 }
+        guard let lanes = context.lanes else { return 0 }
         return try await withThrowingTaskGroup(of: Int.self) { group in
             for index in 0 ..< partitionCount {
                 let upperBound = index < boundaries.count ? boundaries[index] : nil
@@ -360,27 +412,22 @@ extension DataTransferService {
                 let resumeCursor = context.resume?.entry(table: plan.table, partition: index)?.cursor
                     ?? lowerBound.map { TransferChunkCursor(lastKey: [$0], rowsDone: 0) }
                 group.addTask { @MainActor in
-                    // Partition lanes start at 1: lane 0 is the run's own pair.
-                    let pair = try await provider.pair(lane: index + 1)
-                    if let snapshotToken = context.snapshotToken {
-                        let adopted = (try? await pair.source.adoptSnapshotToken(snapshotToken)) ?? false
-                        if !adopted { context.gate.downgradeConsistency() }
+                    try await lanes.withLane { laneSource, laneTarget in
+                        try await self.withAdoptedSnapshot(source: laneSource, context: context) {
+                            try await self.copyRows(
+                                plan: plan,
+                                source: laneSource,
+                                target: laneTarget,
+                                options: options,
+                                limits: limits,
+                                checkpoint: context.checkpoint,
+                                jobId: context.jobId,
+                                resumeCursor: resumeCursor,
+                                partition: index,
+                                upperBound: upperBound
+                            )
+                        }
                     }
-                    defer {
-                        Task { @MainActor in try? await pair.source.execute("ROLLBACK") }
-                    }
-                    return try await self.copyRows(
-                        plan: plan,
-                        source: pair.source,
-                        target: pair.target,
-                        options: options,
-                        limits: limits,
-                        checkpoint: context.checkpoint,
-                        jobId: context.jobId,
-                        resumeCursor: resumeCursor,
-                        partition: index,
-                        upperBound: upperBound
-                    )
                 }
             }
             var total = 0
@@ -388,6 +435,28 @@ extension DataTransferService {
                 total += written
             }
             return total
+        }
+    }
+
+    /// A lane reads the run's snapshot, and gives the transaction that pins it
+    /// back before the lane is released. The rollback is awaited: a detached
+    /// one lands after the driver is back in the pool, on whatever the next
+    /// consumer is doing.
+    private func withAdoptedSnapshot<T: Sendable>(
+        source: TransferDriverContext,
+        context: TransferCopyContext,
+        body: @Sendable () async throws -> T
+    ) async throws -> T {
+        guard let token = context.snapshotToken else { return try await body() }
+        let adopted = (try? await source.adoptSnapshotToken(token)) ?? false
+        if !adopted { context.gate.downgradeConsistency() }
+        do {
+            let result = try await body()
+            if adopted { try? await source.execute("ROLLBACK") }
+            return result
+        } catch {
+            if adopted { try? await source.execute("ROLLBACK") }
+            throw error
         }
     }
 
@@ -641,19 +710,15 @@ extension DataTransferService {
 
 // MARK: - Row Copy Support Types
 
-/// Hands out the driver pairs the data phase copies tables with. Lane 0 is the
-/// pair the run already holds; higher lanes open their own connections through
-/// the metadata pool, capped by the pool's connection budget.
-struct TransferDriverProvider: Sendable {
-    private let call: @Sendable (Int) async throws -> (source: TransferDriverContext, target: TransferDriverContext)
-
-    init(call: @escaping @Sendable (Int) async throws -> (source: TransferDriverContext, target: TransferDriverContext)) {
-        self.call = call
-    }
-
-    func pair(lane: Int) async throws -> (source: TransferDriverContext, target: TransferDriverContext) {
-        try await call(lane)
-    }
+/// What the data phase is given once for the whole run: the estimates behind
+/// the progress bar, the target's limits, the checkpoint to resume from, and
+/// the lanes the run may copy on.
+private struct TransferRunInputs {
+    let estimates: [String: Int]
+    let limits: PluginServerLimits?
+    let resume: TransferResumeState?
+    let jobId: UUID
+    let lanes: TransferLanePool?
 }
 
 /// Everything a table copy needs that is not the pair of drivers it runs on.
@@ -663,7 +728,9 @@ private struct TransferCopyContext {
     let checkpoint: TransferCheckpointStore
     let snapshotToken: String?
     let gate: TransferRunGate
-    let provider: TransferDriverProvider?
+    let lanes: TransferLanePool?
+    let boundaries: [String: [String]]
+    let parallelTables: Bool
 }
 
 @MainActor

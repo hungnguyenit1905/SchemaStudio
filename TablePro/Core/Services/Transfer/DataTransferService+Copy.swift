@@ -39,7 +39,8 @@ extension DataTransferService {
             chunkSize: Self.chunkSize,
             comparison: source.chunkComparison,
             quoteIdentifier: source.quoteIdentifier,
-            escapeStringLiteral: source.escapeStringLiteral
+            escapeStringLiteral: source.escapeStringLiteral,
+            keyLiteralKinds: plan.keyLiteralKinds
         )
 
         let gate = TransferBackpressureGate(capacity: Self.pipelineDepth)
