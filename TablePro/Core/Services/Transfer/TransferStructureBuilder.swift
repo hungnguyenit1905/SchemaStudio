@@ -255,8 +255,17 @@ enum TransferStructureBuilder {
         return warnings
     }
 
+    /// A PostgreSQL `serial` is not an identity column and carries no extra: it
+    /// is an ordinary integer whose default reads from a sequence. Copying that
+    /// default verbatim points the new table at the source's sequence, which
+    /// does not exist in the target database, so the column has to be
+    /// recognised here and recreated as the target's own auto-increment.
     static func isAutoIncrement(_ column: PluginColumnInfo) -> Bool {
         if column.identityKind != nil { return true }
+        if let defaultValue = column.defaultValue,
+           defaultValue.lowercased().hasPrefix("nextval(") {
+            return true
+        }
         guard let extra = column.extra else { return false }
         return extra.lowercased().contains("auto_increment")
     }
