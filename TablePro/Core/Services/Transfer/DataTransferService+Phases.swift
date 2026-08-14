@@ -29,7 +29,7 @@ extension DataTransferService {
 
         await runStructurePhase(preview.plans, target: target, options: options, run: &run)
         await runDataPhase(preview.plans, source: source, target: target, options: options, run: &run)
-        await runConstraintPhase(preview.plans, target: target, options: options, run: &run)
+        await runConstraintPhase(preview.plans, target: target, run: &run)
 
         return run.report(for: selections)
     }
@@ -143,7 +143,6 @@ extension DataTransferService {
     func runConstraintPhase(
         _ plans: [TransferTablePlan],
         target: TransferDriverContext,
-        options: TransferOptions,
         run: inout TransferRunState
     ) async {
         guard !run.stopped else { return }
@@ -151,16 +150,18 @@ extension DataTransferService {
         defer { state.statusMessage = "" }
 
         let foreignKeysDisabled = await disableForeignKeyChecks(on: target)
-        await applyConstraintPlans(plans, target: target, options: options, run: &run)
+        await applyConstraintPlans(plans, target: target, run: &run)
         if foreignKeysDisabled {
             await restoreForeignKeyChecks(on: target)
         }
     }
 
+    /// A constraint that cannot be created never stops the run: the rows are
+    /// already at the target, so the table is reported with a warning and the
+    /// remaining tables keep going regardless of `continueOnError`.
     private func applyConstraintPlans(
         _ plans: [TransferTablePlan],
         target: TransferDriverContext,
-        options: TransferOptions,
         run: inout TransferRunState
     ) async {
         for plan in plans where !run.isBlocked(plan.table) {
@@ -168,14 +169,10 @@ extension DataTransferService {
                 run.stopped = true
                 return
             }
-            do {
-                try await applyConstraintSteps(plan, target: target)
-                run.finish(plan.table)
-            } catch {
-                run.fail(plan.table, message: error.localizedDescription)
-                if !options.continueOnError { run.stopped = true
-                    return
-                }
+            let messages = await applyConstraintSteps(plan, target: target)
+            run.finish(plan.table)
+            if !messages.isEmpty {
+                run.warn(plan.table, messages: messages)
             }
         }
     }
@@ -202,29 +199,53 @@ extension DataTransferService {
         }
     }
 
-    private func applyConstraintSteps(_ plan: TransferTablePlan, target: TransferDriverContext) async throws {
+    /// One message per statement that failed rather than a throw on the first,
+    /// so a rejected index never costs the same table its foreign keys.
+    private func applyConstraintSteps(
+        _ plan: TransferTablePlan,
+        target: TransferDriverContext
+    ) async -> [String] {
+        var messages: [String] = []
+
         for step in plan.steps {
             switch step {
             case .createIndexes:
                 for index in plan.structure.indexes {
                     guard let sql = target.addIndexStatement(table: plan.table, index: index) else { continue }
-                    try await target.execute(sql)
+                    await Self.appendFailure(of: sql, on: target, to: &messages)
                 }
             case .createForeignKeys:
                 for foreignKey in plan.structure.foreignKeys {
                     guard let sql = target.addForeignKeyStatement(table: plan.table, foreignKey: foreignKey) else {
                         continue
                     }
-                    try await target.execute(sql)
+                    await Self.appendFailure(of: sql, on: target, to: &messages)
                 }
             case .resetSequences:
                 for column in plan.structure.autoIncrementColumns {
                     guard let sql = target.resetSequenceStatement(table: plan.table, column: column) else { continue }
-                    try await target.execute(sql)
+                    await Self.appendFailure(of: sql, on: target, to: &messages)
                 }
             case .dropTargetTable, .createTargetTable, .truncateTarget, .transferRows, .failMissingTarget:
                 continue
             }
+        }
+
+        return messages
+    }
+
+    private static func appendFailure(
+        of statement: String,
+        on target: TransferDriverContext,
+        to messages: inout [String]
+    ) async {
+        do {
+            try await target.execute(statement)
+        } catch {
+            messages.append(error.localizedDescription)
+            logger.warning(
+                "Transfer constraint statement failed: \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
 
@@ -405,9 +426,14 @@ extension DataTransferService {
 // MARK: - Run State
 
 struct TransferRunState {
+    private static let constraintsNotAppliedMessage = String(
+        localized: "Rows were copied but indexes and foreign keys were not applied."
+    )
+
     private var rows: [String: Int] = [:]
     private var durations: [String: TimeInterval] = [:]
     private var failures: [String: String] = [:]
+    private var warnings: [String: [String]] = [:]
     private var finished: Set<String> = []
 
     var stopped = false
@@ -417,6 +443,12 @@ struct TransferRunState {
     mutating func fail(_ table: String, message: String, duration: TimeInterval = 0) {
         failures[table] = message
         durations[table] = duration
+    }
+
+    /// A warning never stops the run and never blocks the table, so every later
+    /// phase still visits it.
+    mutating func warn(_ table: String, messages: [String]) {
+        warnings[table, default: []].append(contentsOf: messages)
     }
 
     mutating func succeed(_ table: String, rows count: Int, duration: TimeInterval) {
@@ -440,8 +472,15 @@ struct TransferRunState {
         return TransferReport(results: results, wasCancelled: stopped)
     }
 
+    /// A table whose rows landed before the run stopped is not "not completed":
+    /// the data is at the target, only its constraints are missing.
     private func outcome(for table: String) -> TransferTableOutcome {
         if let message = failures[table] { return .failed(message) }
-        return finished.contains(table) ? .succeeded : .notRun
+        if finished.contains(table) {
+            guard let messages = warnings[table], !messages.isEmpty else { return .succeeded }
+            return .warned(messages)
+        }
+        guard rows[table] != nil else { return .notRun }
+        return .warned([Self.constraintsNotAppliedMessage])
     }
 }

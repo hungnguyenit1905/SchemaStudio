@@ -58,6 +58,7 @@ struct TransferTableSelection: Identifiable, Hashable, Sendable {
 
 enum TransferTableOutcome: Sendable, Hashable {
     case succeeded
+    case warned([String])
     case failed(String)
     case notRun
 }
@@ -75,6 +76,11 @@ struct TransferTableResult: Sendable, Identifiable, Hashable {
         return nil
     }
 
+    var warningMessages: [String] {
+        if case .warned(let messages) = outcome { return messages }
+        return []
+    }
+
     var didRun: Bool { outcome != .notRun }
 }
 
@@ -83,6 +89,7 @@ struct TransferReport: Sendable {
     let wasCancelled: Bool
 
     var failedCount: Int { results.count(where: { $0.errorMessage != nil }) }
+    var warningCount: Int { results.count(where: { !$0.warningMessages.isEmpty }) }
     var notRunCount: Int { results.count(where: { !$0.didRun }) }
     var totalRows: Int { results.reduce(0) { $0 + $1.rowsTransferred } }
 }
