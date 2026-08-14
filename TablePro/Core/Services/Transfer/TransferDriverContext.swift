@@ -24,6 +24,8 @@ struct TransferDriverContext: Sendable {
 
     var supportsSchemas: Bool { pluginDriver.supportsSchemas }
 
+    var serverVersion: String? { pluginDriver.serverVersion }
+
     /// The container the driver is already pinned to. A schema-aware engine
     /// resolves a bare table name through its schema, everything else through
     /// the database it connected to.

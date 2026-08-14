@@ -84,7 +84,8 @@ extension TransferTypeMapper {
                 isUnique: index.isUnique,
                 indexType: indexType,
                 columnPrefixes: columnPrefixes,
-                whereClause: whereClause
+                whereClause: whereClause,
+                descendingColumns: index.descendingColumns
             ),
             warnings: warnings
         )

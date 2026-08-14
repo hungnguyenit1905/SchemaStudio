@@ -76,6 +76,11 @@ charset conversion. Anything else falls back to prepared batches, and so does My
 `local_infile` is off at the server. Batches are sized by the target's own limits, so a single row
 that is larger than the limit is sent on its own instead of failing the batch.
 
+An index that sorts a column in descending order keeps that order at the target. MySQL before 8.0
+and MariaDB before 10.8 accept the syntax and build an ascending index without saying anything, so
+the transfer creates the index ascending there and reports it on the table instead of letting the
+difference pass unnoticed.
+
 ## When a constraint cannot be created
 
 An index, foreign key or sequence reset that the target rejects does not fail the table and does not

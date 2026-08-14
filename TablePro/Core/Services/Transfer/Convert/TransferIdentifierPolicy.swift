@@ -132,7 +132,21 @@ extension PluginIndexDefinition {
             isUnique: isUnique,
             indexType: indexType,
             columnPrefixes: columnPrefixes,
-            whereClause: whereClause
+            whereClause: whereClause,
+            descendingColumns: descendingColumns
+        )
+    }
+
+    func withDescendingColumns(_ columns: Set<String>) -> PluginIndexDefinition {
+        guard columns != descendingColumns else { return self }
+        return PluginIndexDefinition(
+            name: name,
+            columns: self.columns,
+            isUnique: isUnique,
+            indexType: indexType,
+            columnPrefixes: columnPrefixes,
+            whereClause: whereClause,
+            descendingColumns: columns
         )
     }
 }

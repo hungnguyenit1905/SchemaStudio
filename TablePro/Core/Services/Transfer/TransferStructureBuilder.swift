@@ -111,7 +111,8 @@ enum TransferStructureBuilder {
         indexes: [PluginIndexInfo],
         foreignKeys: [PluginForeignKeyInfo],
         targetSchema: String?,
-        mapper: TransferTypeMapper? = nil
+        mapper: TransferTypeMapper? = nil,
+        keepsDescendingIndex: Bool = true
     ) -> TransferTableStructure {
         var warnings: [TransferStructureWarning] = []
         var definitions: [PluginColumnDefinition] = []
@@ -192,6 +193,22 @@ enum TransferStructureBuilder {
             mappedIndexes = kept
         }
 
+        if !keepsDescendingIndex {
+            mappedIndexes = mappedIndexes.map { index in
+                guard !index.descendingColumns.isEmpty else { return index }
+                warnings.append(
+                    .indexSilentlyIgnored(
+                        table: table,
+                        index: index.name,
+                        reason: String(
+                            localized: "The target builds an ascending index from a descending one without reporting it, so the index is created ascending."
+                        )
+                    )
+                )
+                return index.withDescendingColumns([])
+            }
+        }
+
         let mappedForeignKeys = foreignKeyDefinitions(from: foreignKeys, targetSchema: targetSchema)
         let names = TransferIdentifierMap(
             names: mappedIndexes.map(\.name) + mappedForeignKeys.map(\.name),
@@ -258,7 +275,8 @@ enum TransferStructureBuilder {
                     isUnique: index.isUnique,
                     indexType: index.type,
                     columnPrefixes: index.columnPrefixes,
-                    whereClause: index.whereClause
+                    whereClause: index.whereClause,
+                    descendingColumns: index.descendingColumns ?? []
                 )
             }
     }

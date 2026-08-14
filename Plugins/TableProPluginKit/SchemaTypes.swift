@@ -113,6 +113,15 @@ public struct PluginIndexDefinition: Sendable {
     public let columnPrefixes: [String: Int]?
     public let whereClause: String?
 
+    /// The columns the index sorts in descending order. A driver that does not
+    /// report sort direction leaves this empty, which reads as "every column
+    /// ascending" and matches how the index was treated before.
+    public let descendingColumns: Set<String>
+
+    /// Kept at its published signature so plugins built against an earlier
+    /// PluginKit keep resolving the symbol their witness table references.
+    /// `@_disfavoredOverload` steers new call sites to the full initializer.
+    @_disfavoredOverload
     public init(
         name: String,
         columns: [String],
@@ -127,6 +136,25 @@ public struct PluginIndexDefinition: Sendable {
         self.indexType = indexType
         self.columnPrefixes = columnPrefixes
         self.whereClause = whereClause
+        descendingColumns = []
+    }
+
+    public init(
+        name: String,
+        columns: [String],
+        isUnique: Bool,
+        indexType: String?,
+        columnPrefixes: [String: Int]?,
+        whereClause: String?,
+        descendingColumns: Set<String>
+    ) {
+        self.name = name
+        self.columns = columns
+        self.isUnique = isUnique
+        self.indexType = indexType
+        self.columnPrefixes = columnPrefixes
+        self.whereClause = whereClause
+        self.descendingColumns = descendingColumns
     }
 }
 

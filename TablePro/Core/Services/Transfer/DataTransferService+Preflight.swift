@@ -29,6 +29,11 @@ extension DataTransferService {
             Self.logger.warning("Target cannot disable constraint checks; drops and truncates may run slower")
         }
 
+        let keepsDescendingIndex = TransferIndexDirectionSupport.keepsDescendingIndex(
+            targetType: target.databaseType,
+            version: target.serverVersion
+        )
+
         var plans: [TransferTablePlan] = []
         var failures: [TransferPreflightFailure] = []
 
@@ -42,7 +47,8 @@ extension DataTransferService {
                     options: options,
                     targetExists: targetTables.contains(selection.table),
                     selectedTables: selectedTables,
-                    inboundForeignKeys: inbound
+                    inboundForeignKeys: inbound,
+                    keepsDescendingIndex: keepsDescendingIndex
                 )
                 plans.append(plan)
             } catch {
@@ -67,7 +73,8 @@ extension DataTransferService {
         options: TransferOptions,
         targetExists: Bool,
         selectedTables: Set<String>,
-        inboundForeignKeys: [String: [String]]
+        inboundForeignKeys: [String: [String]],
+        keepsDescendingIndex: Bool
     ) async throws -> TransferTablePlan {
         let columns = try await source.fetchColumns(table: table)
         guard !columns.isEmpty else { throw TransferError.structureUnavailable(table) }
@@ -81,7 +88,8 @@ extension DataTransferService {
             indexes: indexes,
             foreignKeys: foreignKeys,
             targetSchema: target.schema,
-            mapper: mapper.isSameDialect ? nil : mapper
+            mapper: mapper.isSameDialect ? nil : mapper,
+            keepsDescendingIndex: keepsDescendingIndex
         )
 
         let steps = TransferModePlanner.plan(mode: mode, options: options, targetExists: targetExists)
