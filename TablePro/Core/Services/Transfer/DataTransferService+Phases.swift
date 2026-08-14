@@ -136,7 +136,11 @@ extension DataTransferService {
         }
     }
 
-    private func runConstraintPhase(
+    /// `ALTER TABLE ... ADD CONSTRAINT FOREIGN KEY` validates every row already
+    /// in the table, so a source that holds an orphan row aborts the statement
+    /// (MySQL 1452). The transfer mirrors the source, the way `mysqldump` does,
+    /// so the whole pass runs with the checks off.
+    func runConstraintPhase(
         _ plans: [TransferTablePlan],
         target: TransferDriverContext,
         options: TransferOptions,
@@ -146,6 +150,19 @@ extension DataTransferService {
         state.statusMessage = String(localized: "Adding indexes and foreign keys\u{2026}")
         defer { state.statusMessage = "" }
 
+        let foreignKeysDisabled = await disableForeignKeyChecks(on: target)
+        await applyConstraintPlans(plans, target: target, options: options, run: &run)
+        if foreignKeysDisabled {
+            await restoreForeignKeyChecks(on: target)
+        }
+    }
+
+    private func applyConstraintPlans(
+        _ plans: [TransferTablePlan],
+        target: TransferDriverContext,
+        options: TransferOptions,
+        run: inout TransferRunState
+    ) async {
         for plan in plans where !run.isBlocked(plan.table) {
             if shouldStop {
                 run.stopped = true
