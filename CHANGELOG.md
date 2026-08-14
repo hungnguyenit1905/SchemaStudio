@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A constraint that cannot be created in Data Transfer is now reported as a warning on that table and no longer stops the remaining tables.
 - Data Transfer progress is now measured by table instead of an estimated row count, which could push the bar past 100% before the run finished.
 - A table whose rows were copied before a transfer was stopped no longer reports as not completed.
+- Editing an index in the structure tab no longer rebuilds it ascending when one of its columns was sorted descending.
 - A table opened from the sidebar now joins the tab group of the window it was opened from. With two windows open it could land in the other one.
 - The schema picker, database filter, and new-object menu below the sidebar now follow the connection selected in that window. Selecting a connection in one window retargeted them in every other window.
 - An open tab now keeps running against the database it was opened on, so changing the database in the sidebar no longer breaks it with a "table doesn't exist" error. (#2026)
