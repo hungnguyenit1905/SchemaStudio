@@ -1068,6 +1068,23 @@ final class MariaDBPluginConnection: @unchecked Sendable {
         _cachedServerVersion
     }
 
+    // MARK: - Handle Access
+
+    /// The one seam other files use to reach the live handle: same queue, same
+    /// shutdown guard, same error mapping as every query goes through.
+    func withConnectionHandle<T: Sendable>(
+        _ body: @escaping @Sendable (UnsafeMutablePointer<MYSQL>) throws -> T
+    ) async throws -> T {
+        try await pluginDispatchAsync(on: queue) { [self] in
+            guard !isShuttingDown, let mysql else { throw MariaDBPluginError.notConnected }
+            return try body(mysql)
+        }
+    }
+
+    func lastError() -> MariaDBPluginError {
+        getError()
+    }
+
     // MARK: - Private Helpers
 
     private func getError() -> MariaDBPluginError {

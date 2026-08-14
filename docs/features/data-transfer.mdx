@@ -43,9 +43,10 @@ target in this version. The target connection also has to allow writes, so a rea
 - **Parallel tables**: copies up to three tables at once, each on its own connections. The number
   is capped by the connection pool, and the extra connections are released when the run ends.
 - **Parallel reads inside one table**: splits a large table with a single numeric primary key into
-  ranges and reads each range on its own connection. It only engages past a million estimated rows,
-  because working out the ranges costs a scan of the key. UUID, text and composite keys stay
-  sequential.
+  ranges and reads each range on its own connection. The ranges are worked out to hold the same
+  number of rows, so a key with gaps still spreads the work evenly. It only engages past a million
+  estimated rows, because working out the ranges costs a scan of the key. UUID, text and composite
+  keys stay sequential.
 
 ## What runs, and in what order
 
@@ -68,9 +69,12 @@ rows already in the table. That is what a dump and restore does. It means the ta
 holding a foreign key its rows violate, but only where the source already violated the same one:
 the transfer mirrors the source rather than cleaning it up.
 
-The row pass uses the target's native bulk path when one exists (PostgreSQL `COPY`), and falls back
-to prepared batches otherwise. Batches are sized by the target's own limits, so a single row that is
-larger than the limit is sent on its own instead of failing the batch.
+The row pass uses the target's native bulk path when one exists: `COPY` on PostgreSQL, and
+`LOAD DATA LOCAL INFILE` on MySQL when the server allows it. The MySQL path is served from memory,
+never from a file on disk, and binary columns travel as hex so their bytes are not put through a
+charset conversion. Anything else falls back to prepared batches, and so does MySQL when
+`local_infile` is off at the server. Batches are sized by the target's own limits, so a single row
+that is larger than the limit is sent on its own instead of failing the batch.
 
 ## When a constraint cannot be created
 

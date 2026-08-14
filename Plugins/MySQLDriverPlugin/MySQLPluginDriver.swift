@@ -17,6 +17,10 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     internal var cachedPrivilegeCatalog: PluginPrivilegeCatalog?
 
+    internal var activeConnection: MariaDBPluginConnection? { mariadbConnection }
+    internal var isMariaDBServer: Bool { isMariaDB }
+    internal var activeDatabaseName: String { _activeDatabase }
+
     /// Detected server type from version string after connecting
     private var isMariaDB = false
 
@@ -944,7 +948,7 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         schema: String?,
         columns: [String]
     ) async throws -> PluginBulkLoadWriter? {
-        nil
+        try await makeBulkLoadWriter(table: table, schema: schema, columns: columns)
     }
 
     func serverLimits() async throws -> PluginServerLimits? {
