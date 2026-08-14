@@ -19,6 +19,45 @@ extension MySQLPluginDriver {
         partitions: Int
     ) async throws -> [String]? {
         guard partitions > 1 else { return nil }
+        if let sampled = try? await percentileBoundaries(
+            table: table,
+            column: column,
+            partitions: partitions
+        ), !sampled.isEmpty {
+            return sampled
+        }
+        return try await valueRangeBoundaries(table: table, column: column, partitions: partitions)
+    }
+
+    /// Equal-row partitions, so a key with gaps does not leave workers idle.
+    /// A server without window functions has no way to ask for this, and a
+    /// failure here is never fatal: the caller falls back to the value split.
+    private func percentileBoundaries(
+        table: String,
+        column: String,
+        partitions: Int
+    ) async throws -> [String] {
+        guard MySQLPartitionBoundarySQL.supportsWindowFunctions(
+            version: serverVersion,
+            isMariaDB: isMariaDBServer
+        ) else { return [] }
+
+        let result = try await execute(
+            query: MySQLPartitionBoundarySQL.percentileQuery(
+                table: quoteIdentifier(table),
+                column: quoteIdentifier(column),
+                partitions: partitions
+            )
+        )
+        let minimums = result.rows.compactMap { $0[safe: 0]?.asText }
+        return MySQLPartitionBoundarySQL.boundaries(fromBucketMinimums: minimums)
+    }
+
+    private func valueRangeBoundaries(
+        table: String,
+        column: String,
+        partitions: Int
+    ) async throws -> [String]? {
         let quotedColumn = quoteIdentifier(column)
         let result = try await execute(
             query: "SELECT MIN(\(quotedColumn)), MAX(\(quotedColumn)) FROM \(quoteIdentifier(table))"

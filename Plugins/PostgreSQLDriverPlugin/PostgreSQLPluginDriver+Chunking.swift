@@ -57,6 +57,15 @@ extension LibPQBackedDriver {
         let schemaName = schema ?? core.currentSchema
         let qualified = "\(quoteIdentifier(schemaName)).\(quoteIdentifier(table))"
         let quotedColumn = quoteIdentifier(column)
+
+        if let sampled = try? await percentileBoundaries(
+            qualified: qualified,
+            column: quotedColumn,
+            partitions: partitions
+        ), !sampled.isEmpty {
+            return sampled
+        }
+
         let result = try await execute(
             query: "SELECT MIN(\(quotedColumn)), MAX(\(quotedColumn)) FROM \(qualified)"
         )
@@ -69,6 +78,27 @@ extension LibPQBackedDriver {
             return nil
         }
         return Self.splitBoundaries(min: minValue, max: maxValue, partitions: partitions)
+    }
+
+    /// Equal-row partitions rather than equal value ranges, so a key with gaps
+    /// still spreads the rows evenly over the workers. `NTILE` has been in
+    /// PostgreSQL since 8.4, so this is the normal path and the value split is
+    /// only the fallback when the sample query cannot run.
+    private func percentileBoundaries(
+        qualified: String,
+        column: String,
+        partitions: Int
+    ) async throws -> [String] {
+        let sql = """
+        SELECT MIN(bucket_key)::text FROM ( \
+        SELECT \(column) AS bucket_key, NTILE(\(partitions)) OVER (ORDER BY \(column)) AS bucket \
+        FROM \(qualified) WHERE \(column) IS NOT NULL \
+        ) AS sampled GROUP BY bucket ORDER BY bucket
+        """
+        let result = try await execute(query: sql)
+        let minimums = result.rows.compactMap { $0[safe: 0]?.asText }
+        guard minimums.count > 1 else { return [] }
+        return Array(minimums.dropFirst())
     }
 
     static func splitBoundaries(min: Double, max: Double, partitions: Int) -> [String] {
