@@ -341,13 +341,9 @@ extension DataTransferService {
                     state: &state
                 )
             }
-            var written = 0
-            for row in chunk.rows {
-                try await writer.write(row: row)
-                written += 1
-            }
-            self.state.processedRows += written
-            return written
+            try await writer.write(rows: chunk.rows)
+            self.state.processedRows += chunk.rows.count
+            return chunk.rows.count
         }
         guard let sink = state.sink, let currentSplitter = state.splitter else {
             throw TransferError.structureUnavailable(plan.table)

@@ -50,6 +50,24 @@ final class MySQLBulkLoadWriter: PluginBulkLoadWriter, @unchecked Sendable {
         try stream.append(chunk)
     }
 
+    /// The whole chunk is encoded and appended under one lock, so a chunk costs
+    /// one suspension and one handoff instead of one per row.
+    func write(rows: [[PluginCellValue]]) async throws {
+        let chunk: Data? = lock.withLock {
+            guard !finished else { return nil }
+            for row in rows {
+                buffer.append(MySQLLocalInfileEncoder.line(for: row, hexColumns: hexColumns))
+            }
+            rowCount += rows.count
+            guard buffer.count >= Self.flushThresholdBytes else { return nil }
+            let pending = buffer
+            buffer.removeAll(keepingCapacity: true)
+            return pending
+        }
+        guard let chunk else { return }
+        try stream.append(chunk)
+    }
+
     /// The server's own count is what the table actually took, so it wins over
     /// the rows this writer handed over.
     func finish() async throws -> Int {

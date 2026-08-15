@@ -35,6 +35,26 @@ final class PostgresBulkLoadWriter: PluginBulkLoadWriter, @unchecked Sendable {
         try await core.copyWrite(chunk)
     }
 
+    /// The whole chunk is encoded into the buffer before anything is awaited,
+    /// so a chunk costs one suspension instead of one per row.
+    func write(rows: [[PluginCellValue]]) async throws {
+        guard !finished else {
+            throw LibPQPluginError(
+                message: "Bulk writer already finished",
+                sqlState: nil,
+                detail: nil
+            )
+        }
+        for row in rows {
+            buffer.append(Self.copyRowData(row))
+        }
+        rowCount += rows.count
+        guard buffer.count >= Self.flushThresholdBytes else { return }
+        let chunk = buffer
+        buffer.removeAll(keepingCapacity: true)
+        try await core.copyWrite(chunk)
+    }
+
     func finish() async throws -> Int {
         guard !finished else { return rowCount }
         finished = true
