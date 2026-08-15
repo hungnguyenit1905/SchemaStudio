@@ -123,54 +123,60 @@ private enum MySQLLocalInfileEncoder {
     static let lineTerminator: UInt8 = 0x0A
     private static let escape: UInt8 = 0x5C
 
+    /// One byte buffer per row, no String anywhere: a String per value plus a
+    /// join costs more than the load it feeds.
     static func line(for row: [PluginCellValue], hexColumns: [Bool]) -> Data {
-        var data = Data()
+        var bytes: [UInt8] = []
+        bytes.reserveCapacity(64 * row.count)
         for (index, value) in row.enumerated() {
-            if index > 0 { data.append(fieldTerminator) }
-            data.append(field(value, asHex: index < hexColumns.count && hexColumns[index]))
+            if index > 0 { bytes.append(fieldTerminator) }
+            append(value, asHex: index < hexColumns.count && hexColumns[index], to: &bytes)
         }
-        data.append(lineTerminator)
-        return data
+        bytes.append(lineTerminator)
+        return Data(bytes)
     }
 
-    private static func field(_ value: PluginCellValue, asHex: Bool) -> Data {
+    private static let hexDigits: [UInt8] = Array("0123456789ABCDEF".utf8)
+
+    private static func append(_ value: PluginCellValue, asHex: Bool, to bytes: inout [UInt8]) {
         switch value {
         case .null:
-            return nullField
+            // `\N` is the only spelling of NULL the loader accepts, and it has
+            // to reach the server unescaped.
+            bytes.append(contentsOf: [escape, 0x4E])
         case .text(let text):
-            let bytes = Data(text.utf8)
-            return asHex ? Data(hex(bytes).utf8) : escaped(bytes)
-        case .bytes(let bytes):
-            return asHex ? Data(hex(bytes).utf8) : escaped(bytes)
+            asHex ? appendHex(text.utf8, to: &bytes) : appendEscaped(text.utf8, to: &bytes)
+        case .bytes(let data):
+            asHex ? appendHex(data, to: &bytes) : appendEscaped(data, to: &bytes)
         }
     }
 
-    private static var nullField: Data { Data([escape, 0x4E]) }
-
-    static func escaped(_ bytes: Data) -> Data {
-        var output = Data()
-        output.reserveCapacity(bytes.count)
-        for byte in bytes {
+    /// The escape character, both terminators and NUL are the four bytes that
+    /// would otherwise end a field, end a row, or truncate the value.
+    private static func appendEscaped<Bytes: Sequence>(
+        _ source: Bytes,
+        to bytes: inout [UInt8]
+    ) where Bytes.Element == UInt8 {
+        for byte in source {
             switch byte {
-            case escape:
-                output.append(contentsOf: [escape, escape])
-            case fieldTerminator:
-                output.append(contentsOf: [escape, 0x74])
-            case lineTerminator:
-                output.append(contentsOf: [escape, 0x6E])
-            case 0x0D:
-                output.append(contentsOf: [escape, 0x72])
-            case 0x00:
-                output.append(contentsOf: [escape, 0x30])
-            default:
-                output.append(byte)
+            case escape: bytes.append(contentsOf: [escape, escape])
+            case fieldTerminator: bytes.append(contentsOf: [escape, 0x74])
+            case lineTerminator: bytes.append(contentsOf: [escape, 0x6E])
+            case 0x0D: bytes.append(contentsOf: [escape, 0x72])
+            case 0x00: bytes.append(contentsOf: [escape, 0x30])
+            default: bytes.append(byte)
             }
         }
-        return output
     }
 
-    static func hex(_ data: Data) -> String {
-        data.map { String(format: "%02X", $0) }.joined()
+    private static func appendHex<Bytes: Sequence>(
+        _ source: Bytes,
+        to bytes: inout [UInt8]
+    ) where Bytes.Element == UInt8 {
+        for byte in source {
+            bytes.append(hexDigits[Int(byte >> 4)])
+            bytes.append(hexDigits[Int(byte & 0x0F)])
+        }
     }
 }
 

@@ -73,36 +73,45 @@ final class PostgresBulkLoadWriter: PluginBulkLoadWriter, @unchecked Sendable {
         await core.copyAbort()
     }
 
+    /// Encoding runs over UTF-8 bytes, not Characters, and writes into one
+    /// buffer. Building a String per value and joining them cost more than the
+    /// copy itself: grapheme breaking on every character, an intermediate array
+    /// and String per row, then a re-encode back to bytes.
     static func copyRowData(_ row: [PluginCellValue]) -> Data {
-        var text = row.map(copyTextValue).joined(separator: "\t")
-        text.append("\n")
-        return Data(text.utf8)
+        var bytes: [UInt8] = []
+        bytes.reserveCapacity(64 * row.count)
+        for (index, value) in row.enumerated() {
+            if index > 0 { bytes.append(0x09) }
+            append(value, to: &bytes)
+        }
+        bytes.append(0x0A)
+        return Data(bytes)
     }
 
-    private static func copyTextValue(_ value: PluginCellValue) -> String {
+    private static let hexDigits: [UInt8] = Array("0123456789ABCDEF".utf8)
+
+    private static func append(_ value: PluginCellValue, to bytes: inout [UInt8]) {
         switch value {
         case .null:
-            return "\\N"
+            bytes.append(contentsOf: [0x5C, 0x4E])
         case .text(let string):
-            var out = ""
-            out.reserveCapacity(string.count)
-            for char in string {
-                switch char {
-                case "\\": out += "\\\\"
-                case "\t": out += "\\t"
-                case "\n": out += "\\n"
-                case "\r": out += "\\r"
-                default: out.append(char)
+            for byte in string.utf8 {
+                switch byte {
+                case 0x5C: bytes.append(contentsOf: [0x5C, 0x5C])
+                case 0x09: bytes.append(contentsOf: [0x5C, 0x74])
+                case 0x0A: bytes.append(contentsOf: [0x5C, 0x6E])
+                case 0x0D: bytes.append(contentsOf: [0x5C, 0x72])
+                default: bytes.append(byte)
                 }
             }
-            return out
         case .bytes(let data):
-            var hex = "\\\\x"
-            hex.reserveCapacity(2 + data.count * 2)
+            // A bytea literal inside COPY text needs the backslash itself
+            // escaped, so the value starts with \\x and continues in hex.
+            bytes.append(contentsOf: [0x5C, 0x5C, 0x78])
             for byte in data {
-                hex += String(format: "%02X", byte)
+                bytes.append(hexDigits[Int(byte >> 4)])
+                bytes.append(hexDigits[Int(byte & 0x0F)])
             }
-            return hex
         }
     }
 }
