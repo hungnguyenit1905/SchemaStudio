@@ -167,6 +167,7 @@ extension DataTransferService {
     ) async throws {
         state.useBulk = false
         state.bulkWriter = nil
+        state.targetColumns = targetColumns
         state.sink = try makeSink(
             plan: plan,
             header: PluginStreamHeader(columns: headerColumns, columnTypeNames: []),
@@ -212,7 +213,7 @@ extension DataTransferService {
                 // it must land inside this chunk's transaction or a crash
                 // between the commit and the next chunk loses it silently.
                 if let sink = state.sink, !state.pending.isEmpty {
-                    written += try await flush(&state.pending, into: sink)
+                    written += try await flush(&state.pending, into: sink, columns: state.targetColumns)
                 }
                 if state.useBulk, let writer = state.bulkWriter {
                     written = try await writer.finish()
@@ -287,7 +288,7 @@ extension DataTransferService {
             written = try await writer.finish()
             state.bulkWriter = nil
         } else if let sink = state.sink, !state.pending.isEmpty {
-            written = try await flush(&state.pending, into: sink)
+            written = try await flush(&state.pending, into: sink, columns: state.targetColumns)
         }
         if state.transactionOpen {
             try await target.driver.commitTransaction()
@@ -355,6 +356,7 @@ extension DataTransferService {
             converter: .identity,
             sink: sink,
             splitter: currentSplitter,
+            targetColumns: state.targetColumns,
             pending: &state.pending
         )
         state.splitter = result.splitter
@@ -464,7 +466,8 @@ extension DataTransferService {
         converter: TransferRowConverter,
         sink: ImportDataSinkAdapter,
         splitter: TransferBatchSplitter,
-        pending: inout [[String: PluginCellValue]]
+        targetColumns: [String],
+        pending: inout [[PluginCellValue]]
     ) async throws -> (written: Int, splitter: TransferBatchSplitter) {
         var splitter = splitter
         var written = 0
@@ -478,23 +481,22 @@ extension DataTransferService {
             )
             let bytes = TransferBatchSplitter.estimatedBytes(for: values)
             let action = splitter.append(values, estimatedBytes: bytes)
-            let dictionary = Self.rowDictionary(row, columns: headerColumns)
 
             switch action {
             case .buffered:
-                pending.append(dictionary)
+                pending.append(values)
             case .flushBefore:
-                written += try await flush(&pending, into: sink)
+                written += try await flush(&pending, into: sink, columns: targetColumns)
                 splitter.reset()
                 _ = splitter.append(values, estimatedBytes: bytes)
-                pending.append(dictionary)
+                pending.append(values)
             case .sendAlone:
                 if !pending.isEmpty {
-                    written += try await flush(&pending, into: sink)
+                    written += try await flush(&pending, into: sink, columns: targetColumns)
                 }
                 splitter.reset()
-                var single = [dictionary]
-                written += try await flush(&single, into: sink)
+                var single = [values]
+                written += try await flush(&single, into: sink, columns: targetColumns)
             }
         }
 
@@ -541,12 +543,13 @@ extension DataTransferService {
     }
 
     private func flush(
-        _ pending: inout [[String: PluginCellValue]],
-        into sink: ImportDataSinkAdapter
+        _ pending: inout [[PluginCellValue]],
+        into sink: ImportDataSinkAdapter,
+        columns: [String]
     ) async throws -> Int {
         let batch = pending
         pending.removeAll(keepingCapacity: true)
-        try await sink.insertRows(batch)
+        try await sink.insertRows(columns: columns, rows: batch)
         return batch.count
     }
 
@@ -637,7 +640,8 @@ private struct TransferWriterState {
     var sink: ImportDataSinkAdapter?
     var bulkWriter: (any PluginBulkLoadWriter)?
     var splitter: TransferBatchSplitter?
-    var pending: [[String: PluginCellValue]] = []
+    var pending: [[PluginCellValue]] = []
+    var targetColumns: [String] = []
     var useBulk = false
     var bulkColumns: [String] = []
     var transactionOpen = false
