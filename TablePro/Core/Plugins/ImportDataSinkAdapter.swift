@@ -132,6 +132,32 @@ final class ImportDataSinkAdapter: PluginImportDataSink, @unchecked Sendable {
         }
     }
 
+    /// Rows already ordered against one fixed column list, which is what a
+    /// transfer has: source and target share the columns for the whole table.
+    /// The dictionary form above has to rebuild the mapping for every row, and
+    /// with it a lowercased key per field and a sort per row, none of which
+    /// tells this caller anything it did not already know.
+    func insertRows(columns: [String], rows: [[PluginCellValue]]) async throws {
+        guard targetTable != nil else {
+            throw PluginImportError.importFailed("No target table configured for row import")
+        }
+        guard let rowGenerator else {
+            throw PluginImportError.importFailed("Could not resolve SQL dialect for row import")
+        }
+        guard !columns.isEmpty, !rows.isEmpty else { return }
+
+        let chunkSize = max(1, rowGenerator.maxBindParameters / columns.count)
+        var offset = 0
+        while offset < rows.count {
+            let end = min(offset + chunkSize, rows.count)
+            let chunk = Array(rows[offset ..< end])
+            if let statement = rowGenerator.insertStatement(columns: columns, rows: chunk) {
+                _ = try await driver.executeParameterized(query: statement.sql, parameters: statement.parameters)
+            }
+            offset = end
+        }
+    }
+
     private func mappedColumnsAndValues(_ values: [String: PluginCellValue]) -> ([String], [PluginCellValue]) {
         var pairs: [(column: String, value: PluginCellValue)] = []
         for (field, value) in values {
