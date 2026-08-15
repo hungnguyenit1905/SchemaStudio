@@ -28,13 +28,18 @@ extension LibPQBackedDriver {
 
     /// Adopts a snapshot another connection exported. The adopting connection
     /// must not have read anything yet in its transaction, so this runs as the
-    /// first command after `BEGIN`. A failure rolls the transaction back and
-    /// reports false; the caller then reads without a shared snapshot and the
-    /// report downgrades to per-table consistency.
+    /// first command after `BEGIN`. The isolation level has to be set on that
+    /// `BEGIN`: PostgreSQL rejects `SET TRANSACTION SNAPSHOT` in a READ
+    /// COMMITTED transaction with "a snapshot-importing transaction must have
+    /// isolation level SERIALIZABLE or REPEATABLE READ", and it checks that
+    /// before it looks at the token, so a plain `BEGIN` can never adopt. A
+    /// failure rolls the transaction back and reports false; the caller then
+    /// reads without a shared snapshot and the report downgrades to per-table
+    /// consistency.
     func adoptSnapshotToken(_ token: String) async throws -> Bool {
         let escaped = token.replacingOccurrences(of: "'", with: "''")
         do {
-            _ = try await execute(query: "BEGIN")
+            _ = try await execute(query: "BEGIN ISOLATION LEVEL REPEATABLE READ")
             _ = try await execute(query: "SET TRANSACTION SNAPSHOT '\(escaped)'")
             return true
         } catch {
