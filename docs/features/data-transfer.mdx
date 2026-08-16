@@ -53,8 +53,10 @@ target in this version. The target connection also has to allow writes, so a rea
 The transfer checks everything it can before it writes anything: it reads the structure of every
 selected table, works out which tables already exist at the target, and, for *Empty target then
 transfer*, compares the columns. A target table that is missing a column stops the run before it is
-emptied. A table that another table still references through a foreign key stops the run before it
-is dropped, and names the constraint.
+emptied. A table that another table outside the selection still references through a foreign key
+stops the run before it is dropped, and names the constraint, unless the target confirms it can
+disable foreign key checks (MySQL): there, the table is dropped and recreated and the check becomes
+a warning instead, on the same terms as the risk below.
 
 Once the checks pass, the run goes through three passes over the whole selection: create the tables,
 load the rows, then add the indexes and foreign keys. The first pass runs with foreign key checks
