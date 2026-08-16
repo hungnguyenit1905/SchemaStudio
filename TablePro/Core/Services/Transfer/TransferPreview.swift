@@ -17,13 +17,18 @@ struct TransferTablePlan: Sendable, Identifiable {
     /// read from the source column's declared type.
     let keyLiteralKinds: [String: TransferKeyLiteralKind]
 
+    /// Warnings discovered during preflight itself, outside the structure
+    /// builder (e.g. an external foreign key the drop step bypassed).
+    let additionalWarnings: [TransferStructureWarning]
+
     init(
         table: String,
         structure: TransferTableStructure,
         targetExists: Bool,
         steps: [TransferStep],
         extraTargetColumns: [String],
-        keyLiteralKinds: [String: TransferKeyLiteralKind] = [:]
+        keyLiteralKinds: [String: TransferKeyLiteralKind] = [:],
+        additionalWarnings: [TransferStructureWarning] = []
     ) {
         self.table = table
         self.structure = structure
@@ -31,11 +36,12 @@ struct TransferTablePlan: Sendable, Identifiable {
         self.steps = steps
         self.extraTargetColumns = extraTargetColumns
         self.keyLiteralKinds = keyLiteralKinds
+        self.additionalWarnings = additionalWarnings
     }
 
     var id: String { table }
 
-    var warnings: [TransferStructureWarning] { structure.warnings }
+    var warnings: [TransferStructureWarning] { structure.warnings + additionalWarnings }
 }
 
 struct TransferPreflightFailure: Sendable, Identifiable, Hashable {

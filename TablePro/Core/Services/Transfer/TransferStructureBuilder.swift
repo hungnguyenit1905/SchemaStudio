@@ -18,6 +18,7 @@ enum TransferStructureWarning: Sendable, Hashable {
     case identifierCollision(first: String, second: String, mapped: String)
     case identifierTooLong(name: String, limit: Int)
     case caseOnlyNameClash(first: String, second: String)
+    case externalForeignKeyDropped(table: String, references: [String])
 
     var message: String {
         switch self {
@@ -79,6 +80,14 @@ enum TransferStructureWarning: Sendable, Hashable {
                 format: String(localized: "Names '%@' and '%@' differ only in capitalization and stay separate because the target quotes them."),
                 first,
                 second
+            )
+        case .externalForeignKeyDropped(let table, let references):
+            return String(
+                format: String(
+                    localized: "'%@' is dropped and recreated while %@ still points at it. Its foreign key may end up invalid until it is fixed."
+                ),
+                table,
+                references.joined(separator: ", ")
             )
         }
     }

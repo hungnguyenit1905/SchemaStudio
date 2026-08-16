@@ -48,6 +48,7 @@ extension DataTransferService {
                     targetExists: targetTables.contains(selection.table),
                     selectedTables: selectedTables,
                     inboundForeignKeys: inbound,
+                    constraintDisable: constraintDisable,
                     keepsDescendingIndex: keepsDescendingIndex
                 )
                 plans.append(plan)
@@ -74,6 +75,7 @@ extension DataTransferService {
         targetExists: Bool,
         selectedTables: Set<String>,
         inboundForeignKeys: [String: [String]],
+        constraintDisable: PluginConstraintDisableCapability,
         keepsDescendingIndex: Bool
     ) async throws -> TransferTablePlan {
         let columns = try await source.fetchColumns(table: table)
@@ -99,12 +101,18 @@ extension DataTransferService {
             throw TransferError.createTableUnsupported(table)
         }
 
+        var additionalWarnings: [TransferStructureWarning] = []
         if steps.contains(.dropTargetTable) {
             let blocking = (inboundForeignKeys[table] ?? []).filter { reference in
                 !selectedTables.contains(referencingTable(in: reference))
             }
-            guard blocking.isEmpty else {
+            switch Self.resolveDropBlock(table: table, blocking: blocking, constraintDisable: constraintDisable) {
+            case .clear:
+                break
+            case .blocked:
                 throw TransferError.blockingForeignKeys(table: table, references: blocking)
+            case .warned(let warning):
+                additionalWarnings.append(warning)
             }
         }
 
@@ -127,8 +135,29 @@ extension DataTransferService {
                 columns: columns,
                 primaryKeyColumns: structure.primaryKeyColumns,
                 databaseType: source.databaseType
-            )
+            ),
+            additionalWarnings: additionalWarnings
         )
+    }
+
+    enum TransferDropBlockOutcome: Equatable {
+        case clear
+        case blocked
+        case warned(TransferStructureWarning)
+    }
+
+    /// `runStructurePhase` already disables `FOREIGN_KEY_CHECKS` around the
+    /// real DROP, so a target that confirmed it supports the toggle does not
+    /// need preflight to block on a reference outside the selection. Any
+    /// other capability keeps the strict block, since the drop would fail.
+    static func resolveDropBlock(
+        table: String,
+        blocking: [String],
+        constraintDisable: PluginConstraintDisableCapability
+    ) -> TransferDropBlockOutcome {
+        guard !blocking.isEmpty else { return .clear }
+        guard constraintDisable == .supported else { return .blocked }
+        return .warned(.externalForeignKeyDropped(table: table, references: blocking))
     }
 
     /// Truncating a table whose columns do not cover the source destroys the

@@ -81,4 +81,49 @@ struct TransferPreflightTests {
         #expect(!DataTransferWizardModel.isTransferable(.systemTable))
         #expect(!DataTransferWizardModel.isTransferable(.externalTable))
     }
+
+    @Test("No inbound reference never blocks, regardless of capability")
+    func noReferenceClearsRegardlessOfCapability() {
+        for capability: PluginConstraintDisableCapability in [.supported, .notPermitted, .notApplicable, .unknown] {
+            let outcome = DataTransferService.resolveDropBlock(
+                table: "users",
+                blocking: [],
+                constraintDisable: capability
+            )
+            #expect(outcome == .clear)
+        }
+    }
+
+    @Test("A blocking reference warns instead of failing when the target supports disabling checks")
+    func blockingReferenceWarnsWhenSupported() {
+        let outcome = DataTransferService.resolveDropBlock(
+            table: "users",
+            blocking: ["orders.orders_user_id_foreign"],
+            constraintDisable: .supported
+        )
+        #expect(outcome == .warned(.externalForeignKeyDropped(table: "users", references: ["orders.orders_user_id_foreign"])))
+    }
+
+    @Test("A blocking reference still fails when the target cannot confirm it can disable checks")
+    func blockingReferenceStaysBlockedWithoutConfirmedSupport() {
+        for capability: PluginConstraintDisableCapability in [.notPermitted, .notApplicable, .unknown] {
+            let outcome = DataTransferService.resolveDropBlock(
+                table: "users",
+                blocking: ["orders.orders_user_id_foreign"],
+                constraintDisable: capability
+            )
+            #expect(outcome == .blocked)
+        }
+    }
+
+    @Test("The external foreign key warning names the table and every reference")
+    func externalForeignKeyWarningMessageIsDescriptive() {
+        let message = TransferStructureWarning.externalForeignKeyDropped(
+            table: "users",
+            references: ["orders.orders_user_id_foreign", "carts.carts_user_id_foreign"]
+        ).message
+        #expect(message.contains("users"))
+        #expect(message.contains("orders.orders_user_id_foreign"))
+        #expect(message.contains("carts.carts_user_id_foreign"))
+    }
 }
