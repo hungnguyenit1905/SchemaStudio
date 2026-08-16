@@ -229,6 +229,7 @@ struct PluginCapabilityTests {
         #expect(PluginCapability.databaseDriver.rawValue == 0)
         #expect(PluginCapability.exportFormat.rawValue == 1)
         #expect(PluginCapability.importFormat.rawValue == 2)
+        #expect(PluginCapability.documentInspector.rawValue == 3)
     }
 
     @Test("Codable round-trip preserves value")
@@ -239,11 +240,25 @@ struct PluginCapabilityTests {
         #expect(decoded == original)
     }
 
-    @Test("decoding removed raw value 3 fails gracefully")
-    func decodingRemovedRawValueFails() {
-        let json = Data("3".utf8)
-        let decoded = try? JSONDecoder().decode(PluginCapability.self, from: json)
+    // Raw value 3 was once unassigned and this test guarded it. `documentInspector`
+    // has since taken 3, so the guard has to move to a raw value that is still
+    // unassigned; the property under test is that an unknown value decodes to nil
+    // rather than trapping, not that any particular number is unused.
+    @Test("decoding an unassigned raw value fails gracefully")
+    func decodingUnassignedRawValueFails() {
+        let decoded = try? JSONDecoder().decode(PluginCapability.self, from: Data("4".utf8))
         #expect(decoded == nil)
+    }
+
+    @Test("every declared raw value decodes back to its case")
+    func declaredRawValuesDecode() throws {
+        let expected: [Int: PluginCapability] = [
+            0: .databaseDriver, 1: .exportFormat, 2: .importFormat, 3: .documentInspector,
+        ]
+        for (rawValue, capability) in expected {
+            let decoded = try JSONDecoder().decode(PluginCapability.self, from: Data("\(rawValue)".utf8))
+            #expect(decoded == capability)
+        }
     }
 }
 
