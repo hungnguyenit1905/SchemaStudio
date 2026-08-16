@@ -120,6 +120,10 @@ final class CSVExportPlugin: ExportFormatPlugin, SettablePlugin {
                 val = s
             case .bytes(let d):
                 val = "0x" + d.map { String(format: "%02X", $0) }.joined()
+            case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                val = cell.textFallback
+            @unknown default:
+                val = cell.textFallback
             }
 
             var processed = val

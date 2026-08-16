@@ -176,6 +176,10 @@ enum JSONImportParsing {
         switch cellValue(from: value) {
         case .text(let string): return String(string.prefix(80))
         case .bytes, .null: return ""
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return String(cellValue(from: value).textFallback.prefix(80))
+        @unknown default:
+            return String(cellValue(from: value).textFallback.prefix(80))
         }
     }
 }

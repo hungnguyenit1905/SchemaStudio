@@ -579,6 +579,12 @@ final class SQLExportPlugin: ExportFormatPlugin, SettablePlugin {
                     }
                     let escaped = dataSource.escapeStringLiteral(val)
                     return "'\(escaped)'"
+                case .int, .double, .decimalText, .bool:
+                    return cell.textFallback
+                case .date, .time, .timestamp, .uuid, .array:
+                    return "'\(dataSource.escapeStringLiteral(cell.textFallback))'"
+                @unknown default:
+                    return "'\(dataSource.escapeStringLiteral(cell.textFallback))'"
                 }
             }.joined(separator: ", ")
 

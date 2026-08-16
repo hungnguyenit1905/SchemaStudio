@@ -391,10 +391,14 @@ extension TableViewCoordinator {
     }
 
     private func blobStringValue(at row: Int, columnIndex: Int) -> String? {
-        switch cellTypedValue(at: row, column: columnIndex) {
+        let cell = cellTypedValue(at: row, column: columnIndex)
+        switch cell {
         case .null: return nil
         case .text(let text): return text
         case .bytes(let data): return String(data: data, encoding: .isoLatin1)
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return cell.textFallback
+        @unknown default: return cell.textFallback
         }
     }
 }

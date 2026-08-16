@@ -88,13 +88,11 @@ final class XLSXWriter {
                         let hex = data.map { String(format: "%02X", $0) }.joined()
                         return .string("0x" + hex)
                     case .text(let val):
-                        if val.isEmpty {
-                            return .empty
-                        }
-                        if Double(val) != nil, !val.hasPrefix("0") || val == "0" || val.contains(".") {
-                            return .number(val)
-                        }
-                        return .string(val)
+                        return Self.cell(forText: val)
+                    case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                        return Self.cell(forText: value.textFallback)
+                    @unknown default:
+                        return Self.cell(forText: value.textFallback)
                     }
                 }
                 appendRow(cellRow, isHeader: false, to: &sheetData)
@@ -102,6 +100,19 @@ final class XLSXWriter {
         }
 
         sheets[sheets.count - 1].data = sheetData
+    }
+
+    /// Routes a rendered string through the same numeric-detection the `.text`
+    /// case has always used, so a typed value exports identically to the text
+    /// form a pre-v20 driver would have sent.
+    private static func cell(forText val: String) -> CellValue {
+        if val.isEmpty {
+            return .empty
+        }
+        if Double(val) != nil, !val.hasPrefix("0") || val == "0" || val.contains(".") {
+            return .number(val)
+        }
+        return .string(val)
     }
 
     /// Finish the current sheet by closing the XML tags.

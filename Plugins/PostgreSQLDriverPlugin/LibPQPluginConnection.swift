@@ -520,6 +520,22 @@ final class LibPQPluginConnection: @unchecked Sendable {
                 paramValues.append(UnsafePointer(raw.assumingMemoryBound(to: CChar.self)))
                 paramLengths.append(Int32(byteCount))
                 paramFormats.append(1)
+            case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                guard let cStr = strdup(param.textFallback) else {
+                    throw LibPQPluginError(message: "Failed to allocate parameter buffer", sqlState: nil, detail: nil)
+                }
+                allocations.append(UnsafeMutableRawPointer(cStr))
+                paramValues.append(UnsafePointer(cStr))
+                paramLengths.append(0)
+                paramFormats.append(0)
+            @unknown default:
+                guard let cStr = strdup(param.textFallback) else {
+                    throw LibPQPluginError(message: "Failed to allocate parameter buffer", sqlState: nil, detail: nil)
+                }
+                allocations.append(UnsafeMutableRawPointer(cStr))
+                paramValues.append(UnsafePointer(cStr))
+                paramLengths.append(0)
+                paramFormats.append(0)
             }
         }
 

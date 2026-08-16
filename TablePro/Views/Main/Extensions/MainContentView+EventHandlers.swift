@@ -222,6 +222,9 @@ extension MainContentView {
                 case .null: return nil
                 case .text(let s): return s
                 case .bytes(let data): return String(data: data, encoding: .isoLatin1) ?? ""
+                case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                    return cell.textFallback
+                @unknown default: return cell.textFallback
                 }
             }
         }

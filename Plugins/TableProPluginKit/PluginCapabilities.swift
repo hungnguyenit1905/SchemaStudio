@@ -22,4 +22,11 @@ public struct PluginCapabilities: OptionSet, Sendable {
     public static let batchExecute = PluginCapabilities(rawValue: 1 << 10)
     public static let transactions = PluginCapabilities(rawValue: 1 << 11)
     public static let userManagement = PluginCapabilities(rawValue: 1 << 12)
+
+    // Bit 13 is taken. Next free bit is 14.
+    // The driver binds PluginCellValue's typed cases through its native
+    // parameter path instead of rendering them to text. A driver that does not
+    // declare this receives the pre-v20 case set exactly as before, so growing
+    // the enum is not a cliff for a driver whose binding lands later.
+    public static let typedCellValues = PluginCapabilities(rawValue: 1 << 13)
 }

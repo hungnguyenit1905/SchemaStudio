@@ -148,6 +148,18 @@ final class JSONExportPlugin: ExportFormatPlugin, SettablePlugin {
             return "\"\(data.base64EncodedString())\""
         case .text(let val):
             return formatJSONTextValue(val, columnTypeName: columnTypeName, preserveAsString: preserveAsString)
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return formatJSONTextValue(
+                value.textFallback,
+                columnTypeName: columnTypeName,
+                preserveAsString: preserveAsString
+            )
+        @unknown default:
+            return formatJSONTextValue(
+                value.textFallback,
+                columnTypeName: columnTypeName,
+                preserveAsString: preserveAsString
+            )
         }
     }
 

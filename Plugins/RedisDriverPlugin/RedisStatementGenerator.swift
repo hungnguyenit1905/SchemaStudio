@@ -247,6 +247,10 @@ struct RedisStatementGenerator {
         case .null: return nil
         case .text(let text): return RedisArgumentCodec.quote(text)
         case .bytes(let bytes): return RedisArgumentCodec.quote(bytes)
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return RedisArgumentCodec.quote(value.textFallback)
+        @unknown default:
+            return RedisArgumentCodec.quote(value.textFallback)
         }
     }
 }

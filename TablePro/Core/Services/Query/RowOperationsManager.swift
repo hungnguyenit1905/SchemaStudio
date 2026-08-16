@@ -310,6 +310,10 @@ final class RowOperationsManager {
                     result.append(s)
                 case .bytes(let data):
                     result.append(BlobFormattingService.shared.format(data, for: .copy) ?? "")
+                case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                    result.append(cell.textFallback)
+                @unknown default:
+                    result.append(cell.textFallback)
                 }
             }
         }

@@ -155,6 +155,9 @@ final class CloudflareD1PluginDriver: PluginDatabaseDriver, @unchecked Sendable 
             case .null: return nil
             case .text(let s): return s
             case .bytes(let d): return d.base64EncodedString()
+            case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                return param.textFallback
+            @unknown default: return param.textFallback
             }
         }
         let payload = try await client.executeRaw(sql: trimmed, params: anyParams)

@@ -325,6 +325,10 @@ actor CassandraConnectionActor {
                 }
             case .null:
                 cass_statement_bind_null(statement, index)
+            case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                cass_statement_bind_string(statement, index, param.textFallback)
+            @unknown default:
+                cass_statement_bind_string(statement, index, param.textFallback)
             }
         }
 

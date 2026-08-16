@@ -34,6 +34,10 @@ internal struct InClauseConverter {
             return nil
         case .text(let value):
             return formatScalar(value, type: type)
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return formatScalar(cell.textFallback, type: type)
+        @unknown default:
+            return formatScalar(cell.textFallback, type: type)
         }
     }
 

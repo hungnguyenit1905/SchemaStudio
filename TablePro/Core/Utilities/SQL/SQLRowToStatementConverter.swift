@@ -133,6 +133,12 @@ internal struct SQLRowToStatementConverter {
             return "'\(escapeStringFn(s))'"
         case .bytes(let data):
             return formatBinaryLiteral(data)
+        case .int, .double, .decimalText, .bool:
+            return value.textFallback
+        case .date, .time, .timestamp, .uuid, .array:
+            return "'\(escapeStringFn(value.textFallback))'"
+        @unknown default:
+            return "'\(escapeStringFn(value.textFallback))'"
         }
     }
 

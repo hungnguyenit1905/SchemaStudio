@@ -181,6 +181,10 @@ actor SQLiteLocalBackend {
                     let baseAddress = rawBuffer.baseAddress
                     return sqlite3_bind_blob(statement, bindIndex, baseAddress, Int32(data.count), sqliteTransient)
                 }
+            case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                bindResult = sqlite3_bind_text(statement, bindIndex, param.textFallback, -1, sqliteTransient)
+            @unknown default:
+                bindResult = sqlite3_bind_text(statement, bindIndex, param.textFallback, -1, sqliteTransient)
             }
 
             if bindResult != SQLITE_OK {

@@ -630,37 +630,28 @@ final class MariaDBPluginConnection: @unchecked Sendable {
                 binds[index].is_null?.pointee = 1
 
             case .text(let stringValue):
-                let data = stringValue.data(using: .utf8) ?? Data()
-                let buffer = UnsafeMutableRawPointer.allocate(byteCount: max(data.count, 1), alignment: 1)
-                if !data.isEmpty {
-                    data.copyBytes(to: buffer.assumingMemoryBound(to: UInt8.self), count: data.count)
-                }
-
-                binds[index].buffer_type = MYSQL_TYPE_STRING
-                binds[index].buffer = buffer
-                binds[index].buffer_length = UInt(data.count)
-                binds[index].length = UnsafeMutablePointer<UInt>.allocate(capacity: 1)
-                binds[index].length?.pointee = UInt(data.count)
-                binds[index].is_null = UnsafeMutablePointer<my_bool>.allocate(capacity: 1)
-                binds[index].is_null?.pointee = 0
-
-                buffers.append(buffer)
+                buffers.append(
+                    Self.bindBuffer(
+                        Data(stringValue.utf8), type: MYSQL_TYPE_STRING, into: &binds[index]
+                    )
+                )
 
             case .bytes(let data):
-                let buffer = UnsafeMutableRawPointer.allocate(byteCount: max(data.count, 1), alignment: 1)
-                if !data.isEmpty {
-                    data.copyBytes(to: buffer.assumingMemoryBound(to: UInt8.self), count: data.count)
-                }
+                buffers.append(Self.bindBuffer(data, type: MYSQL_TYPE_LONG_BLOB, into: &binds[index]))
 
-                binds[index].buffer_type = MYSQL_TYPE_LONG_BLOB
-                binds[index].buffer = buffer
-                binds[index].buffer_length = UInt(data.count)
-                binds[index].length = UnsafeMutablePointer<UInt>.allocate(capacity: 1)
-                binds[index].length?.pointee = UInt(data.count)
-                binds[index].is_null = UnsafeMutablePointer<my_bool>.allocate(capacity: 1)
-                binds[index].is_null?.pointee = 0
+            case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                buffers.append(
+                    Self.bindBuffer(
+                        Data(param.textFallback.utf8), type: MYSQL_TYPE_STRING, into: &binds[index]
+                    )
+                )
 
-                buffers.append(buffer)
+            @unknown default:
+                buffers.append(
+                    Self.bindBuffer(
+                        Data(param.textFallback.utf8), type: MYSQL_TYPE_STRING, into: &binds[index]
+                    )
+                )
             }
         }
 
@@ -671,6 +662,29 @@ final class MariaDBPluginConnection: @unchecked Sendable {
         }
 
         return ParameterBindings(binds: binds, buffers: buffers)
+    }
+
+    /// Copies `data` into a fresh buffer and points `bind` at it. Extracted so
+    /// the text case and every typed case that renders to text bind through one
+    /// path, which is what keeps a typed value byte-identical to the string a
+    /// pre-v20 driver would have sent.
+    private static func bindBuffer(
+        _ data: Data,
+        type: enum_field_types,
+        into bind: inout MYSQL_BIND
+    ) -> UnsafeMutableRawPointer {
+        let buffer = UnsafeMutableRawPointer.allocate(byteCount: max(data.count, 1), alignment: 1)
+        if !data.isEmpty {
+            data.copyBytes(to: buffer.assumingMemoryBound(to: UInt8.self), count: data.count)
+        }
+        bind.buffer_type = type
+        bind.buffer = buffer
+        bind.buffer_length = UInt(data.count)
+        bind.length = UnsafeMutablePointer<UInt>.allocate(capacity: 1)
+        bind.length?.pointee = UInt(data.count)
+        bind.is_null = UnsafeMutablePointer<my_bool>.allocate(capacity: 1)
+        bind.is_null?.pointee = 0
+        return buffer
     }
 
     private func fetchResultSet(

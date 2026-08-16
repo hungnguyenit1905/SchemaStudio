@@ -47,6 +47,10 @@ enum CellDisplayFormatter {
                 displayValue = nsDisplay.substring(to: maxDisplayLength) + "..."
             }
             return displayValue.sanitizedForCellDisplay
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return format(.text(rawValue.textFallback), columnType: columnType, displayFormat: displayFormat)
+        @unknown default:
+            return format(.text(rawValue.textFallback), columnType: columnType, displayFormat: displayFormat)
         }
     }
 }

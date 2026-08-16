@@ -112,6 +112,10 @@ final class PostgresBulkLoadWriter: PluginBulkLoadWriter, @unchecked Sendable {
                 bytes.append(hexDigits[Int(byte >> 4)])
                 bytes.append(hexDigits[Int(byte & 0x0F)])
             }
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            append(.text(value.textFallback), to: &bytes)
+        @unknown default:
+            append(.text(value.textFallback), to: &bytes)
         }
     }
 }

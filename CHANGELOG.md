@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Database drivers installed from the plugin registry need to be updated for this release. Open Settings > Plugins and update them; a driver still on the old version shows as outdated instead of loading.
 - The "Share anonymous usage data" setting is back in Settings > General, now off by default.
 - The sidebar lists every saved connection, grouped into the same folders as the welcome window. Expanding a connection connects it and loads its databases. A connect that fails shows the reason on the connection with a retry button, and reopening the app connects nothing until you expand something yourself.
 - Right-clicking a connection in the sidebar offers Connect, Disconnect, Refresh, New Query, and Edit Connection.

@@ -216,6 +216,10 @@ extension ClickHousePluginDriver {
                 paramMap["p\(i + 1)"] = s
             case .bytes(let d):
                 paramMap["p\(i + 1)"] = "0x" + d.map { String(format: "%02X", $0) }.joined()
+            case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                paramMap["p\(i + 1)"] = parameters[i].textFallback
+            @unknown default:
+                paramMap["p\(i + 1)"] = parameters[i].textFallback
             }
         }
 

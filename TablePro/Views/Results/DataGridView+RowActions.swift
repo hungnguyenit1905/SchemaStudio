@@ -107,7 +107,7 @@ extension TableViewCoordinator {
             return
         }
 
-        let value = cell.asText ?? "NULL"
+        let value = cell.isNull ? "NULL" : (cell.asText ?? cell.textFallback)
 
         if columnIndex < columnDisplayFormats.count, let format = columnDisplayFormats[columnIndex], format != .raw {
             let formatted = ValueDisplayFormatService.applyFormat(value, format: format)
@@ -252,6 +252,10 @@ extension TableViewCoordinator {
                 return BlobFormattingService.shared.formatIfNeeded(value, columnType: columnType, for: .copy)
             case .bytes(let data):
                 return BlobFormattingService.shared.format(data, for: .copy) ?? ""
+            case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                return cell.textFallback
+            @unknown default:
+                return cell.textFallback
             }
         }
     }

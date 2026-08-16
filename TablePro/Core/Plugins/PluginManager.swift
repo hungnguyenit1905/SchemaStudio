@@ -14,8 +14,8 @@ import TableProPluginKit
 @MainActor @Observable
 final class PluginManager {
     static let shared = PluginManager()
-    static let currentPluginKitVersion = 19
-    static let minimumCompatiblePluginKitVersion = 19
+    static let currentPluginKitVersion = 20
+    static let minimumCompatiblePluginKitVersion = 20
     static let currentInspectorKitVersion = 1
     private static let disabledPluginsKey = "com.SchemaStudio.disabledPlugins"
     private static let legacyDisabledPluginsKey = "disabledPlugins"
@@ -512,54 +512,20 @@ final class PluginManager {
         let bundle: Bundle
     }
 
+    nonisolated static let bundleVersionGate = PluginBundleVersionGate(
+        currentPluginKit: currentPluginKitVersion,
+        minimumCompatiblePluginKit: minimumCompatiblePluginKitVersion,
+        currentInspectorKit: currentInspectorKitVersion
+    )
+
     nonisolated private static func validateBundleVersions(_ bundle: Bundle) throws {
         let infoPlist = bundle.infoDictionary ?? [:]
-        let declaredPluginKit = infoPlist["TableProPluginKitVersion"] as? Int
-        let declaredInspectorKit = infoPlist["TableProInspectorKitVersion"] as? Int
-
-        if declaredPluginKit == nil, declaredInspectorKit == nil {
-            throw PluginError.pluginOutdated(
-                pluginVersion: 0,
-                requiredVersion: currentPluginKitVersion
-            )
-        }
-
-        if let version = declaredPluginKit {
-            if version > currentPluginKitVersion {
-                throw PluginError.incompatibleVersion(
-                    required: version,
-                    current: currentPluginKitVersion
-                )
-            }
-            if version < minimumCompatiblePluginKitVersion {
-                throw PluginError.pluginOutdated(
-                    pluginVersion: version,
-                    requiredVersion: currentPluginKitVersion
-                )
-            }
-        }
-
-        if let version = declaredInspectorKit {
-            if version > currentInspectorKitVersion {
-                throw PluginError.incompatibleVersion(
-                    required: version,
-                    current: currentInspectorKitVersion
-                )
-            }
-            if version < currentInspectorKitVersion {
-                throw PluginError.pluginOutdated(
-                    pluginVersion: version,
-                    requiredVersion: currentInspectorKitVersion
-                )
-            }
-        }
-
-        if let minAppVersion = infoPlist["SchemaStudioMinAppVersion"] as? String {
-            let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
-            if appVersion.compare(minAppVersion, options: .numeric) == .orderedAscending {
-                throw PluginError.appVersionTooOld(minimumRequired: minAppVersion, currentApp: appVersion)
-            }
-        }
+        try bundleVersionGate.validate(
+            declaredPluginKit: infoPlist["TableProPluginKitVersion"] as? Int,
+            declaredInspectorKit: infoPlist["TableProInspectorKitVersion"] as? Int,
+            minimumAppVersion: infoPlist["SchemaStudioMinAppVersion"] as? String,
+            appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
+        )
     }
 
     nonisolated private static func validateAndLoadBundle(

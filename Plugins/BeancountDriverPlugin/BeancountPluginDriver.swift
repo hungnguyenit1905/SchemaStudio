@@ -377,6 +377,10 @@ final class BeancountPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                     _ = data.withUnsafeBytes { buffer in
                         sqlite3_bind_blob(statement, position, buffer.baseAddress, Int32(data.count), SQLITE_TRANSIENT)
                     }
+                case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                    sqlite3_bind_text(statement, position, parameter.textFallback, -1, SQLITE_TRANSIENT)
+                @unknown default:
+                    sqlite3_bind_text(statement, position, parameter.textFallback, -1, SQLITE_TRANSIENT)
                 }
             }
 

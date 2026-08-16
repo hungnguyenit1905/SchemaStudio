@@ -120,6 +120,10 @@ extension MainContentView {
                     raw = s
                 case .bytes(let data):
                     raw = BlobFormattingService.shared.format(data, for: .copy) ?? ""
+                case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                    raw = row.values[i].textFallback
+                @unknown default:
+                    raw = row.values[i].textFallback
                 }
                 return (raw as NSString).length > 200 ? String(raw.prefix(200)) + "..." : raw
             }

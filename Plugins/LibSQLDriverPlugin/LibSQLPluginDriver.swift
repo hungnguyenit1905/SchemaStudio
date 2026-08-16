@@ -198,6 +198,9 @@ final class LibSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
                 case .null: return nil
                 case .text(let s): return s
                 case .bytes(let d): return "X'" + d.map { String(format: "%02X", $0) }.joined() + "'"
+                case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                    return param.textFallback
+                @unknown default: return param.textFallback
                 }
             }
             let result = try await client.execute(sql: trimmed, args: stringArgs)
