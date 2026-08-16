@@ -132,7 +132,12 @@ echo "✅ TableProPluginKit.framework present"
 # Verify code signature
 echo "Verifying code signature..."
 if codesign --verify --deep --strict "$APP_BUNDLE" 2>&1; then
-  SIGN_INFO=$(codesign -dvv "$APP_BUNDLE" 2>&1 | grep "Authority=" | head -1)
+  # An ad-hoc signature carries no Authority line, so the grep finds nothing and
+  # would abort the script under `set -e`. Report the signing mode instead.
+  SIGN_INFO=$(codesign -dvv "$APP_BUNDLE" 2>&1 | grep "Authority=" | head -1 || true)
+  if [ -z "$SIGN_INFO" ]; then
+    SIGN_INFO="ad-hoc (no Developer ID; this build cannot be notarized)"
+  fi
   echo "✅ Code signature valid: $SIGN_INFO"
 else
   echo "❌ ERROR: Code signature verification failed"

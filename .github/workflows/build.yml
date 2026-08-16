@@ -97,6 +97,10 @@ jobs:
           CERTIFICATES_P12: ${{ secrets.CERTIFICATES_P12 }}
           CERTIFICATES_PASSWORD: ${{ secrets.CERTIFICATES_PASSWORD }}
         run: |
+          if [ -z "$CERTIFICATES_P12" ]; then
+            echo "::notice::No CERTIFICATES_P12 secret; producing an ad-hoc signed build."
+            exit 0
+          fi
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           security create-keychain -p "" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
@@ -113,6 +117,10 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
         run: |
+          if [ -z "$NOTARY_PASSWORD" ]; then
+            echo "::notice::No NOTARY_PASSWORD secret; skipping notarization."
+            exit 0
+          fi
           xcrun notarytool store-credentials "SchemaStudio" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
@@ -122,6 +130,10 @@ jobs:
         env:
           PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
         run: |
+          if [ -z "$PROVISIONING_PROFILE" ]; then
+            echo "::notice::No PROVISIONING_PROFILE secret; skipping."
+            exit 0
+          fi
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "$PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/tablepro.provisionprofile
 
@@ -129,8 +141,10 @@ jobs:
         env:
           ANALYTICS_HMAC_SECRET: ${{ secrets.ANALYTICS_HMAC_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          NOTARIZE: "true"
-        run: scripts/build-release.sh arm64
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+        run: |
+          export NOTARIZE=$([ -n "$NOTARY_PASSWORD" ] && echo true || echo false)
+          scripts/build-release.sh arm64
 
       - name: Verify build
         run: scripts/ci/verify-build.sh arm64
@@ -145,8 +159,10 @@ jobs:
 
       - name: Package artifacts
         env:
-          NOTARIZE: "true"
-        run: scripts/ci/package-artifacts.sh arm64
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+        run: |
+          export NOTARIZE=$([ -n "$NOTARY_PASSWORD" ] && echo true || echo false)
+          scripts/ci/package-artifacts.sh arm64
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -229,6 +245,10 @@ jobs:
           CERTIFICATES_P12: ${{ secrets.CERTIFICATES_P12 }}
           CERTIFICATES_PASSWORD: ${{ secrets.CERTIFICATES_PASSWORD }}
         run: |
+          if [ -z "$CERTIFICATES_P12" ]; then
+            echo "::notice::No CERTIFICATES_P12 secret; producing an ad-hoc signed build."
+            exit 0
+          fi
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           security create-keychain -p "" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
@@ -245,6 +265,10 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
         run: |
+          if [ -z "$NOTARY_PASSWORD" ]; then
+            echo "::notice::No NOTARY_PASSWORD secret; skipping notarization."
+            exit 0
+          fi
           xcrun notarytool store-credentials "SchemaStudio" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
@@ -254,6 +278,10 @@ jobs:
         env:
           PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
         run: |
+          if [ -z "$PROVISIONING_PROFILE" ]; then
+            echo "::notice::No PROVISIONING_PROFILE secret; skipping."
+            exit 0
+          fi
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "$PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/tablepro.provisionprofile
 
@@ -261,8 +289,10 @@ jobs:
         env:
           ANALYTICS_HMAC_SECRET: ${{ secrets.ANALYTICS_HMAC_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          NOTARIZE: "true"
-        run: scripts/build-release.sh x86_64
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+        run: |
+          export NOTARIZE=$([ -n "$NOTARY_PASSWORD" ] && echo true || echo false)
+          scripts/build-release.sh x86_64
 
       - name: Verify build
         run: scripts/ci/verify-build.sh x86_64
@@ -277,8 +307,10 @@ jobs:
 
       - name: Package artifacts
         env:
-          NOTARIZE: "true"
-        run: scripts/ci/package-artifacts.sh x86_64
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+        run: |
+          export NOTARIZE=$([ -n "$NOTARY_PASSWORD" ] && echo true || echo false)
+          scripts/ci/package-artifacts.sh x86_64
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
