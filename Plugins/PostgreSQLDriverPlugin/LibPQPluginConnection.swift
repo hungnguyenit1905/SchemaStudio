@@ -520,6 +520,14 @@ final class LibPQPluginConnection: @unchecked Sendable {
                 paramValues.append(UnsafePointer(raw.assumingMemoryBound(to: CChar.self)))
                 paramLengths.append(Int32(byteCount))
                 paramFormats.append(1)
+            // Typed values cross in libpq's text format, which is the lossless
+            // path here rather than a fallback: the parameter OIDs are left
+            // unspecified, so the server parses each literal directly into the
+            // target column type. That is the only way `numeric` survives
+            // without a double, and it is what makes `.array` land as a real
+            // array rather than a string. `.timestamp` renders as ISO-8601 with
+            // an explicit `Z`, so a `timestamptz` column stores the correct
+            // instant and a `timestamp` column stores the UTC wall clock.
             case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
                 guard let cStr = strdup(param.textFallback) else {
                     throw LibPQPluginError(message: "Failed to allocate parameter buffer", sqlState: nil, detail: nil)

@@ -639,17 +639,36 @@ final class MariaDBPluginConnection: @unchecked Sendable {
             case .bytes(let data):
                 buffers.append(Self.bindBuffer(data, type: MYSQL_TYPE_LONG_BLOB, into: &binds[index]))
 
-            case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            case .int(let value):
+                buffers.append(Self.bindScalar(value, type: MYSQL_TYPE_LONGLONG, into: &binds[index]))
+
+            case .double(let value):
+                buffers.append(Self.bindScalar(value, type: MYSQL_TYPE_DOUBLE, into: &binds[index]))
+
+            case .bool(let value):
+                buffers.append(
+                    Self.bindScalar(Int64(value ? 1 : 0), type: MYSQL_TYPE_LONGLONG, into: &binds[index])
+                )
+
+            // MySQL's exact numeric wire type is a string; binding a decimal as
+            // a double would round it. Dates, times, UUIDs and arrays have no
+            // narrower binding that is also lossless, so they cross as text and
+            // the server parses them into the column type.
+            case .decimalText, .date, .time, .timestamp, .uuid, .array:
                 buffers.append(
                     Self.bindBuffer(
-                        Data(param.textFallback.utf8), type: MYSQL_TYPE_STRING, into: &binds[index]
+                        Data(MySQLTemporalLiteral.literal(for: param).utf8),
+                        type: MYSQL_TYPE_STRING,
+                        into: &binds[index]
                     )
                 )
 
             @unknown default:
                 buffers.append(
                     Self.bindBuffer(
-                        Data(param.textFallback.utf8), type: MYSQL_TYPE_STRING, into: &binds[index]
+                        Data(MySQLTemporalLiteral.literal(for: param).utf8),
+                        type: MYSQL_TYPE_STRING,
+                        into: &binds[index]
                     )
                 )
             }
@@ -662,6 +681,29 @@ final class MariaDBPluginConnection: @unchecked Sendable {
         }
 
         return ParameterBindings(binds: binds, buffers: buffers)
+    }
+
+    /// Copies a fixed-width value into a fresh buffer and points `bind` at it.
+    /// `is_unsigned` stays 0: every scalar bound here is signed.
+    private static func bindScalar<Scalar>(
+        _ value: Scalar,
+        type: enum_field_types,
+        into bind: inout MYSQL_BIND
+    ) -> UnsafeMutableRawPointer {
+        let size = MemoryLayout<Scalar>.size
+        let buffer = UnsafeMutableRawPointer.allocate(
+            byteCount: size,
+            alignment: MemoryLayout<Scalar>.alignment
+        )
+        buffer.assumingMemoryBound(to: Scalar.self).initialize(to: value)
+        bind.buffer_type = type
+        bind.buffer = buffer
+        bind.buffer_length = UInt(size)
+        bind.length = UnsafeMutablePointer<UInt>.allocate(capacity: 1)
+        bind.length?.pointee = UInt(size)
+        bind.is_null = UnsafeMutablePointer<my_bool>.allocate(capacity: 1)
+        bind.is_null?.pointee = 0
+        return buffer
     }
 
     /// Copies `data` into a fresh buffer and points `bind` at it. Extracted so

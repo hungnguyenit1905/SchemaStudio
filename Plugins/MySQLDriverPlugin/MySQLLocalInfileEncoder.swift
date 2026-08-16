@@ -42,9 +42,9 @@ enum MySQLLocalInfileEncoder {
         case .bytes(let data):
             asHex ? appendHex(data, to: &bytes) : appendEscaped(data, to: &bytes)
         case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
-            append(.text(value.textFallback), asHex: asHex, to: &bytes)
+            append(.text(MySQLTemporalLiteral.literal(for: value)), asHex: asHex, to: &bytes)
         @unknown default:
-            append(.text(value.textFallback), asHex: asHex, to: &bytes)
+            append(.text(MySQLTemporalLiteral.literal(for: value)), asHex: asHex, to: &bytes)
         }
     }
 
