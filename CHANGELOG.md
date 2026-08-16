@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Editing or deleting a ClickHouse row now matches on the primary key alone. It previously matched on every column in the row, so an edit could silently affect nothing when any other column had changed, and it made ClickHouse scan far more than it needed to.
 - Data Transfer no longer fails with a foreign key error when it adds constraints to the target. Foreign keys are added with the checks off, the same way a dump and restore does it.
 - Data Transfer in Copy mode no longer blocks dropping a table that a table outside the selection still points at, when the target confirms it can disable foreign key checks. It warns instead.
 - A constraint that cannot be created in Data Transfer is now reported as a warning on that table and no longer stops the remaining tables.

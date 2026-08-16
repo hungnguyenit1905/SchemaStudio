@@ -1,0 +1,1 @@
+../../Plugins/ClickHouseDriverPlugin/ClickHouseStatementGenerator.swift
