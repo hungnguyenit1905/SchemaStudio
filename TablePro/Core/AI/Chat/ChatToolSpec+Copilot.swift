@@ -58,6 +58,10 @@ extension ChatToolSpec {
             rewritten["required"] = .array(filtered)
         }
 
+        if rewritten["type"] == .string("object"), rewritten["required"] == nil {
+            rewritten["required"] = .array([])
+        }
+
         return .object(rewritten)
     }
 

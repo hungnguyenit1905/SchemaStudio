@@ -21,29 +21,59 @@ private final class TestState {
     }
 }
 
+private actor ManualTimeout {
+    private var started = 0
+    private var sleepers: [CheckedContinuation<Void, Never>] = []
+    private var observers: [CheckedContinuation<Void, Never>] = []
+
+    func wait() async {
+        started += 1
+        let waiting = observers
+        observers = []
+        for observer in waiting { observer.resume() }
+        await withCheckedContinuation { continuation in
+            sleepers.append(continuation)
+        }
+    }
+
+    func waitUntilStarted(_ count: Int) async {
+        while started < count {
+            await withCheckedContinuation { continuation in
+                observers.append(continuation)
+            }
+        }
+    }
+
+    func fire() {
+        let pending = sleepers
+        sleepers = []
+        for sleeper in pending { sleeper.resume() }
+    }
+}
+
 @Suite("CopilotIdleStopController")
 @MainActor
 struct CopilotIdleStopControllerTests {
-    private static let timeout: Duration = .milliseconds(40)
-    private static let waitPastTimeout: Duration = .milliseconds(120)
-    private static let waitMidTimeout: Duration = .milliseconds(15)
-
-    private func makeController(state: TestState) -> CopilotIdleStopController {
+    private func makeController(state: TestState, timeout: ManualTimeout) -> CopilotIdleStopController {
         CopilotIdleStopController(
-            timeout: Self.timeout,
+            timeout: .seconds(1),
             isAuthenticated: { state.authenticated },
             isRunning: { state.running },
-            onStopRequest: { state.stopCount += 1 }
+            onStopRequest: { state.stopCount += 1 },
+            waitForTimeout: { _ in await timeout.wait() }
         )
     }
 
     @Test("Stops when timer fires while unauthenticated and running")
     func stopsAfterTimeout() async throws {
         let state = TestState()
-        let controller = makeController(state: state)
+        let timeout = ManualTimeout()
+        let controller = makeController(state: state, timeout: timeout)
 
         controller.schedule()
-        try await Task.sleep(for: Self.waitPastTimeout)
+        await timeout.waitUntilStarted(1)
+        await timeout.fire()
+        await controller.scheduledStop?.value
 
         #expect(state.stopCount == 1)
     }
@@ -51,23 +81,26 @@ struct CopilotIdleStopControllerTests {
     @Test("Skips when already authenticated at schedule time")
     func skipsWhenAuthenticated() async throws {
         let state = TestState(authenticated: true)
-        let controller = makeController(state: state)
+        let timeout = ManualTimeout()
+        let controller = makeController(state: state, timeout: timeout)
 
         controller.schedule()
-        try await Task.sleep(for: Self.waitPastTimeout)
 
+        #expect(controller.scheduledStop == nil)
         #expect(state.stopCount == 0)
     }
 
     @Test("Skips when authenticated by fire time")
     func skipsWhenAuthenticatedByFireTime() async throws {
         let state = TestState()
-        let controller = makeController(state: state)
+        let timeout = ManualTimeout()
+        let controller = makeController(state: state, timeout: timeout)
 
         controller.schedule()
-        try await Task.sleep(for: Self.waitMidTimeout)
+        await timeout.waitUntilStarted(1)
         state.authenticated = true
-        try await Task.sleep(for: Self.waitPastTimeout)
+        await timeout.fire()
+        await controller.scheduledStop?.value
 
         #expect(state.stopCount == 0)
     }
@@ -75,11 +108,14 @@ struct CopilotIdleStopControllerTests {
     @Test("Skips when not running by fire time")
     func skipsWhenNotRunningByFireTime() async throws {
         let state = TestState()
-        let controller = makeController(state: state)
+        let timeout = ManualTimeout()
+        let controller = makeController(state: state, timeout: timeout)
 
         controller.schedule()
+        await timeout.waitUntilStarted(1)
         state.running = false
-        try await Task.sleep(for: Self.waitPastTimeout)
+        await timeout.fire()
+        await controller.scheduledStop?.value
 
         #expect(state.stopCount == 0)
     }
@@ -87,12 +123,15 @@ struct CopilotIdleStopControllerTests {
     @Test("Cancel before fire prevents stop")
     func cancelPreventsStop() async throws {
         let state = TestState()
-        let controller = makeController(state: state)
+        let timeout = ManualTimeout()
+        let controller = makeController(state: state, timeout: timeout)
 
         controller.schedule()
-        try await Task.sleep(for: Self.waitMidTimeout)
+        await timeout.waitUntilStarted(1)
+        let pending = controller.scheduledStop
         controller.cancel()
-        try await Task.sleep(for: Self.waitPastTimeout)
+        await timeout.fire()
+        await pending?.value
 
         #expect(state.stopCount == 0)
     }
@@ -100,12 +139,17 @@ struct CopilotIdleStopControllerTests {
     @Test("Reschedule cancels prior timer; only fires once")
     func rescheduleFiresOnce() async throws {
         let state = TestState()
-        let controller = makeController(state: state)
+        let timeout = ManualTimeout()
+        let controller = makeController(state: state, timeout: timeout)
 
         controller.schedule()
-        try await Task.sleep(for: Self.waitMidTimeout)
+        await timeout.waitUntilStarted(1)
+        let first = controller.scheduledStop
         controller.schedule()
-        try await Task.sleep(for: Self.waitPastTimeout)
+        await timeout.waitUntilStarted(2)
+        await timeout.fire()
+        await first?.value
+        await controller.scheduledStop?.value
 
         #expect(state.stopCount == 1)
     }

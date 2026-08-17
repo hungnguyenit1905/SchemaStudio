@@ -26,7 +26,7 @@ actor PairingExchangeStore {
     }
 
     func consume(code: String, verifier: String, now: Date = .now) throws -> String {
-        prune(now: now)
+        defer { prune(now: now) }
 
         guard let entry = pending[code] else {
             throw MCPDataLayerError.notFound("pairing code")

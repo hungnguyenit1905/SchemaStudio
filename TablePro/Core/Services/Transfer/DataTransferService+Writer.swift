@@ -30,6 +30,7 @@ extension DataTransferService {
 
         var state = TransferWriterState()
         var written = 0
+        var bulkRowsRecorded = 0
         let commitPerChunk = !options.useSingleTransaction
         var lastCursor: TransferChunkCursor?
 
@@ -73,7 +74,12 @@ extension DataTransferService {
                         // A buffered bulk load reports its total once, from
                         // `finish()`, so counting the chunk here as well would
                         // report every row twice.
-                        if !state.useBulk { written += rows }
+                        if state.useBulk {
+                            bulkRowsRecorded += rows
+                            recordWrittenRows(rows)
+                        } else {
+                            written += rows
+                        }
                     }
                     // A chunk is counted once here, after its retries and its
                     // trailing partial batch have settled, so a retried chunk
@@ -96,7 +102,7 @@ extension DataTransferService {
                     state: &state
                 )
                 written = state.useBulk ? finished : written + finished
-                recordWrittenRows(written - beforeFinish)
+                recordWrittenRows(state.useBulk ? finished - bulkRowsRecorded : written - beforeFinish)
             }
 
             try await restoreWriter(target: target, state: &state)
@@ -343,7 +349,6 @@ extension DataTransferService {
                 )
             }
             try await writer.write(rows: chunk.rows)
-            self.state.processedRows += chunk.rows.count
             return chunk.rows.count
         }
         guard let sink = state.sink, let currentSplitter = state.splitter else {

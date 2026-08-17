@@ -25,6 +25,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New app icon, with light, dark, and tinted variants.
 - Sidebar connection rows no longer show the database type logo before the name.
 
+### Fixed
+
+- Saving on a read-only connection now says the connection is read-only instead of reporting that the SQL could not be generated.
+- Undo in the table structure editor steps back one edit at a time. Edits made in the same moment were folded into one step, so a single undo could revert several of them.
+- Oracle zoned and local timestamps now render with a numeric UTC offset (e.g. `+0700`) instead of always showing `Z`.
+- SequelAce now shows up as an available import source when its favorites file exists but the app itself is not installed.
+- A settings file with one malformed value (for example a row-height entry of the wrong type) no longer fails to load entirely; the one bad value falls back to its default and the rest of your settings still apply.
+- Row counts reported during a bulk-load transfer no longer double-count rows written past the internal pipeline buffer.
+- A transfer retrying a retryable server error now stops after the configured number of attempts instead of one extra try beyond it.
+- SSH host key verification now correctly flags a mismatch when a host's key changes between ports, instead of treating it as an unknown key.
+- Connections saved before this release, or whose SSH or SSL configuration is missing a field a newer build added, now load instead of failing to decode.
+- Copying the connection URL for a connection that uses a saved SSH profile now includes that profile's SSH host and user instead of leaving the tunnel out of the URL.
+- AI tool schemas sent to GitHub Copilot now always declare a `required` field, which Copilot's tool-calling API expects even when nothing is required.
+- Consuming an expired MCP pairing code now reports it as expired instead of not found.
+
 ### Removed
 
 - The "Sidebar as List" and "Sidebar as Tree" options, along with the default layout setting. Every connection now uses one tree.

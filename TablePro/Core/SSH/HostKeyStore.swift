@@ -61,8 +61,12 @@ internal final class HostKeyStore: @unchecked Sendable {
         let entries = loadEntries()
 
         guard let existing = entries.first(where: { $0.host == hostKey && $0.keyType == keyType }) else {
-            Self.logger.info("Unknown host key for \(hostKey)")
-            return .unknown(fingerprint: currentFingerprint, keyType: keyType)
+            guard let otherType = entries.first(where: { $0.host == hostKey }) else {
+                Self.logger.info("Unknown host key for \(hostKey)")
+                return .unknown(fingerprint: currentFingerprint, keyType: keyType)
+            }
+            Self.logger.warning("Host key type changed for \(hostKey)")
+            return .mismatch(expected: Self.fingerprint(of: otherType.keyData), actual: currentFingerprint)
         }
 
         let storedFingerprint = Self.fingerprint(of: existing.keyData)

@@ -202,21 +202,23 @@ struct DataGridSettings: Codable, Equatable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        rowHeight = try container.decodeIfPresent(DataGridRowHeight.self, forKey: .rowHeight) ?? .normal
-        dateFormat = try container.decodeIfPresent(DateFormatOption.self, forKey: .dateFormat) ?? .iso8601
-        nullDisplay = try container.decodeIfPresent(String.self, forKey: .nullDisplay) ?? "NULL"
-        defaultPageSize = try (container.decodeIfPresent(Int.self, forKey: .defaultPageSize) ?? 1_000)
+        rowHeight = container.decodeLenient(DataGridRowHeight.self, forKey: .rowHeight, default: .normal)
+        dateFormat = container.decodeLenient(DateFormatOption.self, forKey: .dateFormat, default: .iso8601)
+        nullDisplay = container.decodeLenient(String.self, forKey: .nullDisplay, default: "NULL")
+        defaultPageSize = container
+            .decodeLenient(Int.self, forKey: .defaultPageSize, default: 1_000)
             .clamped(to: SettingsValidationRules.defaultPageSizeRange)
-        showAlternateRows = try container.decodeIfPresent(Bool.self, forKey: .showAlternateRows) ?? true
-        showRowNumbers = try container.decodeIfPresent(Bool.self, forKey: .showRowNumbers) ?? true
-        autoShowInspector = try container.decodeIfPresent(Bool.self, forKey: .autoShowInspector) ?? false
-        enableSmartValueDetection = try container.decodeIfPresent(Bool.self, forKey: .enableSmartValueDetection) ?? true
-        countRowsIfEstimateLessThan = try container
-            .decodeIfPresent(Int.self, forKey: .countRowsIfEstimateLessThan) ?? 100_000
-        queryResultRowCap = try container.decodeIfPresent(Int.self, forKey: .queryResultRowCap) ?? 10_000
-        truncateQueryResults = try container.decodeIfPresent(Bool.self, forKey: .truncateQueryResults) ?? true
-        defaultSortBehavior = try container
-            .decodeIfPresent(DefaultSortBehavior.self, forKey: .defaultSortBehavior) ?? .none
+        showAlternateRows = container.decodeLenient(Bool.self, forKey: .showAlternateRows, default: true)
+        showRowNumbers = container.decodeLenient(Bool.self, forKey: .showRowNumbers, default: true)
+        autoShowInspector = container.decodeLenient(Bool.self, forKey: .autoShowInspector, default: false)
+        enableSmartValueDetection = container
+            .decodeLenient(Bool.self, forKey: .enableSmartValueDetection, default: true)
+        countRowsIfEstimateLessThan = container
+            .decodeLenient(Int.self, forKey: .countRowsIfEstimateLessThan, default: 100_000)
+        queryResultRowCap = container.decodeLenient(Int.self, forKey: .queryResultRowCap, default: 10_000)
+        truncateQueryResults = container.decodeLenient(Bool.self, forKey: .truncateQueryResults, default: true)
+        defaultSortBehavior = container
+            .decodeLenient(DefaultSortBehavior.self, forKey: .defaultSortBehavior, default: .none)
     }
 
     // MARK: - Validated Properties
@@ -360,5 +362,15 @@ struct TabSettings: Codable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         enablePreviewTabs = try container.decodeIfPresent(Bool.self, forKey: .enablePreviewTabs) ?? true
         groupAllConnectionTabs = try container.decodeIfPresent(Bool.self, forKey: .groupAllConnectionTabs) ?? false
+    }
+}
+
+// MARK: - Lenient Decoding
+
+/// A stored setting that is absent, malformed, or of a type an older build
+/// wrote falls back to its default instead of failing the whole settings file.
+private extension KeyedDecodingContainer {
+    func decodeLenient<T: Decodable>(_ type: T.Type, forKey key: Key, default fallback: T) -> T {
+        ((try? decodeIfPresent(type, forKey: key)) ?? nil) ?? fallback
     }
 }

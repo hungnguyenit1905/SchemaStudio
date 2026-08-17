@@ -24,7 +24,7 @@ struct ConnectionURLFormatter {
             return formatDuckDB(connection)
         }
 
-        let ssh = connection.resolvedSSHConfig
+        let ssh = resolveSSHConfig(connection, profile: sshProfile)
         if ssh.enabled {
             return formatSSH(connection, sshConfig: ssh, scheme: scheme, password: password, sshPassword: sshPassword)
         }
@@ -33,6 +33,16 @@ struct ConnectionURLFormatter {
     }
 
     // MARK: - Private
+
+    private static func resolveSSHConfig(
+        _ connection: DatabaseConnection,
+        profile: SSHProfile?
+    ) -> SSHConfiguration {
+        if let profile, connection.sshProfileId == profile.id {
+            return profile.toSSHConfiguration()
+        }
+        return connection.resolvedSSHConfig
+    }
 
     private static func urlScheme(for type: DatabaseType) -> String {
         PluginMetadataRegistry.shared.snapshot(forTypeId: type.rawValue)?.primaryUrlScheme
