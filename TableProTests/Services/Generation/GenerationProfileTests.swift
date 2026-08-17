@@ -203,7 +203,7 @@ struct GenerationProfileReconcilerTests {
         ])
         let live = schema(customerColumns: [PluginColumnInfo(name: "nickname", dataType: "varchar(32)")])
         let result = GenerationProfileReconciler().reconcile(saved, against: live)
-        #expect(result.profile.tables.first?.column(named: "nickname")?.generator == RandomStringGenerator.identifier)
+        #expect(result.profile.tables.first?.column(named: "nickname")?.generator == LoremWordsGenerator.identifier)
         #expect(result.changes.count == 1)
     }
 

@@ -208,8 +208,10 @@ struct TypeFallbackGeneratorResolverTests {
         #expect(resolve(PluginColumnInfo(name: "a", dataType: "date")) == "Date")
         #expect(resolve(PluginColumnInfo(name: "a", dataType: "timestamp")) == "DateTime")
         #expect(resolve(PluginColumnInfo(name: "a", dataType: "bytea")) == "RandomBytes")
-        #expect(resolve(PluginColumnInfo(name: "a", dataType: "varchar(40)")) == "RandomString")
+        #expect(resolve(PluginColumnInfo(name: "a", dataType: "varchar(8)")) == "RandomString")
+        #expect(resolve(PluginColumnInfo(name: "a", dataType: "varchar(40)")) == "LoremWords")
         #expect(resolve(PluginColumnInfo(name: "a", dataType: "text")) == "LoremWords")
+        #expect(resolve(PluginColumnInfo(name: "a", dataType: "jsonb")) == "Fixed")
     }
 
     @Test("A server-assigned column resolves to the server's own value")
@@ -256,7 +258,7 @@ struct TypeFallbackGeneratorResolverTests {
 
     @Test("Every resolution builds a working generator", arguments: [
         "boolean", "integer", "numeric(10,2)", "double precision", "uuid", "date",
-        "timestamp", "bytea", "varchar(40)", "text", "smallint", "bigint"
+        "timestamp", "bytea", "varchar(40)", "varchar(8)", "text", "smallint", "bigint", "jsonb"
     ])
     func everyResolutionBuilds(dataType: String) throws {
         let table = GenerationPlanningFixtures.table(

@@ -49,8 +49,10 @@ that matches wins.
    filled with that type's own values.
 2. **The name decides.** A column called `email` gets **Email**, `first_name` gets **First name**,
    `created_at` gets a **Date and time** in the past, `updated_at` gets a time that is always at or
-   after `created_at`. Around fifty name patterns are recognised, and the table's own name is
-   stripped off first, so `user_email` on table `user` is still read as `email`.
+   after `created_at`. Around fifty name patterns are recognised. Names that end in a known word are
+   read too, so `proof_url` is a URL and `tx_serial` is a code. The column's own name is tried first
+   and then the name with the table's name stripped off, so `user_email` on table `users` is read as
+   `email` while `username` on the same table is still a username.
 3. **The type decides.** Anything the name rules do not recognise falls back to its type: an
    integer column gets a number in a readable range, a `varchar` gets words sized to fit its length,
    a `uuid` column gets a UUID.

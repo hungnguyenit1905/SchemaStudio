@@ -44,6 +44,7 @@ struct GenerationProfileReconciliation: Sendable {
     var profile: GenerationProfile
     var changes: [GenerationProfileChange]
     var addedColumns: Set<String>
+    var warnings: [ValidationWarning]
 
     var hasChanges: Bool { !changes.isEmpty }
 }
@@ -61,6 +62,7 @@ struct GenerationProfileReconciler {
     func reconcile(_ profile: GenerationProfile, against schema: [GenerationTable]) -> GenerationProfileReconciliation {
         var changes: [GenerationProfileChange] = []
         var addedColumns: Set<String> = []
+        var warnings: [ValidationWarning] = []
         var tables: [GenerationTableProfile] = []
 
         for tableProfile in profile.tables {
@@ -75,7 +77,8 @@ struct GenerationProfileReconciler {
                 tableProfile: tableProfile,
                 live: live,
                 changes: &changes,
-                addedColumns: &addedColumns
+                addedColumns: &addedColumns,
+                warnings: &warnings
             )
             tables.append(reconciled)
         }
@@ -83,14 +86,20 @@ struct GenerationProfileReconciler {
         var updated = profile
         updated.version = GenerationProfile.currentVersion
         updated.tables = tables
-        return GenerationProfileReconciliation(profile: updated, changes: changes, addedColumns: addedColumns)
+        return GenerationProfileReconciliation(
+            profile: updated,
+            changes: changes,
+            addedColumns: addedColumns,
+            warnings: warnings
+        )
     }
 
     private func reconcileColumns(
         tableProfile: GenerationTableProfile,
         live: GenerationTable,
         changes: inout [GenerationProfileChange],
-        addedColumns: inout Set<String>
+        addedColumns: inout Set<String>,
+        warnings: inout [ValidationWarning]
     ) -> [GenerationColumnProfile] {
         let tableName = tableProfile.reference.qualifiedName
         var reconciled: [GenerationColumnProfile] = []
@@ -107,12 +116,14 @@ struct GenerationProfileReconciler {
 
         let known = Set(tableProfile.columns.map(\.column))
         for liveColumn in live.columns where !known.contains(liveColumn.name) {
-            let resolution = TypeFallbackGeneratorResolver.resolve(liveColumn)
+            let resolution = AutoMapper.resolve(liveColumn, table: live.name)
+            warnings.append(contentsOf: resolution.warnings)
             reconciled.append(
                 GenerationColumnProfile(
                     column: liveColumn.name,
                     generator: resolution.identifier,
-                    params: resolution.params
+                    params: resolution.params,
+                    common: resolution.common
                 )
             )
             addedColumns.insert("\(tableName).\(liveColumn.name)")
