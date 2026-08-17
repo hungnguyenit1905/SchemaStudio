@@ -84,6 +84,23 @@ struct SplitMix64Tests {
         #expect(seen == [0, 1, 2, 3, 4])
     }
 
+    @Test("A span of zero means the whole 64-bit range instead of trapping")
+    func fullWidthSpan() {
+        var rng = SplitMix64(seed: 4)
+        var values: [UInt64] = []
+        for _ in 0..<200 { values.append(rng.next(span: 0)) }
+        #expect(Set(values).count == 200)
+        #expect(values.contains { $0 > UInt64(Int64.max) })
+    }
+
+    @Test("A positive span stays inside itself")
+    func boundedSpan() {
+        var rng = SplitMix64(seed: 4)
+        for _ in 0..<500 {
+            #expect(rng.next(span: 7) < 7)
+        }
+    }
+
     @Test("An upper bound of zero or less yields zero")
     func degenerateBound() {
         var rng = SplitMix64(seed: 5)

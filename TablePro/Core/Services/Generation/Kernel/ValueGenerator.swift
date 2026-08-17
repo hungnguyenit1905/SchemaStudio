@@ -10,6 +10,14 @@ protocol ValueGenerator: AnyObject {
     static var identifier: String { get }
     static var paramSchema: ParamSchema { get }
 
+    /// True when the column carrying this generator is left out of the INSERT
+    /// entirely, so the server supplies the value.
+    static var excludesColumnFromInsert: Bool { get }
+
+    /// Columns whose value must already be in the `RowContext` before this
+    /// generator runs, which is what orders the columns inside a row.
+    var rowDependencies: [String] { get }
+
     init(params: Data, column: GenerationColumn, seed: UInt64) throws
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue
@@ -18,6 +26,10 @@ protocol ValueGenerator: AnyObject {
 
 extension ValueGenerator {
     static var paramSchema: ParamSchema { .empty }
+
+    static var excludesColumnFromInsert: Bool { false }
+
+    var rowDependencies: [String] { [] }
 
     var identifier: String { Self.identifier }
 }

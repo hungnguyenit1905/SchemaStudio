@@ -24,6 +24,14 @@ struct SplitMix64: RandomNumberGenerator, Sendable {
         return word ^ (word >> 31)
     }
 
+    /// A span of zero means "the whole 64-bit range" here, because a span is
+    /// computed as `upper - lower + 1` and that wraps to zero at full width.
+    /// `next(upperBound: 0)` traps, so the caller must come through this.
+    mutating func next(span: UInt64) -> UInt64 {
+        guard span > 0 else { return next() }
+        return next(upperBound: span)
+    }
+
     mutating func nextInt(upperBound: Int) -> Int {
         guard upperBound > 0 else { return 0 }
         return Int(next(upperBound: UInt64(upperBound)))

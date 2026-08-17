@@ -9,6 +9,7 @@ struct GeneratorRegistry: Sendable {
     struct Entry: Sendable {
         let identifier: String
         let paramSchema: ParamSchema
+        let excludesColumnFromInsert: Bool
         let make: @Sendable (Data, GenerationColumn, UInt64) throws -> any ValueGenerator
     }
 
@@ -22,10 +23,15 @@ struct GeneratorRegistry: Sendable {
 
     func paramSchema(for identifier: String) -> ParamSchema? { entries[identifier]?.paramSchema }
 
+    func excludesColumnFromInsert(_ identifier: String) -> Bool {
+        entries[identifier]?.excludesColumnFromInsert ?? false
+    }
+
     mutating func register<Generator: ValueGenerator>(_ type: Generator.Type) {
         entries[type.identifier] = Entry(
             identifier: type.identifier,
             paramSchema: type.paramSchema,
+            excludesColumnFromInsert: type.excludesColumnFromInsert,
             make: { params, column, seed in try type.init(params: params, column: column, seed: seed) }
         )
     }
