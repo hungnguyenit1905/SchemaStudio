@@ -60,6 +60,8 @@ final class IntegerGenerator: ValueGenerator {
         rng = SplitMix64(seed: seed)
     }
 
+    var distinctValueCount: Int? { GenerationValueMapper.saturatingCount(stepCount) }
+
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         let offset = rng.next(span: stepCount)
         return .int(lowerBound &+ Int64(bitPattern: offset &* UInt64(step)))

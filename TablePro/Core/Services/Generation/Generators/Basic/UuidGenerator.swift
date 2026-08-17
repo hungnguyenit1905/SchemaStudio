@@ -49,6 +49,8 @@ final class UuidGenerator: ValueGenerator {
         rng = SplitMix64(seed: seed)
     }
 
+    var distinctValueCount: Int? { Int.max }
+
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         let identifier = Self.version4(high: rng.next(), low: rng.next())
         guard emitsText else { return .uuid(identifier) }

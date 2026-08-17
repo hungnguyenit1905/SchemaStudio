@@ -97,6 +97,22 @@ final class RandomStringGenerator: ValueGenerator {
         rng = SplitMix64(seed: seed)
     }
 
+    var distinctValueCount: Int? {
+        var total: UInt64 = 0
+        for length in lengthRange {
+            var combinations: UInt64 = 1
+            for _ in 0..<length {
+                let (product, overflowed) = combinations.multipliedReportingOverflow(by: UInt64(alphabet.count))
+                guard !overflowed else { return Int.max }
+                combinations = product
+            }
+            let (sum, overflowed) = total.addingReportingOverflow(combinations)
+            guard !overflowed else { return Int.max }
+            total = sum
+        }
+        return GenerationValueMapper.saturatingCount(total)
+    }
+
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         let length = rng.nextInt(in: lengthRange)
         var text = String()

@@ -61,6 +61,8 @@ final class DateGenerator: ValueGenerator {
         rng = SplitMix64(seed: seed)
     }
 
+    var distinctValueCount: Int? { GenerationValueMapper.saturatingCount(dayCount) }
+
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         let civil = CivilDate.fromDaysSinceEpoch(firstDay + Int(rng.next(span: dayCount)))
         guard emitsText else {

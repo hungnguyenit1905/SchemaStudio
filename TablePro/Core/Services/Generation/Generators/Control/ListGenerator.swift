@@ -89,6 +89,8 @@ final class ListGenerator: ValueGenerator {
         rng = SplitMix64(seed: seed)
     }
 
+    var distinctValueCount: Int? { Set(values).count }
+
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         guard mode == .random else {
             defer { position += 1 }

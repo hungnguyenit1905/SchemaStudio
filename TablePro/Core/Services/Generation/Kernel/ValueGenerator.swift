@@ -18,6 +18,12 @@ protocol ValueGenerator: AnyObject {
     /// generator runs, which is what orders the columns inside a row.
     var rowDependencies: [String] { get }
 
+    /// How many distinct values this generator can produce, where that is
+    /// computable. Pre-flight uses it to refuse a unique column that cannot fill
+    /// the requested row count. `nil` means "not computable", and the run falls
+    /// back to the runtime `uniqueExhausted` error.
+    var distinctValueCount: Int? { get }
+
     init(params: Data, column: GenerationColumn, seed: UInt64) throws
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue
@@ -31,41 +37,9 @@ extension ValueGenerator {
 
     var rowDependencies: [String] { [] }
 
+    var distinctValueCount: Int? { nil }
+
     var identifier: String { Self.identifier }
-}
-
-enum GenerationError: Error, Equatable {
-    case unknownGenerator(identifier: String)
-    case invalidParameters(generator: String, reason: String)
-    case uniqueExhausted(column: String, attempts: Int)
-    case dependencyMissing(column: String, dependsOn: String)
-}
-
-extension GenerationError: LocalizedError {
-    var errorDescription: String? {
-        switch self {
-        case .unknownGenerator(let identifier):
-            return String(format: String(localized: "No generator is registered as %@."), identifier)
-        case .invalidParameters(let generator, let reason):
-            return String(
-                format: String(localized: "The %@ generator rejected its settings: %@"),
-                generator,
-                reason
-            )
-        case .uniqueExhausted(let column, let attempts):
-            return String(
-                format: String(localized: "Could not find a distinct value for %@ after %d attempts."),
-                column,
-                attempts
-            )
-        case .dependencyMissing(let column, let dependsOn):
-            return String(
-                format: String(localized: "%@ needs %@, which has not been generated yet."),
-                column,
-                dependsOn
-            )
-        }
-    }
 }
 
 enum GenerationParams {

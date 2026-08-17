@@ -28,6 +28,8 @@ final class FixedGenerator: ValueGenerator {
         value = GenerationValueMapper.value(from: decoded.value ?? .string(""), base: column.type.base)
     }
 
+    var distinctValueCount: Int? { 1 }
+
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         value
     }

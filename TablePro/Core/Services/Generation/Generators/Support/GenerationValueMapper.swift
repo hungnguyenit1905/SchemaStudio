@@ -64,6 +64,12 @@ enum GenerationValueMapper {
         return text.isEmpty ? "0" : text
     }
 
+    /// A domain wider than `Int` is reported as `Int.max`, which reads as
+    /// "wide enough for any row count" everywhere pre-flight uses it.
+    static func saturatingCount(_ value: UInt64) -> Int {
+        value >= UInt64(Int.max) ? Int.max : Int(value)
+    }
+
     private static func boolean(from text: String) -> PluginCellValue {
         switch text.lowercased() {
         case "1", "t", "true", "y", "yes", "on": return .bool(true)

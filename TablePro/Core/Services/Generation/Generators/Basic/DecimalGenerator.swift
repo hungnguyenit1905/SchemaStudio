@@ -73,6 +73,8 @@ final class DecimalGenerator: ValueGenerator {
         rng = SplitMix64(seed: seed)
     }
 
+    var distinctValueCount: Int? { GenerationValueMapper.saturatingCount(unscaledSpan) }
+
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         let unscaled = unscaledLowerBound &+ Int64(bitPattern: rng.next(span: unscaledSpan))
         return .decimalText(Self.format(unscaled: unscaled, scale: scale))

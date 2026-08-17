@@ -87,6 +87,8 @@ final class DateTimeGenerator: ValueGenerator {
         rng = SplitMix64(seed: seed)
     }
 
+    var distinctValueCount: Int? { GenerationValueMapper.saturatingCount(tickCount) }
+
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         let tick = firstTick + Int(rng.next(span: tickCount))
         let seconds = tick * granularity.seconds

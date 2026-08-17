@@ -54,6 +54,20 @@ struct CommonParams: Codable, Sendable, Hashable {
         self.sortOrder = sortOrder
     }
 
+    /// Written by hand because a synthesized `init(from:)` ignores the property
+    /// defaults above and throws `keyNotFound` for every key a saved profile
+    /// happens not to carry.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        nullPercent = try container.decodeIfPresent(Int.self, forKey: .nullPercent) ?? 0
+        blankPercent = try container.decodeIfPresent(Int.self, forKey: .blankPercent) ?? 0
+        unique = try container.decodeIfPresent(Bool.self, forKey: .unique) ?? false
+        prefix = try container.decodeIfPresent(String.self, forKey: .prefix) ?? ""
+        suffix = try container.decodeIfPresent(String.self, forKey: .suffix) ?? ""
+        textCase = try container.decodeIfPresent(GenerationTextCase.self, forKey: .textCase) ?? .unchanged
+        sortOrder = try container.decodeIfPresent(GenerationSortOrder.self, forKey: .sortOrder) ?? .unsorted
+    }
+
     static let none = CommonParams()
 
     var affix: String { prefix + suffix }

@@ -46,6 +46,8 @@ final class BooleanGenerator: ValueGenerator {
         rng = SplitMix64(seed: seed)
     }
 
+    var distinctValueCount: Int? { truePercent == 0 || truePercent == 100 ? 1 : 2 }
+
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         let flag = rng.rollsBelow(percent: truePercent)
         guard emitsInteger else { return .bool(flag) }
