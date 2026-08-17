@@ -15,7 +15,7 @@ enum GenerationValueMapper {
             guard let number = Int64(text) else { return .text(text) }
             return .int(number)
         case .decimal:
-            guard Double(text) != nil else { return .text(text) }
+            guard let number = Double(text), number.isFinite else { return .text(text) }
             return .decimalText(text)
         case .float32, .float64:
             guard let number = Double(text) else { return .text(text) }
@@ -40,7 +40,7 @@ enum GenerationValueMapper {
         case .double(let number): return decimal(number, base: base)
         case .string(let text): return value(from: text, base: base)
         case .array(let elements): return .array(elements.map { value(from: $0, base: base) })
-        case .object: return .text("")
+        case .object: return .text(json.jsonText ?? "{}")
         }
     }
 
@@ -51,6 +51,17 @@ enum GenerationValueMapper {
         case .int32: return unsigned ? 0...4_294_967_295 : -2_147_483_648...2_147_483_647
         default: return unsigned ? 0...Int64.max : Int64.min...Int64.max
         }
+    }
+
+    /// `String(Double)` renders a large magnitude in scientific notation, which
+    /// MySQL's `DECIMAL` parser rejects outright.
+    static func fixedPointText(_ number: Double) -> String {
+        guard number.isFinite else { return "0" }
+        var text = String(format: "%.10f", number)
+        guard text.contains(".") else { return text }
+        while text.hasSuffix("0") { text.removeLast() }
+        if text.hasSuffix(".") { text.removeLast() }
+        return text.isEmpty ? "0" : text
     }
 
     private static func boolean(from text: String) -> PluginCellValue {
@@ -71,11 +82,18 @@ enum GenerationValueMapper {
         }
     }
 
+    /// Every narrowing here goes through `Int64(exactly:)`. A plain `Int64(_:)`
+    /// on a `Double` traps outside the representable range, and the value comes
+    /// from a user-supplied parameter.
     private static func decimal(_ number: Double, base: TransferBaseType) -> PluginCellValue {
         switch base {
-        case .decimal: return .decimalText(String(number))
-        case .int8, .int16, .int32, .int64: return .int(Int64(number))
-        case .string, .text, .enumeration, .set, .json: return .text(String(number))
+        case .decimal: return .decimalText(fixedPointText(number))
+        case .int8, .int16, .int32, .int64:
+            guard let exact = Int64(exactly: number.rounded()) else {
+                return .decimalText(fixedPointText(number))
+            }
+            return .int(exact)
+        case .string, .text, .enumeration, .set, .json: return .text(fixedPointText(number))
         default: return .double(number)
         }
     }

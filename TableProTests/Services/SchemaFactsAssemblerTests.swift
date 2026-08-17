@@ -201,6 +201,75 @@ struct SchemaFactsAssemblerTests {
         #expect(composite.primaryKeyColumns == ["a", "b"])
     }
 
+    @Test("A partial unique index does not make the column globally distinct")
+    func partialUniqueIndexIsNotGlobalUniqueness() throws {
+        let table = assemble(
+            columns: [
+                PluginColumnInfo(
+                    name: "email",
+                    dataType: "varchar(255)",
+                    checkExpressions: [],
+                    uniqueConstraints: ["orders_live_email_key"]
+                )
+            ],
+            indexes: [
+                PluginIndexInfo(
+                    name: "orders_live_email_key",
+                    columns: ["email"],
+                    isUnique: true,
+                    isPrimary: false,
+                    type: "BTREE",
+                    columnPrefixes: nil,
+                    whereClause: "deleted_at IS NULL",
+                    descendingColumns: nil
+                )
+            ]
+        )
+        #expect(!(try column(table, "email").requiresUniqueValues))
+        #expect(table.uniqueConstraints.isEmpty)
+    }
+
+    @Test("A prefix unique index does not make the whole value distinct")
+    func prefixUniqueIndexIsNotGlobalUniqueness() throws {
+        let table = assemble(
+            databaseType: .mysql,
+            columns: [
+                PluginColumnInfo(
+                    name: "email",
+                    dataType: "varchar(255)",
+                    checkExpressions: [],
+                    uniqueConstraints: ["email_prefix_key"]
+                )
+            ],
+            indexes: [
+                PluginIndexInfo(
+                    name: "email_prefix_key",
+                    columns: ["email"],
+                    isUnique: true,
+                    isPrimary: false,
+                    type: "BTREE",
+                    columnPrefixes: ["email": 10],
+                    whereClause: nil,
+                    descendingColumns: nil
+                )
+            ]
+        )
+        #expect(!(try column(table, "email").requiresUniqueValues))
+    }
+
+    @Test("A composite primary key declared out of order is recorded once")
+    func compositePrimaryKeyRecordedOnce() {
+        let table = assemble(
+            columns: [
+                PluginColumnInfo(name: "a", dataType: "int", isNullable: false, isPrimaryKey: true),
+                PluginColumnInfo(name: "b", dataType: "int", isNullable: false, isPrimaryKey: true)
+            ],
+            indexes: [PluginIndexInfo(name: "orders_pkey", columns: ["b", "a"], isUnique: true, isPrimary: true)]
+        )
+        #expect(table.compositeUniqueConstraints.count == 1)
+        #expect(table.compositeUniqueConstraints.first?.columns == ["b", "a"])
+    }
+
     @Test("CHECK expressions are carried verbatim")
     func checkExpressions() throws {
         let table = assemble(columns: [

@@ -9,7 +9,6 @@ import TableProPluginKit
 enum ReferenceStrategy: String, Codable, Sendable, CaseIterable {
     case random
     case sequential
-    case roundRobin
 }
 
 struct ReferenceTarget: Sendable, Hashable {
@@ -44,8 +43,7 @@ final class ReferenceGenerator: ValueGenerator, ReferencePoolConsuming {
             label: "Pick",
             type: .choice([
                 ParamChoice(value: ReferenceStrategy.random.rawValue, label: String(localized: "At random")),
-                ParamChoice(value: ReferenceStrategy.sequential.rawValue, label: String(localized: "In order")),
-                ParamChoice(value: ReferenceStrategy.roundRobin.rawValue, label: String(localized: "Evenly"))
+                ParamChoice(value: ReferenceStrategy.sequential.rawValue, label: String(localized: "In order"))
             ]),
             defaultValue: .string(ReferenceStrategy.random.rawValue)
         )
@@ -84,6 +82,13 @@ final class ReferenceGenerator: ValueGenerator, ReferencePoolConsuming {
                 reason: "no parent table and column to draw from"
             )
         }
+        let inferred = requestedTable.isEmpty || requestedColumn.isEmpty
+        if inferred, column.foreignKey?.isComposite == true {
+            throw GenerationError.invalidParameters(
+                generator: Self.identifier,
+                reason: "\(column.name) is part of a composite foreign key, whose columns have to be drawn together"
+            )
+        }
         columnName = column.name
         referenceTarget = ReferenceTarget(
             schema: decoded.schema ?? column.foreignKey?.referencedSchema,
@@ -110,7 +115,7 @@ final class ReferenceGenerator: ValueGenerator, ReferencePoolConsuming {
         switch strategy {
         case .random:
             return pool.values[rng.nextInt(upperBound: pool.values.count)]
-        case .sequential, .roundRobin:
+        case .sequential:
             defer { position += 1 }
             return pool.values[position % pool.values.count]
         }

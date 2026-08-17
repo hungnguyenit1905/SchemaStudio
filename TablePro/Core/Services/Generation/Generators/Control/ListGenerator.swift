@@ -69,10 +69,21 @@ final class ListGenerator: ValueGenerator {
         }
         values = source.map { GenerationValueMapper.value(from: $0, base: column.type.base) }
         let weights = decoded.weights ?? Array(repeating: 1, count: source.count)
-        cumulativeWeights = weights.reduce(into: [Int]()) { running, weight in
-            running.append((running.last ?? 0) + weight)
+        var running: [Int] = []
+        var total = 0
+        for weight in weights {
+            let (sum, overflowed) = total.addingReportingOverflow(weight)
+            guard !overflowed else {
+                throw GenerationError.invalidParameters(
+                    generator: Self.identifier,
+                    reason: "the weights add up to more than the largest whole number"
+                )
+            }
+            total = sum
+            running.append(total)
         }
-        totalWeight = cumulativeWeights.last ?? 0
+        cumulativeWeights = running
+        totalWeight = total
         mode = decoded.mode ?? .random
         self.seed = seed
         rng = SplitMix64(seed: seed)

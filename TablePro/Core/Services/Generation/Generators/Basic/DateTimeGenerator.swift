@@ -117,16 +117,40 @@ final class DateTimeGenerator: ValueGenerator {
         )
     }
 
+    /// The date-only reading is reachable only when the text carries no time at
+    /// all. Falling back to it after a failed timestamp parse silently turned a
+    /// zoned instant into midnight UTC.
     static func epochSeconds(_ text: String) -> Int? {
-        let normalized = text.replacingOccurrences(of: " ", with: "T")
-        let withZone = normalized.hasSuffix("Z") || normalized.contains("+") ? normalized : normalized + "Z"
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return nil }
+
         let parser = ISO8601DateFormatter()
-        parser.formatOptions = [.withInternetDateTime]
-        if let parsed = parser.date(from: withZone) { return Int(parsed.timeIntervalSince1970) }
-        parser.formatOptions = [.withFullDate]
-        let datePart = normalized.split(separator: "T", maxSplits: 1).first.map(String.init) ?? normalized
-        if let parsed = parser.date(from: datePart) {
-            return Int(parsed.timeIntervalSince1970)
+        parser.timeZone = TimeZone(secondsFromGMT: 0)
+
+        guard let separator = trimmed.firstIndex(where: { $0 == "T" || $0 == " " }) else {
+            parser.formatOptions = [.withFullDate]
+            return parser.date(from: trimmed).map { Int($0.timeIntervalSince1970) }
+        }
+
+        let datePart = trimmed[..<separator]
+        let timePart = trimmed[trimmed.index(after: separator)...]
+            .replacingOccurrences(of: " ", with: "")
+        guard !timePart.isEmpty else {
+            parser.formatOptions = [.withFullDate]
+            return parser.date(from: String(datePart)).map { Int($0.timeIntervalSince1970) }
+        }
+
+        let carriesZone = timePart.hasSuffix("Z")
+            || timePart.dropFirst().contains("+")
+            || timePart.dropFirst().contains("-")
+        let candidate = "\(datePart)T\(timePart)" + (carriesZone ? "" : "Z")
+
+        for options in [
+            ISO8601DateFormatter.Options([.withInternetDateTime]),
+            ISO8601DateFormatter.Options([.withInternetDateTime, .withFractionalSeconds])
+        ] {
+            parser.formatOptions = options
+            if let parsed = parser.date(from: candidate) { return Int(parsed.timeIntervalSince1970) }
         }
         return nil
     }

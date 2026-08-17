@@ -51,6 +51,13 @@ extension JSONValue {
         if case .bool(let value) = self { return value }
         return nil
     }
+
+    var jsonText: String? {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        guard let data = try? encoder.encode(self) else { return nil }
+        return String(bytes: data, encoding: .utf8)
+    }
 }
 
 extension JSONValue: Codable {

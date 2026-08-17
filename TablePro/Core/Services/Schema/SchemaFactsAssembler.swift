@@ -98,6 +98,11 @@ struct SchemaFactsAssembler {
         }
 
         for index in indexes where index.isUnique || index.isPrimary {
+            guard Self.constrainsWholeValues(index) else {
+                byName.removeValue(forKey: index.name)
+                order.removeAll { $0 == index.name }
+                continue
+            }
             if byName[index.name] == nil { order.append(index.name) }
             byName[index.name] = index.columns
         }
@@ -106,7 +111,7 @@ struct SchemaFactsAssembler {
             byName[name].map { GenerationUniqueConstraint(name: name, columns: $0) }
         }
 
-        let primaryKeyAlreadyPresent = constraints.contains { $0.columns == primaryKeyColumns }
+        let primaryKeyAlreadyPresent = constraints.contains { Set($0.columns) == Set(primaryKeyColumns) }
         if !primaryKeyColumns.isEmpty, !primaryKeyAlreadyPresent {
             constraints.insert(
                 GenerationUniqueConstraint(name: Self.primaryKeyConstraintName, columns: primaryKeyColumns),
@@ -114,6 +119,15 @@ struct SchemaFactsAssembler {
             )
         }
         return constraints
+    }
+
+    /// A partial index constrains only the rows its predicate selects and a
+    /// prefix index constrains only the leading characters, so neither means the
+    /// column's values have to be distinct. Treating them as full uniqueness
+    /// makes generation enforce a rule the server never asked for, and on a
+    /// small value domain that aborts the run with `uniqueExhausted`.
+    private static func constrainsWholeValues(_ index: PluginIndexInfo) -> Bool {
+        index.whereClause == nil && (index.columnPrefixes?.isEmpty ?? true)
     }
 
     private static let primaryKeyConstraintName = "PRIMARY"

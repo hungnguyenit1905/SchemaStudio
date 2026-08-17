@@ -31,7 +31,7 @@ final class DoubleGenerator: ValueGenerator {
         )
         let lower = decoded.min ?? 0
         let upper = decoded.max ?? 1
-        guard lower <= upper, lower.isFinite, upper.isFinite else {
+        guard lower <= upper, lower.isFinite, upper.isFinite, (upper - lower).isFinite else {
             throw GenerationError.invalidParameters(
                 generator: Self.identifier,
                 reason: "the range \(lower) to \(upper) is not usable"

@@ -68,9 +68,12 @@ Every generator takes its own settings, shown in the panel below the column list
 apply to all of them:
 
 - **Null percentage**: share of rows where the column is `NULL`. Refused on a `NOT NULL` column.
-- **Blank percentage**: share of rows where the column is an empty string.
+- **Blank percentage**: share of rows where the column is an empty string. Ignored on a column that
+  is also set to **Unique**, since an empty string repeated is a repeated value; the run reports this
+  once per column.
 - **Unique**: no two rows repeat a value. Refused before the run starts if the generator cannot
-  produce as many distinct values as there are rows.
+  produce as many distinct values as there are rows. Nulls are exempt, because SQL uniqueness does
+  not constrain them.
 - **Prefix**, **suffix**, and **case**: applied to the generated value before the length limit is
   checked.
 - **Sort**: writes the values in ascending or descending order rather than in generation order.

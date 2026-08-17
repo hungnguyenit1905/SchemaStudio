@@ -25,6 +25,7 @@ final class DecoratedGenerator {
     private var rng: SplitMix64
     private var seenHashes: Set<UInt64> = []
     private var affixWarningIssued = false
+    private var blankWarningIssued = false
     private(set) var warnings: [GenerationWarning] = []
 
     init(
@@ -42,22 +43,59 @@ final class DecoratedGenerator {
         self.truncator = truncator
         self.seed = seed
         self.uniqueRetryBudget = uniqueRetryBudget
-        rng = SplitMix64(seed: seed)
+        rng = SplitMix64(seed: Self.decoratorSeed(from: seed))
+    }
+
+    /// The decorator must not walk the same stream as the generator it wraps.
+    /// Handed the same column seed, a 50% null roll and a 50% boolean draw read
+    /// the same word, so every `true` became `NULL` and the column emitted only
+    /// `false`.
+    static func decoratorSeed(from seed: UInt64) -> UInt64 {
+        FNV1aHasher.hash { hasher in
+            hasher.combine(seed)
+            hasher.combine("decorator")
+        }
     }
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         let value = try uniqueChecked(row: row, index: index)
-        let blanked = rng.rollsBelow(percent: common.blankPercent) ? Self.blanked(value) : value
+        let blanked = shouldBlank() ? Self.blanked(value) : value
         guard rng.rollsBelow(percent: common.nullPercent) else { return blanked }
         return .null
     }
 
+    /// A blank is a value like any other, so emitting it on a column that has to
+    /// be distinct would repeat `''` on every blanked row. Uniqueness wins and
+    /// the column is warned about once. Nulls are exempt because SQL uniqueness
+    /// does not constrain them.
+    private func shouldBlank() -> Bool {
+        guard rng.rollsBelow(percent: common.blankPercent) else { return false }
+        guard common.unique else { return true }
+        warnBlanksSuppressed()
+        return false
+    }
+
     func reset() {
         inner.reset()
-        rng = SplitMix64(seed: seed)
+        rng = SplitMix64(seed: Self.decoratorSeed(from: seed))
         seenHashes.removeAll(keepingCapacity: true)
         warnings.removeAll(keepingCapacity: true)
         affixWarningIssued = false
+        blankWarningIssued = false
+    }
+
+    private func warnBlanksSuppressed() {
+        guard !blankWarningIssued else { return }
+        blankWarningIssued = true
+        warnings.append(
+            GenerationWarning(
+                column: columnName,
+                message: String(
+                    format: String(localized: "%@ has to be distinct, so blank values are not written to it."),
+                    columnName
+                )
+            )
+        )
     }
 
     private func uniqueChecked(row: RowContext, index: Int) throws -> PluginCellValue {
