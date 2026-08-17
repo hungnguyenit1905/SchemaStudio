@@ -18,6 +18,9 @@ enum GenerationError: Error, Equatable {
     case columnDependencyCycle(table: String, columns: [String])
     case unsupportedProfileVersion(found: Int, supported: Int)
     case unknownColumn(table: String, column: String)
+    case referencePoolTooSmall(table: String, columns: [String], poolCount: Int, rowCount: Int)
+    case destructiveOperationBlocked(table: String)
+    case writeFailed(table: String, reason: String)
 }
 
 extension GenerationError: LocalizedError {
@@ -94,6 +97,23 @@ extension GenerationError: LocalizedError {
             )
         case .unknownColumn(let table, let column):
             return String(format: String(localized: "%@ has no column named %@."), table, column)
+        case .referencePoolTooSmall(let table, let columns, let poolCount, let rowCount):
+            return String(
+                format: String(
+                    localized: "%@ (%@) has %d rows to point at, which is fewer than the %d rows being generated."
+                ),
+                table,
+                columns.joined(separator: ", "),
+                poolCount,
+                rowCount
+            )
+        case .destructiveOperationBlocked(let table):
+            return String(
+                format: String(localized: "This connection does not allow emptying %@."),
+                table
+            )
+        case .writeFailed(let table, let reason):
+            return String(format: String(localized: "Writing rows into %@ failed: %@"), table, reason)
         }
     }
 
@@ -144,6 +164,14 @@ extension GenerationError: LocalizedError {
             return String(localized: "Update SchemaStudio, or rebuild the profile in this version.")
         case .unknownColumn:
             return String(localized: "Reload the profile so it matches the table as it is now.")
+        case .referencePoolTooSmall:
+            return String(localized: "Generate fewer rows, or pick a way of reusing parent rows other than one to one.")
+        case .destructiveOperationBlocked:
+            return String(
+                localized: "Turn off Empty table before generating, or allow destructive operations on this connection."
+            )
+        case .writeFailed:
+            return String(localized: "Check the server's error, then run the generation again.")
         }
     }
 }
