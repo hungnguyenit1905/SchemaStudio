@@ -1,0 +1,208 @@
+---
+title: Data Generation
+description: Fill tables with valid test data generated from their own schema, with foreign keys, unique constraints and column types respected.
+---
+
+Data Generation writes test rows into your tables. It reads the structure of each table you pick,
+chooses a generator for every column, and inserts rows that satisfy the constraints already on the
+table: types and lengths, `NOT NULL`, primary keys, unique constraints, foreign keys, enum value
+lists, and auto-increment columns. Open it from **Tools > Data Generation…**, or right-click a
+database or schema in the sidebar and pick **Data Generation…** to start with that connection
+already filled in.
+
+<Note>
+The target connection has to allow writes, so a read-only [Safe Mode](/features/safe-mode) level
+blocks the run. Generation writes into the database you point it at and never into a second
+connection.
+</Note>
+
+It opens in its own tab rather than a modal, because the configuration is a **profile**: it has a
+name, it is saved, and it is run again later against the same database.
+
+## The four steps
+
+1. **Scope.** Pick a connection, a database, and a schema, then tick the tables to fill. The list is
+   ordered by foreign key dependency, not alphabetically, so a parent table always appears above its
+   children. Ticking a table whose foreign key points at an unticked table raises a warning and
+   offers to tick the parent too.
+2. **Tables.** Set how many rows each table gets, and whether it is emptied first.
+3. **Columns.** Review the generator picked for each column and change it where you want something
+   different. This is where most of the work happens.
+4. **Run.** Preview a sample, set the run options, then start.
+
+## Table settings
+
+| Setting | What it does | Default |
+| ------- | ------------ | ------- |
+| Number of records | How many rows to insert into this table. | 1,000 |
+| Empty table before generating | Removes the existing rows first. `TRUNCATE` when nothing points at the table, `DELETE` when a foreign key does. | Off |
+| Enabled | Leaves the table configured but skips it on this run. | On |
+
+## How a column gets its generator
+
+Every column arrives with a generator already chosen. Four rules run in order, and the first one
+that matches wins.
+
+1. **The constraint decides.** A generated or computed column is left out of the insert entirely. An
+   auto-increment or identity column is left to the server. A column with a foreign key gets
+   **Reference**, which draws from the parent's keys. A column with an enum type gets **List**,
+   filled with that type's own values.
+2. **The name decides.** A column called `email` gets **Email**, `first_name` gets **First name**,
+   `created_at` gets a **Date and time** in the past, `updated_at` gets a time that is always at or
+   after `created_at`. Around fifty name patterns are recognised, and the table's own name is
+   stripped off first, so `user_email` on table `user` is still read as `email`.
+3. **The type decides.** Anything the name rules do not recognise falls back to its type: an
+   integer column gets a number in a readable range, a `varchar` gets words sized to fit its length,
+   a `uuid` column gets a UUID.
+4. **The CHECK constraint narrows it.** `age > 0` sets a minimum. `status IN ('a','b')` switches the
+   column to a **List** of exactly those values. `length(code) <= 8` caps the length. A CHECK the
+   app cannot read leaves the generator alone and marks the column with a warning icon, so you know
+   the constraint is not being enforced by the generator.
+
+The type always beats the name. A column called `email` that holds an integer skips the name rules
+and falls through to its type.
+
+## Generators
+
+Every generator takes its own settings, shown in the panel below the column list. These settings
+apply to all of them:
+
+- **Null percentage**: share of rows where the column is `NULL`. Refused on a `NOT NULL` column.
+- **Blank percentage**: share of rows where the column is an empty string.
+- **Unique**: no two rows repeat a value. Refused before the run starts if the generator cannot
+  produce as many distinct values as there are rows.
+- **Prefix**, **suffix**, and **case**: applied to the generated value before the length limit is
+  checked.
+- **Sort**: writes the values in ascending or descending order rather than in generation order.
+
+The catalog:
+
+| Group | Generators |
+| ----- | ---------- |
+| Control | Auto increment, Fixed, List, Reference, Regex, SQL query, Expression, Sequence, Null, Column default, Copy from column |
+| Basic | Integer, Decimal, Double, Boolean, Random string, Random bytes, UUID, Bit, JSON, XML |
+| Date and time | Date, Time, Date and time, Timestamp, Relative date and time |
+| Person | First name, Last name, Middle name, Full name, Gender, Age, Title, National ID, Job title |
+| Contact | Email, Phone number, Mobile number, URL, Domain, Username, IPv4, IPv6, MAC address |
+| Address | Country, Country code, State, City, Street address, Street name, Building number, Postal code, Latitude, Longitude, Full address, Time zone |
+| Business | Company name, Department, Product name, Price, Currency code, Credit card number, Card expiry, CVV, IBAN, SWIFT, Tax ID, SKU, EAN-13, ISBN-13 |
+| Text | Lorem word, Lorem sentence, Lorem paragraph, Lorem text, Slug, Colour, File name, MIME type, User agent, SemVer |
+
+Credit card numbers, EAN-13 and ISBN-13 carry correct check digits, so a column validated by the
+application that reads it still passes.
+
+### Columns that depend on each other
+
+Some generators read another column in the same row:
+
+- **Copy from column** repeats another column's value.
+- **Expression** builds a string from a template: `{{first_name}}.{{last_name}}@example.com`.
+- **Relative date and time** takes a base column and an offset range, so `updated_at` is always at
+  or after `created_at` instead of landing before it.
+- **Email** and **Slug** accept the same placeholders, so an address matches the name in its row.
+
+The columns are ordered by these dependencies before the row is built. Two columns that point at
+each other are a configuration error and are reported before the run.
+
+### Reference, and where the keys come from
+
+A **Reference** column draws from the parent table's keys. When the parent is also being generated,
+its keys are collected as they are inserted. When it is not, they are read from the table that is
+already there. A parent with no rows and a `NOT NULL` foreign key fails before anything is written,
+and the message names both tables.
+
+| Strategy | What it does |
+| -------- | ------------ |
+| Random | Any parent key, evenly. |
+| Round robin | Each parent key in turn, so the children are spread exactly evenly. |
+| Weighted | A few parents get most of the children, which is closer to how real data looks. |
+| One to one | Each parent key used once. Needs at least as many parent rows as child rows. |
+| Ensure coverage | Every parent gets at least one child, then the rest are random. Useful when a join must not drop rows. |
+
+## Distribution
+
+Numeric generators take a distribution: uniform, normal, or exponential. Uniform data makes an index
+benchmark meaningless, because a real column is rarely evenly spread. The reference strategies above
+do the same job for foreign keys.
+
+## Locale
+
+Names, addresses, companies and phone numbers come from locale datasets. `en_US` and `vi_VN` ship
+with the app. The Vietnamese dataset carries real administrative divisions, so a generated province,
+district and ward belong together instead of being picked independently.
+
+## Preview
+
+**Preview** generates a few dozen rows and shows them in a grid without writing anything. It runs
+the same code and the same seed as the real run, so a preview row is a row you will actually get.
+
+## The seed
+
+A run is reproducible. The same profile and the same seed produce the same data every time. The seed
+is shown in the run options and can be copied, so a data set can be recreated exactly, which is what
+you want when reporting a bug against generated data. Each column draws from its own stream, so
+changing one table's row count does not change what another table gets.
+
+## Run options
+
+| Option | What it does |
+| ------ | ------------ |
+| Use a single transaction | Wraps the whole run in one transaction, so a failure leaves the database untouched. On a run of more than a million rows this grows the server's undo or write-ahead log, and the wizard warns before starting. |
+| Continue on error | Skips a batch the server rejected and carries on. Only available when a single transaction is off. |
+| Records per batch | How many rows go in one insert. Reduced automatically when the server's own limits are lower. |
+| Disable foreign key checks | Turns constraint checking off for the run where the engine allows it. |
+| Disable triggers | Stops triggers firing during the insert. Reported as skipped on engines that cannot do it. |
+
+## What runs, and in what order
+
+Everything that can be checked is checked before anything is written. The schema is read again at
+the start of the run rather than trusted from the profile, because the table may have changed since
+the profile was saved. Then the app confirms that every generator suits its column's type, that no
+`NOT NULL` column is set to produce nulls, that every unique column can produce enough distinct
+values for the requested row count, and that every referenced parent has keys available. A failure
+here stops the run before a single row is written.
+
+The tables are then sorted so a parent is always filled before its children. For each table in turn:
+the table is emptied if asked, the rows are generated and written in batches, the new keys are
+collected for any child table that references them, and the table's sequence is lifted past the
+largest key that was written. That last step matters: without it the next insert your application
+makes collides with a generated row.
+
+A table that points at itself, such as `employee.manager_id`, is not treated as a loop. It is filled
+with the column left null, then a second pass sets it from the keys that were just created.
+
+Two tables that point at each other are a loop. When one of the foreign keys allows null, the loop
+is broken there and filled in on a second pass. When none of them do, the run needs foreign key
+checks turned off. When neither is possible the run fails and names the tables in the loop.
+
+## Limits
+
+- Views, materialized views and foreign tables are not listed and cannot be filled.
+- Spatial, geometry, vector and user-defined composite types are not generated.
+- Generated and computed columns are left to the server and shown read-only.
+- A table with no primary key can be filled, but its keys cannot be collected, so no other table can
+  reference it.
+- A CHECK constraint too complex to read is not enforced by the generator. The column carries a
+  warning and the server may still reject the row.
+
+## Stopping a run
+
+**Stop** ends the run after the current batch. A statement already running on the server finishes
+first. With a single transaction on, everything is rolled back. With it off, the rows already
+committed stay, and the report says exactly how many rows landed in each table. Foreign key checks
+and triggers are turned back on either way, including after a failure.
+
+## The report
+
+The report lists each table with the rows written, the time it took, and any warning raised along
+the way: a value truncated to fit its column, a CHECK that could not be read, a trigger option the
+engine ignored. When **Continue on error** is on, it also counts the batches that failed and shows
+the first failing row of each, so the cause is visible without re-running.
+
+## Profiles
+
+The whole configuration is saved as a named profile and run again later. Profiles store table and
+column names rather than internal identifiers, so a profile still opens after the schema changes.
+On load, the current schema is compared against it: a column that no longer exists is dropped with
+a warning, a new column is auto-mapped and highlighted, and a column whose type changed is checked
+against its generator and reset to the type default if the two no longer suit each other.
