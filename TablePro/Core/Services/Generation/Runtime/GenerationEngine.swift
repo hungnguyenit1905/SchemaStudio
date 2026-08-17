@@ -321,82 +321,12 @@ actor GenerationEngine {
         runSeed: UInt64,
         continuation: AsyncThrowingStream<GenerationEvent, Error>.Continuation
     ) async throws {
-        for requirement in builder.referenceRequirements {
-            let key = ReferenceKey(
-                schema: requirement.target.schema,
-                table: requirement.target.table,
-                columns: [requirement.target.column]
-            )
-            let tuples = try await values(for: key)
-            guard !tuples.isEmpty else {
-                try degrade(
-                    requirement: requirement,
-                    table: table,
-                    key: key,
-                    continuation: continuation
-                )
-                builder.bind(pool: ReferenceValuePool(target: requirement.target, values: [.null]))
-                continue
-            }
-            builder.bind(
-                pool: ReferenceValuePool(target: requirement.target, values: tuples.map { $0[0] })
-            )
-        }
-
-        for requirement in builder.compositeRequirements {
-            let tuples = try await values(for: requirement.key)
-            guard !tuples.isEmpty else {
-                try degrade(
-                    requirement: requirement,
-                    table: table,
-                    key: requirement.key,
-                    continuation: continuation
-                )
-                builder.bind(
-                    compositePool: try ReferencePool(
-                        key: requirement.key,
-                        tuples: [requirement.localColumns.map { _ in PluginCellValue.null }],
-                        strategy: .random,
-                        seed: poolSeed(for: requirement.key, table: table, runSeed: runSeed)
-                    )
-                )
-                continue
-            }
-            builder.bind(
-                compositePool: try ReferencePool(
-                    key: requirement.key,
-                    tuples: tuples,
-                    strategy: options.referenceStrategy,
-                    seed: poolSeed(for: requirement.key, table: table, runSeed: runSeed),
-                    rowCount: table.rowCount
-                )
-            )
-        }
-    }
-
-    private func degrade(
-        requirement: some ReferenceRequiring,
-        table: TablePlan,
-        key: ReferenceKey,
-        continuation: AsyncThrowingStream<GenerationEvent, Error>.Continuation
-    ) throws {
-        guard requirement.isNullable else {
-            throw GenerationError.emptyParentTable(
-                table: table.qualifiedName,
-                column: requirement.localColumnList,
-                parentTable: key.qualifiedName
-            )
-        }
-        continuation.yield(
-            .warning(
-                String(
-                    format: String(localized: "%@ is empty, so %@.%@ is left empty."),
-                    key.qualifiedName,
-                    table.qualifiedName,
-                    requirement.localColumnList
-                )
-            )
+        let binder = ReferencePoolBinder(
+            strategy: options.referenceStrategy,
+            values: { key in try await self.values(for: key) },
+            onDegrade: { message in continuation.yield(.warning(message)) }
         )
+        try await binder.bind(to: builder, table: table, runSeed: runSeed)
     }
 
     private func values(for key: ReferenceKey) async throws -> [[PluginCellValue]] {
@@ -405,14 +335,6 @@ actor GenerationEngine {
             return projected
         }
         return try await driver.loadDistinctValues(key: key, limit: options.referencePoolLimit)
-    }
-
-    private func poolSeed(for key: ReferenceKey, table: TablePlan, runSeed: UInt64) -> UInt64 {
-        GenerationSeed.columnSeed(
-            runSeed: runSeed,
-            table: table.qualifiedName,
-            column: "\(key.qualifiedName).\(key.columns.joined(separator: ","))"
-        )
     }
 
     private static func harvestColumns(for table: GenerationTableReference, in plan: GenerationPlan) -> [String] {

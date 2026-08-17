@@ -42,6 +42,7 @@ enum ActiveSheet: Identifiable {
     case maintenance(operation: String, tableName: String)
     case createDatabase
     case dataTransfer
+    case dataGeneration
 
     var id: String {
         switch self {
@@ -55,6 +56,7 @@ enum ActiveSheet: Identifiable {
         case .maintenance(let operation, let tableName): "maintenance-\(operation)-\(tableName)"
         case .createDatabase: "createDatabase"
         case .dataTransfer: "dataTransfer"
+        case .dataGeneration: "dataGeneration"
         }
     }
 }
@@ -184,6 +186,7 @@ final class MainContentCoordinator {
     var importFileURL: URL?
     var exportPreselectedTableNames: Set<String>?
     var dataTransferPreselectedScope: DatabaseScope?
+    var dataGenerationPreselectedScope: DatabaseScope?
     var pendingLoadTrigger: TableLoadTrigger?
     @ObservationIgnored var deferredRestoreLoadTabId: UUID?
 
@@ -1399,12 +1402,6 @@ final class MainContentCoordinator {
 
     static func stripTrailingOrderBy(from sql: String) -> String {
         QuerySqlParser.stripTrailingOrderBy(from: sql)
-    }
-
-    // MARK: - SQL Parsing
-
-    func extractTableName(from sql: String) -> String? {
-        QuerySqlParser.extractTableName(from: sql)
     }
 
     // MARK: - Sorting

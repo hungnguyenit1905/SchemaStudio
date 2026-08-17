@@ -807,6 +807,10 @@ final class MainContentCommandActions {
         coordinator?.openDataTransferWizard(preselectedScope: nil)
     }
 
+    func openDataGeneration() {
+        coordinator?.openDataGenerationWizard(preselectedScope: nil)
+    }
+
     func importTables(formatId: String) {
         coordinator?.openImportDialog(formatId: formatId)
     }

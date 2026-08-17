@@ -6,8 +6,8 @@ description: Fill tables with valid test data generated from their own schema, w
 Data Generation writes test rows into your tables. It reads the structure of each table you pick,
 chooses a generator for every column, and inserts rows that satisfy the constraints already on the
 table: types and lengths, `NOT NULL`, primary keys, unique constraints, foreign keys, enum value
-lists, and auto-increment columns. Open it from **Tools > Data Generation…**, or right-click a
-database or schema in the sidebar and pick **Data Generation…** to start with that connection
+lists, and auto-increment columns. Open it from **Tools > Generate Data…**, or right-click a
+database in the sidebar and pick **Generate Data…** to start with that connection and database
 already filled in.
 
 <Note>
@@ -16,27 +16,30 @@ blocks the run. Generation writes into the database you point it at and never in
 connection.
 </Note>
 
-It opens in its own tab rather than a modal, because the configuration is a **profile**: it has a
-name, it is saved, and it is run again later against the same database.
+It opens as a dialog you fill in, run, and close.
 
-## The four steps
+## The three steps
 
-1. **Scope.** Pick a connection, a database, and a schema, then tick the tables to fill. The list is
-   ordered by foreign key dependency, not alphabetically, so a parent table always appears above its
-   children. Ticking a table whose foreign key points at an unticked table raises a warning and
-   offers to tick the parent too.
-2. **Tables.** Set how many rows each table gets, and whether it is emptied first.
-3. **Columns.** Review the generator picked for each column and change it where you want something
-   different. This is where most of the work happens.
-4. **Run.** Preview a sample, set the run options, then start.
+1. **Scope.** Pick a connection, a database, and a schema, then tick the tables to fill and set how
+   many rows each one gets. The list is ordered by foreign key dependency, not alphabetically, so a
+   parent table always appears above its children, and the tables a selected table points at are
+   named next to it. Ticking a table whose foreign key points at an unticked table asks whether to
+   add the parent as well.
+2. **Columns.** Review the generator picked for each column and change it where you want something
+   different. This is where most of the work happens. **Preview** shows the rows the run will write.
+3. **Options.** Choose how the rows are written, read what the pre-flight found, then start. The run
+   replaces this step with a live log.
+
+The seed is on the first step. Two runs with the same seed against the same schema write the same
+rows, which is what makes a generated database worth keeping. A new dialog starts with a new seed;
+copy one out if you want to reproduce a run later.
 
 ## Table settings
 
 | Setting | What it does | Default |
 | ------- | ------------ | ------- |
-| Number of records | How many rows to insert into this table. | 1,000 |
+| Number of records | How many rows to insert into this table. | 100 |
 | Empty table before generating | Removes the existing rows first. `TRUNCATE` when nothing points at the table, `DELETE` when a foreign key does. | Off |
-| Enabled | Leaves the table configured but skips it on this run. | On |
 
 ## How a column gets its generator
 

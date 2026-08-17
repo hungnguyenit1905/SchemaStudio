@@ -172,6 +172,7 @@ struct MainContentView: View {
                     coordinator.activeSheet = nil
                     coordinator.exportPreselectedTableNames = nil
                     coordinator.dataTransferPreselectedScope = nil
+                    coordinator.dataGenerationPreselectedScope = nil
                 }
             }
         )
@@ -181,6 +182,11 @@ struct MainContentView: View {
             DataTransferWizard(
                 isPresented: dismissBinding,
                 preselectedScope: coordinator.dataTransferPreselectedScope
+            )
+        case .dataGeneration:
+            DataGenerationWizard(
+                isPresented: dismissBinding,
+                preselectedScope: coordinator.dataGenerationPreselectedScope
             )
         case .createDatabase:
             let viewModel = DatabaseSwitcherViewModel(

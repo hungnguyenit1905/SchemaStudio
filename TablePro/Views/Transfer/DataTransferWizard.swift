@@ -13,16 +13,15 @@ struct DataTransferWizard: View {
     @State private var showCloseConfirmation = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            Divider()
+        WizardShell(
+            title: String(localized: "Data Transfer"),
+            stepDescription: stepDescription,
+            errorMessage: model.step == .running ? nil : model.errorMessage
+        ) {
             content
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            Divider()
-            footer
+        } footer: {
+            footerButtons
         }
-        .frame(width: 760, height: 560)
-        .background(Color(nsColor: .windowBackgroundColor))
         .task {
             await model.loadConnections(preselectedScope: preselectedScope)
         }
@@ -58,19 +57,6 @@ struct DataTransferWizard: View {
 
     // MARK: - Chrome
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Data Transfer")
-                .font(.title3.weight(.semibold))
-            Text(stepDescription)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-    }
-
     private var stepDescription: String {
         switch model.step {
         case .endpoints:
@@ -99,24 +85,6 @@ struct DataTransferWizard: View {
         case .report:
             TransferReportView(report: model.report)
         }
-    }
-
-    private var footer: some View {
-        HStack {
-            if let errorMessage = model.errorMessage, model.step != .running {
-                Text(errorMessage)
-                    .font(.callout)
-                    .foregroundStyle(.red)
-                    .lineLimit(2)
-                    .truncationMode(.middle)
-            }
-
-            Spacer()
-
-            footerButtons
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
     }
 
     @ViewBuilder private var footerButtons: some View {

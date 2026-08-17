@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Generate test data into your tables from Tools > Generate Data, or by right-clicking a database in the sidebar. Pick the tables, review the generator it chose for each column, preview the exact rows, then run. Generated rows respect the constraints already on the table: types and lengths, required columns, primary keys, unique constraints (single and multi-column), foreign keys, enum value lists, and `CHECK` ranges where they can be read. A run is repeatable: the same seed writes the same rows.
 - Optional crash reporting, off by default. Turn it on in Settings > General > Diagnostics. Crash reports carry the stack trace, app and OS version, and nothing about your connections, queries, or data.
 
 ### Changed
