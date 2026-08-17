@@ -21,6 +21,11 @@ internal struct ClickHouseStatementGenerator {
     let columns: [String]
     let primaryKeyColumns: [String]
 
+    /// Whether the engine guarantees `primaryKeyColumns` identifies at most one
+    /// row. Only then may a mutation narrow its WHERE to them; a non-unique key
+    /// would let one edit rewrite every row that shares it.
+    let keyIsUnique: Bool
+
     func generateStatements(
         changes: [PluginRowChange],
         insertedRowData: [Int: [PluginCellValue]],
@@ -130,10 +135,11 @@ internal struct ClickHouseStatementGenerator {
 
     /// A primary key column the result set does not carry cannot be matched on,
     /// so a partial key falls back to the full row rather than narrowing the
-    /// WHERE to the subset it happens to have.
+    /// WHERE to the subset it happens to have. A key the engine does not
+    /// guarantee unique falls back for the same reason.
     private func matchColumns() -> Set<String> {
-        guard !primaryKeyColumns.isEmpty else { return Set(columns) }
         let available = Set(columns)
+        guard keyIsUnique, !primaryKeyColumns.isEmpty else { return available }
         guard primaryKeyColumns.allSatisfy(available.contains) else { return available }
         return Set(primaryKeyColumns)
     }

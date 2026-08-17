@@ -147,19 +147,37 @@ struct HostKeyStoreTests {
         let key2222 = makeTestKey(0x55)
 
         store.trust(hostname: "example.com", port: 22, key: key22, keyType: "ssh-rsa")
-        store.trust(hostname: "example.com", port: 2_222, key: key2222, keyType: "ssh-ed25519")
+        store.trust(hostname: "example.com", port: 2_222, key: key2222, keyType: "ssh-rsa")
 
         #expect(store.verify(keyData: key22, keyType: "ssh-rsa", hostname: "example.com", port: 22) == .trusted)
-        #expect(store
-            .verify(keyData: key2222, keyType: "ssh-ed25519", hostname: "example.com", port: 2_222) == .trusted)
+        #expect(store.verify(keyData: key2222, keyType: "ssh-rsa", hostname: "example.com", port: 2_222) == .trusted)
 
-        // Key from port 22 should not match port 2222
         let result = store.verify(keyData: key22, keyType: "ssh-rsa", hostname: "example.com", port: 2_222)
         switch result {
         case .mismatch:
-            break // expected — different key stored for this port
+            break
         default:
             Issue.record("Expected .mismatch when using wrong port's key, got \(result)")
+        }
+    }
+
+    @Test("A known host offering a key type that was never trusted is unknown, not a mismatch")
+    func testUntrustedKeyTypeIsUnknown() {
+        let path = makeTempFilePath()
+        defer { try? FileManager.default.removeItem(atPath: path) }
+
+        let store = HostKeyStore(filePath: path)
+        let ed25519Key = makeTestKey(0x66)
+        let rsaKey = makeTestKey(0x77)
+
+        store.trust(hostname: "example.com", port: 22, key: ed25519Key, keyType: "ssh-ed25519")
+
+        let result = store.verify(keyData: rsaKey, keyType: "ssh-rsa", hostname: "example.com", port: 22)
+        switch result {
+        case .unknown:
+            break
+        default:
+            Issue.record("Expected .unknown for an untrusted key type, got \(result)")
         }
     }
 

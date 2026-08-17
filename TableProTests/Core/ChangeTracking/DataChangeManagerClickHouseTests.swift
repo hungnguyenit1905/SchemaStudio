@@ -51,7 +51,8 @@ private final class ClickHouseStubDriver: PluginDatabaseDriver {
         ClickHouseStatementGenerator(
             table: table,
             columns: columns,
-            primaryKeyColumns: primaryKeyColumns
+            primaryKeyColumns: primaryKeyColumns,
+            keyIsUnique: false
         ).generateStatements(
             changes: changes,
             insertedRowData: insertedRowData,

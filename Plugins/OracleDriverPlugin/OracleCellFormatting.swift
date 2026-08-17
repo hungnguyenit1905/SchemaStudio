@@ -29,11 +29,11 @@ enum OracleCellFormatting {
         return formatter
     }()
 
-    private static let numericOffsetFormatter: DateFormatter = {
+    private static let zoneOffsetFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = .current
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZ"
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
         return formatter
     }()
 
@@ -46,7 +46,7 @@ enum OracleCellFormatting {
         case .utc:
             return utcFormatter.string(from: date)
         case .local, .zoned:
-            return numericOffsetFormatter.string(from: date)
+            return zoneOffsetFormatter.string(from: date)
         }
     }
 

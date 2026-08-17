@@ -18,11 +18,15 @@ import Testing
 struct ClickHouseStatementGeneratorTests {
     private let columns = ["id", "name", "email"]
 
-    private func generator(primaryKeyColumns: [String] = ["id"]) -> ClickHouseStatementGenerator {
+    private func generator(
+        primaryKeyColumns: [String] = ["id"],
+        keyIsUnique: Bool = true
+    ) -> ClickHouseStatementGenerator {
         ClickHouseStatementGenerator(
             table: "users",
             columns: columns,
-            primaryKeyColumns: primaryKeyColumns
+            primaryKeyColumns: primaryKeyColumns,
+            keyIsUnique: keyIsUnique
         )
     }
 
@@ -50,9 +54,13 @@ struct ClickHouseStatementGeneratorTests {
         )
     }
 
-    private func delete(_ change: PluginRowChange, primaryKeyColumns: [String] = ["id"])
-        throws -> ClickHouseStatementGenerator.Statement {
-        let statements = try #require(generator(primaryKeyColumns: primaryKeyColumns).generateStatements(
+    private func delete(
+        _ change: PluginRowChange,
+        primaryKeyColumns: [String] = ["id"],
+        keyIsUnique: Bool = true
+    ) throws -> ClickHouseStatementGenerator.Statement {
+        let generator = generator(primaryKeyColumns: primaryKeyColumns, keyIsUnique: keyIsUnique)
+        let statements = try #require(generator.generateStatements(
             changes: [change],
             insertedRowData: [:],
             deletedRowIndices: [0],
@@ -94,6 +102,20 @@ struct ClickHouseStatementGeneratorTests {
         let statement = try delete(
             deleteChange(originalRow: ["1", "John", "john@test.com"]),
             primaryKeyColumns: []
+        )
+
+        #expect(statement.statement.contains("`id` = ?"))
+        #expect(statement.statement.contains("`name` = ?"))
+        #expect(statement.statement.contains("`email` = ?"))
+        #expect(statement.parameters.count == 3)
+    }
+
+    @Test("A key the engine does not guarantee unique falls back to matching the full row")
+    func nonUniqueKeyFallsBackToFullRow() throws {
+        let statement = try delete(
+            deleteChange(originalRow: ["1", "John", "john@test.com"]),
+            primaryKeyColumns: ["id"],
+            keyIsUnique: false
         )
 
         #expect(statement.statement.contains("`id` = ?"))
@@ -206,7 +228,8 @@ struct ClickHouseStatementGeneratorTests {
         let generator = ClickHouseStatementGenerator(
             table: "we`ird",
             columns: ["id"],
-            primaryKeyColumns: ["id"]
+            primaryKeyColumns: ["id"],
+            keyIsUnique: true
         )
         let statements = try #require(generator.generateStatements(
             changes: [deleteChange(originalRow: ["1"])],

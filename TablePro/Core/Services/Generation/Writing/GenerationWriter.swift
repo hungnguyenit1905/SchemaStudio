@@ -77,6 +77,8 @@ final class GenerationWriter {
             )
             rowsWritten += batch.count
             record(harvested)
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
             guard continueOnError else {
                 throw GenerationError.writeFailed(table: table.qualifiedName, reason: error.localizedDescription)

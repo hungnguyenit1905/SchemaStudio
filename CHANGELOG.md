@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Saving on a read-only connection now says the connection is read-only instead of reporting that the SQL could not be generated.
 - Undo in the table structure editor steps back one edit at a time. Edits made in the same moment were folded into one step, so a single undo could revert several of them.
-- Oracle zoned and local timestamps now render with a numeric UTC offset (e.g. `+0700`) instead of always showing `Z`.
+- Oracle zoned and local timestamps now render the actual zone offset (e.g. `+07:00`) instead of always showing `Z`.
 - SequelAce now shows up as an available import source when its favorites file exists but the app itself is not installed.
 - A settings file with one malformed value (for example a row-height entry of the wrong type) no longer fails to load entirely; the one bad value falls back to its default and the rest of your settings still apply.
 - Row counts reported during a bulk-load transfer no longer double-count rows written past the internal pipeline buffer.
@@ -59,7 +59,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Editing or deleting a ClickHouse row now matches on the primary key alone. It previously matched on every column in the row, so an edit could silently affect nothing when any other column had changed, and it made ClickHouse scan far more than it needed to.
 - Data Transfer no longer fails with a foreign key error when it adds constraints to the target. Foreign keys are added with the checks off, the same way a dump and restore does it.
 - Data Transfer in Copy mode no longer blocks dropping a table that a table outside the selection still points at, when the target confirms it can disable foreign key checks. It warns instead.
 - A constraint that cannot be created in Data Transfer is now reported as a warning on that table and no longer stops the remaining tables.

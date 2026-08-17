@@ -282,6 +282,10 @@ final class ClickHousePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     // MARK: - DML Statement Generation
 
+    /// `primaryKeyColumns` here is the MergeTree `primary_key`/`sorting_key`, a
+    /// sparse index rather than a uniqueness constraint, and ClickHouse has no
+    /// unique constraints at all. Rows sharing a key are legal, so a mutation
+    /// must keep matching the full row.
     func generateStatements(
         table: String,
         columns: [String],
@@ -294,7 +298,8 @@ final class ClickHousePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         ClickHouseStatementGenerator(
             table: table,
             columns: columns,
-            primaryKeyColumns: primaryKeyColumns
+            primaryKeyColumns: primaryKeyColumns,
+            keyIsUnique: false
         ).generateStatements(
             changes: changes,
             insertedRowData: insertedRowData,
