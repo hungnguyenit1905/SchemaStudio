@@ -44,6 +44,24 @@ protocol GenerationDriver: Sendable {
     ) async throws -> [[PluginCellValue]]?
 
     func loadDistinctValues(key: ReferenceKey, limit: Int) async throws -> [[PluginCellValue]]
+
+    /// The second pass. `assignments` carries, per row, the values for
+    /// `setColumns` followed by the values for `keyColumns`, which is how a row
+    /// written with a null foreign key is found again and filled.
+    func update(
+        table: GenerationTableReference,
+        setColumns: [String],
+        keyColumns: [String],
+        assignments: [[PluginCellValue]]
+    ) async throws
+
+    /// Puts a sequence back above the keys the run wrote by hand. A driver whose
+    /// server has nothing to reset does nothing.
+    func resetSequence(
+        table: GenerationTableReference,
+        column: String,
+        sequenceName: String?
+    ) async throws
 }
 
 extension GenerationDriver {
@@ -51,4 +69,10 @@ extension GenerationDriver {
     var supportsTransactions: Bool { true }
 
     func serverLimits() async throws -> PluginServerLimits? { nil }
+
+    func resetSequence(
+        table: GenerationTableReference,
+        column: String,
+        sequenceName: String?
+    ) async throws {}
 }

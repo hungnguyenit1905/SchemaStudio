@@ -62,6 +62,13 @@ final class IntegerGenerator: ValueGenerator {
 
     var distinctValueCount: Int? { GenerationValueMapper.saturatingCount(stepCount) }
 
+    /// Only a step of one gives a contiguous domain, which is what the shuffle
+    /// over `[min, max]` assumes.
+    var integerDomain: ClosedRange<Int64>? {
+        guard step == 1, stepCount > 0, stepCount <= ShuffledRangeSource.maximumDomain else { return nil }
+        return lowerBound ... lowerBound &+ Int64(stepCount - 1)
+    }
+
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         let offset = rng.next(span: stepCount)
         return .int(lowerBound &+ Int64(bitPattern: offset &* UInt64(step)))

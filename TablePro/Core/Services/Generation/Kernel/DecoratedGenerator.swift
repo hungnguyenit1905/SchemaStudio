@@ -11,11 +11,22 @@ struct GenerationWarning: Sendable, Hashable {
     let message: String
 }
 
+/// How a column that has to hold distinct values gets them. Cheapest first: a
+/// generator whose values never repeat needs nothing, a finite integer domain is
+/// shuffled so no draw is ever wasted, and everything else is tracked.
+enum UniqueStrategy {
+    case off
+    case trusted
+    case shuffledRange(ShuffledRangeSource)
+    case tracked(UniqueTracker)
+}
+
 final class DecoratedGenerator {
     static let defaultUniqueRetryBudget = 64
 
     private let inner: any ValueGenerator
     private let columnName: String
+    private let columnBase: TransferBaseType
     private let maxLength: Int?
     private let common: CommonParams
     private let truncator: GenerationStringTruncator
@@ -23,7 +34,7 @@ final class DecoratedGenerator {
     private let seed: UInt64
 
     private var rng: SplitMix64
-    private var seenHashes: Set<UInt64> = []
+    private var unique: UniqueStrategy
     private var affixWarningIssued = false
     private var blankWarningIssued = false
     private(set) var warnings: [GenerationWarning] = []
@@ -34,16 +45,65 @@ final class DecoratedGenerator {
         common: CommonParams,
         truncator: GenerationStringTruncator,
         seed: UInt64,
+        rowCount: Int = 0,
         uniqueRetryBudget: Int = DecoratedGenerator.defaultUniqueRetryBudget
     ) {
         self.inner = inner
         columnName = column.name
+        columnBase = column.type.base
         maxLength = column.maxLength
         self.common = common
         self.truncator = truncator
         self.seed = seed
         self.uniqueRetryBudget = uniqueRetryBudget
         rng = SplitMix64(seed: Self.decoratorSeed(from: seed))
+        unique = Self.strategy(
+            inner: inner,
+            column: column,
+            common: common,
+            rowCount: rowCount,
+            seed: Self.shuffleSeed(from: seed)
+        )
+    }
+
+    /// A column the server fills is never tracked: nothing of ours is written, so
+    /// the uniqueness is the server's to keep. SQL uniqueness also does not
+    /// constrain `NULL`, which is why the tracked path lets nulls through.
+    ///
+    /// The affix and the case transform both change the value the server compares,
+    /// so a shuffle over the raw domain would no longer guarantee distinct stored
+    /// values. Those columns fall back to tracking what was actually emitted.
+    ///
+    /// A blank or a null percentage rules the shuffle out for a different reason:
+    /// a drawn value that is then thrown away cannot be put back, so a domain
+    /// sized to the row count would run out partway through a run the pre-flight
+    /// had already approved.
+    static func strategy(
+        inner: any ValueGenerator,
+        column: GenerationColumn,
+        common: CommonParams,
+        rowCount: Int,
+        seed: UInt64
+    ) -> UniqueStrategy {
+        guard common.unique || column.requiresUniqueValues else { return .off }
+        guard !inner.excludesColumnFromInsert, !column.isServerAssigned else { return .off }
+        if inner.producesDistinctValues { return .trusted }
+        if !common.hasAffix, common.textCase == .unchanged, common.blankPercent == 0,
+           common.nullPercent == 0,
+           let domain = inner.integerDomain,
+           let source = ShuffledRangeSource(domain: domain, seed: seed) {
+            return .shuffledRange(source)
+        }
+        return .tracked(
+            UniqueTracker(matching: UniqueMatching.resolve(for: column), expectedCount: rowCount)
+        )
+    }
+
+    static func shuffleSeed(from seed: UInt64) -> UInt64 {
+        FNV1aHasher.hash { hasher in
+            hasher.combine(seed)
+            hasher.combine("shuffle")
+        }
     }
 
     /// The decorator must not walk the same stream as the generator it wraps.
@@ -70,18 +130,36 @@ final class DecoratedGenerator {
     /// does not constrain them.
     private func shouldBlank() -> Bool {
         guard rng.rollsBelow(percent: common.blankPercent) else { return false }
-        guard common.unique else { return true }
+        guard mustBeDistinct else { return true }
         warnBlanksSuppressed()
         return false
+    }
+
+    private var mustBeDistinct: Bool {
+        if case .off = unique { return false }
+        return true
     }
 
     func reset() {
         inner.reset()
         rng = SplitMix64(seed: Self.decoratorSeed(from: seed))
-        seenHashes.removeAll(keepingCapacity: true)
+        resetUniqueState()
         warnings.removeAll(keepingCapacity: true)
         affixWarningIssued = false
         blankWarningIssued = false
+    }
+
+    private func resetUniqueState() {
+        switch unique {
+        case .off, .trusted:
+            return
+        case .shuffledRange(var source):
+            source.reset()
+            unique = .shuffledRange(source)
+        case .tracked(var tracker):
+            tracker.reset()
+            unique = .tracked(tracker)
+        }
     }
 
     private func warnBlanksSuppressed() {
@@ -99,12 +177,24 @@ final class DecoratedGenerator {
     }
 
     private func uniqueChecked(row: RowContext, index: Int) throws -> PluginCellValue {
-        guard common.unique else { return try shaped(row: row, index: index) }
-        for _ in 0..<uniqueRetryBudget {
-            let value = try shaped(row: row, index: index)
-            if seenHashes.insert(value.stableHash).inserted { return value }
+        switch unique {
+        case .off, .trusted:
+            return try shaped(row: row, index: index)
+        case .shuffledRange(var source):
+            defer { unique = .shuffledRange(source) }
+            guard let drawn = source.next() else {
+                throw GenerationError.uniqueExhausted(column: columnName, attempts: uniqueRetryBudget)
+            }
+            return .int(drawn)
+        case .tracked(var tracker):
+            defer { unique = .tracked(tracker) }
+            for _ in 0..<uniqueRetryBudget {
+                let value = try shaped(row: row, index: index)
+                if case .null = value { return value }
+                if tracker.admit(value) { return value }
+            }
+            throw GenerationError.uniqueExhausted(column: columnName, attempts: uniqueRetryBudget)
         }
-        throw GenerationError.uniqueExhausted(column: columnName, attempts: uniqueRetryBudget)
     }
 
     private func shaped(row: RowContext, index: Int) throws -> PluginCellValue {

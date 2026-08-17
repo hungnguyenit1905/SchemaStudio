@@ -73,7 +73,11 @@ apply to all of them:
 - **Blank percentage**: share of rows where the column is an empty string. Ignored on a column that
   is also set to **Unique**, since an empty string repeated is a repeated value; the run reports this
   once per column.
-- **Unique**: no two rows repeat a value. Refused before the run starts if the generator cannot
+- **Unique**: no two rows repeat a value, compared the way the server compares it: under a
+  case-insensitive collation such as `utf8mb4_general_ci` or `CITEXT`, `Alice` and `alice` count as
+  one value. A column whose values are a whole finite range is filled from a shuffle of that range,
+  so nothing is drawn twice and nothing is wasted retrying. Refused before the run starts if the
+  generator cannot
   produce as many distinct values as there are rows. Nulls are exempt, because SQL uniqueness does
   not constrain them.
 - **Prefix**, **suffix**, and **case**: applied to the generated value before the length limit is
@@ -186,7 +190,7 @@ checks turned off. When neither is possible the run fails and names the tables i
 - Spatial, geometry, vector and user-defined composite types are not generated.
 - Generated and computed columns are left to the server and shown read-only.
 - A table with no primary key can be filled, but its keys cannot be collected, so no other table can
-  reference it.
+  reference it and a column that needs a second pass stays empty. The run says which column and why.
 - A CHECK constraint too complex to read is not enforced by the generator. The column carries a
   warning and the server may still reject the row.
 

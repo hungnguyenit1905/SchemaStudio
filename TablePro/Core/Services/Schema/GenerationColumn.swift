@@ -44,6 +44,40 @@ struct GenerationColumn: Sendable, Hashable {
     let requiresUniqueValues: Bool
     let foreignKey: GenerationForeignKey?
 
+    /// Carried because uniqueness is the server's comparison, not ours: under a
+    /// case-insensitive collation `Alice` and `alice` are one value.
+    let collation: String?
+
+    init(
+        name: String,
+        type: TransferColumnType,
+        isNullable: Bool,
+        isPrimaryKey: Bool,
+        identityKind: IdentityKind?,
+        isGenerated: Bool,
+        defaultValue: String?,
+        checkExpressions: [String],
+        sequenceName: String?,
+        uniqueConstraints: [String],
+        requiresUniqueValues: Bool,
+        foreignKey: GenerationForeignKey?,
+        collation: String? = nil
+    ) {
+        self.name = name
+        self.type = type
+        self.isNullable = isNullable
+        self.isPrimaryKey = isPrimaryKey
+        self.identityKind = identityKind
+        self.isGenerated = isGenerated
+        self.defaultValue = defaultValue
+        self.checkExpressions = checkExpressions
+        self.sequenceName = sequenceName
+        self.uniqueConstraints = uniqueConstraints
+        self.requiresUniqueValues = requiresUniqueValues
+        self.foreignKey = foreignKey
+        self.collation = collation
+    }
+
     var isIdentity: Bool { identityKind != nil }
 
     var isServerAssigned: Bool { isGenerated || identityKind == .always }

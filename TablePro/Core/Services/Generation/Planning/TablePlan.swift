@@ -16,6 +16,14 @@ struct ColumnPlan: Sendable {
     var name: String { column.name }
 }
 
+/// A column whose values the server would otherwise have supplied from a
+/// sequence. Writing explicit keys into one leaves the sequence behind the data,
+/// so it has to be reset after the table is written.
+struct SequenceBackedColumn: Sendable, Hashable {
+    let column: String
+    let sequenceName: String?
+}
+
 struct TablePlan: Sendable {
     let reference: GenerationTableReference
     let rowCount: Int
@@ -31,6 +39,16 @@ struct TablePlan: Sendable {
     /// Foreign keys that point at a row that does not exist yet. Written as
     /// `NULL` on the first pass, filled by an `UPDATE` afterwards.
     let deferredColumns: [String]
+
+    /// Multi-column unique constraints. Single-column ones are already carried by
+    /// `GenerationColumn.requiresUniqueValues`.
+    let uniqueConstraints: [GenerationUniqueConstraint]
+
+    /// The columns a second pass can use to find a row again, and the sequence
+    /// each one is backed by where the server has one.
+    let primaryKeyColumns: [String]
+
+    let sequenceBackedColumns: [SequenceBackedColumn]
 
     /// A table whose every column is server-assigned has nothing to list, so
     /// the insert has to take the vendor's "all defaults" shape.

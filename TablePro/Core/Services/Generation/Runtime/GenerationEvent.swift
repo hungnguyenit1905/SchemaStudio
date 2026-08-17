@@ -33,6 +33,9 @@ enum GenerationEvent: Sendable {
     case tableStarted(table: String, rowCount: Int)
     case progress(table: String, rowsWritten: Int, totalRows: Int)
     case tableFinished(table: String, rowsWritten: Int, duration: TimeInterval)
+
+    /// The `UPDATE` pass that fills the foreign keys pass one had to leave empty.
+    case secondPassFinished(table: String, columns: [String], rowsUpdated: Int)
     case warning(String)
     case batchFailed(table: String, error: String)
     case finished(report: GenerationReport)

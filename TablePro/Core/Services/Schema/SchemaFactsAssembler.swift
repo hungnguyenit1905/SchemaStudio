@@ -46,7 +46,8 @@ struct SchemaFactsAssembler {
                 sequenceName: column.sequenceName,
                 uniqueConstraints: column.uniqueConstraints,
                 requiresUniqueValues: singleColumnUniqueNames.contains(column.name),
-                foreignKey: resolvedForeignKeys.first { $0.localColumns.contains(column.name) }
+                foreignKey: resolvedForeignKeys.first { $0.localColumns.contains(column.name) },
+                collation: column.collation
             )
         }
 

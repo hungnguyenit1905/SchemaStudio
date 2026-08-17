@@ -124,11 +124,13 @@ actor GenerationEngine {
                     continuation: continuation
                 )
             }
+            try await runSecondPasses(plan: plan, warnings: &warnings, continuation: continuation)
 
             if transactionOpen {
                 try await driver.commitTransaction()
                 transactionOpen = false
             }
+            try await resetSequences(plan: plan)
             await hooks.restoreForeignKeyChecks()
             continuation.yield(
                 .finished(
@@ -231,17 +233,6 @@ actor GenerationEngine {
             harvested[table.reference] = HarvestedKeys(columns: harvestColumns, rows: rows)
         }
         warnings.append(contentsOf: builder.warnings)
-        if !table.deferredColumns.isEmpty {
-            let message = String(
-                format: String(
-                    localized: "%@ is written with %@ left empty, because the rows they point at do not exist yet."
-                ),
-                table.qualifiedName,
-                table.deferredColumns.joined(separator: ", ")
-            )
-            warnings.append(GenerationWarning(column: table.deferredColumns.joined(separator: ", "), message: message))
-            continuation.yield(.warning(message))
-        }
 
         let report = Self.tableReport(table: table, writer: writer, startedAt: startedAt)
         continuation.yield(
@@ -252,6 +243,44 @@ actor GenerationEngine {
             )
         )
         reports.append(report)
+    }
+
+    /// Runs after the transaction has committed, never inside it. MySQL's
+    /// `ALTER TABLE ... AUTO_INCREMENT` is DDL and commits implicitly, so resetting
+    /// a sequence mid-run would end the run's transaction early and leave a later
+    /// failure only half rolled back. A run that never commits needs no reset
+    /// anyway: the rows it wrote are gone.
+    private func resetSequences(plan: GenerationPlan) async throws {
+        let resetter = SequenceResetter(driver: driver)
+        for table in plan.tables where !table.sequenceBackedColumns.isEmpty {
+            try await resetter.reset(table: table)
+        }
+    }
+
+    /// Runs once every table has rows, because that is the earliest point at which
+    /// the keys a deferred column has to point at exist.
+    private func runSecondPasses(
+        plan: GenerationPlan,
+        warnings: inout [GenerationWarning],
+        continuation: AsyncThrowingStream<GenerationEvent, Error>.Continuation
+    ) async throws {
+        let updater = SecondPassUpdater(driver: driver, poolLimit: options.referencePoolLimit)
+        for table in plan.tables where !table.deferredColumns.isEmpty {
+            try checkCancellation()
+            let outcome = try await updater.fill(table: table, runSeed: plan.seed)
+            warnings.append(contentsOf: outcome.warnings)
+            for warning in outcome.warnings {
+                continuation.yield(.warning(warning.message))
+            }
+            guard outcome.rowsUpdated > 0 else { continue }
+            continuation.yield(
+                .secondPassFinished(
+                    table: table.qualifiedName,
+                    columns: table.deferredColumns,
+                    rowsUpdated: outcome.rowsUpdated
+                )
+            )
+        }
     }
 
     private static func tableReport(

@@ -24,6 +24,15 @@ protocol ValueGenerator: AnyObject {
     /// back to the runtime `uniqueExhausted` error.
     var distinctValueCount: Int? { get }
 
+    /// True when the generator's own values never repeat, so a unique column
+    /// carrying it needs no tracking at all.
+    var producesDistinctValues: Bool { get }
+
+    /// The closed integer domain this generator draws from, where it has one.
+    /// A unique column over a finite domain is filled from a shuffle of that
+    /// domain rather than by drawing and rejecting duplicates.
+    var integerDomain: ClosedRange<Int64>? { get }
+
     init(params: Data, column: GenerationColumn, seed: UInt64) throws
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue
@@ -39,7 +48,13 @@ extension ValueGenerator {
 
     var distinctValueCount: Int? { nil }
 
+    var producesDistinctValues: Bool { false }
+
+    var integerDomain: ClosedRange<Int64>? { nil }
+
     var identifier: String { Self.identifier }
+
+    var excludesColumnFromInsert: Bool { Self.excludesColumnFromInsert }
 }
 
 enum GenerationParams {

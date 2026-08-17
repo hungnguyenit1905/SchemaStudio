@@ -89,13 +89,30 @@ struct GenerationPlanCompiler {
         let columns = sorted.compactMap { plansByName[$0] }
         let deferred = Set(deferredColumns)
 
+        let insertColumns = columns.filter { !$0.excludedFromInsert }.map(\.name)
         return TablePlan(
             reference: tableProfile.reference,
             rowCount: tableProfile.rowCount,
             emptyFirst: tableProfile.emptyFirst,
             columns: columns,
-            insertColumns: columns.filter { !$0.excludedFromInsert }.map(\.name),
-            deferredColumns: columns.map(\.name).filter { deferred.contains($0) }
+            insertColumns: insertColumns,
+            deferredColumns: columns.map(\.name).filter { deferred.contains($0) },
+            uniqueConstraints: live.compositeUniqueConstraints,
+            primaryKeyColumns: live.primaryKeyColumns,
+            sequenceBackedColumns: Self.sequenceBackedColumns(in: columns, written: Set(insertColumns))
         )
+    }
+
+    /// Only a column the run actually writes needs its sequence reset: one left to
+    /// the server never moved it out of step in the first place.
+    private static func sequenceBackedColumns(
+        in columns: [ColumnPlan],
+        written: Set<String>
+    ) -> [SequenceBackedColumn] {
+        columns.compactMap { plan in
+            guard written.contains(plan.name) else { return nil }
+            guard plan.column.sequenceName != nil || plan.column.isIdentity else { return nil }
+            return SequenceBackedColumn(column: plan.name, sequenceName: plan.column.sequenceName)
+        }
     }
 }

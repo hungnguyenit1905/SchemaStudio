@@ -38,6 +38,12 @@ final class RowBuilder: @unchecked Sendable {
         let consumer: (any ReferencePoolConsuming)?
         let isNullable: Bool
         let isDeferred: Bool
+        let cardinality: Int?
+
+        /// A deferred column is written as `NULL` on this pass and a column fed
+        /// from a parent's tuple is not ours to change, so neither can be redrawn
+        /// to settle a composite collision.
+        let isRedrawable: Bool
     }
 
     private struct CompositeGroup {
@@ -53,11 +59,21 @@ final class RowBuilder: @unchecked Sendable {
     private var columns: [Column] = []
     private var composites: [CompositeGroup] = []
     private var context: RowContext
+    private var compositeUnique: CompositeUniqueTracker
+    private let compositeRetryBudget: Int
 
-    init(plan: TablePlan, truncator: GenerationStringTruncator, registry: GeneratorRegistry, runSeed: UInt64) throws {
+    init(
+        plan: TablePlan,
+        truncator: GenerationStringTruncator,
+        registry: GeneratorRegistry,
+        runSeed: UInt64,
+        compositeRetryBudget: Int = DecoratedGenerator.defaultUniqueRetryBudget
+    ) throws {
         table = plan.reference
         insertColumns = plan.insertColumns
         context = RowContext(table: plan.qualifiedName, rowIndex: 0)
+        self.compositeRetryBudget = compositeRetryBudget
+        compositeUnique = CompositeUniqueTracker(constraints: [])
 
         let deferred = Set(plan.deferredColumns)
         let compositeColumns = Self.compositeGroups(in: plan)
@@ -84,14 +100,29 @@ final class RowBuilder: @unchecked Sendable {
                         column: columnPlan.column,
                         common: columnPlan.common,
                         truncator: truncator,
-                        seed: columnSeed
+                        seed: columnSeed,
+                        rowCount: plan.rowCount
                     ),
                     consumer: compositeMembers.contains(columnPlan.name) ? nil : inner as? ReferencePoolConsuming,
                     isNullable: columnPlan.column.isNullable,
-                    isDeferred: deferred.contains(columnPlan.name)
+                    isDeferred: deferred.contains(columnPlan.name),
+                    cardinality: inner.distinctValueCount,
+                    isRedrawable: !deferred.contains(columnPlan.name)
+                        && !compositeMembers.contains(columnPlan.name)
+                        && !(inner is ReferencePoolConsuming)
                 )
             )
         }
+
+        let byName = Dictionary(uniqueKeysWithValues: columns.map { ($0.name, $0) })
+        compositeUnique = CompositeUniqueTracker(
+            constraints: CompositeUniqueTracker.constraints(
+                for: plan,
+                redrawable: { byName[$0]?.isRedrawable ?? false },
+                cardinality: { byName[$0]?.cardinality }
+            ),
+            expectedCount: plan.rowCount
+        )
     }
 
     var warnings: [GenerationWarning] {
@@ -134,18 +165,42 @@ final class RowBuilder: @unchecked Sendable {
             }
         }
 
-        var row: [PluginCellValue] = []
-        row.reserveCapacity(insertColumns.count)
         var values: [String: PluginCellValue] = [:]
         for column in columns {
             let value = try resolve(column, index: index)
             context.set(value, for: column.name)
             values[column.name] = value
         }
+        try settleCompositeCollisions(in: &values, index: index)
+
+        var row: [PluginCellValue] = []
+        row.reserveCapacity(insertColumns.count)
         for name in insertColumns {
             row.append(values[name] ?? .null)
         }
         return row
+    }
+
+    private func settleCompositeCollisions(
+        in values: inout [String: PluginCellValue],
+        index: Int
+    ) throws {
+        guard !compositeUnique.isEmpty else { return }
+        var attempts = 0
+        while let collision = compositeUnique.collision(in: values) {
+            guard attempts < compositeRetryBudget else {
+                throw GenerationError.uniqueExhausted(
+                    column: collision.columns.joined(separator: ", "),
+                    attempts: attempts
+                )
+            }
+            attempts += 1
+            guard let column = columns.first(where: { $0.name == collision.redrawColumn }) else { return }
+            let value = try column.generator.next(row: context, index: index)
+            context.set(value, for: column.name)
+            values[column.name] = value
+        }
+        compositeUnique.record(values)
     }
 
     func reset() {
@@ -155,6 +210,7 @@ final class RowBuilder: @unchecked Sendable {
         for group in composites {
             group.pool?.reset()
         }
+        compositeUnique.reset()
     }
 
     private func resolve(_ column: Column, index: Int) throws -> PluginCellValue {

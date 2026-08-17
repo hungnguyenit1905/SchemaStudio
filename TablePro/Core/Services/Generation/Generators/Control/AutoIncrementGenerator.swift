@@ -40,6 +40,8 @@ final class AutoIncrementGenerator: ValueGenerator {
 
     var distinctValueCount: Int? { Int.max }
 
+    var producesDistinctValues: Bool { true }
+
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         defer { emitted += 1 }
         return .int(start &+ emitted &* step)

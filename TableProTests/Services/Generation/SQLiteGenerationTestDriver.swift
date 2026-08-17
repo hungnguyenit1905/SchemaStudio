@@ -126,6 +126,52 @@ final class SQLiteGenerationTestDriver: GenerationDriver, @unchecked Sendable {
         return nil
     }
 
+    func update(
+        table: GenerationTableReference,
+        setColumns: [String],
+        keyColumns: [String],
+        assignments: [[PluginCellValue]]
+    ) async throws {
+        guard !setColumns.isEmpty, !keyColumns.isEmpty else { return }
+        let assignmentList = setColumns.map { "\(Self.quote($0)) = ?" }.joined(separator: ", ")
+        let predicate = keyColumns.map { "\(Self.quote($0)) = ?" }.joined(separator: " AND ")
+        let sql = "UPDATE \(Self.quote(table.table)) SET \(assignmentList) WHERE \(predicate)"
+        let expected = setColumns.count + keyColumns.count
+
+        for assignment in assignments where assignment.count == expected {
+            var statement: OpaquePointer?
+            guard sqlite3_prepare_v2(handle, sql, -1, &statement, nil) == SQLITE_OK else {
+                throw SQLiteError(message: "\(lastErrorMessage) while preparing an update of \(table.table)")
+            }
+            defer { sqlite3_finalize(statement) }
+            for (offset, value) in assignment.enumerated() {
+                bind(value, to: statement, at: Int32(offset + 1))
+            }
+            guard sqlite3_step(statement) == SQLITE_DONE else {
+                throw SQLiteError(message: "\(lastErrorMessage) while updating \(table.table)")
+            }
+        }
+    }
+
+    /// SQLite hands out `max(rowid) + 1` on its own for a plain
+    /// `INTEGER PRIMARY KEY`, so only an `AUTOINCREMENT` table keeps a counter
+    /// that can fall behind, and only that table has a `sqlite_sequence` row.
+    func resetSequence(
+        table: GenerationTableReference,
+        column: String,
+        sequenceName: String?
+    ) async throws {
+        let names = try query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'sqlite_sequence'")
+        guard !names.isEmpty else { return }
+        try execute(
+            """
+            UPDATE sqlite_sequence SET seq = \
+            (SELECT COALESCE(MAX(\(Self.quote(column))), 0) FROM \(Self.quote(table.table))) \
+            WHERE name = '\(table.table.replacingOccurrences(of: "'", with: "''"))'
+            """
+        )
+    }
+
     func loadDistinctValues(key: ReferenceKey, limit: Int) async throws -> [[PluginCellValue]] {
         let columnList = key.columns.map(Self.quote).joined(separator: ", ")
         let notNull = key.columns.map { "\(Self.quote($0)) IS NOT NULL" }.joined(separator: " AND ")

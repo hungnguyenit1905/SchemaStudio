@@ -33,10 +33,29 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
     /// reaches in and cancels a run at a known point.
     var onInsert: (@Sendable (Int) async -> Void)?
 
+    struct Update: Sendable {
+        let table: GenerationTableReference
+        let setColumns: [String]
+        let keyColumns: [String]
+        let assignments: [[PluginCellValue]]
+    }
+
+    struct SequenceReset: Sendable, Hashable {
+        let table: String
+        let column: String
+        let sequenceName: String?
+    }
+
     private(set) var batches: [Batch] = []
     private(set) var emptied: [(table: GenerationTableReference, allowsTruncate: Bool)] = []
     private(set) var foreignKeyCheckCalls: [Bool] = []
     private(set) var transactionCalls: [String] = []
+    private(set) var updates: [Update] = []
+    private(set) var sequenceResets: [SequenceReset] = []
+
+    /// Every call in the order it arrived, which is how a test asserts that a
+    /// sequence reset lands after the commit rather than inside the transaction.
+    private(set) var callOrder: [String] = []
 
     init(blocksDestructiveOperations: Bool = false) {
         self.blocksDestructiveOperations = blocksDestructiveOperations
@@ -62,9 +81,20 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
         PluginServerLimits(maxPacketBytes: 1_048_576, maxBindParameters: 900)
     }
 
-    func beginTransaction() async throws { transactionCalls.append("begin") }
-    func commitTransaction() async throws { transactionCalls.append("commit") }
-    func rollbackTransaction() async throws { transactionCalls.append("rollback") }
+    func beginTransaction() async throws {
+        transactionCalls.append("begin")
+        callOrder.append("begin")
+    }
+
+    func commitTransaction() async throws {
+        transactionCalls.append("commit")
+        callOrder.append("commit")
+    }
+
+    func rollbackTransaction() async throws {
+        transactionCalls.append("rollback")
+        callOrder.append("rollback")
+    }
 
     func setForeignKeyChecks(enabled: Bool) async throws {
         foreignKeyCheckCalls.append(enabled)
@@ -88,11 +118,34 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
             throw GenerationError.writeFailed(table: table.qualifiedName, reason: "rejected by the fake driver")
         }
         batches.append(Batch(table: table, columns: columns, rows: rows))
+        callOrder.append("insert")
         await onInsert?(batches.count)
         guard !harvestColumns.isEmpty, harvestMode == .echoesInsertedColumns else { return nil }
         let positions = harvestColumns.compactMap { columns.firstIndex(of: $0) }
         guard positions.count == harvestColumns.count else { return nil }
         return rows.map { row in positions.map { row[$0] } }
+    }
+
+    func update(
+        table: GenerationTableReference,
+        setColumns: [String],
+        keyColumns: [String],
+        assignments: [[PluginCellValue]]
+    ) async throws {
+        updates.append(
+            Update(table: table, setColumns: setColumns, keyColumns: keyColumns, assignments: assignments)
+        )
+    }
+
+    func resetSequence(
+        table: GenerationTableReference,
+        column: String,
+        sequenceName: String?
+    ) async throws {
+        sequenceResets.append(
+            SequenceReset(table: table.table, column: column, sequenceName: sequenceName)
+        )
+        callOrder.append("resetSequence")
     }
 
     func loadDistinctValues(key: ReferenceKey, limit: Int) async throws -> [[PluginCellValue]] {

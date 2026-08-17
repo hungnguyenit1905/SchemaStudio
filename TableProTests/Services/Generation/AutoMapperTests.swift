@@ -21,6 +21,7 @@ enum AutoMapFixtures {
         allowedValues: [String]? = nil,
         checkExpressions: [String] = [],
         sequenceName: String? = nil,
+        collation: String? = nil,
         foreignKeys: [PluginForeignKeyInfo] = [],
         indexes: [PluginIndexInfo] = []
     ) -> GenerationColumn {
@@ -29,6 +30,7 @@ enum AutoMapFixtures {
             dataType: dataType,
             isNullable: isNullable,
             isPrimaryKey: isPrimaryKey,
+            collation: collation,
             identityKind: identityKind,
             isGenerated: isGenerated,
             allowedValues: allowedValues,

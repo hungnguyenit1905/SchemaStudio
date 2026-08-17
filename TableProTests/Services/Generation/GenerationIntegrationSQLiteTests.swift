@@ -337,12 +337,38 @@ struct GenerationIntegrationSQLiteTests {
         #expect(try driver.scalar("SELECT COUNT(*) FROM customers WHERE created_at = '2024-05-01'") == 20)
     }
 
-    @Test("A cycle is broken by leaving the nullable key empty")
-    func cycleIsBrokenAtTheNullableKey() async throws {
+    @Test("A cycle is broken on the first pass and filled on the second")
+    func cycleIsBrokenThenFilled() async throws {
         let (driver, _) = try await Self.run(rows: 20)
 
-        #expect(try driver.scalar("SELECT COUNT(*) FROM orders WHERE primary_shipment_id IS NOT NULL") == 0)
         #expect(try driver.scalar("SELECT COUNT(*) FROM shipments WHERE order_id IS NULL") == 0)
+        #expect(try driver.scalar("SELECT COUNT(*) FROM orders WHERE primary_shipment_id IS NULL") == 0)
+        #expect(
+            try driver.scalar(
+                """
+                SELECT COUNT(*) FROM orders o
+                LEFT JOIN shipments s ON s.id = o.primary_shipment_id
+                WHERE o.primary_shipment_id IS NOT NULL AND s.id IS NULL
+                """
+            ) == 0
+        )
+    }
+
+    @Test("A self-reference is filled with other rows' keys, never a row's own")
+    func selfReferenceIsFilledOnTheSecondPass() async throws {
+        let (driver, _) = try await Self.run(rows: 20)
+
+        #expect(try driver.scalar("SELECT COUNT(*) FROM customers WHERE manager_id IS NULL") == 0)
+        #expect(try driver.scalar("SELECT COUNT(*) FROM customers WHERE manager_id = id") == 0)
+        #expect(
+            try driver.scalar(
+                """
+                SELECT COUNT(*) FROM customers c
+                LEFT JOIN customers m ON m.id = c.manager_id
+                WHERE c.manager_id IS NOT NULL AND m.id IS NULL
+                """
+            ) == 0
+        )
     }
 
     @Test("The P1 acceptance run: 100k rows into a five-table schema with foreign keys")
