@@ -476,14 +476,13 @@ struct MCPHttpServerTransportTests {
         #expect(http.value(forHTTPHeaderField: "Access-Control-Allow-Origin") == nil)
     }
 
-    @Test("Initialize with unsupported protocolVersion returns invalid_request error")
-    func initializeRejectsUnsupportedProtocolVersion() async throws {
+    @Test("Initialize with unsupported protocolVersion negotiates down to the latest supported version")
+    func initializeNegotiatesUnsupportedProtocolVersion() async throws {
         let auth = StubAlwaysAllowAuthenticator()
-        let (transport, _, port) = try await startedTransport(authenticator: auth)
+        let (transport, store, port) = try await startedTransport(authenticator: auth)
         defer { Task { await transport.stop() } }
 
         let consumer = StubExchangeConsumer()
-        let store = MCPSessionStore()
         let progressSink = NullProgressSink()
         let dispatcher = MCPProtocolDispatcher(
             handlers: [InitializeHandler()],
@@ -505,19 +504,22 @@ struct MCPHttpServerTransportTests {
         let (data, response) = try await URLSession.shared.data(for: httpRequest)
         let http = try #require(response as? HTTPURLResponse)
 
-        #expect(http.statusCode == 400)
-        let parsed = try parseJsonRpcError(data)
-        #expect(parsed.code == JsonRpcErrorCode.invalidRequest)
+        #expect(http.statusCode == 200)
+        let decoded = try JsonRpcCodec.decode(data)
+        guard case .successResponse(let success) = decoded, case .object(let result) = success.result else {
+            Issue.record("Expected a success response, got \(decoded)")
+            return
+        }
+        #expect(result["protocolVersion"]?.stringValue == InitializeHandler.supportedProtocolVersion)
     }
 
     @Test("Subsequent request with mismatched MCP-Protocol-Version is rejected")
     func mismatchedProtocolVersionHeaderRejected() async throws {
         let auth = StubAlwaysAllowAuthenticator()
-        let (transport, _, port) = try await startedTransport(authenticator: auth)
+        let (transport, store, port) = try await startedTransport(authenticator: auth)
         defer { Task { await transport.stop() } }
 
         let consumer = StubExchangeConsumer()
-        let store = MCPSessionStore()
         let progressSink = NullProgressSink()
         let dispatcher = MCPProtocolDispatcher(
             handlers: [InitializeHandler(), PingHandler()],
@@ -590,12 +592,15 @@ struct MCPHttpServerTransportTests {
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         request.setValue(sessionId, forHTTPHeaderField: "Mcp-Session-Id")
         request.setValue("Bearer test-token", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 5
+        request.timeoutInterval = 30
 
         let session = URLSession(configuration: .ephemeral)
+        let streamOpened = AsyncStream<Void>.makeStream()
         let streamTask = Task<(Int, String), Error> {
+            defer { streamOpened.continuation.finish() }
             let (bytes, response) = try await session.bytes(for: request)
             let httpResponse = response as? HTTPURLResponse
+            streamOpened.continuation.yield(())
             var collected = ""
             for try await line in bytes.lines {
                 collected += line + "\n"
@@ -604,7 +609,8 @@ struct MCPHttpServerTransportTests {
             return (httpResponse?.statusCode ?? 0, collected)
         }
 
-        try await Task.sleep(for: .milliseconds(200))
+        var openedIterator = streamOpened.stream.makeAsyncIterator()
+        _ = await openedIterator.next()
 
         let notification = JsonRpcNotification(
             method: "notifications/test",

@@ -238,9 +238,9 @@ struct ChangeReapplyVersionTests {
         #expect(versions == [1, 2, 3], "Only version changes should be recorded")
     }
 
-    @Test("DataChangeManager reloadVersion increments on cell change")
+    @Test("DataChangeManager reloadVersion is not bumped by a cell change")
     @MainActor
-    func dataChangeManagerVersionIncrements() {
+    func dataChangeManagerVersionUnchangedOnCellChange() {
         let manager = DataChangeManager()
         let initialVersion = manager.reloadVersion
 
@@ -252,6 +252,6 @@ struct ChangeReapplyVersionTests {
             newValue: "new"
         )
 
-        #expect(manager.reloadVersion > initialVersion)
+        #expect(manager.reloadVersion == initialVersion)
     }
 }

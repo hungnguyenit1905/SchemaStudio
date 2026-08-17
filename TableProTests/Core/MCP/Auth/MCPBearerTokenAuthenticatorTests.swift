@@ -116,7 +116,7 @@ struct MCPBearerTokenAuthenticatorTests {
             return
         }
         #expect(principal.scopes.contains(.toolsRead))
-        #expect(principal.tokenFingerprint.count == 8)
+        #expect(principal.tokenFingerprint.count == 16)
         #expect(!principal.tokenFingerprint.contains(plaintext))
     }
 

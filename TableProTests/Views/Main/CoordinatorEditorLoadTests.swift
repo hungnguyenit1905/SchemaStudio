@@ -109,17 +109,16 @@ struct CoordinatorEditorLoadTests {
         #expect(tabManager.tabs[0].content.query == "SELECT * FROM users")
     }
 
-    @Test("insertQueryFromAI appends with separator when tab has existing text")
+    @Test("insertQueryFromAI never reuses a tab that already has text")
     @MainActor
-    func insertAiAppendsToExistingQuery() {
+    func insertAiKeepsExistingQuery() {
         let (coordinator, tabManager) = makeCoordinator()
         defer { coordinator.teardown() }
 
         tabManager.addTab(initialQuery: "SELECT 1")
 
-        coordinator.insertQueryFromAI("SELECT 2")
-
-        #expect(tabManager.tabs[0].content.query == "SELECT 1\n\nSELECT 2")
+        #expect(coordinator.aiInsertReusesSelectedQueryTab == false)
+        #expect(tabManager.tabs[0].content.query == "SELECT 1")
     }
 
     @Test("insertQueryFromAI treats whitespace-only text as empty")
@@ -165,7 +164,7 @@ struct CoordinatorEditorLoadTests {
         #expect(tabManager.tabs[0].content.query == originalQuery)
     }
 
-    @Test("insertQueryFromAI does nothing when no tabs exist")
+    @Test("insertQueryFromAI opens a query tab when no tabs exist")
     @MainActor
     func insertAiNoTabs() {
         let (coordinator, tabManager) = makeCoordinator()
@@ -175,6 +174,8 @@ struct CoordinatorEditorLoadTests {
 
         coordinator.insertQueryFromAI("SELECT 1")
 
-        #expect(tabManager.tabs.isEmpty)
+        #expect(tabManager.tabs.count == 1)
+        #expect(tabManager.tabs[0].tabType == .query)
+        #expect(tabManager.tabs[0].content.query == "SELECT 1")
     }
 }

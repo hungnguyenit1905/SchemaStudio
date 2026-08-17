@@ -12,7 +12,13 @@ import Testing
 
 @Suite("Table Query Builder - Filtered Query Fallback")
 struct TableQueryBuilderFilteredQueryTests {
-    private let builder = TableQueryBuilder(databaseType: .mysql)
+    private static let mysqlDialect = SQLDialectDescriptor(
+        identifierQuote: "`", keywords: [], functions: [], dataTypes: [],
+        regexSyntax: .regexp, booleanLiteralStyle: .numeric,
+        likeEscapeStyle: .implicit, paginationStyle: .limit
+    )
+
+    private let builder = TableQueryBuilder(databaseType: .mysql, dialect: Self.mysqlDialect)
 
     @Test("buildFilteredQuery with enabled filter produces WHERE clause")
     func filteredQueryWithEnabledFilter() {

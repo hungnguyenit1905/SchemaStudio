@@ -11,6 +11,56 @@ import Foundation
 import TableProPluginKit
 import Testing
 
+private final class ClickHouseStubDriver: PluginDatabaseDriver {
+    var supportsSchemas: Bool { false }
+    var supportsTransactions: Bool { false }
+    var currentSchema: String? { nil }
+    var serverVersion: String? { nil }
+
+    func connect() async throws {}
+    func disconnect() {}
+    func ping() async throws {}
+    func execute(query: String) async throws -> PluginQueryResult {
+        PluginQueryResult(columns: [], columnTypeNames: [], rows: [], rowsAffected: 0, executionTime: 0)
+    }
+
+    func fetchTables(schema: String?) async throws -> [PluginTableInfo] { [] }
+    func fetchColumns(table: String, schema: String?) async throws -> [PluginColumnInfo] { [] }
+    func fetchIndexes(table: String, schema: String?) async throws -> [PluginIndexInfo] { [] }
+    func fetchForeignKeys(table: String, schema: String?) async throws -> [PluginForeignKeyInfo] { [] }
+    func fetchTableDDL(table: String, schema: String?) async throws -> String { "" }
+    func fetchViewDefinition(view: String, schema: String?) async throws -> String { "" }
+    func fetchTableMetadata(table: String, schema: String?) async throws -> PluginTableMetadata {
+        PluginTableMetadata(tableName: table)
+    }
+
+    func fetchDatabases() async throws -> [String] { [] }
+    func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
+        PluginDatabaseMetadata(name: database)
+    }
+
+    func generateStatements(
+        table: String,
+        columns: [String],
+        primaryKeyColumns: [String],
+        changes: [PluginRowChange],
+        insertedRowData: [Int: [PluginCellValue]],
+        deletedRowIndices: Set<Int>,
+        insertedRowIndices: Set<Int>
+    ) -> [(statement: String, parameters: [PluginCellValue])]? {
+        ClickHouseStatementGenerator(
+            table: table,
+            columns: columns,
+            primaryKeyColumns: primaryKeyColumns
+        ).generateStatements(
+            changes: changes,
+            insertedRowData: insertedRowData,
+            deletedRowIndices: deletedRowIndices,
+            insertedRowIndices: insertedRowIndices
+        )
+    }
+}
+
 @MainActor
 @Suite("DataChangeManager ClickHouse UPDATE Validation")
 struct DataChangeManagerClickHouseTests {
@@ -23,6 +73,7 @@ struct DataChangeManagerClickHouseTests {
             primaryKeyColumns: ["id"],
             databaseType: .clickhouse
         )
+        manager.pluginDriver = ClickHouseStubDriver()
 
         manager.recordCellChange(
             rowIndex: 0,
@@ -52,6 +103,7 @@ struct DataChangeManagerClickHouseTests {
             primaryKeyColumns: ["id"],
             databaseType: .clickhouse
         )
+        manager.pluginDriver = ClickHouseStubDriver()
 
         manager.recordCellChange(
             rowIndex: 0,
@@ -103,6 +155,7 @@ struct DataChangeManagerClickHouseTests {
             primaryKeyColumns: [],
             databaseType: .clickhouse
         )
+        manager.pluginDriver = ClickHouseStubDriver()
 
         manager.recordCellChange(
             rowIndex: 0,

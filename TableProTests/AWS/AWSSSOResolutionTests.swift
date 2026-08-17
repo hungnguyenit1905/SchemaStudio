@@ -258,7 +258,7 @@ private final class AWSSSOStubProtocol: URLProtocol, @unchecked Sendable {
     }
 }
 
-@Suite("AWSSSO - fetchRoleCredentials")
+@Suite("AWSSSO - fetchRoleCredentials", .serialized)
 struct AWSSSOFetchTests {
     private let settings = AWSSSOProfileSettings(
         accountId: "111111111111",

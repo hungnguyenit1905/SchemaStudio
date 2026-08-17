@@ -102,9 +102,9 @@ struct StructureGridDelegateAddRowTests {
         #expect(manager.workingForeignKeys.count == fksBefore)
     }
 
-    @Test("Indexes sub-tab on SQLite: dataGridAddRow is a no-op (supportsAddIndex == false)")
-    func sqliteIndexes_isNoOp() {
-        let (delegate, manager) = makeDelegate(selectedTab: .indexes, type: .sqlite)
+    @Test("Indexes sub-tab on CockroachDB: dataGridAddRow is a no-op (supportsAddIndex == false)")
+    func unsupportedIndexes_addIsNoOp() {
+        let (delegate, manager) = makeDelegate(selectedTab: .indexes, type: .cockroachdb)
         let before = manager.workingIndexes.count
         delegate.dataGridAddRow()
         #expect(manager.workingIndexes.count == before)
@@ -164,9 +164,9 @@ struct StructureGridDelegateAddRowTests {
         #expect(manager.workingForeignKeys.count == after - 1)
     }
 
-    @Test("Indexes sub-tab on SQLite: dataGridDeleteRows is a no-op (supportsDropIndex == false)")
-    func sqliteIndexes_deleteIsNoOp() {
-        let (delegate, manager) = makeDelegate(selectedTab: .indexes, type: .sqlite)
+    @Test("Indexes sub-tab on CockroachDB: dataGridDeleteRows is a no-op (supportsDropIndex == false)")
+    func unsupportedIndexes_deleteIsNoOp() {
+        let (delegate, manager) = makeDelegate(selectedTab: .indexes, type: .cockroachdb)
         manager.addIndex(.placeholder())
         let before = manager.workingIndexes.count
         delegate.dataGridDeleteRows([before - 1])
