@@ -6,11 +6,6 @@
 import Foundation
 import TableProPluginKit
 
-enum ReferenceStrategy: String, Codable, Sendable, CaseIterable {
-    case random
-    case sequential
-}
-
 struct ReferenceTarget: Sendable, Hashable {
     let schema: String?
     let table: String
@@ -29,6 +24,11 @@ struct ReferenceValuePool: Sendable, Hashable {
 /// binds it before the run starts.
 protocol ReferencePoolConsuming: AnyObject {
     var referenceTarget: ReferenceTarget { get }
+
+    /// Read before the run so a strategy that pairs each row with its own parent
+    /// is checked against the pool rather than running out part way through.
+    var poolStrategy: ReferenceStrategy { get }
+
     func bind(pool: ReferenceValuePool)
 }
 
@@ -37,31 +37,24 @@ final class ReferenceGenerator: ValueGenerator, ReferencePoolConsuming {
     static let paramSchema = ParamSchema(fields: [
         ParamField(key: "schema", label: "Schema", type: .text, defaultValue: .null),
         ParamField(key: "table", label: "Table", type: .text, defaultValue: .string("")),
-        ParamField(key: "column", label: "Column", type: .text, defaultValue: .string("")),
-        ParamField(
-            key: "strategy",
-            label: "Pick",
-            type: .choice([
-                ParamChoice(value: ReferenceStrategy.random.rawValue, label: String(localized: "At random")),
-                ParamChoice(value: ReferenceStrategy.sequential.rawValue, label: String(localized: "In order"))
-            ]),
-            defaultValue: .string(ReferenceStrategy.random.rawValue)
-        )
-    ])
+        ParamField(key: "column", label: "Column", type: .text, defaultValue: .string(""))
+    ] + PoolValuePicker.paramFields())
 
     private struct Params: Codable {
         var schema: String?
         var table: String?
         var column: String?
         var strategy: ReferenceStrategy?
+        var skew: Double?
     }
 
     private let columnName: String
-    private let strategy: ReferenceStrategy
     private let seed: UInt64
+    private var picker: PoolValuePicker
     private var rng: SplitMix64
     private var pool: ReferenceValuePool?
-    private var position = 0
+
+    let poolStrategy: ReferenceStrategy
 
     let referenceTarget: ReferenceTarget
 
@@ -95,14 +88,19 @@ final class ReferenceGenerator: ValueGenerator, ReferencePoolConsuming {
             table: table,
             column: referenced
         )
-        strategy = decoded.strategy ?? .random
+        poolStrategy = decoded.strategy ?? .random
+        picker = PoolValuePicker(
+            strategy: poolStrategy,
+            skew: decoded.skew ?? PoolValuePicker.defaultSkew,
+            seed: seed
+        )
         self.seed = seed
         rng = SplitMix64(seed: seed)
     }
 
     func bind(pool: ReferenceValuePool) {
         self.pool = pool
-        position = 0
+        picker.bind(count: pool.values.count)
     }
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
@@ -112,17 +110,19 @@ final class ReferenceGenerator: ValueGenerator, ReferencePoolConsuming {
                 dependsOn: "\(referenceTarget.table).\(referenceTarget.column)"
             )
         }
-        switch strategy {
-        case .random:
-            return pool.values[rng.nextInt(upperBound: pool.values.count)]
-        case .sequential:
-            defer { position += 1 }
-            return pool.values[position % pool.values.count]
+        guard let position = picker.nextIndex(count: pool.values.count, using: &rng) else {
+            throw GenerationError.referencePoolTooSmall(
+                table: referenceTarget.table,
+                columns: [referenceTarget.column],
+                poolCount: pool.values.count,
+                rowCount: index + 1
+            )
         }
+        return pool.values[position]
     }
 
     func reset() {
         rng = SplitMix64(seed: seed)
-        position = 0
+        picker.bind(count: pool?.values.count ?? 0)
     }
 }

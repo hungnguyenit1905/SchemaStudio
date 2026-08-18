@@ -226,10 +226,10 @@ struct ControlGeneratorTests {
         #expect(try take(generator, 50).allSatisfy { $0 == .int(1) || $0 == .int(2) })
     }
 
-    @Test("Reference in sequential mode walks the pool in order and wraps")
-    func referenceSequentialWraps() throws {
+    @Test("Reference in round robin walks the pool in order and wraps")
+    func referenceRoundRobinWraps() throws {
         let generator = try ReferenceGenerator(
-            params: GeneratorTestFixtures.params(#"{"table":"parent","column":"id","strategy":"sequential"}"#),
+            params: GeneratorTestFixtures.params(#"{"table":"parent","column":"id","strategy":"roundRobin"}"#),
             column: GeneratorTestFixtures.column(name: "parent_id", dataType: "bigint"),
             seed: 1
         )

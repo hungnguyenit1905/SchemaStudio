@@ -146,15 +146,37 @@ and the message names both tables.
 | -------- | ------------ |
 | Random | Any parent key, evenly. |
 | Round robin | Each parent key in turn, so the children are spread exactly evenly. |
-| Weighted | A few parents get most of the children, which is closer to how real data looks. |
-| One to one | Each parent key used once. Needs at least as many parent rows as child rows. |
-| Ensure coverage | Every parent gets at least one child, then the rest are random. Useful when a join must not drop rows. |
+| One to one | Each parent key used once. Refused before the run when there are fewer parent rows than child rows. |
+| Ensure coverage | Every parent gets one child before any parent gets a second, so a join never drops a row. |
+| Weighted | A few parents get most of the children, which is closer to how real data looks. Skew sets how hard. |
+
+A **SQL query** column picks from its result the same way, minus one to one and ensure coverage:
+those pair each row with a parent, which only a foreign key has.
+
+### Regex
+
+A **Regex** column takes a pattern and writes values that match it: `[A-Z]{3}-[0-9]{4}` gives
+`QRV-8801`. The supported subset is literals, character classes such as `[a-z0-9]` and `[^0-9]`, the
+escapes `\d \w \s \D \W \S`, the quantifiers `{n}`, `{n,m}`, `*`, `+` and `?`, alternation,
+groups, and the anchors `^` and `$`. Backreferences and lookaround cannot be produced left to right,
+so a pattern using one is refused when you write it, with the construct named. `*`, `+` and `{n,}`
+repeat 16 times at most, or fewer where the column is shorter than that.
+
+A `CHECK` constraint carrying a pattern the generator understands sets the column up on its own.
 
 ## Distribution
 
 Numeric generators take a distribution: uniform, normal, or exponential. Uniform data makes an index
 benchmark meaningless, because a real column is rarely evenly spread. The reference strategies above
 do the same job for foreign keys.
+
+| Distribution | Settings |
+| ------------ | -------- |
+| Uniform | None. Every value in the range is as likely as any other. |
+| Normal | Mean and standard deviation, in the column's own units. Empty centres on the middle of the range and spreads it over six deviations. |
+| Exponential | Rate. Higher rates push more values towards the minimum. |
+
+A draw that lands outside the column's range is redrawn rather than folded onto the end value.
 
 ## Locale
 
@@ -220,6 +242,33 @@ checks turned off. When neither is possible the run fails and names the tables i
   reference it and a column that needs a second pass stays empty. The run says which column and why.
 - A CHECK constraint too complex to read is not enforced by the generator. The column carries a
   warning and the server may still reject the row.
+
+## How rows reach the server
+
+Where the database has a native bulk load path, the run uses it: `COPY FROM STDIN` on PostgreSQL,
+`LOAD DATA LOCAL INFILE` on MySQL. Both are faster than inserts, and both are optional. The run
+falls back to prepared batches, with no interruption and no setting to change, when the server has
+local infile turned off, when **Continue on error** is on (a bulk stream fails as a whole, so a
+single bad row would take the batch with it), or when a child table needs the parent's new keys read
+back, which a bulk stream cannot report.
+
+Batch size follows the server's own limits rather than a fixed number: PostgreSQL's 65,535 bind
+parameters, MySQL's `max_allowed_packet`, SQL Server's 2,100 parameters, SQLite's variable limit.
+A bulk stream carries no bind parameters, so it is cut by size alone and takes far more rows per
+chunk.
+
+## Resuming an interrupted run
+
+A run that is stopped, fails, or is cut off by a lost connection records how far each table got.
+Starting the same run again continues from there: tables already finished are skipped and not
+emptied again, and the table that was interrupted picks up at the row it stopped on. The resumed
+rows continue the same seeded sequence, so the finished data is identical to what an uninterrupted
+run would have written, with no repeated values in unique columns.
+
+Resuming needs the same configuration. Change the seed, the row counts, or any column's generator
+and the run starts over from the beginning, because the recorded progress no longer describes the
+data on the server. A run with **Use a single transaction** on records nothing to resume from: an
+interruption rolls it back, so there is nothing left to continue.
 
 ## Stopping a run
 

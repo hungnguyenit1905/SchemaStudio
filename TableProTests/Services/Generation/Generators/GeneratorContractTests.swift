@@ -33,12 +33,12 @@ struct GeneratorContractTests {
 
     @Test("Every generator in the catalog is registered exactly once")
     func catalogIsComplete() {
-        #expect(Self.identifiers.count == 74)
+        #expect(Self.identifiers.count == 75)
         #expect(Set(Self.identifiers).count == Self.identifiers.count)
         #expect(Set(Self.identifiers) == [
             "AutoIncrement", "Boolean", "Copy", "Date", "DateTime", "Decimal", "Default",
             "Double", "Fixed", "Integer", "List", "LoremWords", "Null", "RandomBytes",
-            "RandomString", "Reference", "UUID",
+            "RandomString", "Reference", "Regex", "UUID",
             "CompanyName", "Department", "ProductName", "Price", "CurrencyCode",
             "CreditCardNumber", "CreditCardExpiry", "CVV", "IBAN", "SWIFT", "TaxID",
             "SKU", "EAN13", "ISBN13",

@@ -14,8 +14,18 @@ struct GenerationRunOptions: Sendable {
     var singleTransaction = false
     var continueOnError = false
     var referencePoolLimit = 100_000
-    var referenceStrategy: ReferencePoolStrategy = .random
+    var referenceStrategy: ReferenceStrategy = .random
     var singleTransactionRowWarningThreshold = 1_000_000
+
+    /// Records how far each table got so an interrupted run continues instead of
+    /// starting over. Never used with `singleTransaction`, where an interruption
+    /// rolls the whole run back and there is nothing on the server to resume onto.
+    var isResumable = true
+
+    /// Uses the vendor's bulk load path (`COPY`, `LOAD DATA LOCAL INFILE`) where
+    /// the target has one. The prepared-batch path stays the fallback and runs
+    /// whenever the route rules bulk out.
+    var usesBulkLoad = true
 }
 
 /// Runs a compiled plan. Never touches the main actor: the only thing that
@@ -29,6 +39,7 @@ actor GenerationEngine {
     private let truncator: GenerationStringTruncator
     private let options: GenerationRunOptions
     private let maxBindParameters: Int
+    private let checkpoints: GenerationCheckpointStore
 
     private var isCancelled = false
     private var harvested: [GenerationTableReference: HarvestedKeys] = [:]
@@ -52,13 +63,15 @@ actor GenerationEngine {
         registry: GeneratorRegistry = .standard,
         truncator: GenerationStringTruncator = GenerationStringTruncator(unit: .unicodeScalars),
         maxBindParameters: Int = 65_535,
-        options: GenerationRunOptions = GenerationRunOptions()
+        options: GenerationRunOptions = GenerationRunOptions(),
+        checkpoints: GenerationCheckpointStore = .shared
     ) {
         self.driver = driver
         self.registry = registry
         self.truncator = truncator
         self.options = options
         self.maxBindParameters = maxBindParameters
+        self.checkpoints = checkpoints
     }
 
     func cancel() {
@@ -113,11 +126,13 @@ actor GenerationEngine {
             }
 
             let limits = try? await driver.serverLimits()
+            let resume = await resumePoints(plan: plan)
             for table in plan.tables {
                 try await generate(
                     table: table,
                     plan: plan,
                     limits: limits,
+                    resume: resume[table.qualifiedName],
                     hooks: hooks,
                     reports: &reports,
                     warnings: &warnings,
@@ -132,6 +147,7 @@ actor GenerationEngine {
             }
             try await resetSequences(plan: plan)
             await hooks.restoreForeignKeyChecks()
+            await clearCheckpoints(plan: plan)
             continuation.yield(
                 .finished(
                     report: GenerationReport(
@@ -161,6 +177,7 @@ actor GenerationEngine {
         table: TablePlan,
         plan: GenerationPlan,
         limits: PluginServerLimits?,
+        resume: GenerationCheckpoint?,
         hooks: GenerationTableHooks,
         reports: inout [GenerationTableReport],
         warnings: inout [GenerationWarning],
@@ -168,7 +185,25 @@ actor GenerationEngine {
     ) async throws {
         let startedAt = Date()
         continuation.yield(.tableStarted(table: table.qualifiedName, rowCount: table.rowCount))
-        try await hooks.emptyTable(table)
+        // A table the profile empties first has nothing worth resuming onto: the
+        // rows an earlier attempt wrote are the ones this run is about to delete.
+        let resume = table.emptyFirst ? nil : resume
+        if resume?.isComplete == true {
+            reports.append(Self.skippedReport(table: table, startedAt: startedAt))
+            continuation.yield(
+                .tableFinished(
+                    table: table.qualifiedName,
+                    rowsWritten: table.rowCount,
+                    duration: Date().timeIntervalSince(startedAt)
+                )
+            )
+            return
+        }
+
+        let firstRow = min(max(resume?.rowsWritten ?? 0, 0), table.rowCount)
+        if firstRow == 0 {
+            try await hooks.emptyTable(table)
+        }
 
         let builder = try RowBuilder(
             plan: table,
@@ -177,8 +212,26 @@ actor GenerationEngine {
             runSeed: plan.seed
         )
         try await bindPools(to: builder, table: table, runSeed: plan.seed, continuation: continuation)
+        try fastForward(builder: builder, to: firstRow)
 
-        let harvestColumns = Self.harvestColumns(for: table.reference, in: plan)
+        // A resumed table has no record of the keys its earlier batches wrote, so
+        // it never claims to harvest: a child re-reads the parent instead.
+        let harvestColumns = firstRow == 0 ? Self.harvestColumns(for: table.reference, in: plan) : []
+        let route = GenerationBulkLoadRoute.resolve(
+            supportsBulkLoad: options.usesBulkLoad && driver.supportsBulkLoad,
+            supportsLocalInfile: limits?.supportsLocalInfile,
+            requiresLocalInfile: driver.requiresLocalInfile,
+            continueOnError: options.continueOnError,
+            harvestRequired: !harvestColumns.isEmpty,
+            isResumedMidTable: firstRow > 0
+        )
+        Self.logger.info(
+            """
+            \(table.qualifiedName, privacy: .public) writes through \
+            \(route.strategy == .bulk ? "bulk load" : "prepared batches", privacy: .public)\
+            \(route.reason.map { ": \($0.rawValue)" } ?? "", privacy: .public)
+            """
+        )
         let writer = GenerationWriter(
             driver: driver,
             table: table.reference,
@@ -186,13 +239,16 @@ actor GenerationEngine {
             harvestColumns: harvestColumns,
             limits: limits,
             maxBindParameters: maxBindParameters,
-            continueOnError: options.continueOnError
+            continueOnError: options.continueOnError,
+            strategy: route.strategy,
+            rowsAlreadyWritten: firstRow,
+            onBatchWritten: checkpointRecorder(plan: plan, table: table)
         )
 
         var throttle = GenerationProgressThrottle()
         var reportedFailures = 0
         do {
-            for index in 0 ..< table.rowCount {
+            for index in firstRow ..< table.rowCount {
                 if index % Self.cancellationCheckInterval == 0 {
                     try checkCancellation()
                 }
@@ -217,8 +273,9 @@ actor GenerationEngine {
                     )
                 }
             }
-            try await writer.flush()
+            try await writer.finish()
         } catch {
+            await writer.abort()
             reports.append(Self.tableReport(table: table, writer: writer, startedAt: startedAt))
             throw error
         }
@@ -233,6 +290,15 @@ actor GenerationEngine {
             harvested[table.reference] = HarvestedKeys(columns: harvestColumns, rows: rows)
         }
         warnings.append(contentsOf: builder.warnings)
+
+        await recordCheckpoint(
+            plan: plan,
+            entry: GenerationCheckpoint(
+                table: table.qualifiedName,
+                rowsWritten: writer.rowsWritten,
+                isComplete: true
+            )
+        )
 
         let report = Self.tableReport(table: table, writer: writer, startedAt: startedAt)
         continuation.yield(
@@ -281,6 +347,70 @@ actor GenerationEngine {
                 )
             )
         }
+    }
+
+    /// Replays the rows an earlier attempt already wrote and throws them away.
+    /// This is what restores the deterministic stream: every column's generator,
+    /// every unique tracker and every pool cursor ends up in the state it was in
+    /// when the run was interrupted, so the resumed rows continue the sequence
+    /// instead of repeating its start.
+    private func fastForward(builder: RowBuilder, to firstRow: Int) throws {
+        guard firstRow > 0 else { return }
+        for index in 0 ..< firstRow {
+            if index % Self.cancellationCheckInterval == 0 {
+                try checkCancellation()
+            }
+            _ = try builder.buildRow(index: index)
+        }
+    }
+
+    private var isCheckpointing: Bool {
+        options.isResumable && !options.singleTransaction
+    }
+
+    private func resumePoints(plan: GenerationPlan) async -> [String: GenerationCheckpoint] {
+        guard isCheckpointing else { return [:] }
+        let entries = await checkpoints.load(jobId: GenerationCheckpointStore.jobId(for: plan))
+        return Dictionary(entries.map { ($0.table, $0) }, uniquingKeysWith: { _, latest in latest })
+    }
+
+    private func recordCheckpoint(plan: GenerationPlan, entry: GenerationCheckpoint) async {
+        guard isCheckpointing else { return }
+        await checkpoints.record(jobId: GenerationCheckpointStore.jobId(for: plan), entry: entry)
+    }
+
+    private func clearCheckpoints(plan: GenerationPlan) async {
+        guard isCheckpointing else { return }
+        await checkpoints.clear(jobId: GenerationCheckpointStore.jobId(for: plan))
+    }
+
+    /// The writer's per-batch hook. A checkpoint lands after the batch it counts
+    /// was accepted, never before, so a resumed run can only ever re-generate
+    /// rows the server refused.
+    private func checkpointRecorder(
+        plan: GenerationPlan,
+        table: TablePlan
+    ) -> (@Sendable (Int) async -> Void)? {
+        guard isCheckpointing else { return nil }
+        let store = checkpoints
+        let jobId = GenerationCheckpointStore.jobId(for: plan)
+        let name = table.qualifiedName
+        return { rowsWritten in
+            await store.record(
+                jobId: jobId,
+                entry: GenerationCheckpoint(table: name, rowsWritten: rowsWritten)
+            )
+        }
+    }
+
+    private static func skippedReport(table: TablePlan, startedAt: Date) -> GenerationTableReport {
+        GenerationTableReport(
+            table: table.qualifiedName,
+            rowsRequested: table.rowCount,
+            rowsWritten: table.rowCount,
+            failedBatches: 0,
+            duration: Date().timeIntervalSince(startedAt)
+        )
     }
 
     private static func tableReport(

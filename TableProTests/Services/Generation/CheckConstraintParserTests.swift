@@ -342,18 +342,35 @@ struct AutoMapperCheckRefinementTests {
         #expect(resolution.params.objectValue?["values"] == .array([.string("new"), .string("paid")]))
     }
 
-    @Test("A pattern check warns instead of generating values the server rejects")
-    func patternCheckWarns() {
+    @Test("A pattern check switches the column to the generator that can match it")
+    func patternCheckRoutesToRegex() {
         let resolution = Fixtures.resolve(
             "sku",
             "varchar(16)",
             table: "products",
             checkExpressions: ["CHECK (((sku)::text ~ '^[A-Z]{3}$'::text))"]
         )
+        #expect(resolution.identifier == RegexGenerator.identifier)
+        #expect(resolution.params.objectValue?["pattern"] == .string("^[A-Z]{3}$"))
+        #expect(resolution.warnings.isEmpty)
+    }
+
+    @Test("A pattern outside the supported subset is reported instead of half applied")
+    func unsupportedPatternWarns() {
+        let expression = "CHECK (((sku)::text ~ '^(?=.*[0-9])[A-Z]+$'::text))"
+        let resolution = Fixtures.resolve("sku", "varchar(16)", table: "products", checkExpressions: [expression])
         #expect(resolution.identifier == "SKU")
-        #expect(resolution.warnings == [
-            .uncheckedConstraint(column: "sku", expression: "CHECK (((sku)::text ~ '^[A-Z]{3}$'::text))")
-        ])
+        #expect(resolution.warnings == [.uncheckedConstraint(column: "sku", expression: expression)])
+    }
+
+    @Test("A LIKE check is not read as a regular expression", arguments: [
+        "CHECK (((sku)::text ~~ 'AB%'::text))",
+        "(`sku` like _latin1'AB%')"
+    ])
+    func likeCheckWarns(expression: String) {
+        let resolution = Fixtures.resolve("sku", "varchar(16)", table: "products", checkExpressions: [expression])
+        #expect(resolution.identifier == "SKU")
+        #expect(resolution.warnings == [.uncheckedConstraint(column: "sku", expression: expression)])
     }
 
     @Test("An unparseable check warns and leaves the generator alone")

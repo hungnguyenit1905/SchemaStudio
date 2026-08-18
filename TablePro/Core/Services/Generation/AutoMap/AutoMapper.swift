@@ -140,9 +140,25 @@ enum AutoMapper {
         case .notNull:
             draft.common.nullPercent = 0
             return true
-        case .pattern:
+        case .pattern(let pattern):
+            return applyPattern(pattern, to: &draft)
+        case .likePattern:
             return false
         }
+    }
+
+    /// A regular expression the reverse-regex generator understands is applied by
+    /// switching the column to it, because no other generator can be narrowed
+    /// into matching one. A pattern outside the supported subset is left alone
+    /// and reported, which is what the tier did for every pattern before.
+    private static func applyPattern(_ pattern: String, to draft: inout Draft) -> Bool {
+        guard [.string, .text].contains(draft.column.type.base) else { return false }
+        guard (try? RegexPatternParser.parse(pattern, repeatCap: RegexGenerator.defaultRepeatCap)) != nil else {
+            return false
+        }
+        draft.identifier = RegexGenerator.identifier
+        draft.params = .object(["pattern": .string(pattern)])
+        return true
     }
 
     /// Every generator that takes the same `min` and `max` pair, which is what a

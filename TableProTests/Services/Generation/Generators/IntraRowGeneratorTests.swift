@@ -235,10 +235,10 @@ struct IntraRowGeneratorTests {
     }
 
     @Test("A query column draws in order when asked to")
-    func sequentialDrawsFollowTheResult() throws {
+    func roundRobinDrawsFollowTheResult() throws {
         let query = try generator(
             SqlQueryGenerator.identifier,
-            params: #"{"query":"SELECT id FROM users","strategy":"sequential"}"#
+            params: #"{"query":"SELECT id FROM users","strategy":"roundRobin"}"#
         )
         let consumer = try #require(query as? any SqlQueryConsuming)
         consumer.bind(queryValues: [.int(7), .int(8)])

@@ -255,7 +255,7 @@ struct GenerationIntegrationSQLiteTests {
         let driver = try SQLiteGenerationTestDriver()
         try driver.execute(ddl)
         let plan = try GenerationPlanCompiler().compile(profile: profile(rows: rows), schema: schema())
-        let engine = GenerationEngine(
+        let engine = GenerationRuntimeFixtures.engine(
             driver: driver,
             truncator: GenerationStringTruncator.forVendor(.sqlite),
             maxBindParameters: 32_766

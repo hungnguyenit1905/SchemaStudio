@@ -73,7 +73,7 @@ final class DataGenerationWizardModel {
     /// draws from its own seeded stream and ignores the strategy entirely. It is not
     /// offered as a control for that reason, and it is set here so the preview and
     /// the run agree on it.
-    var referenceStrategy: ReferencePoolStrategy = .random
+    var referenceStrategy: ReferenceStrategy = .random
 
     var preview: GenerationPreview?
     var isPreparingPreview = false

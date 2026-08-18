@@ -146,7 +146,7 @@ struct GenerationGoldenTests {
             ReferenceKey(schema: "public", table: "authors", columns: ["id"]): (1 ... 12).map { [.int(Int64($0))] }
         ]
         let plan = try GenerationPlanCompiler().compile(profile: profile(), schema: schema())
-        let engine = GenerationEngine(
+        let engine = GenerationRuntimeFixtures.engine(
             driver: driver,
             truncator: GenerationStringTruncator.forVendor(.postgresql)
         )

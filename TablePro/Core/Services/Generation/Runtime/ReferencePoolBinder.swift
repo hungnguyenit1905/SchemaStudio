@@ -19,11 +19,11 @@ struct ReferencePoolBinder {
 
     private let values: ValuesProvider
     private let queryValues: QueryValuesProvider
-    private let strategy: ReferencePoolStrategy
+    private let strategy: ReferenceStrategy
     private let onDegrade: (String) -> Void
 
     init(
-        strategy: ReferencePoolStrategy,
+        strategy: ReferenceStrategy,
         values: @escaping ValuesProvider,
         queryValues: @escaping QueryValuesProvider,
         onDegrade: @escaping (String) -> Void
@@ -49,6 +49,7 @@ struct ReferencePoolBinder {
                 builder.bind(pool: ReferenceValuePool(target: requirement.target, values: [.null]))
                 continue
             }
+            try requirePoolFits(requirement: requirement, key: key, poolCount: tuples.count, table: table)
             builder.bind(pool: ReferenceValuePool(target: requirement.target, values: tuples.map { $0[0] }))
         }
 
@@ -76,6 +77,24 @@ struct ReferencePoolBinder {
                 )
             )
         }
+    }
+
+    /// A column that takes a parent row of its own runs out part way through the
+    /// table when there are fewer parents than rows, so the pool is measured
+    /// against the row count here, before anything is written.
+    private func requirePoolFits(
+        requirement: ReferenceRequirement,
+        key: ReferenceKey,
+        poolCount: Int,
+        table: TablePlan
+    ) throws {
+        guard requirement.strategy == .oneToOne, table.rowCount > poolCount else { return }
+        throw GenerationError.referencePoolTooSmall(
+            table: key.qualifiedName,
+            columns: key.columns,
+            poolCount: poolCount,
+            rowCount: table.rowCount
+        )
     }
 
     /// Each distinct query runs once, however many columns draw from it, because

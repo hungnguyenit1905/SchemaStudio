@@ -30,7 +30,8 @@ struct GenerationEngineTests {
     private static func shopProfile(
         customers: Int = 4,
         orders: Int = 8,
-        emptyFirst: Bool = false
+        emptyFirst: Bool = false,
+        referenceParams: JSONValue = .object([:])
     ) -> GenerationProfile {
         GenerationPlanningFixtures.profile(tables: [
             GenerationPlanningFixtures.tableProfile(
@@ -47,7 +48,11 @@ struct GenerationEngineTests {
                 rowCount: orders,
                 columns: [
                     GenerationRuntimeFixtures.columnProfile("id", generator: "AutoIncrement"),
-                    GenerationRuntimeFixtures.columnProfile("customer_id", generator: "Reference")
+                    GenerationRuntimeFixtures.columnProfile(
+                        "customer_id",
+                        generator: "Reference",
+                        params: referenceParams
+                    )
                 ]
             )
         ])
@@ -69,7 +74,7 @@ struct GenerationEngineTests {
         let driver = FakeGenerationDriver()
         driver.preloadedValues = Self.customerKeys()
         let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
-        let engine = GenerationEngine(driver: driver)
+        let engine = GenerationRuntimeFixtures.engine(driver: driver)
 
         let events = try await GenerationRuntimeFixtures.collect(engine.run(plan: plan))
 
@@ -85,13 +90,67 @@ struct GenerationEngineTests {
         driver.preloadedValues = Self.customerKeys()
         let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
 
-        _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+        _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
 
         let columns = driver.columns(for: "orders")
         let position = try #require(columns.firstIndex(of: "customer_id"))
         let values = driver.rows(for: "orders").map { $0[position].textFallback }
         #expect(values.count == 8)
         #expect(values.allSatisfy { ["1", "2", "3", "4"].contains($0) })
+    }
+
+    @Test("A one to one foreign key is refused before anything is written when the parent is too small")
+    func oneToOneIsMeasuredBeforeTheRun() async throws {
+        let driver = FakeGenerationDriver()
+        driver.preloadedValues = Self.customerKeys()
+        let plan = try GenerationRuntimeFixtures.plan(
+            profile: Self.shopProfile(referenceParams: .object(["strategy": .string("oneToOne")])),
+            schema: Self.shopSchema()
+        )
+
+        await #expect(throws: GenerationError.referencePoolTooSmall(
+            table: "public.customers",
+            columns: ["id"],
+            poolCount: 4,
+            rowCount: 8
+        )) {
+            _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
+        }
+        #expect(driver.rows(for: "orders").isEmpty)
+    }
+
+    @Test("A one to one foreign key gives every child its own parent")
+    func oneToOnePairsRowsWithParents() async throws {
+        let driver = FakeGenerationDriver()
+        driver.preloadedValues = Self.customerKeys()
+        let plan = try GenerationRuntimeFixtures.plan(
+            profile: Self.shopProfile(orders: 4, referenceParams: .object(["strategy": .string("oneToOne")])),
+            schema: Self.shopSchema()
+        )
+
+        _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
+
+        let position = try #require(driver.columns(for: "orders").firstIndex(of: "customer_id"))
+        let values = driver.rows(for: "orders").map { $0[position].textFallback }
+        #expect(Set(values).count == values.count)
+        #expect(Set(values) == ["1", "2", "3", "4"])
+    }
+
+    @Test("Ensure coverage gives every parent at least one child")
+    func ensureCoverageReachesEveryParent() async throws {
+        let driver = FakeGenerationDriver()
+        driver.preloadedValues = Self.customerKeys()
+        let plan = try GenerationRuntimeFixtures.plan(
+            profile: Self.shopProfile(referenceParams: .object(["strategy": .string("ensureCoverage")])),
+            schema: Self.shopSchema()
+        )
+
+        _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
+
+        let position = try #require(driver.columns(for: "orders").firstIndex(of: "customer_id"))
+        let values = driver.rows(for: "orders").map { $0[position].textFallback }
+        #expect(values.count == 8)
+        #expect(Set(values) == ["1", "2", "3", "4"])
     }
 
     @Test("Emptying a table first is refused on a connection that blocks destructive operations")
@@ -104,7 +163,7 @@ struct GenerationEngineTests {
         )
 
         await #expect(throws: GenerationError.destructiveOperationBlocked(table: "public.customers")) {
-            _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+            _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
         }
         #expect(driver.batches.isEmpty)
         #expect(driver.emptied.isEmpty)
@@ -120,7 +179,7 @@ struct GenerationEngineTests {
             schema: Self.shopSchema()
         )
 
-        _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+        _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
 
         #expect(driver.emptied.count == 1)
         #expect(driver.emptied[0].table.table == "customers")
@@ -135,7 +194,7 @@ struct GenerationEngineTests {
             profile: Self.shopProfile(customers: 20_000, orders: 1),
             schema: Self.shopSchema()
         )
-        let engine = GenerationEngine(driver: driver)
+        let engine = GenerationRuntimeFixtures.engine(driver: driver)
         driver.onInsert = { [engine] batches in
             guard batches == 2 else { return }
             await engine.cancel()
@@ -160,7 +219,7 @@ struct GenerationEngineTests {
         let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
 
         await #expect(throws: GenerationError.self) {
-            _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+            _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
         }
     }
 
@@ -174,7 +233,7 @@ struct GenerationEngineTests {
         let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
 
         let events = try await GenerationRuntimeFixtures.collect(
-            GenerationEngine(driver: driver, options: options).run(plan: plan)
+            GenerationRuntimeFixtures.engine(driver: driver, options: options).run(plan: plan)
         )
 
         let report = try #require(GenerationRuntimeFixtures.report(in: events))
@@ -195,7 +254,7 @@ struct GenerationEngineTests {
         #expect(plan.requiresConstraintDisable)
 
         await #expect(throws: GenerationError.self) {
-            _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+            _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
         }
         #expect(driver.foreignKeyCheckCalls == [false, true])
     }
@@ -208,7 +267,7 @@ struct GenerationEngineTests {
             schema: Self.cycleSchema(),
             canDisableConstraints: true
         )
-        let engine = GenerationEngine(driver: driver)
+        let engine = GenerationRuntimeFixtures.engine(driver: driver)
         driver.onInsert = { [engine] batches in
             guard batches == 1 else { return }
             await engine.cancel()
@@ -234,7 +293,7 @@ struct GenerationEngineTests {
 
         await #expect(throws: GenerationError.self) {
             _ = try await GenerationRuntimeFixtures.collect(
-                GenerationEngine(driver: driver, options: options).run(plan: plan)
+                GenerationRuntimeFixtures.engine(driver: driver, options: options).run(plan: plan)
             )
         }
         #expect(driver.transactionCalls == ["begin", "rollback"])
@@ -246,7 +305,7 @@ struct GenerationEngineTests {
         let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
 
         await #expect(throws: GenerationError.self) {
-            _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+            _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
         }
     }
 
@@ -277,7 +336,9 @@ struct GenerationEngineTests {
         ])
         let plan = try GenerationRuntimeFixtures.plan(profile: profile, schema: schema)
 
-        let events = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+        let events = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan)
+        )
 
         let position = try #require(driver.columns(for: "orders").firstIndex(of: "customer_id"))
         #expect(driver.rows(for: "orders").allSatisfy { $0[position].isNull })

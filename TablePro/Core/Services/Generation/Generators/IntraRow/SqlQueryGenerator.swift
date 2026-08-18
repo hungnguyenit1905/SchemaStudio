@@ -41,32 +41,23 @@ final class SqlQueryGenerator: ValueGenerator, SqlQueryConsuming {
             type: .text,
             defaultValue: .string(""),
             help: String(localized: "Leave empty to use the first column of the result.")
-        ),
-        ParamField(
-            key: "strategy",
-            label: "Pick",
-            type: .choice([
-                ParamChoice(value: ReferenceStrategy.random.rawValue, label: String(localized: "At random")),
-                ParamChoice(value: ReferenceStrategy.sequential.rawValue, label: String(localized: "In order"))
-            ]),
-            defaultValue: .string(ReferenceStrategy.random.rawValue)
         )
-    ])
+    ] + PoolValuePicker.paramFields(strategies: ReferenceStrategy.freeDrawCases))
 
     private struct Params: Codable {
         var query: String?
         var column: String?
         var strategy: ReferenceStrategy?
+        var skew: Double?
     }
 
     private static let readOnlyKeywords = ["select", "with"]
 
     private let columnName: String
-    private let strategy: ReferenceStrategy
     private let seed: UInt64
+    private var picker: PoolValuePicker
     private var rng: SplitMix64
     private var values: [PluginCellValue] = []
-    private var position = 0
 
     let querySource: SqlQuerySource
 
@@ -90,7 +81,14 @@ final class SqlQueryGenerator: ValueGenerator, SqlQueryConsuming {
         columnName = column.name
         let requestedColumn = decoded.column ?? ""
         querySource = SqlQuerySource(query: query, column: requestedColumn.isEmpty ? nil : requestedColumn)
-        strategy = decoded.strategy ?? .random
+        let strategy = decoded.strategy ?? .random
+        guard strategy.drawsFreely else {
+            throw GenerationError.invalidParameters(
+                generator: Self.identifier,
+                reason: "\(strategy.rawValue) pairs rows with a parent table, so a query cannot use it"
+            )
+        }
+        picker = PoolValuePicker(strategy: strategy, skew: decoded.skew ?? PoolValuePicker.defaultSkew, seed: seed)
         self.seed = seed
         rng = SplitMix64(seed: seed)
     }
@@ -99,25 +97,22 @@ final class SqlQueryGenerator: ValueGenerator, SqlQueryConsuming {
 
     func bind(queryValues: [PluginCellValue]) {
         values = queryValues
-        position = 0
+        picker.bind(count: queryValues.count)
     }
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
         guard !values.isEmpty else {
             throw GenerationError.dependencyMissing(column: columnName, dependsOn: querySource.query)
         }
-        switch strategy {
-        case .random:
-            return values[rng.nextInt(upperBound: values.count)]
-        case .sequential:
-            defer { position += 1 }
-            return values[position % values.count]
+        guard let position = picker.nextIndex(count: values.count, using: &rng) else {
+            throw GenerationError.queryValuesUnavailable(table: querySource.query, column: columnName)
         }
+        return values[position]
     }
 
     func reset() {
         rng = SplitMix64(seed: seed)
-        position = 0
+        picker.bind(count: values.count)
     }
 
     /// Leading comments are stripped before the first keyword is read, because

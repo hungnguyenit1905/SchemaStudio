@@ -16,6 +16,15 @@ protocol GenerationDriver: Sendable {
 
     var supportsTransactions: Bool { get }
 
+    /// Whether `bulkLoadWriter` can hand one back. Asking has to be possible
+    /// without opening a load, because opening one commits the connection to it.
+    var supportsBulkLoad: Bool { get }
+
+    /// Whether the vendor's bulk path needs a client-side local infile, which
+    /// most hosting disables. MySQL's `LOAD DATA LOCAL INFILE` does; `COPY` does
+    /// not.
+    var requiresLocalInfile: Bool { get }
+
     func serverLimits() async throws -> PluginServerLimits?
 
     func beginTransaction() async throws
@@ -42,6 +51,13 @@ protocol GenerationDriver: Sendable {
         rows: [[PluginCellValue]],
         harvestColumns: [String]
     ) async throws -> [[PluginCellValue]]?
+
+    /// Opens the vendor's bulk load path for one table. Returning nil is not an
+    /// error: the caller writes prepared batches instead.
+    func bulkLoadWriter(
+        table: GenerationTableReference,
+        columns: [String]
+    ) async throws -> (any PluginBulkLoadWriter)?
 
     func loadDistinctValues(key: ReferenceKey, limit: Int) async throws -> [[PluginCellValue]]
 
@@ -72,8 +88,15 @@ protocol GenerationDriver: Sendable {
 extension GenerationDriver {
     var blocksDestructiveOperations: Bool { false }
     var supportsTransactions: Bool { true }
+    var supportsBulkLoad: Bool { false }
+    var requiresLocalInfile: Bool { false }
 
     func serverLimits() async throws -> PluginServerLimits? { nil }
+
+    func bulkLoadWriter(
+        table: GenerationTableReference,
+        columns: [String]
+    ) async throws -> (any PluginBulkLoadWriter)? { nil }
 
     func loadQueryValues(source: SqlQuerySource, limit: Int) async throws -> [PluginCellValue] { [] }
 

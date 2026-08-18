@@ -13,6 +13,7 @@ enum CheckConstraint: Sendable, Hashable {
     case nonEmpty
     case notNull
     case pattern(String)
+    case likePattern(String)
 }
 
 /// What a single `CHECK` expression yielded. `isComplete` is false when part of
@@ -143,9 +144,13 @@ enum CheckConstraintParser {
             guard names(groups[0], column) else { return nil }
             return [.nonEmpty]
         },
-        Matcher("\(identifierPattern)\\s*(?:~\\*|~|regexp|rlike|like|ilike)\\s*'(.*)'") { groups, column in
+        Matcher("\(identifierPattern)\\s*(?:~\\*|~|regexp|rlike)\\s*'(.*)'") { groups, column in
             guard names(groups[0], column) else { return nil }
             return [.pattern(groups[1])]
+        },
+        Matcher("\(identifierPattern)(?:\\s+(?:like|ilike)\\s*|\\s*~~\\*?\\s*)'(.*)'") { groups, column in
+            guard names(groups[0], column) else { return nil }
+            return [.likePattern(groups[1])]
         },
         Matcher("regexp_like\\s*\\(\\s*\(identifierPattern)\\s*,\\s*'(.*)'\\s*\\)") { groups, column in
             guard names(groups[0], column) else { return nil }

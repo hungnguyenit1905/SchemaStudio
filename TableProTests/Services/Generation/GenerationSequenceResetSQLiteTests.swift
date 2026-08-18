@@ -66,7 +66,7 @@ struct GenerationSequenceResetSQLiteTests {
         let driver = try SQLiteGenerationTestDriver()
         try driver.execute(ddl)
         let plan = try GenerationPlanCompiler().compile(profile: profile(rows: rows), schema: schema())
-        let engine = GenerationEngine(
+        let engine = GenerationRuntimeFixtures.engine(
             driver: driver,
             truncator: GenerationStringTruncator.forVendor(.sqlite),
             maxBindParameters: 32_766
@@ -99,7 +99,7 @@ struct GenerationSequenceResetSQLiteTests {
         let fake = FakeGenerationDriver()
         let plan = try GenerationPlanCompiler().compile(profile: Self.profile(rows: 5), schema: Self.schema())
         _ = try await GenerationRuntimeFixtures.collect(
-            GenerationEngine(
+            GenerationRuntimeFixtures.engine(
                 driver: fake,
                 options: GenerationRunOptions(singleTransaction: true)
             ).run(plan: plan)
@@ -115,7 +115,7 @@ struct GenerationSequenceResetSQLiteTests {
         fake.failInsertsFor = ["tickets"]
         let plan = try GenerationPlanCompiler().compile(profile: Self.profile(rows: 5), schema: Self.schema())
         _ = try? await GenerationRuntimeFixtures.collect(
-            GenerationEngine(
+            GenerationRuntimeFixtures.engine(
                 driver: fake,
                 options: GenerationRunOptions(singleTransaction: true)
             ).run(plan: plan)
@@ -129,7 +129,7 @@ struct GenerationSequenceResetSQLiteTests {
         let fake = FakeGenerationDriver()
         let plan = try GenerationPlanCompiler().compile(profile: Self.profile(rows: 5), schema: Self.schema())
         _ = try await GenerationRuntimeFixtures.collect(
-            GenerationEngine(driver: fake).run(plan: plan)
+            GenerationRuntimeFixtures.engine(driver: fake).run(plan: plan)
         )
         #expect(fake.sequenceResets.map(\.column) == ["id"])
 
@@ -141,7 +141,7 @@ struct GenerationSequenceResetSQLiteTests {
         ])
         let quiet = FakeGenerationDriver()
         _ = try await GenerationRuntimeFixtures.collect(
-            GenerationEngine(driver: quiet).run(
+            GenerationRuntimeFixtures.engine(driver: quiet).run(
                 plan: try GenerationPlanCompiler().compile(profile: serverFilled, schema: Self.schema())
             )
         )

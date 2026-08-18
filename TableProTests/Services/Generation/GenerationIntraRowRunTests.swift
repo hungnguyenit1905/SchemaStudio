@@ -90,7 +90,7 @@ struct GenerationIntraRowRunTests {
             schema: Self.eventsSchema()
         )
 
-        _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+        _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
 
         let created = try Self.values(driver, column: "created_at")
         let updated = try Self.values(driver, column: "updated_at")
@@ -116,7 +116,7 @@ struct GenerationIntraRowRunTests {
             schema: Self.eventsSchema()
         )
 
-        _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+        _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
 
         let firstNames = try Self.values(driver, column: "first_name").map(\.textFallback)
         let lastNames = try Self.values(driver, column: "last_name").map(\.textFallback)
@@ -143,7 +143,7 @@ struct GenerationIntraRowRunTests {
             schema: Self.eventsSchema()
         )
 
-        _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+        _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
 
         #expect(driver.queriesRun.count == 1)
         let statuses = try Self.values(driver, column: "status").map(\.textFallback)
@@ -159,7 +159,9 @@ struct GenerationIntraRowRunTests {
             schema: Self.eventsSchema()
         )
 
-        let events = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+        let events = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan)
+        )
 
         let statuses = try Self.values(driver, column: "status")
         #expect(statuses.allSatisfy { $0.isNull })
@@ -190,7 +192,7 @@ struct GenerationIntraRowRunTests {
         let plan = try GenerationRuntimeFixtures.plan(profile: profile, schema: schema)
 
         await #expect(throws: GenerationError.queryValuesUnavailable(table: "public.events", column: "status")) {
-            _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+            _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
         }
     }
 
@@ -207,7 +209,7 @@ struct GenerationIntraRowRunTests {
         )
 
         let preview = try await GenerationPreviewService(driver: driver).preview(plan: plan, rowsPerTable: 5)
-        _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: driver).run(plan: plan))
+        _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
 
         let written = driver.rows(for: "events").prefix(5)
         #expect(Array(preview.tables[0].rows) == Array(written))

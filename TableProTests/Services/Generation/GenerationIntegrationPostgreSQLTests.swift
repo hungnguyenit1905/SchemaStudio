@@ -215,7 +215,7 @@ struct GenerationIntegrationPostgreSQLTests {
             tables: ["regions", "customers", "stores", "orders", "shipments"]
         )
         let plan = try GenerationPlanCompiler().compile(profile: Self.profile(rows: 20_000), schema: schema)
-        let engine = GenerationEngine(
+        let engine = GenerationRuntimeFixtures.engine(
             driver: generationDriver,
             truncator: GenerationStringTruncator.forVendor(.postgresql)
         )

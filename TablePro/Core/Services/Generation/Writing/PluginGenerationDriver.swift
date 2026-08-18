@@ -35,8 +35,23 @@ struct PluginGenerationDriver: GenerationDriver {
 
     var supportsTransactions: Bool { pluginDriver.supportsTransactions }
 
+    var supportsBulkLoad: Bool { pluginDriver.supportsBulkLoad }
+
+    var requiresLocalInfile: Bool { databaseType == .mysql }
+
     func serverLimits() async throws -> PluginServerLimits? {
         try await pluginDriver.serverLimits()
+    }
+
+    func bulkLoadWriter(
+        table: GenerationTableReference,
+        columns: [String]
+    ) async throws -> (any PluginBulkLoadWriter)? {
+        try await pluginDriver.bulkLoadWriter(
+            table: table.table,
+            schema: table.schema ?? schema,
+            columns: columns
+        )
     }
 
     func beginTransaction() async throws {

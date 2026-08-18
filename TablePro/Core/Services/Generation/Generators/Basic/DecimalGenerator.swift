@@ -20,7 +20,7 @@ final class DecimalGenerator: ValueGenerator {
             defaultValue: .int(10_000)
         ),
         ParamField(key: "scale", label: "Decimal places", type: .integer(minimum: 0, maximum: 18), defaultValue: .null)
-    ])
+    ] + Distribution.paramFields)
 
     private struct Params: Codable {
         var min: Double?
@@ -31,6 +31,8 @@ final class DecimalGenerator: ValueGenerator {
     private let scale: Int
     private let unscaledLowerBound: Int64
     private let unscaledSpan: UInt64
+    private let scaleFactor: Double
+    private let distribution: Distribution
     private let seed: UInt64
     private var rng: SplitMix64
 
@@ -69,6 +71,8 @@ final class DecimalGenerator: ValueGenerator {
         scale = resolvedScale
         unscaledLowerBound = Int64(lower)
         unscaledSpan = UInt64(upper - lower) &+ 1
+        scaleFactor = Double(factor)
+        distribution = try Distribution(params: params, generator: Self.identifier)
         self.seed = seed
         rng = SplitMix64(seed: seed)
     }
@@ -76,8 +80,22 @@ final class DecimalGenerator: ValueGenerator {
     var distinctValueCount: Int? { GenerationValueMapper.saturatingCount(unscaledSpan) }
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
-        let unscaled = unscaledLowerBound &+ Int64(bitPattern: rng.next(span: unscaledSpan))
-        return .decimalText(Self.format(unscaled: unscaled, scale: scale))
+        guard !distribution.isUniform else {
+            let unscaled = unscaledLowerBound &+ Int64(bitPattern: rng.next(span: unscaledSpan))
+            return .decimalText(Self.format(unscaled: unscaled, scale: scale))
+        }
+        return .decimalText(Self.format(unscaled: shapedUnscaledValue(), scale: scale))
+    }
+
+    /// The distribution is drawn in the column's own units and scaled back,
+    /// because a mean of 100 on a money column means 100 currency units, not
+    /// 100 hundredths of one.
+    private func shapedUnscaledValue() -> Int64 {
+        let unscaledUpperBound = unscaledLowerBound &+ Int64(unscaledSpan - 1)
+        let lower = Double(unscaledLowerBound) / scaleFactor
+        let upper = Double(unscaledUpperBound) / scaleFactor
+        let drawn = (distribution.sample(in: lower...upper, using: &rng) * scaleFactor).rounded()
+        return Int64(min(max(drawn, Double(unscaledLowerBound)), Double(unscaledUpperBound)))
     }
 
     func reset() {

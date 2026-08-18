@@ -72,7 +72,9 @@ struct GenerationPreviewTests {
         let plan = try GenerationPlanCompiler().compile(profile: Self.profile(rows: 500), schema: schema)
 
         let sink = FakeGenerationDriver()
-        _ = try await GenerationRuntimeFixtures.collect(GenerationEngine(driver: sink).run(plan: plan))
+        _ = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: sink).run(plan: plan)
+        )
         let written = sink.rows(for: "customers")
 
         let previewed = try await GenerationPreviewService(driver: FakeGenerationDriver())
@@ -167,7 +169,7 @@ struct GenerationPreviewTests {
         ])
         let plan = try GenerationPlanCompiler().compile(profile: profile, schema: schema)
 
-        func drawn(strategy: ReferencePoolStrategy) async throws -> [String] {
+        func drawn(strategy: ReferenceStrategy) async throws -> [String] {
             let driver = FakeGenerationDriver()
             driver.preloadedValues[
                 ReferenceKey(schema: "public", table: "regions", columns: ["country", "code"])

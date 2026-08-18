@@ -13,7 +13,7 @@ struct ReferencePoolTests {
     private static let key = ReferenceKey(schema: "public", table: "customers", columns: ["id"])
 
     private static func pool(
-        _ strategy: ReferencePoolStrategy,
+        _ strategy: ReferenceStrategy,
         values: [Int64] = [1, 2, 3, 4],
         seed: UInt64 = 42,
         rowCount: Int? = nil

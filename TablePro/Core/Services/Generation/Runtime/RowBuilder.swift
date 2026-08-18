@@ -16,6 +16,7 @@ struct ReferenceRequirement: ReferenceRequiring, Sendable, Hashable {
     let target: ReferenceTarget
     let column: String
     let isNullable: Bool
+    let strategy: ReferenceStrategy
 
     var localColumnList: String { column }
 }
@@ -175,8 +176,13 @@ final class RowBuilder: @unchecked Sendable {
     /// Single-column parents, one per generator that draws from an existing table.
     var referenceRequirements: [ReferenceRequirement] {
         columns.compactMap { column in
-            guard let target = column.consumer?.referenceTarget else { return nil }
-            return ReferenceRequirement(target: target, column: column.name, isNullable: column.isNullable)
+            guard let consumer = column.consumer else { return nil }
+            return ReferenceRequirement(
+                target: consumer.referenceTarget,
+                column: column.name,
+                isNullable: column.isNullable,
+                strategy: consumer.poolStrategy
+            )
         }
     }
 

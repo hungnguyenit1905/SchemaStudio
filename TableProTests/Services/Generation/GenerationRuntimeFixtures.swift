@@ -14,6 +14,55 @@ enum GenerationHarvestMode: Sendable {
     case echoesInsertedColumns
 }
 
+/// A bulk load stream that keeps every row it was handed, so a test can assert
+/// both the path taken and the rows that travelled it.
+final class FakeBulkLoadWriter: PluginBulkLoadWriter, @unchecked Sendable {
+    struct WriteRejected: Error {}
+
+    private let onRows: @Sendable ([[PluginCellValue]]) -> Void
+    private let failsWrites: Bool
+    private let failsWritesAfterChunks: Int?
+    private let failsFinish: Bool
+    private(set) var chunkCount = 0
+    private(set) var rowCount = 0
+    private(set) var didFinish = false
+    private(set) var didAbort = false
+
+    init(
+        failsWrites: Bool = false,
+        failsWritesAfterChunks: Int? = nil,
+        failsFinish: Bool = false,
+        onRows: @escaping @Sendable ([[PluginCellValue]]) -> Void
+    ) {
+        self.failsWrites = failsWrites
+        self.failsWritesAfterChunks = failsWritesAfterChunks
+        self.failsFinish = failsFinish
+        self.onRows = onRows
+    }
+
+    func write(row: [PluginCellValue]) async throws {
+        try await write(rows: [row])
+    }
+
+    func write(rows: [[PluginCellValue]]) async throws {
+        guard !failsWrites else { throw WriteRejected() }
+        if let failsWritesAfterChunks, chunkCount >= failsWritesAfterChunks { throw WriteRejected() }
+        chunkCount += 1
+        rowCount += rows.count
+        onRows(rows)
+    }
+
+    func finish() async throws -> Int {
+        guard !failsFinish else { throw WriteRejected() }
+        didFinish = true
+        return rowCount
+    }
+
+    func abort() async {
+        didAbort = true
+    }
+}
+
 final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
     struct Batch: Sendable {
         let table: GenerationTableReference
@@ -23,6 +72,19 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
 
     let blocksDestructiveOperations: Bool
     let supportsTransactions = true
+
+    var supportsBulkLoad = false
+    var requiresLocalInfile = false
+
+    /// A driver that claims bulk load and then hands back nothing, which is the
+    /// case the writer has to downgrade out of rather than drop rows in.
+    var handsBackBulkWriter = true
+    var failsBulkWrites = false
+    var failsBulkWritesAfterChunks: Int?
+    var failsBulkFinish = false
+    var supportsLocalInfile: Bool?
+    private(set) var bulkWriters: [FakeBulkLoadWriter] = []
+    private(set) var bulkWriterRequests: [GenerationTableReference] = []
 
     var harvestMode: GenerationHarvestMode = .unsupported
     var preloadedValues: [ReferenceKey: [[PluginCellValue]]] = [:]
@@ -80,7 +142,28 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
     }
 
     func serverLimits() async throws -> PluginServerLimits? {
-        PluginServerLimits(maxPacketBytes: 1_048_576, maxBindParameters: 900)
+        PluginServerLimits(
+            maxPacketBytes: 1_048_576,
+            maxBindParameters: 900,
+            supportsLocalInfile: supportsLocalInfile
+        )
+    }
+
+    func bulkLoadWriter(
+        table: GenerationTableReference,
+        columns: [String]
+    ) async throws -> (any PluginBulkLoadWriter)? {
+        bulkWriterRequests.append(table)
+        guard handsBackBulkWriter else { return nil }
+        let writer = FakeBulkLoadWriter(
+            failsWrites: failsBulkWrites,
+            failsWritesAfterChunks: failsBulkWritesAfterChunks,
+            failsFinish: failsBulkFinish
+        ) { [weak self] rows in
+            self?.batches.append(Batch(table: table, columns: columns, rows: rows))
+        }
+        bulkWriters.append(writer)
+        return writer
     }
 
     func beginTransaction() async throws {
@@ -174,6 +257,35 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
 }
 
 enum GenerationRuntimeFixtures {
+    /// An engine whose checkpoints go nowhere shared, which is what every suite
+    /// wants: one suite's interrupted run must never leave a resume point that
+    /// another suite's identical plan picks up.
+    static func engine(
+        driver: any GenerationDriver,
+        registry: GeneratorRegistry = .standard,
+        truncator: GenerationStringTruncator = GenerationStringTruncator(unit: .unicodeScalars),
+        maxBindParameters: Int = 65_535,
+        options: GenerationRunOptions = GenerationRunOptions()
+    ) -> GenerationEngine {
+        GenerationEngine(
+            driver: driver,
+            registry: registry,
+            truncator: truncator,
+            maxBindParameters: maxBindParameters,
+            options: options,
+            checkpoints: checkpointStore()
+        )
+    }
+
+    /// A checkpoint store of its own per engine, so one suite's interrupted run
+    /// never leaves a resume point that another suite's identical plan picks up.
+    static func checkpointStore() -> GenerationCheckpointStore {
+        GenerationCheckpointStore(
+            directory: FileManager.default.temporaryDirectory
+                .appendingPathComponent("generation-checkpoints-\(UUID().uuidString)", isDirectory: true)
+        )
+    }
+
     static func plan(
         profile: GenerationProfile,
         schema: [GenerationTable],

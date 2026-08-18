@@ -12,6 +12,7 @@ extension GeneratorRegistry {
         registry.register(FixedGenerator.self)
         registry.register(ListGenerator.self)
         registry.register(ReferenceGenerator.self)
+        registry.register(RegexGenerator.self)
         registry.register(NullGenerator.self)
         registry.register(DefaultGenerator.self)
         registry.register(CopyGenerator.self)

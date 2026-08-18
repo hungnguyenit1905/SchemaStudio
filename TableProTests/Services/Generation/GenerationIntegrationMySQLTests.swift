@@ -131,7 +131,7 @@ struct GenerationIntegrationMySQLTests {
 
         let schema = try await Self.loadSchema(adapter: adapter, tables: [Self.tickets, Self.staff])
         let plan = try GenerationPlanCompiler().compile(profile: Self.profile(rows: 2_000), schema: schema)
-        let engine = GenerationEngine(
+        let engine = GenerationRuntimeFixtures.engine(
             driver: generationDriver,
             truncator: GenerationStringTruncator.forVendor(.mysql)
         )

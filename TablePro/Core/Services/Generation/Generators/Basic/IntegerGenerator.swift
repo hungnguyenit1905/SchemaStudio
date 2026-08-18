@@ -11,14 +11,8 @@ final class IntegerGenerator: ValueGenerator {
     static let paramSchema = ParamSchema(fields: [
         ParamField(key: "min", label: "Minimum", type: .integer(minimum: nil, maximum: nil), defaultValue: .null),
         ParamField(key: "max", label: "Maximum", type: .integer(minimum: nil, maximum: nil), defaultValue: .null),
-        ParamField(key: "step", label: "Step", type: .integer(minimum: 1, maximum: nil), defaultValue: .int(1)),
-        ParamField(
-            key: "distribution",
-            label: "Distribution",
-            type: .choice([ParamChoice(value: "uniform", label: String(localized: "Uniform"))]),
-            defaultValue: .string("uniform")
-        )
-    ])
+        ParamField(key: "step", label: "Step", type: .integer(minimum: 1, maximum: nil), defaultValue: .int(1))
+    ] + Distribution.paramFields)
 
     private struct Params: Codable {
         var min: Int64?
@@ -29,6 +23,7 @@ final class IntegerGenerator: ValueGenerator {
     private let lowerBound: Int64
     private let stepCount: UInt64
     private let step: Int64
+    private let distribution: Distribution
     private let seed: UInt64
     private var rng: SplitMix64
 
@@ -56,6 +51,7 @@ final class IntegerGenerator: ValueGenerator {
         step = requestedStep
         let span = UInt64(bitPattern: upper &- lower)
         stepCount = span / UInt64(requestedStep) &+ 1
+        distribution = try Distribution(params: params, generator: Self.identifier)
         self.seed = seed
         rng = SplitMix64(seed: seed)
     }
@@ -70,7 +66,14 @@ final class IntegerGenerator: ValueGenerator {
     }
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
-        let offset = rng.next(span: stepCount)
+        guard !distribution.isUniform else {
+            let offset = rng.next(span: stepCount)
+            return .int(lowerBound &+ Int64(bitPattern: offset &* UInt64(step)))
+        }
+        let lastStep = Double(stepCount - 1)
+        let lower = Double(lowerBound)
+        let drawn = distribution.sample(in: lower...(lower + lastStep * Double(step)), using: &rng)
+        let offset = UInt64(min(max(((drawn - lower) / Double(step)).rounded(), 0), lastStep))
         return .int(lowerBound &+ Int64(bitPattern: offset &* UInt64(step)))
     }
 
