@@ -33,12 +33,25 @@ struct GeneratorContractTests {
 
     @Test("Every generator in the catalog is registered exactly once")
     func catalogIsComplete() {
-        #expect(Self.identifiers.count == 17)
+        #expect(Self.identifiers.count == 74)
         #expect(Set(Self.identifiers).count == Self.identifiers.count)
         #expect(Set(Self.identifiers) == [
             "AutoIncrement", "Boolean", "Copy", "Date", "DateTime", "Decimal", "Default",
             "Double", "Fixed", "Integer", "List", "LoremWords", "Null", "RandomBytes",
-            "RandomString", "Reference", "UUID"
+            "RandomString", "Reference", "UUID",
+            "CompanyName", "Department", "ProductName", "Price", "CurrencyCode",
+            "CreditCardNumber", "CreditCardExpiry", "CVV", "IBAN", "SWIFT", "TaxID",
+            "SKU", "EAN13", "ISBN13",
+            "City", "State", "StateCode", "PostalCode", "Country", "CountryCode",
+            "Latitude", "Longitude", "TimeZone", "StreetName", "BuildingNumber",
+            "StreetAddress", "FullAddress",
+            "FirstName", "LastName", "MiddleName", "FullName", "Gender", "Age", "Title",
+            "NationalID", "JobTitle",
+            "Email", "Username", "PhoneNumber", "MobileNumber", "Domain", "URL",
+            "IPv4", "IPv6", "MACAddress",
+            "LoremSentence", "LoremParagraph", "LoremText", "Slug", "Color", "FileName",
+            "MimeType", "UserAgent", "SemVer",
+            "Expression", "RelativeDateTime", "SQLQuery"
         ])
     }
 
@@ -49,11 +62,17 @@ struct GeneratorContractTests {
         #expect(first == second)
     }
 
+    /// `Country` and `CountryCode` sit in the exempt list because their dataset
+    /// covers one country per locale, so their domain holds a single value and no
+    /// seed can move it. That is a property of the data, not a gap in the generator.
     @Test("Different seeds produce different values for any random generator", arguments: identifiers)
     func seedsChangeOutputWhereRandomnessApplies(identifier: String) throws {
         let first = try take(make(identifier, seed: 1), 200)
         let second = try take(make(identifier, seed: 2), 200)
-        let deterministicByDesign = ["AutoIncrement", "Fixed", "Null", "Default", "Copy"]
+        let deterministicByDesign = [
+            "AutoIncrement", "Fixed", "Null", "Default", "Copy", "Country", "CountryCode", "Slug",
+            "Expression"
+        ]
         guard !deterministicByDesign.contains(identifier) else {
             #expect(first == second)
             return
@@ -128,6 +147,7 @@ struct GeneratorContractTests {
     @Test("Copy declares the row dependency that orders it after its source")
     func rowDependenciesAreDeclared() throws {
         #expect(try make("Copy").rowDependencies == ["other"])
+        #expect(try make("Slug").rowDependencies == ["other"])
         #expect(try make("Integer").rowDependencies.isEmpty)
     }
 }

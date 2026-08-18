@@ -15,22 +15,28 @@ import TableProPluginKit
 /// parent values are identical, the pools are identical, so the rows are too.
 struct ReferencePoolBinder {
     typealias ValuesProvider = (ReferenceKey) async throws -> [[PluginCellValue]]
+    typealias QueryValuesProvider = (SqlQuerySource) async throws -> [PluginCellValue]
 
     private let values: ValuesProvider
+    private let queryValues: QueryValuesProvider
     private let strategy: ReferencePoolStrategy
     private let onDegrade: (String) -> Void
 
     init(
         strategy: ReferencePoolStrategy,
         values: @escaping ValuesProvider,
+        queryValues: @escaping QueryValuesProvider,
         onDegrade: @escaping (String) -> Void
     ) {
         self.strategy = strategy
         self.values = values
+        self.queryValues = queryValues
         self.onDegrade = onDegrade
     }
 
     func bind(to builder: RowBuilder, table: TablePlan, runSeed: UInt64) async throws {
+        try await bindQueries(to: builder, table: table)
+
         for requirement in builder.referenceRequirements {
             let key = ReferenceKey(
                 schema: requirement.target.schema,
@@ -70,6 +76,47 @@ struct ReferencePoolBinder {
                 )
             )
         }
+    }
+
+    /// Each distinct query runs once, however many columns draw from it, because
+    /// a query is the expensive part of binding and two columns naming the same
+    /// one mean the same values.
+    private func bindQueries(to builder: RowBuilder, table: TablePlan) async throws {
+        var loaded: [SqlQuerySource: [PluginCellValue]] = [:]
+        for requirement in builder.queryRequirements {
+            let source = requirement.source
+            let available: [PluginCellValue]
+            if let cached = loaded[source] {
+                available = cached
+            } else {
+                available = try await queryValues(source).filter { !$0.isNull }
+                loaded[source] = available
+            }
+            guard !available.isEmpty else {
+                try degradeQuery(requirement: requirement, table: table)
+                builder.bind(queryValues: [.null], for: source)
+                continue
+            }
+            builder.bind(queryValues: available, for: source)
+        }
+    }
+
+    /// A query that returns nothing is survivable only where the column allows
+    /// null, exactly as an empty parent table is.
+    private func degradeQuery(requirement: SqlQueryRequirement, table: TablePlan) throws {
+        guard requirement.isNullable else {
+            throw GenerationError.queryValuesUnavailable(
+                table: table.qualifiedName,
+                column: requirement.column
+            )
+        }
+        onDegrade(
+            String(
+                format: String(localized: "The query for %@.%@ returned nothing, so the column is left empty."),
+                table.qualifiedName,
+                requirement.column
+            )
+        )
     }
 
     /// An empty parent is only survivable where the column allows null. Anywhere

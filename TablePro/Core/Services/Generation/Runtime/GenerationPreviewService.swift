@@ -118,6 +118,9 @@ struct GenerationPreviewService {
             values: { key in
                 try await driver.loadDistinctValues(key: key, limit: options.referencePoolLimit)
             },
+            queryValues: { source in
+                try await driver.loadQueryValues(source: source, limit: options.referencePoolLimit)
+            },
             onDegrade: { degraded.append($0) }
         )
         try await binder.bind(to: builder, table: table, runSeed: plan.seed)

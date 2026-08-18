@@ -145,10 +145,17 @@ enum AutoMapper {
         }
     }
 
+    /// Every generator that takes the same `min` and `max` pair, which is what a
+    /// bound from a check constraint is written into. `Price` and `Age` are here
+    /// because they are the mapper's own answer for money and age columns, and a
+    /// bound the mapper cannot apply to its own choice would be reported as
+    /// unchecked on the most ordinary schema there is.
     private static let boundedGenerators: Set<String> = [
         IntegerGenerator.identifier,
         DecimalGenerator.identifier,
-        DoubleGenerator.identifier
+        DoubleGenerator.identifier,
+        PriceGenerator.identifier,
+        AgeGenerator.identifier
     ]
 
     private static func applyBound(key: String, value: JSONValue, to draft: inout Draft) -> Bool {

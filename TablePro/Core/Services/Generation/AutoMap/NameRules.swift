@@ -265,8 +265,14 @@ enum NameRules {
         .object(["min": minimum, "max": maximum])
     }
 
+    private static let latitudeNames = "^(lat|latitude)$"
+
+    private static let longitudeNames = "^(lng|lon|long|longitude)$"
+
+    private static let priceBounds = JSONValue.object(["min": .int(1), "max": .int(1_000)])
+
     private static let numberRules: [NameRule] = [
-        NameRule("^(age)$", integers, IntegerGenerator.identifier, params: bounds(.int(18), .int(80))),
+        NameRule("^(age)$", integers, AgeGenerator.identifier, params: bounds(.int(18), .int(80))),
         NameRule(countNames, integers, IntegerGenerator.identifier, params: bounds(.int(1), .int(100))),
         NameRule("^(rating|stars|starcount)$", integers, IntegerGenerator.identifier, params: bounds(.int(1), .int(5))),
         NameRule("^(score|points|karma)$", integers, IntegerGenerator.identifier, params: bounds(.int(0), .int(100))),
@@ -276,23 +282,9 @@ enum NameRules {
         NameRule("^(year|birthyear)$", integers, IntegerGenerator.identifier, params: bounds(.int(1_970), .int(2_030))),
         NameRule("^(month)$", integers, IntegerGenerator.identifier, params: bounds(.int(1), .int(12))),
         NameRule(orderingNames, integers, IntegerGenerator.identifier, params: bounds(.int(0), .int(100))),
-        NameRule("^(lat|latitude)$", decimals, DecimalGenerator.identifier, params: bounds(.int(-90), .int(90))),
-        NameRule("^(lat|latitude)$", floats, DoubleGenerator.identifier, params: bounds(.int(-90), .int(90))),
-        NameRule(
-            "^(lng|lon|long|longitude)$",
-            decimals,
-            DecimalGenerator.identifier,
-            params: bounds(.int(-180), .int(180))
-        ),
-        NameRule(
-            "^(lng|lon|long|longitude)$",
-            floats,
-            DoubleGenerator.identifier,
-            params: bounds(.int(-180), .int(180))
-        ),
-        NameRule(moneyNames, decimals, DecimalGenerator.identifier, params: bounds(.int(0), .int(10_000))),
-        NameRule(moneyNames, floats, DoubleGenerator.identifier, params: bounds(.int(0), .int(10_000))),
-        NameRule(moneyNames, integers, IntegerGenerator.identifier, params: bounds(.int(0), .int(10_000))),
+        NameRule(latitudeNames, decimals.union(floats), LocalityBackedGenerator<LatitudeField>.identifier),
+        NameRule(longitudeNames, decimals.union(floats), LocalityBackedGenerator<LongitudeField>.identifier),
+        NameRule(moneyNames, decimals.union(floats).union(integers), PriceGenerator.identifier, params: priceBounds),
         NameRule(rateNames, decimals, DecimalGenerator.identifier, params: bounds(.int(0), .int(100))),
         NameRule(rateNames, floats, DoubleGenerator.identifier, params: bounds(.int(0), .int(100)))
     ]
@@ -316,6 +308,14 @@ enum NameRules {
         .object(["minWords": .int(minimum), "maxWords": .int(maximum), "capitalize": .bool(true)])
     }
 
+    private static func loremSentence(_ minimum: Int, _ maximum: Int) -> JSONValue {
+        .object(["minWords": .int(minimum), "maxWords": .int(maximum)])
+    }
+
+    private static func loremParagraph(_ minimum: Int, _ maximum: Int) -> JSONValue {
+        .object(["minSentences": .int(minimum), "maxSentences": .int(maximum)])
+    }
+
     private static func list(_ values: [String]) -> JSONValue {
         .object(["values": .array(values.map(JSONValue.string))])
     }
@@ -331,15 +331,19 @@ enum NameRules {
     |refreshtoken|secret|salt|hash|checksum|signature|sessionid|nonce)$
     """
 
-    private static let phoneNames = """
-    ^(phone|phonenumber|tel|telephone|mobile|mobilenumber|mobilephone|cellphone|cell|fax|whatsapp\
-    |zalo|contactnumber)$
+    private static let mobileNames = "^(mobile|mobilenumber|mobilephone|cellphone|cell|whatsapp|zalo)$"
+
+    private static let phoneNames = "^(phone|phonenumber|tel|telephone|fax|contactnumber|landline)$"
+
+    private static let personNameNames = """
+    ^(fullname|displayname|contactname|customername|personname|accountholder|recipientname)$
     """
 
-    private static let titleNames = """
-    ^(fullname|name|displayname|contactname|customername|productname|title|subject|headline|label\
-    |jobtitle|department|brand)$
-    """
+    private static let jobTitleNames = "^(jobtitle|position|role|occupation|profession)$"
+
+    private static let nationalIdNames = "^(nationalid|citizenid|ssn|socialsecuritynumber|idnumber|identitycard)$"
+
+    private static let titleNames = "^(name|title|subject|headline|label|caption)$"
 
     private static let companyNames = "^(companyname|company|organization|organisation|org|employer|vendor|supplier)$"
 
@@ -357,90 +361,122 @@ enum NameRules {
     """
 
     private static let codeNames = """
-    ^(code|sku|barcode|ean|upc|reference|referenceno|refno|serial|serialnumber|invoiceno\
+    ^(code|reference|referenceno|refno|serial|serialnumber|invoiceno\
     |invoicenumber|ordernumber|ordercode|couponcode|promocode|voucher)$
     """
+
+    private static let urlNames = "^(url|website|websiteurl|homepage|link|href|webpage)$"
 
     private static let mediaNames = """
     ^(avatar|avatarurl|imageurl|photourl|thumbnail|thumbnailurl|image|photo|picture|logo|logourl\
     |banner|cover|coverimage|attachment)$
     """
 
-    private static let stringRules: [NameRule] = [
+    private static let stringRules: [NameRule] = personRules + contactRules + placeRules + businessRules + mediaRules
+
+    private static let personRules: [NameRule] = [
+        NameRule("^(firstname|fname|givenname|forename)$", strings, FirstNameGenerator.identifier),
+        NameRule("^(lastname|lname|surname|familyname)$", strings, SimpleWordListGenerator<LastNameField>.identifier),
+        NameRule("^(middlename|middleinitial)$", strings, MiddleNameGenerator.identifier),
+        NameRule(personNameNames, strings, FullNameGenerator.identifier),
+        NameRule("^(gender|sex)$", strings, GenderGenerator.identifier),
+        NameRule(jobTitleNames, strings, SimpleWordListGenerator<JobTitleField>.identifier),
         NameRule(
-            emailNames,
+            "^(salutation|honorific|prefix|persontitle)$",
             strings,
-            RandomStringGenerator.identifier,
-            params: randomString(.lowercase, 6, 12),
-            common: CommonParams(suffix: "@example.com")
+            SimpleWordListGenerator<PersonTitleField>.identifier
         ),
-        NameRule(usernameNames, strings, RandomStringGenerator.identifier, params: randomString(.lowercase, 6, 12)),
+        NameRule(nationalIdNames, strings, NationalIdGenerator.identifier, minimumColumnLength: 12)
+    ]
+
+    private static let contactRules: [NameRule] = [
+        NameRule(emailNames, strings, EmailGenerator.identifier),
+        NameRule(usernameNames, strings, UsernameGenerator.identifier),
         NameRule(secretNames, strings, RandomStringGenerator.identifier, params: randomString(.hexadecimal, 32, 64)),
-        NameRule(phoneNames, strings, RandomStringGenerator.identifier, params: randomString(.numeric, 9, 10)),
+        NameRule(mobileNames, strings, PhoneNumberGenerator<MobileLineField>.identifier, minimumColumnLength: 16),
+        NameRule(phoneNames, strings, PhoneNumberGenerator<LandlineField>.identifier, minimumColumnLength: 16),
+        NameRule("^(domain|domainname|hostname|host)$", strings, DomainGenerator.identifier),
+        NameRule(urlNames, strings, UrlGenerator.identifier),
         NameRule(
-            "^(firstname|fname|givenname|forename)$",
+            "^(ip|ipaddress|ipv4|clientip|remoteip|serverip)$",
             strings,
-            LoremWordsGenerator.identifier,
-            params: loremWords(1, 1)
+            IPv4Generator.identifier,
+            minimumColumnLength: 15
         ),
+        NameRule("^(ipv6|ipv6address)$", strings, IPv6Generator.identifier, minimumColumnLength: 39),
         NameRule(
-            "^(lastname|lname|surname|familyname)$",
+            "^(mac|macaddress|hardwareaddress)$",
             strings,
-            LoremWordsGenerator.identifier,
-            params: loremWords(1, 1)
+            MacAddressGenerator.identifier,
+            minimumColumnLength: 17
         ),
-        NameRule("^(middlename|middleinitial)$", strings, LoremWordsGenerator.identifier, params: loremWords(1, 1)),
-        NameRule(titleNames, strings, LoremWordsGenerator.identifier, params: loremWords(2, 3)),
-        NameRule(
-            companyNames,
-            strings,
-            LoremWordsGenerator.identifier,
-            params: loremWords(2, 2),
-            common: CommonParams(suffix: " Inc.")
-        ),
-        NameRule(
-            "^(city|town|district|ward|village)$",
-            strings,
-            LoremWordsGenerator.identifier,
-            params: loremWords(1, 2)
-        ),
-        NameRule(
-            "^(province|region|county|prefecture)$",
-            strings,
-            LoremWordsGenerator.identifier,
-            params: loremWords(1, 1)
-        ),
-        NameRule(
-            "^(country|nation|countryname)$",
-            strings,
-            ListGenerator.identifier,
-            params: list(["United States", "Vietnam", "Japan", "Germany", "France", "United Kingdom"])
-        ),
+        NameRule("^(useragent|browser|clientagent)$", strings, UserAgentGenerator.identifier)
+    ]
+
+    private static let placeRules: [NameRule] = [
+        NameRule("^(city|town|district|ward|village)$", strings, LocalityBackedGenerator<CityField>.identifier),
+        NameRule("^(province|region|county|prefecture)$", strings, LocalityBackedGenerator<StateField>.identifier),
+        NameRule("^(statecode|provincecode|regioncode)$", strings, LocalityBackedGenerator<StateCodeField>.identifier),
+        NameRule("^(country|nation|countryname)$", strings, LocalityBackedGenerator<CountryField>.identifier),
         NameRule(
             "^(countrycode|iso2|isocode|countryiso)$",
             strings,
-            ListGenerator.identifier,
-            params: list(["US", "VN", "JP", "DE", "FR", "GB"])
+            LocalityBackedGenerator<CountryCodeField>.identifier
         ),
-        NameRule(addressNames, strings, LoremWordsGenerator.identifier, params: loremWords(3, 4)),
+        NameRule("^(fulladdress|addressfull|mailingaddress)$", strings, FullAddressGenerator.identifier),
+        NameRule("^(street|streetname)$", strings, StreetNameGenerator.identifier),
+        NameRule("^(housenumber|buildingnumber|streetnumber)$", strings, BuildingNumberGenerator.identifier),
+        NameRule(addressNames, strings, StreetAddressGenerator.identifier),
+        NameRule("^(zip|zipcode|postalcode|postcode)$", strings, LocalityBackedGenerator<PostalCodeField>.identifier),
+        NameRule("^(timezone|tz|timezonename)$", strings, LocalityBackedGenerator<TimeZoneField>.identifier)
+    ]
+
+    private static let businessRules: [NameRule] = [
+        NameRule(companyNames, strings, CompanyNameGenerator.identifier),
+        NameRule("^(department|dept|division)$", strings, DepartmentGenerator.identifier),
+        NameRule("^(productname|itemname|brand)$", strings, ProductNameGenerator.identifier),
+        NameRule("^(currency|currencycode)$", strings, CurrencyCodeGenerator.identifier),
         NameRule(
-            "^(zip|zipcode|postalcode|postcode)$",
+            "^(cardnumber|creditcard|creditcardnumber|cardno)$",
+            strings,
+            CreditCardNumberGenerator.identifier,
+            minimumColumnLength: 19
+        ),
+        NameRule(
+            "^(cardexpiry|cardexpiration|expirymonthyear)$",
+            strings,
+            CreditCardExpiryGenerator.identifier,
+            minimumColumnLength: 5
+        ),
+        NameRule("^(cvv|cvc|securitycode|cardsecuritycode)$", strings, CvvGenerator.identifier, minimumColumnLength: 4),
+        NameRule("^(iban|bankaccount|accountiban)$", strings, IbanGenerator.identifier, minimumColumnLength: 34),
+        NameRule("^(swift|swiftcode|bic|biccode)$", strings, SwiftCodeGenerator.identifier, minimumColumnLength: 11),
+        NameRule("^(taxid|taxnumber|vat|vatnumber|ein)$", strings, TaxIdGenerator.identifier, minimumColumnLength: 14),
+        NameRule("^(sku|stockcode)$", strings, SkuGenerator.identifier, minimumColumnLength: 8),
+        NameRule("^(ean|ean13|upc|barcode|gtin)$", strings, Ean13Generator.identifier, minimumColumnLength: 13),
+        NameRule("^(isbn|isbn13)$", strings, Isbn13Generator.identifier, minimumColumnLength: 13),
+        NameRule(
+            codeNames,
             strings,
             RandomStringGenerator.identifier,
-            params: randomString(.numeric, 5, 5)
-        ),
+            params: randomString(.custom, 8, 12, custom: uppercaseAlphanumeric)
+        )
+    ]
+
+    private static let mediaRules: [NameRule] = [
+        NameRule(titleNames, strings, LoremWordsGenerator.identifier, params: loremWords(2, 3)),
         NameRule(
             longTextNames,
             strings,
-            LoremWordsGenerator.identifier,
-            params: loremWords(8, 40),
+            LoremParagraphGenerator.identifier,
+            params: loremParagraph(2, 4),
             minimumColumnLength: 40
         ),
         NameRule(
             shortTextNames,
             strings,
-            LoremWordsGenerator.identifier,
-            params: loremWords(5, 15),
+            LoremSentenceGenerator.identifier,
+            params: loremSentence(5, 15),
             minimumColumnLength: 20
         ),
         NameRule(
@@ -450,69 +486,22 @@ enum NameRules {
             params: randomString(.lowercase, 8, 24)
         ),
         NameRule(
-            codeNames,
-            strings,
-            RandomStringGenerator.identifier,
-            params: randomString(.custom, 8, 12, custom: uppercaseAlphanumeric)
-        ),
-        NameRule(
-            "^(url|website|websiteurl|homepage|link|href|webpage)$",
-            strings,
-            RandomStringGenerator.identifier,
-            params: randomString(.lowercase, 6, 10),
-            common: CommonParams(prefix: "https://", suffix: ".example.com")
-        ),
-        NameRule(
             mediaNames,
             strings,
             RandomStringGenerator.identifier,
             params: randomString(.lowercase, 6, 12),
             common: CommonParams(prefix: "https://example.com/", suffix: ".png")
         ),
-        NameRule(
-            "^(filename|file)$",
-            strings,
-            RandomStringGenerator.identifier,
-            params: randomString(.lowercase, 6, 12),
-            common: CommonParams(suffix: ".pdf")
-        ),
-        NameRule(
-            "^(mimetype|contenttype|filetype)$",
-            strings,
-            ListGenerator.identifier,
-            params: list(["image/png", "image/jpeg", "application/pdf", "text/plain"])
-        ),
-        NameRule("^(gender|sex)$", strings, ListGenerator.identifier, params: list(["male", "female", "other"])),
-        NameRule(
-            "^(currency|currencycode)$",
-            strings,
-            ListGenerator.identifier,
-            params: list(["USD", "EUR", "VND", "JPY", "GBP"])
-        ),
+        NameRule("^(filename|file|filepath|attachmentname)$", strings, FileNameGenerator.identifier),
+        NameRule("^(mimetype|contenttype|filetype)$", strings, MimeTypeGenerator.identifier),
         NameRule(
             "^(locale|language|lang|languagecode|localecode)$",
             strings,
             ListGenerator.identifier,
             params: list(["en_US", "vi_VN", "ja_JP", "de_DE"])
         ),
-        NameRule(
-            "^(timezone|tz|timezonename)$",
-            strings,
-            ListGenerator.identifier,
-            params: list(["UTC", "Asia/Ho_Chi_Minh", "America/New_York", "Europe/London"])
-        ),
-        NameRule(
-            "^(color|colour|colorcode|hexcolor)$",
-            strings,
-            ListGenerator.identifier,
-            params: list(["#FF5733", "#33FF57", "#3357FF", "#F1C40F", "#9B59B6"])
-        ),
-        NameRule(
-            "^(version|appversion|semver)$",
-            strings,
-            ListGenerator.identifier,
-            params: list(["1.0.0", "1.1.0", "1.2.3", "2.0.0"])
-        ),
+        NameRule("^(color|colour|colorcode|hexcolor)$", strings, ColorGenerator.identifier, minimumColumnLength: 7),
+        NameRule("^(version|appversion|semver)$", strings, SemVerGenerator.identifier),
         NameRule(
             "^(status|state|stage|phase)$",
             strings,
@@ -528,13 +517,7 @@ enum NameRules {
     /// every exact rule above has had its turn, and they are what stops a real
     /// schema's `*_serial`, `*_hash` and `*_id` columns from all reading as prose.
     private static let suffixRules: [NameRule] = [
-        NameRule(
-            "_(url|uri|link)$",
-            strings,
-            RandomStringGenerator.identifier,
-            params: randomString(.lowercase, 6, 10),
-            common: CommonParams(prefix: "https://", suffix: ".example.com")
-        ),
+        NameRule("_(url|uri|link)$", strings, UrlGenerator.identifier),
         NameRule(
             "_(hash|token|secret|signature|apikey|salt)$",
             strings,
@@ -547,24 +530,19 @@ enum NameRules {
             RandomStringGenerator.identifier,
             params: randomString(.custom, 8, 12, custom: uppercaseAlphanumeric)
         ),
+        NameRule("_(email|mail)$", strings, EmailGenerator.identifier),
+        NameRule("_(username|login|nickname)$", strings, UsernameGenerator.identifier),
         NameRule(
-            "_(email|mail)$",
+            "_(mobile|mobilephone|cellphone)$",
             strings,
-            RandomStringGenerator.identifier,
-            params: randomString(.lowercase, 6, 12),
-            common: CommonParams(suffix: "@example.com")
+            PhoneNumberGenerator<MobileLineField>.identifier,
+            minimumColumnLength: 16
         ),
         NameRule(
-            "_(username|login|nickname)$",
+            "_(phone|phonenumber|tel|fax)$",
             strings,
-            RandomStringGenerator.identifier,
-            params: randomString(.lowercase, 6, 12)
-        ),
-        NameRule(
-            "_(phone|phonenumber|mobile|tel|fax)$",
-            strings,
-            RandomStringGenerator.identifier,
-            params: randomString(.numeric, 9, 10)
+            PhoneNumberGenerator<LandlineField>.identifier,
+            minimumColumnLength: 16
         ),
         NameRule(
             "_(id|uid)$",

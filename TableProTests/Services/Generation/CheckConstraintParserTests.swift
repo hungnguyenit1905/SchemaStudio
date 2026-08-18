@@ -218,7 +218,7 @@ struct AutoMapperCheckRefinementTests {
             table: "products",
             checkExpressions: ["CHECK ((price > (0)::numeric))"]
         )
-        #expect(resolution.identifier == "Decimal")
+        #expect(resolution.identifier == "Price")
         #expect(resolution.params.objectValue?["min"] == .double(0.01))
         #expect(resolution.warnings.isEmpty)
     }
@@ -302,27 +302,28 @@ struct AutoMapperCheckRefinementTests {
     @Test("A length check leaves room for the prefix and suffix around the value")
     func lengthCheckAccountsForTheAffix() {
         let resolution = Fixtures.resolve(
-            "email",
-            "varchar(30)",
+            "avatar_url",
+            "varchar(60)",
             table: "users",
-            checkExpressions: ["CHECK ((length((email)::text) <= 20))"]
+            checkExpressions: ["CHECK ((length((avatar_url)::text) <= 30))"]
         )
         #expect(resolution.identifier == "RandomString")
-        #expect(resolution.common.suffix == "@example.com")
-        #expect(resolution.params.objectValue?["maxLength"] == .int(8))
+        #expect(resolution.common.prefix == "https://example.com/")
+        #expect(resolution.common.suffix == ".png")
+        #expect(resolution.params.objectValue?["maxLength"] == .int(6))
         #expect(resolution.warnings.isEmpty)
     }
 
     @Test("A length check the prefix and suffix cannot fit inside warns instead")
     func lengthCheckSmallerThanTheAffixWarns() {
         let resolution = Fixtures.resolve(
-            "email",
-            "varchar(30)",
+            "avatar_url",
+            "varchar(60)",
             table: "users",
-            checkExpressions: ["length(email) <= 6"]
+            checkExpressions: ["length(avatar_url) <= 6"]
         )
         #expect(resolution.warnings == [
-            .uncheckedConstraint(column: "email", expression: "length(email) <= 6")
+            .uncheckedConstraint(column: "avatar_url", expression: "length(avatar_url) <= 6")
         ])
     }
 
@@ -349,7 +350,7 @@ struct AutoMapperCheckRefinementTests {
             table: "products",
             checkExpressions: ["CHECK (((sku)::text ~ '^[A-Z]{3}$'::text))"]
         )
-        #expect(resolution.identifier == "RandomString")
+        #expect(resolution.identifier == "SKU")
         #expect(resolution.warnings == [
             .uncheckedConstraint(column: "sku", expression: "CHECK (((sku)::text ~ '^[A-Z]{3}$'::text))")
         ])

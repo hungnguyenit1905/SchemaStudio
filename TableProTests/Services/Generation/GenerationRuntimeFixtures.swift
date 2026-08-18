@@ -26,6 +26,8 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
 
     var harvestMode: GenerationHarvestMode = .unsupported
     var preloadedValues: [ReferenceKey: [[PluginCellValue]]] = [:]
+    var preloadedQueryValues: [SqlQuerySource: [PluginCellValue]] = [:]
+    private(set) var queriesRun: [SqlQuerySource] = []
     var inboundForeignKeyTables: Set<String> = []
     var failInsertsFor: Set<String> = []
 
@@ -146,6 +148,11 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
             SequenceReset(table: table.table, column: column, sequenceName: sequenceName)
         )
         callOrder.append("resetSequence")
+    }
+
+    func loadQueryValues(source: SqlQuerySource, limit: Int) async throws -> [PluginCellValue] {
+        queriesRun.append(source)
+        return Array((preloadedQueryValues[source] ?? []).prefix(limit))
     }
 
     func loadDistinctValues(key: ReferenceKey, limit: Int) async throws -> [[PluginCellValue]] {

@@ -45,6 +45,11 @@ protocol GenerationDriver: Sendable {
 
     func loadDistinctValues(key: ReferenceKey, limit: Int) async throws -> [[PluginCellValue]]
 
+    /// Runs a user-written `SELECT` once, before any row is built, and returns
+    /// the values of the column it names. `limit` caps how many are kept, so a
+    /// query that forgets its own `LIMIT` cannot pull a whole table into memory.
+    func loadQueryValues(source: SqlQuerySource, limit: Int) async throws -> [PluginCellValue]
+
     /// The second pass. `assignments` carries, per row, the values for
     /// `setColumns` followed by the values for `keyColumns`, which is how a row
     /// written with a null foreign key is found again and filled.
@@ -69,6 +74,8 @@ extension GenerationDriver {
     var supportsTransactions: Bool { true }
 
     func serverLimits() async throws -> PluginServerLimits? { nil }
+
+    func loadQueryValues(source: SqlQuerySource, limit: Int) async throws -> [PluginCellValue] { [] }
 
     func resetSequence(
         table: GenerationTableReference,

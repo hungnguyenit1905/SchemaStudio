@@ -14,17 +14,6 @@ final class LoremWordsGenerator: ValueGenerator {
         ParamField(key: "capitalize", label: "Start with a capital", type: .toggle, defaultValue: .bool(true))
     ])
 
-    private static let words = [
-        "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
-        "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore",
-        "magna", "aliqua", "enim", "ad", "minim", "veniam", "quis", "nostrud",
-        "exercitation", "ullamco", "laboris", "nisi", "aliquip", "ex", "ea", "commodo",
-        "consequat", "duis", "aute", "irure", "in", "reprehenderit", "voluptate",
-        "velit", "esse", "cillum", "eu", "fugiat", "nulla", "pariatur", "excepteur",
-        "sint", "occaecat", "cupidatat", "non", "proident", "sunt", "culpa", "qui",
-        "officia", "deserunt", "mollit", "anim", "id", "est", "laborum"
-    ]
-
     private struct Params: Codable {
         var minWords: Int?
         var maxWords: Int?
@@ -56,17 +45,11 @@ final class LoremWordsGenerator: ValueGenerator {
     }
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
-        let count = rng.nextInt(in: wordRange)
-        var picked: [String] = []
-        picked.reserveCapacity(count)
-        for _ in 0..<count {
-            picked.append(Self.words[rng.nextInt(upperBound: Self.words.count)])
+        var phrase = LoremSource.phrase(wordCount: rng.nextInt(in: wordRange), using: &rng)
+        if capitalize {
+            phrase = LoremSource.capitalized(phrase)
         }
-        var sentence = picked.joined(separator: " ")
-        if capitalize, let first = sentence.first {
-            sentence = String(first).uppercased() + sentence.dropFirst()
-        }
-        return .text(truncator.truncate(sentence, to: maxLength))
+        return .text(truncator.truncate(phrase, to: maxLength))
     }
 
     func reset() {

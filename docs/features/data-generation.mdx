@@ -103,6 +103,12 @@ The catalog:
 Credit card numbers, EAN-13 and ISBN-13 carry correct check digits, so a column validated by the
 application that reads it still passes.
 
+Contact values are deliberately unreachable. Email addresses and generated hosts use domains the RFCs
+reserve, US phone numbers come from the 555 block set aside for fiction, IPv4 and IPv6 addresses come
+from the documentation and private ranges, and MAC addresses are locally administered so no real
+vendor owns them. Vietnamese phone numbers are the exception: Vietnam reserves no fictional block, so
+they use real prefixes with a random subscriber number and are plausible rather than impossible.
+
 ### Columns that depend on each other
 
 Some generators read another column in the same row:
@@ -111,10 +117,23 @@ Some generators read another column in the same row:
 - **Expression** builds a string from a template: `{{first_name}}.{{last_name}}@example.com`.
 - **Relative date and time** takes a base column and an offset range, so `updated_at` is always at
   or after `created_at` instead of landing before it.
-- **Email** and **Slug** accept the same placeholders, so an address matches the name in its row.
+- **Slug** takes a source column and writes its URL-safe ASCII form, so a title of `Đèn bàn LED`
+  becomes `den-ban-led` in the column beside it.
 
 The columns are ordered by these dependencies before the row is built. Two columns that point at
 each other are a configuration error and are reported before the run.
+
+Expression and Slug read whatever the source column ended up holding, so a number, a date or a
+generated name all work. A placeholder naming a column that has no generator is reported by name.
+
+### SQL query
+
+A **SQL query** column draws from a query you write against the connection being generated into. The
+query runs once, before the first row, and the values it returns are the pool for the whole table. It
+has to be a single `SELECT` (or a `WITH` that ends in one); anything else is refused before it is
+sent, and generated values are never pasted into it. Name a column of the result, or leave that empty
+to use the first one. A query that returns nothing leaves a nullable column empty with a warning, and
+fails the run on a column that cannot be null.
 
 ### Reference, and where the keys come from
 
@@ -140,8 +159,13 @@ do the same job for foreign keys.
 ## Locale
 
 Names, addresses, companies and phone numbers come from locale datasets. `en_US` and `vi_VN` ship
-with the app. The Vietnamese dataset carries real administrative divisions, so a generated province,
-district and ward belong together instead of being picked independently.
+with the app. Every address column in a row describes the same place, so a ward always belongs to the
+province written next to it rather than being picked on its own. Vietnamese follows the two-tier
+structure in use since 2025: province, then ward, with no district level.
+
+Names follow the order the locale writes them in. English runs given name, middle name, family name.
+Vietnamese runs family name, middle name, given name, and draws a middle name that agrees with the
+given name.
 
 ## Preview
 

@@ -165,7 +165,7 @@ struct AutoMapperTests {
             ("events", "start_date", "date", "Date"),
             ("events", "end_date", "date", "Date"),
             ("users", "last_login_at", "timestamp", "DateTime"),
-            ("users", "age", "integer", "Integer"),
+            ("users", "age", "integer", "Age"),
             ("products", "stock", "integer", "Integer"),
             ("order_items", "quantity", "integer", "Integer"),
             ("products", "rating", "smallint", "Integer"),
@@ -175,54 +175,54 @@ struct AutoMapperTests {
             ("stats", "year", "integer", "Integer"),
             ("stats", "month", "smallint", "Integer"),
             ("products", "sort_order", "integer", "Integer"),
-            ("stores", "latitude", "numeric(9,6)", "Decimal"),
-            ("stores", "latitude", "double precision", "Double"),
-            ("stores", "longitude", "double precision", "Double"),
-            ("products", "price", "numeric(10,2)", "Decimal"),
-            ("products", "price", "double precision", "Double"),
-            ("products", "price", "bigint", "Integer"),
-            ("orders", "total_amount", "numeric(12,2)", "Decimal"),
+            ("stores", "latitude", "numeric(9,6)", "Latitude"),
+            ("stores", "latitude", "double precision", "Latitude"),
+            ("stores", "longitude", "double precision", "Longitude"),
+            ("products", "price", "numeric(10,2)", "Price"),
+            ("products", "price", "double precision", "Price"),
+            ("products", "price", "bigint", "Price"),
+            ("orders", "total_amount", "numeric(12,2)", "Price"),
             ("orders", "discount", "numeric(5,2)", "Decimal"),
             ("posts", "view_count", "integer", "Integer"),
-            ("users", "email", "varchar(255)", "RandomString"),
-            ("users", "user_email", "varchar(255)", "RandomString"),
-            ("users", "contact_email", "varchar(255)", "RandomString"),
-            ("users", "username", "varchar(32)", "RandomString"),
-            ("users", "login", "varchar(32)", "RandomString"),
+            ("users", "email", "varchar(255)", "Email"),
+            ("users", "user_email", "varchar(255)", "Email"),
+            ("users", "contact_email", "varchar(255)", "Email"),
+            ("users", "username", "varchar(32)", "Username"),
+            ("users", "login", "varchar(32)", "Username"),
             ("users", "password_hash", "varchar(255)", "RandomString"),
             ("sessions", "token", "varchar(64)", "RandomString"),
-            ("users", "phone", "varchar(20)", "RandomString"),
-            ("users", "mobile_number", "varchar(20)", "RandomString"),
-            ("users", "first_name", "varchar(50)", "LoremWords"),
-            ("users", "last_name", "varchar(50)", "LoremWords"),
-            ("users", "middle_name", "varchar(50)", "LoremWords"),
+            ("users", "phone", "varchar(20)", "PhoneNumber"),
+            ("users", "mobile_number", "varchar(20)", "MobileNumber"),
+            ("users", "first_name", "varchar(50)", "FirstName"),
+            ("users", "last_name", "varchar(50)", "LastName"),
+            ("users", "middle_name", "varchar(50)", "MiddleName"),
             ("products", "name", "varchar(120)", "LoremWords"),
             ("posts", "title", "varchar(200)", "LoremWords"),
-            ("employees", "job_title", "varchar(80)", "LoremWords"),
-            ("companies", "company_name", "varchar(120)", "LoremWords"),
-            ("stores", "city", "varchar(80)", "LoremWords"),
-            ("stores", "province", "varchar(80)", "LoremWords"),
-            ("stores", "country", "varchar(60)", "List"),
-            ("stores", "country_code", "varchar(2)", "List"),
-            ("stores", "address_line1", "varchar(200)", "LoremWords"),
-            ("stores", "postal_code", "varchar(10)", "RandomString"),
-            ("posts", "description", "text", "LoremWords"),
-            ("posts", "body", "text", "LoremWords"),
-            ("reviews", "comment", "varchar(400)", "LoremWords"),
+            ("employees", "job_title", "varchar(80)", "JobTitle"),
+            ("companies", "company_name", "varchar(120)", "CompanyName"),
+            ("stores", "city", "varchar(80)", "City"),
+            ("stores", "province", "varchar(80)", "State"),
+            ("stores", "country", "varchar(60)", "Country"),
+            ("stores", "country_code", "varchar(2)", "CountryCode"),
+            ("stores", "address_line1", "varchar(200)", "StreetAddress"),
+            ("stores", "postal_code", "varchar(10)", "PostalCode"),
+            ("posts", "description", "text", "LoremParagraph"),
+            ("posts", "body", "text", "LoremParagraph"),
+            ("reviews", "comment", "varchar(400)", "LoremSentence"),
             ("posts", "slug", "varchar(120)", "RandomString"),
-            ("products", "sku", "varchar(32)", "RandomString"),
+            ("products", "sku", "varchar(32)", "SKU"),
             ("orders", "order_number", "varchar(24)", "RandomString"),
-            ("users", "website", "varchar(255)", "RandomString"),
+            ("users", "website", "varchar(255)", "URL"),
             ("users", "avatar_url", "varchar(255)", "RandomString"),
-            ("files", "filename", "varchar(120)", "RandomString"),
-            ("files", "mime_type", "varchar(60)", "List"),
-            ("users", "gender", "varchar(10)", "List"),
-            ("orders", "currency", "varchar(3)", "List"),
+            ("files", "filename", "varchar(120)", "FileName"),
+            ("files", "mime_type", "varchar(60)", "MimeType"),
+            ("users", "gender", "varchar(10)", "Gender"),
+            ("orders", "currency", "varchar(3)", "CurrencyCode"),
             ("users", "locale", "varchar(10)", "List"),
-            ("users", "timezone", "varchar(40)", "List"),
-            ("products", "color", "varchar(20)", "List"),
+            ("users", "timezone", "varchar(40)", "TimeZone"),
+            ("products", "color", "varchar(20)", "Color"),
             ("orders", "status", "varchar(20)", "List"),
-            ("releases", "version", "varchar(20)", "List"),
+            ("releases", "version", "varchar(20)", "SemVer"),
             ("users", "external_id", "varchar(64)", "UUID"),
             ("users", "uuid", "uuid", "UUID"),
             ("users", "public_id", "varchar(36)", "UUID"),
@@ -323,10 +323,25 @@ struct AutoMapperTests {
     }
 
     @Test("An email reads as an email")
-    func emailParams() {
-        let resolution = Fixtures.resolve("email", "varchar(255)", table: "users")
-        #expect(resolution.params.objectValue?["charset"] == .string("lowercase"))
-        #expect(resolution.common.suffix == "@example.com")
+    func emailParams() throws {
+        let column = Fixtures.column("email", "varchar(255)", table: "users")
+        let resolution = AutoMapper.resolve(column, table: "users")
+        #expect(resolution.identifier == "Email")
+
+        let profile = GenerationColumnProfile(
+            column: "email",
+            generator: resolution.identifier,
+            params: resolution.params,
+            common: resolution.common
+        )
+        let generator = try GeneratorRegistry.standard.make(
+            identifier: resolution.identifier,
+            params: profile.paramData,
+            column: column,
+            seed: 3
+        )
+        let value = try generator.next(row: RowContext(table: "users", rowIndex: 0), index: 0)
+        #expect(value.textFallback.contains("@"))
     }
 
     @Test("A creation timestamp lands in the two years before the run")
@@ -375,12 +390,12 @@ struct AutoMapperTests {
         #expect(!(resolution.warnings.first?.message.isEmpty ?? true))
     }
 
-    @Test("A long text column gets sentences, a short one gets a fitting string")
+    @Test("A long text column gets paragraphs, a short one gets a fitting string")
     func textLengthDecidesTheGenerator() {
         let long = Fixtures.resolve("description", "varchar(500)", table: "posts")
         let short = Fixtures.resolve("description", "varchar(20)", table: "posts")
-        #expect(long.params.objectValue?["maxWords"] == .int(40))
-        #expect(short.params.objectValue?["maxWords"] != .int(40))
+        #expect(long.identifier == "LoremParagraph")
+        #expect(short.identifier != "LoremParagraph")
     }
 
     @Test("A readable range replaces the native one, except where values must differ")

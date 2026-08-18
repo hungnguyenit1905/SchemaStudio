@@ -324,6 +324,9 @@ actor GenerationEngine {
         let binder = ReferencePoolBinder(
             strategy: options.referenceStrategy,
             values: { key in try await self.values(for: key) },
+            queryValues: { source in
+                try await self.driver.loadQueryValues(source: source, limit: self.options.referencePoolLimit)
+            },
             onDegrade: { message in continuation.yield(.warning(message)) }
         )
         try await binder.bind(to: builder, table: table, runSeed: runSeed)

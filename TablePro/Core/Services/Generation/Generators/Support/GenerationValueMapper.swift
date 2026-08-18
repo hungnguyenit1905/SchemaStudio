@@ -44,6 +44,17 @@ enum GenerationValueMapper {
         }
     }
 
+    /// True when a whole number handed to `value(from:base:)` comes back as text,
+    /// which is what makes it subject to the column's length limit. A generator
+    /// counting its own domain has to know this: the same range of numbers is
+    /// 500 distinct values in an integer column and 9 in a `varchar(1)`.
+    static func rendersIntegerAsText(base: TransferBaseType) -> Bool {
+        switch base {
+        case .string, .text, .enumeration, .set, .json: return true
+        default: return false
+        }
+    }
+
     static func range(for base: TransferBaseType, unsigned: Bool) -> ClosedRange<Int64> {
         switch base {
         case .int8: return unsigned ? 0...255 : -128...127

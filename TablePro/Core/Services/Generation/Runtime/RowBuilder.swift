@@ -20,6 +20,15 @@ struct ReferenceRequirement: ReferenceRequiring, Sendable, Hashable {
     var localColumnList: String { column }
 }
 
+/// A query this table has to run before its rows can be built.
+struct SqlQueryRequirement: ReferenceRequiring, Sendable, Hashable {
+    let source: SqlQuerySource
+    let column: String
+    let isNullable: Bool
+
+    var localColumnList: String { column }
+}
+
 struct CompositeReferenceRequirement: ReferenceRequiring, Sendable, Hashable {
     let key: ReferenceKey
     let localColumns: [String]
@@ -36,13 +45,16 @@ final class RowBuilder: @unchecked Sendable {
         let name: String
         let generator: DecoratedGenerator
         let consumer: (any ReferencePoolConsuming)?
+        let queryConsumer: (any SqlQueryConsuming)?
         let isNullable: Bool
         let isDeferred: Bool
         let cardinality: Int?
 
-        /// A deferred column is written as `NULL` on this pass and a column fed
-        /// from a parent's tuple is not ours to change, so neither can be redrawn
-        /// to settle a composite collision.
+        /// A deferred column is written as `NULL` on this pass, a column fed from
+        /// a parent's tuple is not ours to change, and a locality-backed column
+        /// reads a record chosen purely from the row index, so redrawing it
+        /// returns the same value every time. None of the three can settle a
+        /// composite collision.
         let isRedrawable: Bool
     }
 
@@ -79,6 +91,7 @@ final class RowBuilder: @unchecked Sendable {
         let compositeColumns = Self.compositeGroups(in: plan)
         composites = compositeColumns
         let compositeMembers = Set(compositeColumns.flatMap(\.localColumns))
+        var localitySources: [GenerationLocale: LocalityRowSource] = [:]
 
         for columnPlan in plan.columns {
             let columnSeed = GenerationSeed.columnSeed(
@@ -92,6 +105,16 @@ final class RowBuilder: @unchecked Sendable {
                 column: columnPlan.column,
                 seed: columnSeed
             )
+            if let localityConsumer = inner as? LocalityConsuming {
+                localityConsumer.bind(
+                    localities: Self.localitySource(
+                        for: localityConsumer.localityLocale,
+                        runSeed: runSeed,
+                        table: plan.qualifiedName,
+                        cache: &localitySources
+                    )
+                )
+            }
             columns.append(
                 Column(
                     name: columnPlan.name,
@@ -104,12 +127,14 @@ final class RowBuilder: @unchecked Sendable {
                         rowCount: plan.rowCount
                     ),
                     consumer: compositeMembers.contains(columnPlan.name) ? nil : inner as? ReferencePoolConsuming,
+                    queryConsumer: inner as? SqlQueryConsuming,
                     isNullable: columnPlan.column.isNullable,
                     isDeferred: deferred.contains(columnPlan.name),
                     cardinality: inner.distinctValueCount,
                     isRedrawable: !deferred.contains(columnPlan.name)
                         && !compositeMembers.contains(columnPlan.name)
                         && !(inner is ReferencePoolConsuming)
+                        && !(inner is LocalityConsuming)
                 )
             )
         }
@@ -125,6 +150,24 @@ final class RowBuilder: @unchecked Sendable {
         )
     }
 
+    /// One source per table and locale, so every address column in a row reads
+    /// the same place. Seeded from the table rather than from any one column,
+    /// which is what lets columns that never see each other still agree.
+    private static func localitySource(
+        for locale: GenerationLocale,
+        runSeed: UInt64,
+        table: String,
+        cache: inout [GenerationLocale: LocalityRowSource]
+    ) -> LocalityRowSource {
+        if let existing = cache[locale] { return existing }
+        let source = LocalityRowSource(
+            locale: locale,
+            seed: GenerationSeed.columnSeed(runSeed: runSeed, table: table, column: "locality:\(locale.rawValue)")
+        )
+        cache[locale] = source
+        return source
+    }
+
     var warnings: [GenerationWarning] {
         columns.flatMap(\.generator.warnings)
     }
@@ -134,6 +177,14 @@ final class RowBuilder: @unchecked Sendable {
         columns.compactMap { column in
             guard let target = column.consumer?.referenceTarget else { return nil }
             return ReferenceRequirement(target: target, column: column.name, isNullable: column.isNullable)
+        }
+    }
+
+    /// The queries this table's columns draw from, one per column that names one.
+    var queryRequirements: [SqlQueryRequirement] {
+        columns.compactMap { column in
+            guard let source = column.queryConsumer?.querySource else { return nil }
+            return SqlQueryRequirement(source: source, column: column.name, isNullable: column.isNullable)
         }
     }
 
@@ -147,6 +198,12 @@ final class RowBuilder: @unchecked Sendable {
     func bind(pool: ReferenceValuePool) {
         for column in columns where column.consumer?.referenceTarget == pool.target {
             column.consumer?.bind(pool: pool)
+        }
+    }
+
+    func bind(queryValues: [PluginCellValue], for source: SqlQuerySource) {
+        for column in columns where column.queryConsumer?.querySource == source {
+            column.queryConsumer?.bind(queryValues: queryValues)
         }
     }
 

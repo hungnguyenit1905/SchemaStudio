@@ -183,6 +183,26 @@ struct PluginGenerationDriver: GenerationDriver {
         return result.rows
     }
 
+    func loadQueryValues(source: SqlQuerySource, limit: Int) async throws -> [PluginCellValue] {
+        let result = try await driver.execute(query: source.query)
+        let position: Int
+        if let wanted = source.column {
+            guard let found = result.columns.firstIndex(of: wanted) else {
+                throw GenerationError.invalidParameters(
+                    generator: SqlQueryGenerator.identifier,
+                    reason: "the query returns no column named \(wanted)"
+                )
+            }
+            position = found
+        } else {
+            position = 0
+        }
+        return result.rows.prefix(limit).compactMap { row in
+            guard position < row.count else { return nil }
+            return row[position]
+        }
+    }
+
     private func statementGenerator(
         for table: GenerationTableReference,
         columns: [String]

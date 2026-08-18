@@ -14,6 +14,7 @@ enum GenerationError: Error, Equatable {
     case nullPercentOnRequiredColumn(table: String, column: String, percent: Int)
     case uniqueDomainTooSmall(table: String, column: String, distinctValues: Int, rowCount: Int)
     case emptyParentTable(table: String, column: String, parentTable: String)
+    case queryValuesUnavailable(table: String, column: String)
     case tableDependencyCycle(tables: [String])
     case columnDependencyCycle(table: String, columns: [String])
     case unsupportedProfileVersion(found: Int, supported: Int)
@@ -77,6 +78,12 @@ extension GenerationError: LocalizedError {
                 table,
                 column,
                 parentTable
+            )
+        case .queryValuesUnavailable(let table, let column):
+            return String(
+                format: String(localized: "%@.%@ draws from a query that returned no values, and it cannot be null."),
+                table,
+                column
             )
         case .tableDependencyCycle(let tables):
             return String(
@@ -154,6 +161,8 @@ extension GenerationError: LocalizedError {
                 format: String(localized: "Add %@ to this run, put rows in it first, or allow nulls on the column."),
                 parentTable
             )
+        case .queryValuesUnavailable:
+            return String(localized: "Check the query returns rows, or allow nulls on the column.")
         case .tableDependencyCycle:
             return String(
                 localized: "Allow nulls on one of the foreign keys in the loop so it can be filled in a second pass."
