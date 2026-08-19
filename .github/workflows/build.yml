@@ -96,8 +96,13 @@ jobs:
         env:
           CERTIFICATES_P12: ${{ secrets.CERTIFICATES_P12 }}
           CERTIFICATES_PASSWORD: ${{ secrets.CERTIFICATES_PASSWORD }}
+          REQUIRE_SIGNED_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
           if [ -z "$CERTIFICATES_P12" ]; then
+            if [ "$REQUIRE_SIGNED_RELEASE" = "true" ]; then
+              echo "::error::No CERTIFICATES_P12 secret on a release tag. Refusing to publish an ad-hoc signed build."
+              exit 1
+            fi
             echo "::notice::No CERTIFICATES_P12 secret; producing an ad-hoc signed build."
             exit 0
           fi
@@ -142,11 +147,14 @@ jobs:
           ANALYTICS_HMAC_SECRET: ${{ secrets.ANALYTICS_HMAC_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+          REQUIRE_SIGNED_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
           export NOTARIZE=$([ -n "$NOTARY_PASSWORD" ] && echo true || echo false)
           scripts/build-release.sh arm64
 
       - name: Verify build
+        env:
+          REQUIRE_SIGNED_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: scripts/ci/verify-build.sh arm64
 
       - name: Upload dSYMs to Sentry
@@ -244,8 +252,13 @@ jobs:
         env:
           CERTIFICATES_P12: ${{ secrets.CERTIFICATES_P12 }}
           CERTIFICATES_PASSWORD: ${{ secrets.CERTIFICATES_PASSWORD }}
+          REQUIRE_SIGNED_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
           if [ -z "$CERTIFICATES_P12" ]; then
+            if [ "$REQUIRE_SIGNED_RELEASE" = "true" ]; then
+              echo "::error::No CERTIFICATES_P12 secret on a release tag. Refusing to publish an ad-hoc signed build."
+              exit 1
+            fi
             echo "::notice::No CERTIFICATES_P12 secret; producing an ad-hoc signed build."
             exit 0
           fi
@@ -290,11 +303,14 @@ jobs:
           ANALYTICS_HMAC_SECRET: ${{ secrets.ANALYTICS_HMAC_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+          REQUIRE_SIGNED_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
           export NOTARIZE=$([ -n "$NOTARY_PASSWORD" ] && echo true || echo false)
           scripts/build-release.sh x86_64
 
       - name: Verify build
+        env:
+          REQUIRE_SIGNED_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: scripts/ci/verify-build.sh x86_64
 
       - name: Upload dSYMs to Sentry

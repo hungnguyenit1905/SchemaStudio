@@ -20,9 +20,22 @@ APPLE_ID="${APPLE_ID:-datngoquoc@icloud.com}"
 # an unsigned arm64 binary at all, while an ad-hoc signature runs locally and
 # still passes `codesign --verify`. It cannot be notarized, so Gatekeeper asks
 # the user to confirm the first launch.
+# A release build must never take that fallback: it cannot be notarized, and it
+# drops the keychain access group, so the shipped app cannot read the user's
+# saved passwords. CI sets REQUIRE_SIGNED_RELEASE on a v* tag.
 if [ "$SIGN_IDENTITY" != "-" ] && ! security find-identity -v -p codesigning 2>/dev/null | grep -qF "$SIGN_IDENTITY"; then
+    if [ "${REQUIRE_SIGNED_RELEASE:-false}" = "true" ]; then
+        echo "❌ ERROR: signing identity '$SIGN_IDENTITY' not in the keychain and REQUIRE_SIGNED_RELEASE is set."
+        echo "   Refusing to publish an ad-hoc signed release. Check the CERTIFICATES_P12 secret."
+        exit 1
+    fi
     echo "⚠️  Signing identity not available; falling back to ad-hoc signing"
     SIGN_IDENTITY="-"
+fi
+
+if [ "$SIGN_IDENTITY" = "-" ] && [ "${REQUIRE_SIGNED_RELEASE:-false}" = "true" ]; then
+    echo "❌ ERROR: ad-hoc signing requested while REQUIRE_SIGNED_RELEASE is set."
+    exit 1
 fi
 
 if [ "$SIGN_IDENTITY" = "-" ]; then
