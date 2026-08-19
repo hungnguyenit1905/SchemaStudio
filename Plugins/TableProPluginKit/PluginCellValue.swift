@@ -279,3 +279,55 @@ extension PluginCellValue: Codable {
         }
     }
 }
+
+public extension PluginCellValue {
+    /// `YYYY-MM-DD HH:MM:SS[.ffffff]` in UTC: the timestamp form every SQL
+    /// engine parses.
+    ///
+    /// Deliberately not ``textFallback``, which keeps the ISO 8601 `T`/`Z`
+    /// form. That rendering is the v19 wire format a non-adopting driver still
+    /// receives, so changing it would change behavior this release promises to
+    /// leave alone. A literal inlined into a statement has no such constraint
+    /// and a `T` separator is what Oracle and SQL Server reject.
+    static func portableTimestampLiteral(_ instant: Date) -> String {
+        portableTimestampFormatter.string(from: instant)
+    }
+
+    private static let portableTimestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSSSS"
+        return formatter
+    }()
+}
+
+public extension PluginCellValue {
+    /// Reduces this value to the pre-v20 case set (`null`, `text`, `bytes`).
+    ///
+    /// The contract on ``PluginCapabilities/typedCellValues`` is that a driver
+    /// which does not declare it receives exactly the cases it received in v19.
+    /// Callers crossing into such a driver route every value through here, so a
+    /// driver that reads a cell with `asText` keeps working instead of silently
+    /// reading nil.
+    var downgradedToLegacyCases: PluginCellValue {
+        switch self {
+        case .null, .text, .bytes:
+            return self
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return .text(textFallback)
+        }
+    }
+}
+
+public extension Array where Element == PluginCellValue {
+    var downgradedToLegacyCases: [PluginCellValue] {
+        map(\.downgradedToLegacyCases)
+    }
+}
+
+public extension Array where Element == [PluginCellValue] {
+    var downgradedToLegacyCases: [[PluginCellValue]] {
+        map { $0.downgradedToLegacyCases }
+    }
+}

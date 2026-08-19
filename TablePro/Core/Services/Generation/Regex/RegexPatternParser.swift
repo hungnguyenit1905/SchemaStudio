@@ -119,11 +119,13 @@ struct RegexPatternParser {
 
     private static func bounds(in body: String, cap: Int) -> (minimum: Int, maximum: Int)? {
         let parts = body.split(separator: ",", omittingEmptySubsequences: false).map(String.init)
-        guard parts.count <= 2, let minimum = Int(parts[0]), minimum >= 0 else { return nil }
+        guard parts.count <= 2, let requestedMinimum = Int(parts[0]), requestedMinimum >= 0 else { return nil }
+        let minimum = Swift.min(requestedMinimum, cap)
         guard parts.count == 2 else { return (minimum, minimum) }
-        guard !parts[1].isEmpty else { return (minimum, Swift.max(minimum, minimum + cap)) }
-        guard let maximum = Int(parts[1]), maximum >= 0 else { return nil }
-        return (minimum, maximum)
+        guard !parts[1].isEmpty else { return (minimum, cap) }
+        guard let requestedMaximum = Int(parts[1]), requestedMaximum >= 0 else { return nil }
+        guard requestedMinimum <= requestedMaximum else { return (requestedMinimum, requestedMaximum) }
+        return (minimum, Swift.min(requestedMaximum, cap))
     }
 
     private mutating func parseAtom() throws -> RegexPatternNode {

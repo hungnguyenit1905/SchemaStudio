@@ -117,13 +117,13 @@ enum CheckConstraintParser {
             }
             return [.lowerBound(value: lower, inclusive: true), .upperBound(value: upper, inclusive: true)]
         },
-        Matcher("\(identifierPattern)\\s+in\\s*\\((.*)\\)") { groups, column in
+        Matcher("\(identifierPattern)\\s+in\\s*\\(([^()]*)\\)") { groups, column in
             guard names(groups[0], column) else { return nil }
             let values = literals(in: groups[1])
             guard !values.isEmpty else { return nil }
             return [.allowedValues(values)]
         },
-        Matcher("\(identifierPattern)\\s*=\\s*any\\s*\\(+\\s*array\\s*\\[(.*)\\]\\s*\\)+") { groups, column in
+        Matcher("\(identifierPattern)\\s*=\\s*any\\s*\\(+\\s*array\\s*\\[([^\\[\\]]*)\\]\\s*\\)+") { groups, column in
             guard names(groups[0], column) else { return nil }
             let values = literals(in: groups[1])
             guard !values.isEmpty else { return nil }
@@ -144,15 +144,15 @@ enum CheckConstraintParser {
             guard names(groups[0], column) else { return nil }
             return [.nonEmpty]
         },
-        Matcher("\(identifierPattern)\\s*(?:~\\*|~|regexp|rlike)\\s*'(.*)'") { groups, column in
+        Matcher("\(identifierPattern)\\s*(?:~\\*|~|regexp|rlike)\\s*'([^']*)'") { groups, column in
             guard names(groups[0], column) else { return nil }
             return [.pattern(groups[1])]
         },
-        Matcher("\(identifierPattern)(?:\\s+(?:like|ilike)\\s*|\\s*~~\\*?\\s*)'(.*)'") { groups, column in
+        Matcher("\(identifierPattern)(?:\\s+(?:like|ilike)\\s*|\\s*~~\\*?\\s*)'([^']*)'") { groups, column in
             guard names(groups[0], column) else { return nil }
             return [.likePattern(groups[1])]
         },
-        Matcher("regexp_like\\s*\\(\\s*\(identifierPattern)\\s*,\\s*'(.*)'\\s*\\)") { groups, column in
+        Matcher("regexp_like\\s*\\(\\s*\(identifierPattern)\\s*,\\s*'([^']*)'\\s*\\)") { groups, column in
             guard names(groups[0], column) else { return nil }
             return [.pattern(groups[1])]
         }

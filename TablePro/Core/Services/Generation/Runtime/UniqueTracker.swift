@@ -45,6 +45,13 @@ struct UniqueTracker {
         seen.insert(Self.hash(value, matching: matching)).inserted
     }
 
+    /// Returns a value to the domain. A composite-unique retry throws away the
+    /// value it just drew, and leaving it admitted shrinks the column's domain
+    /// by one for every retry.
+    mutating func withdraw(_ value: PluginCellValue) {
+        seen.remove(Self.hash(value, matching: matching))
+    }
+
     mutating func reset() {
         seen.removeAll(keepingCapacity: true)
     }

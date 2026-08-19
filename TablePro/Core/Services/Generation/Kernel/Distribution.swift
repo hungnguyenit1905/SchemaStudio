@@ -139,12 +139,17 @@ struct Distribution: Sendable, Hashable {
         return min(max(value, range.lowerBound), range.upperBound)
     }
 
+    /// Inverse CDF of the exponential truncated to the column's range, rather
+    /// than redrawing until a draw lands inside it. Rejection needs
+    /// `1 - exp(-lambda)` of its draws to be accepted, which at `lambda = 0.1`
+    /// is under a tenth: eight attempts then failed about half the time and
+    /// every one of those rows was returned as the exact maximum. Inverting the
+    /// truncated CDF lands inside the range on the first draw, every time.
     private func exponentialSample(in range: ClosedRange<Double>, span: Double, using rng: inout SplitMix64) -> Double {
-        for _ in 0..<Self.redrawAttempts {
-            let position = -log(1 - rng.nextUnitFraction()) / lambda
-            guard position > 1 else { return range.lowerBound + position * span }
-        }
-        return range.upperBound
+        guard lambda > 0 else { return range.lowerBound + rng.nextUnitFraction() * span }
+        let reach = 1 - exp(-lambda)
+        let position = -log(1 - rng.nextUnitFraction() * reach) / lambda
+        return range.lowerBound + min(max(position, 0), 1) * span
     }
 
     /// Box-Muller. The unit fraction is nudged off zero because `log(0)` is

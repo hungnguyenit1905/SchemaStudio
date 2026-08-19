@@ -118,3 +118,37 @@ struct QueryResultMappingTests {
         #expect(fk.onDelete == "CASCADE")
     }
 }
+
+@Suite("QueryResult typed cell mapping")
+struct QueryResultTypedCellMappingTests {
+    private func mapped(_ cell: PluginCellValue) -> String? {
+        QueryResult(
+            from: PluginQueryResult(
+                columns: ["value"],
+                columnTypeNames: ["TEXT"],
+                rows: [[cell]],
+                rowsAffected: 0,
+                executionTime: 0
+            )
+        ).rows[0][0]
+    }
+
+    @Test("Every v20 case maps to its text rendering rather than being dropped")
+    func typedCasesSurviveTheMapping() {
+        #expect(mapped(.int(42)) == "42")
+        #expect(mapped(.double(1.5)) == "1.5")
+        #expect(mapped(.decimalText("1.25")) == "1.25")
+        #expect(mapped(.bool(true)) == "1")
+        #expect(mapped(.bool(false)) == "0")
+        #expect(mapped(.date(year: 2026, month: 8, day: 19)) == "2026-08-19")
+        #expect(mapped(.time(seconds: 3_661, nanoseconds: 0)) == "01:01:01")
+        #expect(mapped(.array([.int(1), .int(2)])) == "{1,2}")
+    }
+
+    @Test("The pre-v20 cases keep the mapping they already had")
+    func legacyCasesAreUnchanged() {
+        #expect(mapped(.null) == nil)
+        #expect(mapped(.text("hi")) == "hi")
+        #expect(mapped(.bytes(Data([0x0A, 0xFF]))) == "0AFF")
+    }
+}

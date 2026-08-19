@@ -14,6 +14,14 @@ struct GenerationParamForm: View {
     let schema: ParamSchema
     @Binding var params: JSONValue
 
+    /// What the user has typed, before it is parsed and clamped back into
+    /// `params`. Without it a numeric field reads its own clamped value back on
+    /// every keystroke, so a partial entry like `-` or `1` in a field whose
+    /// minimum is higher is rewritten mid-word and cannot be finished. The draft
+    /// is dropped on focus loss so the field then shows the value actually held.
+    @State private var drafts: [String: String] = [:]
+    @FocusState private var focusedField: String?
+
     private var model: GenerationParamFormModel { GenerationParamFormModel(schema: schema) }
 
     var body: some View {
@@ -30,6 +38,10 @@ struct GenerationParamForm: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .onChange(of: focusedField) { previous, _ in
+                guard let previous else { return }
+                drafts[previous] = nil
+            }
         }
     }
 
@@ -68,10 +80,12 @@ struct GenerationParamForm: View {
             TextEditor(text: textBinding(for: field))
                 .font(.body)
                 .frame(minHeight: 60)
+                .focused($focusedField, equals: field.key)
                 .accessibilityIdentifier("generation.param.\(field.key)")
         case .text, .number, .decimal, .stringList, .date:
             TextField(placeholder(for: field), text: textBinding(for: field))
                 .textFieldStyle(.roundedBorder)
+                .focused($focusedField, equals: field.key)
                 .accessibilityIdentifier("generation.param.\(field.key)")
         }
     }
@@ -87,8 +101,11 @@ struct GenerationParamForm: View {
 
     private func textBinding(for field: ParamField) -> Binding<String> {
         Binding(
-            get: { model.text(for: field, in: params) },
-            set: { params = model.params(params, settingText: $0, for: field) }
+            get: { drafts[field.key] ?? model.text(for: field, in: params) },
+            set: { typed in
+                drafts[field.key] = typed
+                params = model.params(params, settingText: typed, for: field)
+            }
         )
     }
 

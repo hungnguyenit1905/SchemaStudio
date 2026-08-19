@@ -50,7 +50,8 @@ final class IntegerGenerator: ValueGenerator {
         lowerBound = lower
         step = requestedStep
         let span = UInt64(bitPattern: upper &- lower)
-        stepCount = span / UInt64(requestedStep) &+ 1
+        let reachableSteps = span / UInt64(requestedStep)
+        stepCount = reachableSteps == UInt64.max ? UInt64.max : reachableSteps &+ 1
         distribution = try Distribution(params: params, generator: Self.identifier)
         self.seed = seed
         rng = SplitMix64(seed: seed)

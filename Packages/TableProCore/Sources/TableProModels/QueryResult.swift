@@ -175,11 +175,7 @@ public extension QueryResult {
         }
         let legacyRows: [[String?]] = plugin.rows.map { row in
             row.map { cell -> String? in
-                switch cell {
-                case .null: return nil
-                case .text(let value): return value
-                case .bytes(let data): return data.map { String(format: "%02X", $0) }.joined()
-                }
+                cell.isNull ? nil : cell.textFallback
             }
         }
         self.init(

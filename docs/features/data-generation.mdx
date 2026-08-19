@@ -227,7 +227,9 @@ largest key that was written. That last step matters: without it the next insert
 makes collides with a generated row.
 
 A table that points at itself, such as `employee.manager_id`, is not treated as a loop. It is filled
-with the column left null, then a second pass sets it from the keys that were just created.
+with the column left null, then a second pass sets it from the keys that were just created. That
+first pass writes a null, so a self-referencing column declared `NOT NULL` cannot be filled this way:
+the run is refused before it starts and names the column.
 
 Two tables that point at each other are a loop. When one of the foreign keys allows null, the loop
 is broken there and filled in on a second pass. When none of them do, the run needs foreign key
@@ -242,6 +244,8 @@ checks turned off. When neither is possible the run fails and names the tables i
   reference it and a column that needs a second pass stays empty. The run says which column and why.
 - A CHECK constraint too complex to read is not enforced by the generator. The column carries a
   warning and the server may still reject the row.
+- A second pass reads back at most the reference pool limit worth of keys. On a table larger than
+  that, rows past the limit keep their deferred column empty and the run says so.
 
 ## How rows reach the server
 

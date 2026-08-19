@@ -49,6 +49,21 @@ struct SecondPassUpdater {
 
         let ownKeys = try await keys(of: table.reference, columns: table.primaryKeyColumns)
         guard !ownKeys.isEmpty else { return outcome }
+        if ownKeys.count >= poolLimit {
+            outcome.warnings.append(
+                GenerationWarning(
+                    column: table.deferredColumns.joined(separator: ", "),
+                    message: String(
+                        format: String(
+                            localized: "%@ has more rows than the %d the second pass reads, so %@ stays empty past that point."
+                        ),
+                        table.qualifiedName,
+                        poolLimit,
+                        table.deferredColumns.joined(separator: ", ")
+                    )
+                )
+            )
+        }
 
         for columnName in table.deferredColumns {
             guard let plan = table.columns.first(where: { $0.name == columnName }) else { continue }

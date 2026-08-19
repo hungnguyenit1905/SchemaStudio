@@ -60,6 +60,11 @@ enum AutoMapper {
         var common: CommonParams = .none
         var warnings: [ValidationWarning] = []
 
+        /// Which of `min`/`max` a check constraint set, as opposed to the
+        /// name-based defaults. A check outranks a guess, but two checks that
+        /// contradict each other are the schema's problem to report.
+        var boundsFromChecks: Set<String> = []
+
         /// A column the server fills or that draws from a parent table has no
         /// settings of ours to narrow, so a check on it is not a gap.
         var acceptsCheckRefinement: Bool {
@@ -174,11 +179,24 @@ enum AutoMapper {
         AgeGenerator.identifier
     ]
 
+    /// A name-based default carries both bounds, so a check that moves one past
+    /// the other leaves the generator with `min > max` and it refuses to build.
+    /// The check is the server's rule and the default is a guess, so the guess
+    /// gives way. Two checks that contradict each other are reported instead.
     private static func applyBound(key: String, value: JSONValue, to draft: inout Draft) -> Bool {
         guard boundedGenerators.contains(draft.identifier) else { return false }
         var fields = draft.params.objectValue ?? [:]
+        let opposite = key == "min" ? "max" : "min"
+        if
+            let incoming = value.doubleValue,
+            let existing = fields[opposite]?.doubleValue,
+            key == "min" ? incoming > existing : incoming < existing {
+            guard !draft.boundsFromChecks.contains(opposite) else { return false }
+            fields.removeValue(forKey: opposite)
+        }
         fields[key] = value
         draft.params = .object(fields)
+        draft.boundsFromChecks.insert(key)
         return true
     }
 

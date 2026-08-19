@@ -36,6 +36,10 @@ protocol ValueGenerator: AnyObject {
     init(params: Data, column: GenerationColumn, seed: UInt64) throws
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue
+
+    /// Hands back a value the caller drew but did not write, so a generator
+    /// enforcing uniqueness can return it to its domain.
+    func discard(_ value: PluginCellValue)
     func reset()
 }
 
@@ -43,6 +47,8 @@ extension ValueGenerator {
     static var paramSchema: ParamSchema { .empty }
 
     static var excludesColumnFromInsert: Bool { false }
+
+    func discard(_ value: PluginCellValue) {}
 
     var rowDependencies: [String] { [] }
 

@@ -56,20 +56,32 @@ final class PriceGenerator: ValueGenerator {
             generator: Self.identifier,
             default: Params()
         )
-        let lower = decoded.min ?? 1
-        let upper = decoded.max ?? 1_000
+        base = column.type.base
+        scale = max(0, min(decoded.scale ?? column.type.scale ?? 2, 6))
+        let ceiling = Self.precisionCeiling(column: column, scale: scale)
+        let upper = min(decoded.max ?? 1_000, ceiling)
+        let requestedLower = decoded.min ?? 1
+        let lower = decoded.min == nil ? min(requestedLower, upper) : requestedLower
         guard lower <= upper else {
             throw GenerationError.invalidParameters(
                 generator: Self.identifier,
                 reason: "the minimum \(lower) is above the maximum \(upper)"
             )
         }
-        base = column.type.base
-        scale = max(0, min(decoded.scale ?? column.type.scale ?? 2, 6))
         wholeRange = Int64(lower.rounded(.up))...max(Int64(lower.rounded(.up)), Int64(upper.rounded(.down)))
         ending = decoded.ending ?? .charm
         self.seed = seed
         rng = SplitMix64(seed: seed)
+    }
+
+    /// `DECIMAL(5,2)` holds 999.99, not the default maximum of 1000: the digits
+    /// left of the point are `precision - scale`, and a value that overruns them
+    /// is rejected by the server rather than rounded.
+    private static func precisionCeiling(column: GenerationColumn, scale: Int) -> Double {
+        guard let precision = column.type.precision, precision > 0 else { return .greatestFiniteMagnitude }
+        let wholeDigits = precision - scale
+        guard wholeDigits > 0 else { return 0 }
+        return pow(10.0, Double(wholeDigits)) - 1
     }
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue {

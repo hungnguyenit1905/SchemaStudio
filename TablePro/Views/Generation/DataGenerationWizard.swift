@@ -162,7 +162,7 @@ struct DataGenerationWizard: View {
     }
 
     private func advanceToColumns() {
-        model.buildProfile()
+        model.prepareColumnsStep()
         model.step = .columns
     }
 

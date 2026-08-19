@@ -259,6 +259,9 @@ final class RowBuilder: @unchecked Sendable {
             }
             attempts += 1
             guard let column = columns.first(where: { $0.name == collision.redrawColumn }) else { return }
+            if let replaced = values[column.name] {
+                column.generator.discard(replaced)
+            }
             let value = try column.generator.next(row: context, index: index)
             context.set(value, for: column.name)
             values[column.name] = value

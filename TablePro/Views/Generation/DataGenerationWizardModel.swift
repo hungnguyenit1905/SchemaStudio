@@ -298,6 +298,38 @@ final class DataGenerationWizardModel {
 
     // MARK: - Mapping
 
+    /// Entering the column step must not throw away what the user did there.
+    /// Auto-mapping runs once per table selection; after that a revisit only
+    /// carries the scope-step settings across, so going Back and Next keeps
+    /// every generator choice, edited parameter, loaded profile and template.
+    func prepareColumnsStep() {
+        guard profileMatchesSelection else {
+            buildProfile()
+            return
+        }
+        applyScopeSettings()
+    }
+
+    private var profileMatchesSelection: Bool {
+        !profile.tables.isEmpty && Set(profile.tables.map(\.table)) == Set(selectedTableNames)
+    }
+
+    /// Seed, row counts and "empty first" belong to the scope step. None of them
+    /// changes which generator a column uses, so they are written onto the
+    /// existing profile instead of forcing a rebuild.
+    private func applyScopeSettings() {
+        var updated = profile
+        updated.seed = UInt64(seedText) ?? updated.seed
+        let empties = emptyFirst && !blocksDestructiveOperations
+        updated.tables = updated.tables.map { table in
+            var copy = table
+            copy.emptyFirst = empties
+            copy.rowCount = tables.first { $0.name == table.table }?.rowCount ?? table.rowCount
+            return copy
+        }
+        profile = updated
+    }
+
     /// Builds the profile the run will execute: every selected table, every column
     /// auto-mapped, warnings kept for the grid to show.
     func buildProfile() {
@@ -465,6 +497,7 @@ final class DataGenerationWizardModel {
 
     func start() async {
         guard let scope = currentScope, let type = connection(for: scope.connectionId)?.type else { return }
+        applyScopeSettings()
         errorMessage = nil
         log = []
         report = nil
@@ -541,6 +574,7 @@ final class DataGenerationWizardModel {
     /// forgotten run keeps writing rows and keeps that connection checked out after
     /// the UI is gone.
     func tearDown() {
+        isCancelling = true
         let engine = engine
         self.engine = nil
         Task { await engine?.cancel() }

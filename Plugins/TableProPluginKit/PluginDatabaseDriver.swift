@@ -898,7 +898,9 @@ public extension PluginDatabaseDriver {
             return hex
         case .int, .double, .decimalText, .bool:
             return value.textFallback
-        case .date, .time, .timestamp, .uuid, .array:
+        case .timestamp(let instant):
+            return escapedParameterValue(PluginCellValue.portableTimestampLiteral(instant))
+        case .date, .time, .uuid, .array:
             return escapedParameterValue(value.textFallback)
         }
     }

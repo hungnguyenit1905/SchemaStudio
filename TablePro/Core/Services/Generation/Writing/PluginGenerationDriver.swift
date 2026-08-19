@@ -33,6 +33,18 @@ struct PluginGenerationDriver: GenerationDriver {
 
     private var pluginDriver: any PluginDatabaseDriver { adapter.schemaPluginDriver }
 
+    private var forwardsTypedCells: Bool {
+        pluginDriver.capabilities.contains(.typedCellValues)
+    }
+
+    private func gated(_ cells: [PluginCellValue]) -> [PluginCellValue] {
+        forwardsTypedCells ? cells : cells.downgradedToLegacyCases
+    }
+
+    private func gated(_ rows: [[PluginCellValue]]) -> [[PluginCellValue]] {
+        forwardsTypedCells ? rows : rows.downgradedToLegacyCases
+    }
+
     var supportsTransactions: Bool { pluginDriver.supportsTransactions }
 
     var supportsBulkLoad: Bool { pluginDriver.supportsBulkLoad }
@@ -47,11 +59,13 @@ struct PluginGenerationDriver: GenerationDriver {
         table: GenerationTableReference,
         columns: [String]
     ) async throws -> (any PluginBulkLoadWriter)? {
-        try await pluginDriver.bulkLoadWriter(
+        guard let writer = try await pluginDriver.bulkLoadWriter(
             table: table.table,
             schema: table.schema ?? schema,
             columns: columns
-        )
+        ) else { return nil }
+        guard forwardsTypedCells else { return LegacyCellBulkLoadWriter(wrapping: writer) }
+        return writer
     }
 
     func beginTransaction() async throws {
@@ -99,7 +113,7 @@ struct PluginGenerationDriver: GenerationDriver {
                 table: table.table,
                 schema: table.schema ?? schema,
                 columns: columns,
-                rows: rows,
+                rows: gated(rows),
                 harvestColumns: harvestColumns
             )
             if let harvested { return harvested }
@@ -146,7 +160,10 @@ struct PluginGenerationDriver: GenerationDriver {
         let sql = "UPDATE \(name) SET \(assignmentList) WHERE \(predicate)"
         let expected = setColumns.count + keyColumns.count
         for assignment in assignments where assignment.count == expected {
-            _ = try await driver.executeParameterized(query: sql, parameters: assignment)
+            _ = try await driver.executeParameterized(
+                query: sql,
+                parameters: assignment.map(\.asAny)
+            )
         }
     }
 
@@ -193,9 +210,38 @@ struct PluginGenerationDriver: GenerationDriver {
         let notNull = key.columns
             .map { "\(adapter.quoteIdentifier($0)) IS NOT NULL" }
             .joined(separator: " AND ")
-        let query = "SELECT DISTINCT \(columnList) FROM \(table) WHERE \(notNull) LIMIT \(limit)"
-        let result = try await driver.execute(query: query)
+        let result = try await driver.execute(
+            query: Self.limitedDistinctSelect(
+                columns: columnList,
+                from: table,
+                where: notNull,
+                limit: limit,
+                style: PluginManager.autoLimitStyle(for: databaseType)
+            )
+        )
         return result.rows
+    }
+
+    /// `LIMIT` is not universal: SQL Server spells it `TOP` before the column
+    /// list and Oracle spells it `FETCH FIRST` after the predicate. This type
+    /// serves every driver, so the clause comes from the dialect.
+    private static func limitedDistinctSelect(
+        columns: String,
+        from table: String,
+        where predicate: String,
+        limit: Int,
+        style: AutoLimitStyle
+    ) -> String {
+        switch style {
+        case .top:
+            return "SELECT DISTINCT TOP \(limit) \(columns) FROM \(table) WHERE \(predicate)"
+        case .fetchFirst:
+            return "SELECT DISTINCT \(columns) FROM \(table) WHERE \(predicate) FETCH FIRST \(limit) ROWS ONLY"
+        case .none:
+            return "SELECT DISTINCT \(columns) FROM \(table) WHERE \(predicate)"
+        default:
+            return "SELECT DISTINCT \(columns) FROM \(table) WHERE \(predicate) LIMIT \(limit)"
+        }
     }
 
     func loadQueryValues(source: SqlQuerySource, limit: Int) async throws -> [PluginCellValue] {

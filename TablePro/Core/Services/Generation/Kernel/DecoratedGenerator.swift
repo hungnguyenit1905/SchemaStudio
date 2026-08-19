@@ -117,11 +117,15 @@ final class DecoratedGenerator {
         }
     }
 
+    /// The null roll comes first so a row that ends up NULL never reserves a
+    /// unique value. Drawing first burned one value out of the domain per null
+    /// row, which exhausts a column whose domain is only as large as the row
+    /// count. `rollsBelow` reads no word at 0%, so a column without nulls draws
+    /// exactly the stream it did before.
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
+        guard !rng.rollsBelow(percent: common.nullPercent) else { return .null }
         let value = try uniqueChecked(row: row, index: index)
-        let blanked = shouldBlank() ? Self.blanked(value) : value
-        guard rng.rollsBelow(percent: common.nullPercent) else { return blanked }
-        return .null
+        return shouldBlank() ? Self.blanked(value) : value
     }
 
     /// A blank is a value like any other, so emitting it on a column that has to
@@ -174,6 +178,15 @@ final class DecoratedGenerator {
                 )
             )
         )
+    }
+
+    /// Only the tracked strategy can take a value back. A shuffled range hands
+    /// out each member once by construction, and returning one would let it be
+    /// drawn twice.
+    func discard(_ value: PluginCellValue) {
+        guard case .tracked(var tracker) = unique else { return }
+        tracker.withdraw(value)
+        unique = .tracked(tracker)
     }
 
     private func uniqueChecked(row: RowContext, index: Int) throws -> PluginCellValue {
