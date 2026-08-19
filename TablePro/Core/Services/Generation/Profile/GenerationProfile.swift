@@ -5,6 +5,33 @@
 
 import Foundation
 
+/// Where a profile was built, by name only. A connection is named, never
+/// identified: an exported profile has to be safe to attach to a bug report, so
+/// it carries nothing that could reach a server and nothing that identifies a
+/// connection on this machine. Import rebinds it to a connection the user picks.
+struct GenerationProfileScope: Codable, Sendable, Hashable {
+    var connectionName: String?
+    var database: String?
+    var schema: String?
+
+    init(connectionName: String? = nil, database: String? = nil, schema: String? = nil) {
+        self.connectionName = connectionName
+        self.database = database
+        self.schema = schema
+    }
+
+    var isEmpty: Bool {
+        (connectionName ?? "").isEmpty && (database ?? "").isEmpty && (schema ?? "").isEmpty
+    }
+
+    var summary: String {
+        [connectionName, database, schema]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+            .joined(separator: " / ")
+    }
+}
+
 /// A saved configuration for a generation run. It stores **names**, never server
 /// identifiers: an OID changes across a dump and restore, a table name does not.
 struct GenerationProfile: Codable, Sendable, Hashable {
@@ -14,17 +41,20 @@ struct GenerationProfile: Codable, Sendable, Hashable {
     var name: String
     var seed: UInt64
     var tables: [GenerationTableProfile]
+    var scope: GenerationProfileScope?
 
     init(
         version: Int = GenerationProfile.currentVersion,
         name: String,
         seed: UInt64,
-        tables: [GenerationTableProfile]
+        tables: [GenerationTableProfile],
+        scope: GenerationProfileScope? = nil
     ) {
         self.version = version
         self.name = name
         self.seed = seed
         self.tables = tables
+        self.scope = scope
     }
 
     init(from decoder: Decoder) throws {
@@ -40,6 +70,7 @@ struct GenerationProfile: Codable, Sendable, Hashable {
         name = try container.decode(String.self, forKey: .name)
         seed = try container.decodeIfPresent(UInt64.self, forKey: .seed) ?? 0
         tables = try container.decodeIfPresent([GenerationTableProfile].self, forKey: .tables) ?? []
+        scope = try container.decodeIfPresent(GenerationProfileScope.self, forKey: .scope)
     }
 
     func table(named table: String, schema: String?) -> GenerationTableProfile? {

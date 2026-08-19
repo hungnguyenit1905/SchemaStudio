@@ -18,6 +18,7 @@ enum GenerationError: Error, Equatable {
     case tableDependencyCycle(tables: [String])
     case columnDependencyCycle(table: String, columns: [String])
     case unsupportedProfileVersion(found: Int, supported: Int)
+    case templateDidNotMatch(template: String)
     case unknownColumn(table: String, column: String)
     case referencePoolTooSmall(table: String, columns: [String], poolCount: Int, rowCount: Int)
     case destructiveOperationBlocked(table: String)
@@ -102,6 +103,11 @@ extension GenerationError: LocalizedError {
                 found,
                 supported
             )
+        case .templateDidNotMatch(let template):
+            return String(
+                format: String(localized: "None of the tables the %@ template fills are in this database."),
+                template
+            )
         case .unknownColumn(let table, let column):
             return String(format: String(localized: "%@ has no column named %@."), table, column)
         case .referencePoolTooSmall(let table, let columns, let poolCount, let rowCount):
@@ -171,6 +177,8 @@ extension GenerationError: LocalizedError {
             return String(localized: "Change one of these columns to a generator that does not read another column.")
         case .unsupportedProfileVersion:
             return String(localized: "Update SchemaStudio, or rebuild the profile in this version.")
+        case .templateDidNotMatch:
+            return String(localized: "Pick a template that matches this schema, or map the columns yourself.")
         case .unknownColumn:
             return String(localized: "Reload the profile so it matches the table as it is now.")
         case .referencePoolTooSmall:

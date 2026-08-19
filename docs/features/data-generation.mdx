@@ -286,8 +286,38 @@ the first failing row of each, so the cause is visible without re-running.
 
 ## Profiles
 
-The whole configuration is saved as a named profile and run again later. Profiles store table and
-column names rather than internal identifiers, so a profile still opens after the schema changes.
-On load, the current schema is compared against it: a column that no longer exists is dropped with
-a warning, a new column is auto-mapped and highlighted, and a column whose type changed is checked
-against its generator and reset to the type default if the two no longer suit each other.
+The whole configuration is saved as a named profile and run again later. Open **Profiles…** from the
+first or second step of the wizard to save what you have set up, load something you saved before, or
+start from a template.
+
+Profiles store table and column names rather than internal identifiers, so a profile still opens
+after the schema changes. On load, the current schema is compared against it: a column that no
+longer exists is dropped, a new column is auto-mapped, and a column whose type changed is checked
+against its generator and reset to the type default if the two no longer suit each other. When
+anything would change, the list of changes is shown first, and the profile is only applied once you
+accept it. A profile that still fits the schema loads without asking.
+
+### Export and import
+
+**Export** writes a profile to a JSON file, and **Import…** reads one back. An exported profile
+holds the tables, the generators, their settings and the seed. It holds no host, port, user or
+password, and nothing that identifies a connection on your machine, so it is safe to attach to a bug
+report or commit to a repository. A profile records the connection, database and schema it was built
+against by name only, and an imported profile is bound to whatever connection the wizard has open.
+
+### Templates
+
+A template is a profile written against a shape rather than against one database. Two ship with the
+app:
+
+| Template | Tables |
+|---|---|
+| E-commerce | `users`, `products`, `orders`, `order_items` |
+| CRM | `companies`, `contacts`, `deals`, `activities` |
+
+Applying one matches its tables and columns against the real schema by name, ignoring case. Columns
+the template does not name, and columns whose generator does not fit the column as it is now, are
+auto-mapped instead, and the wizard says which ones. A template that matches none of the tables in
+the database is refused rather than applied, so it never leaves you with an empty profile to debug.
+
+Scheduled runs are not available. A generation run happens when you start it.

@@ -13,6 +13,7 @@ struct DataGenerationWizard: View {
     @State private var showStopConfirmation = false
     @State private var showParentPrompt = false
     @State private var showPreview = false
+    @State private var showProfiles = false
 
     var body: some View {
         WizardShell(
@@ -35,6 +36,9 @@ struct DataGenerationWizard: View {
         }
         .sheet(isPresented: $showPreview) {
             GenerationPreviewSheet(model: model, isPresented: $showPreview)
+        }
+        .sheet(isPresented: $showProfiles) {
+            GenerationProfileListView(model: model, isPresented: $showProfiles)
         }
         .alert(String(localized: "Stop generating?"), isPresented: $showStopConfirmation) {
             Button(String(localized: "Keep Running"), role: .cancel) {}
@@ -89,6 +93,8 @@ struct DataGenerationWizard: View {
     @ViewBuilder private var footerButtons: some View {
         switch model.step {
         case .scope:
+            Button(String(localized: "Profiles…")) { showProfiles = true }
+                .accessibilityIdentifier("generation.profiles")
             Button(String(localized: "Cancel")) { isPresented = false }
                 .keyboardShortcut(.cancelAction)
             Button(String(localized: "Next")) { requestColumns() }
@@ -97,6 +103,8 @@ struct DataGenerationWizard: View {
                 .accessibilityIdentifier("generation.next")
         case .columns:
             Button(String(localized: "Back")) { model.step = .scope }
+            Button(String(localized: "Profiles…")) { showProfiles = true }
+                .accessibilityIdentifier("generation.profiles")
             Button(String(localized: "Preview")) {
                 showPreview = true
                 Task { await model.loadPreview() }

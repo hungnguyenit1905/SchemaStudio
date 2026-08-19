@@ -92,6 +92,16 @@ final class DataGenerationWizardModel {
     private(set) var profile = GenerationProfile(name: "generation", seed: 0, tables: [])
     private(set) var mappingWarnings: [ValidationWarning] = []
 
+    var savedProfiles: [SavedGenerationProfile] = []
+    var isLoadingProfiles = false
+    var profileMessage: String?
+
+    /// A profile that has been reconciled but not yet adopted. It waits here while
+    /// the user reads what loading it would change.
+    var pendingProfile: GenerationProfile?
+    var pendingDiff: GenerationProfileDiff?
+    var pendingWarnings: [ValidationWarning] = []
+
     /// Turns true once `blocksDestructiveOperations` lands on `DatabaseConnection`,
     /// which belongs to the pending destructive-operation plan. Until then nothing
     /// is gated here. It only decides whether the emptying option is *offered*: the
@@ -329,6 +339,30 @@ final class DataGenerationWizardModel {
         mappingWarnings = warnings
         selectedTableName = tableProfiles.first?.table
         selectedColumnName = tableProfiles.first?.columns.first?.column
+    }
+
+    /// Replaces the whole configuration from a saved profile or a template. The
+    /// table list follows the profile, so the scope step and the column grid never
+    /// disagree about what the run will fill.
+    func adopt(_ profile: GenerationProfile, warnings: [ValidationWarning]) {
+        self.profile = profile
+        mappingWarnings = warnings
+        seedText = String(profile.seed)
+        var byName: [String: GenerationTableProfile] = [:]
+        for tableProfile in profile.tables {
+            byName[tableProfile.table] = tableProfile
+        }
+        for index in tables.indices {
+            guard let tableProfile = byName[tables[index].name] else {
+                tables[index].isSelected = false
+                continue
+            }
+            tables[index].isSelected = true
+            tables[index].rowCount = tableProfile.rowCount
+        }
+        selectedTableName = profile.tables.first?.table
+        selectedColumnName = profile.tables.first?.columns.first?.column
+        preview = nil
     }
 
     func columns(ofTable table: String) -> [GenerationColumnProfile] {
