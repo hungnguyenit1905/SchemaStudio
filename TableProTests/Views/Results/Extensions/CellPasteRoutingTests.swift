@@ -75,6 +75,7 @@ struct CellPasteRoutingTests {
         stub.text = "anything\twith\ttabs"
         stub.hasGridRowsValue = true
         ClipboardService.shared = stub
+        defer { ClipboardService.shared = NSPasteboardClipboardProvider() }
 
         let coordinator = makeCoordinator(columns: ["a", "b", "c"], rowCount: 5)
         let result = coordinator.pasteCellsFromClipboard(anchorRow: 0, anchorColumn: 0)
@@ -88,6 +89,7 @@ struct CellPasteRoutingTests {
         stub.text = "x\ty\tz\nq\tw\te"
         stub.hasGridRowsValue = false
         ClipboardService.shared = stub
+        defer { ClipboardService.shared = NSPasteboardClipboardProvider() }
 
         let coordinator = makeCoordinator(columns: ["a", "b", "c"], rowCount: 5)
         let result = coordinator.pasteCellsFromClipboard(anchorRow: 0, anchorColumn: 0)
@@ -101,6 +103,7 @@ struct CellPasteRoutingTests {
         stub.text = "x\ty"
         stub.hasGridRowsValue = false
         ClipboardService.shared = stub
+        defer { ClipboardService.shared = NSPasteboardClipboardProvider() }
 
         let coordinator = makeCoordinator(columns: ["a", "b", "c", "d", "e"], rowCount: 5)
         let result = coordinator.pasteCellsFromClipboard(anchorRow: 0, anchorColumn: 0)
@@ -113,6 +116,7 @@ struct CellPasteRoutingTests {
         let stub = StubClipboard()
         stub.text = "x\ty"
         ClipboardService.shared = stub
+        defer { ClipboardService.shared = NSPasteboardClipboardProvider() }
 
         let coordinator = TableViewCoordinator(
             changeManager: AnyChangeManager(DataChangeManager()),

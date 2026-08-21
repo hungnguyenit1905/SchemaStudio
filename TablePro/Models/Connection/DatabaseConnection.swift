@@ -362,12 +362,18 @@ struct DatabaseConnection: Identifiable, Hashable {
     var database: String
     var username: String
     var type: DatabaseType
-    var sshConfig: SSHConfiguration
+    var sshConfig: SSHConfiguration {
+        didSet { syncSSHTunnelMode() }
+    }
+
     var sslConfig: SSLConfiguration
     var color: ConnectionColor
     var tagIds: [UUID]
     var groupId: UUID?
-    var sshProfileId: UUID?
+    var sshProfileId: UUID? {
+        didSet { syncSSHTunnelMode() }
+    }
+
     var sshTunnelMode: SSHTunnelMode
     var cloudflareTunnelMode: CloudflareTunnelMode = .disabled
     var cloudSQLProxyMode: CloudSQLProxyMode = .disabled
@@ -516,15 +522,7 @@ struct DatabaseConnection: Identifiable, Hashable {
 
         // Auto-derive sshTunnelMode from legacy fields if not explicitly set
         if sshTunnelMode == .disabled {
-            if let profileId = sshProfileId {
-                var snapshot = sshConfig
-                snapshot.enabled = true
-                self.sshTunnelMode = .profile(id: profileId, snapshot: snapshot)
-            } else if sshConfig.enabled {
-                self.sshTunnelMode = .inline(sshConfig)
-            } else {
-                self.sshTunnelMode = .disabled
-            }
+            self.sshTunnelMode = Self.derivedTunnelMode(sshConfig: sshConfig, sshProfileId: sshProfileId)
         } else {
             self.sshTunnelMode = sshTunnelMode
         }
@@ -556,6 +554,24 @@ struct DatabaseConnection: Identifiable, Hashable {
             if let v = oracleServiceName { fields["oracleServiceName"] = v }
             self.additionalFields = fields
         }
+    }
+
+    private static func derivedTunnelMode(
+        sshConfig: SSHConfiguration,
+        sshProfileId: UUID?
+    ) -> SSHTunnelMode {
+        if let sshProfileId {
+            var snapshot = sshConfig
+            snapshot.enabled = true
+            return .profile(id: sshProfileId, snapshot: snapshot)
+        }
+        return sshConfig.enabled ? .inline(sshConfig) : .disabled
+    }
+
+    /// Keeps the derived tunnel mode in step with the legacy fields it is
+    /// derived from, so mutating either one after init cannot leave it stale.
+    private mutating func syncSSHTunnelMode() {
+        sshTunnelMode = Self.derivedTunnelMode(sshConfig: sshConfig, sshProfileId: sshProfileId)
     }
 
     /// Returns the display color (custom color or database type color)
@@ -658,20 +674,10 @@ extension DatabaseConnection: Codable {
             .decodeIfPresent(CloudSQLProxyMode.self, forKey: .cloudSQLProxyMode) ?? .disabled
         socksProxyMode = try container.decodeIfPresent(SOCKSProxyMode.self, forKey: .socksProxyMode) ?? .disabled
 
-        // Migrate from legacy fields if sshTunnelMode is not present
-        if let tunnelMode = try container.decodeIfPresent(SSHTunnelMode.self, forKey: .sshTunnelMode) {
-            sshTunnelMode = tunnelMode
-        } else {
-            if let profileId = sshProfileId {
-                var snapshot = sshConfig
-                snapshot.enabled = true
-                sshTunnelMode = .profile(id: profileId, snapshot: snapshot)
-            } else if sshConfig.enabled {
-                sshTunnelMode = .inline(sshConfig)
-            } else {
-                sshTunnelMode = .disabled
-            }
-        }
+        // Migrate from legacy fields when sshTunnelMode is absent or unreadable
+        let decodedTunnelMode = try? container.decodeIfPresent(SSHTunnelMode.self, forKey: .sshTunnelMode)
+        sshTunnelMode = decodedTunnelMode.flatMap { $0 }
+            ?? Self.derivedTunnelMode(sshConfig: sshConfig, sshProfileId: sshProfileId)
     }
 
     func encode(to encoder: Encoder) throws {

@@ -227,6 +227,12 @@ public actor MCPConnectionBridge {
                 case .null: return .null
                 case .text(let s): return .string(s)
                 case .bytes(let d): return .string(d.base64EncodedString())
+                case .int(let value): return .int(Int(value))
+                case .double(let value): return .double(value)
+                case .bool(let value): return .bool(value)
+                case .decimalText, .date, .time, .timestamp, .uuid, .array:
+                    return .string(cell.textFallback)
+                @unknown default: return .string(cell.textFallback)
                 }
             })
         }

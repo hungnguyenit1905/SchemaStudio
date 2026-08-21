@@ -1,0 +1,68 @@
+# city\tstate\tstateCode\tpostalCode\tcountryCode\tlatitude\tlongitude\ttimeZone
+New York	New York	NY	10001	US	40.7128	-74.0060	America/New_York
+Brooklyn	New York	NY	11201	US	40.6782	-73.9442	America/New_York
+Buffalo	New York	NY	14201	US	42.8864	-78.8784	America/New_York
+Los Angeles	California	CA	90001	US	34.0522	-118.2437	America/Los_Angeles
+San Francisco	California	CA	94102	US	37.7749	-122.4194	America/Los_Angeles
+San Diego	California	CA	92101	US	32.7157	-117.1611	America/Los_Angeles
+Sacramento	California	CA	95814	US	38.5816	-121.4944	America/Los_Angeles
+San Jose	California	CA	95110	US	37.3382	-121.8863	America/Los_Angeles
+Chicago	Illinois	IL	60601	US	41.8781	-87.6298	America/Chicago
+Springfield	Illinois	IL	62701	US	39.7817	-89.6501	America/Chicago
+Houston	Texas	TX	77002	US	29.7604	-95.3698	America/Chicago
+Dallas	Texas	TX	75201	US	32.7767	-96.7970	America/Chicago
+Austin	Texas	TX	78701	US	30.2672	-97.7431	America/Chicago
+San Antonio	Texas	TX	78205	US	29.4241	-98.4936	America/Chicago
+Phoenix	Arizona	AZ	85004	US	33.4484	-112.0740	America/Phoenix
+Tucson	Arizona	AZ	85701	US	32.2226	-110.9747	America/Phoenix
+Philadelphia	Pennsylvania	PA	19102	US	39.9526	-75.1652	America/New_York
+Pittsburgh	Pennsylvania	PA	15222	US	40.4406	-79.9959	America/New_York
+Miami	Florida	FL	33130	US	25.7617	-80.1918	America/New_York
+Orlando	Florida	FL	32801	US	28.5383	-81.3792	America/New_York
+Tampa	Florida	FL	33602	US	27.9506	-82.4572	America/New_York
+Jacksonville	Florida	FL	32202	US	30.3322	-81.6557	America/New_York
+Atlanta	Georgia	GA	30303	US	33.7490	-84.3880	America/New_York
+Savannah	Georgia	GA	31401	US	32.0809	-81.0912	America/New_York
+Boston	Massachusetts	MA	02108	US	42.3601	-71.0589	America/New_York
+Worcester	Massachusetts	MA	01608	US	42.2626	-71.8023	America/New_York
+Seattle	Washington	WA	98101	US	47.6062	-122.3321	America/Los_Angeles
+Spokane	Washington	WA	99201	US	47.6588	-117.4260	America/Los_Angeles
+Portland	Oregon	OR	97205	US	45.5152	-122.6784	America/Los_Angeles
+Eugene	Oregon	OR	97401	US	44.0521	-123.0868	America/Los_Angeles
+Denver	Colorado	CO	80202	US	39.7392	-104.9903	America/Denver
+Colorado Springs	Colorado	CO	80903	US	38.8339	-104.8214	America/Denver
+Las Vegas	Nevada	NV	89101	US	36.1699	-115.1398	America/Los_Angeles
+Reno	Nevada	NV	89501	US	39.5296	-119.8138	America/Los_Angeles
+Detroit	Michigan	MI	48226	US	42.3314	-83.0458	America/Detroit
+Grand Rapids	Michigan	MI	49503	US	42.9634	-85.6681	America/Detroit
+Minneapolis	Minnesota	MN	55401	US	44.9778	-93.2650	America/Chicago
+Saint Paul	Minnesota	MN	55102	US	44.9537	-93.0900	America/Chicago
+Nashville	Tennessee	TN	37201	US	36.1627	-86.7816	America/Chicago
+Memphis	Tennessee	TN	38103	US	35.1495	-90.0490	America/Chicago
+Charlotte	North Carolina	NC	28202	US	35.2271	-80.8431	America/New_York
+Raleigh	North Carolina	NC	27601	US	35.7796	-78.6382	America/New_York
+Columbus	Ohio	OH	43215	US	39.9612	-82.9988	America/New_York
+Cleveland	Ohio	OH	44113	US	41.4993	-81.6944	America/New_York
+Cincinnati	Ohio	OH	45202	US	39.1031	-84.5120	America/New_York
+Indianapolis	Indiana	IN	46204	US	39.7684	-86.1581	America/Indiana/Indianapolis
+Milwaukee	Wisconsin	WI	53202	US	43.0389	-87.9065	America/Chicago
+Madison	Wisconsin	WI	53703	US	43.0731	-89.4012	America/Chicago
+Kansas City	Missouri	MO	64106	US	39.0997	-94.5786	America/Chicago
+St. Louis	Missouri	MO	63101	US	38.6270	-90.1994	America/Chicago
+New Orleans	Louisiana	LA	70112	US	29.9511	-90.0715	America/Chicago
+Baton Rouge	Louisiana	LA	70802	US	30.4515	-91.1871	America/Chicago
+Salt Lake City	Utah	UT	84101	US	40.7608	-111.8910	America/Denver
+Boise	Idaho	ID	83702	US	43.6150	-116.2023	America/Boise
+Albuquerque	New Mexico	NM	87102	US	35.0844	-106.6504	America/Denver
+Oklahoma City	Oklahoma	OK	73102	US	35.4676	-97.5164	America/Chicago
+Omaha	Nebraska	NE	68102	US	41.2565	-95.9345	America/Chicago
+Des Moines	Iowa	IA	50309	US	41.5868	-93.6250	America/Chicago
+Little Rock	Arkansas	AR	72201	US	34.7465	-92.2896	America/Chicago
+Richmond	Virginia	VA	23219	US	37.5407	-77.4360	America/New_York
+Virginia Beach	Virginia	VA	23451	US	36.8529	-75.9780	America/New_York
+Baltimore	Maryland	MD	21201	US	39.2904	-76.6122	America/New_York
+Charleston	South Carolina	SC	29401	US	32.7765	-79.9311	America/New_York
+Louisville	Kentucky	KY	40202	US	38.2527	-85.7585	America/New_York
+Birmingham	Alabama	AL	35203	US	33.5186	-86.8104	America/Chicago
+Anchorage	Alaska	AK	99501	US	61.2181	-149.9003	America/Anchorage
+Honolulu	Hawaii	HI	96813	US	21.3069	-157.8583	Pacific/Honolulu

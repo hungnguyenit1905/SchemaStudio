@@ -120,6 +120,10 @@ final class MQLExportPlugin: ExportFormatPlugin, SettablePlugin {
                                     jsonValue = "{\"$binary\": {\"base64\": \"\(data.base64EncodedString())\", \"subType\": \"00\"}}"
                                 case .text(let value):
                                     jsonValue = MQLExportHelpers.mqlJsonValue(for: value)
+                                case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                                    jsonValue = MQLExportHelpers.mqlJsonValue(for: cell.textFallback)
+                                @unknown default:
+                                    jsonValue = MQLExportHelpers.mqlJsonValue(for: cell.textFallback)
                                 }
                                 fields.append("\"\(PluginExportUtilities.escapeJSONString(column))\": \(jsonValue)")
                             }

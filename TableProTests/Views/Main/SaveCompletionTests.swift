@@ -175,8 +175,8 @@ struct SaveCompletionTests {
 
     // MARK: - Safe Mode Confirmation Path
 
-    @Test("saveChanges with alert level and pending truncates clears inout params immediately")
-    func alertLevel_pendingTruncates_clearsParams() {
+    @Test("saveChanges with alert level keeps pending truncates when no SQL can be built")
+    func alertLevel_pendingTruncates_keptWhenNoSQL() {
         let (coordinator, tabManager, _) = makeCoordinator(safeModeLevel: .alert)
         tabManager.addTab(databaseName: "testdb")
 
@@ -190,12 +190,12 @@ struct SaveCompletionTests {
             tableOperationOptions: &options
         )
 
-        // Confirmation path clears inout params before returning to prevent double-execution
-        #expect(truncates.isEmpty)
+        #expect(tabManager.tabs.first?.execution.errorMessage != nil)
+        #expect(truncates.contains("users"))
     }
 
-    @Test("saveChanges with safeMode level and pending deletes clears inout params")
-    func safeModeLevel_pendingDeletes_clearsParams() {
+    @Test("saveChanges with safeMode level keeps pending deletes when no SQL can be built")
+    func safeModeLevel_pendingDeletes_keptWhenNoSQL() {
         let (coordinator, tabManager, _) = makeCoordinator(safeModeLevel: .safeMode)
         tabManager.addTab(databaseName: "testdb")
 
@@ -209,7 +209,8 @@ struct SaveCompletionTests {
             tableOperationOptions: &options
         )
 
-        #expect(deletes.isEmpty)
+        #expect(tabManager.tabs.first?.execution.errorMessage != nil)
+        #expect(deletes.contains("orders"))
     }
 
     @Test("saveChanges with alert level and no changes does nothing")
@@ -232,8 +233,8 @@ struct SaveCompletionTests {
         #expect(deletes.isEmpty)
     }
 
-    @Test("saveChanges with silent level and pending truncates clears via normal path")
-    func silentLevel_pendingTruncates_clearsViaNormalPath() {
+    @Test("saveChanges with silent level keeps pending truncates when no SQL can be built")
+    func silentLevel_pendingTruncates_keptWhenNoSQL() {
         let (coordinator, tabManager, _) = makeCoordinator(safeModeLevel: .silent)
         tabManager.addTab(databaseName: "testdb")
 
@@ -247,8 +248,8 @@ struct SaveCompletionTests {
             tableOperationOptions: &options
         )
 
-        // Silent level takes the normal (non-confirmation) path which also clears immediately
-        #expect(truncates.isEmpty)
+        #expect(tabManager.tabs.first?.execution.errorMessage != nil)
+        #expect(truncates.contains("users"))
     }
 
     // MARK: - Row Operations and Safe Mode

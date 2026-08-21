@@ -506,6 +506,12 @@ extension PluginManager {
     }
 
     func autoLimitStyle(for databaseType: DatabaseType) -> AutoLimitStyle {
+        Self.autoLimitStyle(for: databaseType)
+    }
+
+    /// The registry is not actor-isolated, so a background writer can read the
+    /// dialect without hopping to the main actor for it.
+    nonisolated static func autoLimitStyle(for databaseType: DatabaseType) -> AutoLimitStyle {
         guard let snapshot = PluginMetadataRegistry.shared.snapshot(forTypeId: databaseType.pluginTypeId) else {
             return .limit
         }

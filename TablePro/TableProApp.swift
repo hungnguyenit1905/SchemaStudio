@@ -558,6 +558,11 @@ struct AppMenuCommands: Commands {
                 actions?.openDataTransfer()
             }
             .disabled(!(actions?.isConnected ?? false))
+
+            Button(String(localized: "Generate Data\u{2026}")) {
+                actions?.openDataGeneration()
+            }
+            .disabled(!(actions?.isConnected ?? false))
         }
 
         // Edit menu - Undo/Redo (smart handling for both text editor and data grid)

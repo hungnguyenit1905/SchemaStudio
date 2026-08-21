@@ -100,20 +100,17 @@ struct CommandActionsDispatchTests {
         #expect(tab?.content.query == "SELECT 2")
     }
 
-    @Test("insertQueryFromAI appends to existing query")
-    func insertQueryFromAI_appendsToExisting() {
-        let (actions, coordinator) = makeSUT()
+    @Test("insertQueryFromAI leaves a tab that already has a query untouched")
+    func insertQueryFromAI_keepsExistingQuery() {
+        let (_, coordinator) = makeSUT()
         coordinator.tabManager.addTab(databaseName: "testdb")
 
-        // Set an initial query on the tab
         if let idx = coordinator.tabManager.selectedTabIndex {
             coordinator.tabManager.tabs[idx].content.query = "SELECT 1"
         }
 
-        actions.insertQueryFromAI("SELECT 2")
-
-        let tab = coordinator.tabManager.selectedTab
-        #expect(tab?.content.query == "SELECT 1\n\nSELECT 2")
+        #expect(coordinator.aiInsertReusesSelectedQueryTab == false)
+        #expect(coordinator.tabManager.selectedTab?.content.query == "SELECT 1")
     }
 
     // MARK: - copySelectedRows (structure mode)

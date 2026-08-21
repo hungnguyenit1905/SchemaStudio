@@ -50,7 +50,7 @@ struct OracleCellFormattingTests {
         let offsetMagnitude = abs(expectedOffsetSeconds)
         let hours = offsetMagnitude / 3_600
         let minutes = (offsetMagnitude % 3_600) / 60
-        let expectedOffset = String(format: "%@%02d%02d", sign, hours, minutes)
+        let expectedOffset = String(format: "%@%02d:%02d", sign, hours, minutes)
         #expect(result.hasSuffix(expectedOffset), "expected offset \(expectedOffset) at end of \(result)")
     }
 

@@ -13,7 +13,7 @@ A plugin is a macOS loadable bundle target with `WRAPPER_EXTENSION = tableplugin
 
 | Key | Type | Required | Purpose |
 |-----|------|----------|---------|
-| `TableProPluginKitVersion` | integer | Yes | PluginKit ABI version the plugin was built against (18, unchanged since 0.48.0) |
+| `TableProPluginKitVersion` | integer | Yes | PluginKit ABI version the plugin was built against (20) |
 | `TableProProvidesDatabaseTypeIds` | array of strings | Recommended | Database type IDs the plugin serves. Enables lazy loading. |
 | `TableProMinAppVersion` | string | No | Loader rejects the plugin on older app versions |
 | `CFBundleShortVersionString` | string | Yes | Plugin version, used for registry update checks |
@@ -77,7 +77,7 @@ TableProPluginKit builds with Swift Library Evolution, so its public ABI is resi
 If you change PluginKit itself, the rules are:
 
 - **Additive, no version bump**: a new protocol requirement with a default implementation, a new field on a non-frozen struct added through a new initializer overload, reordering requirements.
-- **Breaking, bump required**: changing an existing requirement's signature, removing a requirement, adding a requirement without a default, adding a case to a `@frozen` enum, changing a `@frozen` type's layout. Bump `currentPluginKitVersion` and every plugin's `TableProPluginKitVersion`, then re-release all registry plugins.
+- **Breaking, bump required**: changing an existing requirement's signature, removing a requirement, adding a requirement without a default, adding a case to a `@frozen` enum, changing a `@frozen` type's layout. Bump `currentPluginKitVersion` and `minimumCompatiblePluginKitVersion` together, plus every plugin's `TableProPluginKitVersion`, then re-release all registry plugins.
 - **Never remove a published requirement, even one that defaulted to `nil`.** Library Evolution fills in requirements added after a plugin was built, but it cannot rescue one removed out from under it. Removing a requirement deletes its method descriptor and its default-implementation symbol, and every shipped plugin hard-references both in its witness table, so it fails to load with "Bundle failed to load executable". That shipped on 0.58 and broke MongoDB, Oracle, Cassandra, and Elasticsearch (#1917). If the app stops using a requirement, leave it in place with its default.
 - **Never add a parameter to an existing public initializer or function, even with a default value.** It replaces the mangled symbol and every already-built plugin fails to load. Add a new overload and mark the old one `@_disfavoredOverload`.
 

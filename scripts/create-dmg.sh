@@ -15,6 +15,21 @@ FINAL_DMG="build/Release/$DMG_NAME"
 SIGN_IDENTITY="${SIGN_IDENTITY:-Developer ID Application: Dat Ngo Quoc (D7HJ5TFYCU)}"
 NOTARIZE="${NOTARIZE:-false}"
 
+# Mirrors build-release.sh: without the Developer ID identity the DMG is ad-hoc
+# signed so packaging still succeeds. See that script for why ad-hoc rather than
+# unsigned.
+if [ "$SIGN_IDENTITY" != "-" ] && ! security find-identity -v -p codesigning 2>/dev/null | grep -qF "$SIGN_IDENTITY"; then
+    echo "⚠️  Signing identity not available; falling back to ad-hoc signing"
+    SIGN_IDENTITY="-"
+fi
+
+if [ "$SIGN_IDENTITY" = "-" ]; then
+    CODESIGN_TIMESTAMP="--timestamp=none"
+    NOTARIZE="false"
+else
+    CODESIGN_TIMESTAMP="--timestamp"
+fi
+
 echo "📦 Creating DMG installer for $APP_NAME..."
 echo "   Version: $VERSION"
 echo "   Architecture: $ARCH"
@@ -221,8 +236,8 @@ if [ ! -f "$FINAL_DMG" ]; then
 fi
 
 # Sign the DMG
-echo "🔏 Signing DMG with: $SIGN_IDENTITY"
-codesign -fs "$SIGN_IDENTITY" --timestamp "$FINAL_DMG"
+echo "🔏 Signing DMG with: ${SIGN_IDENTITY/#-/ad-hoc}"
+codesign -fs "$SIGN_IDENTITY" $CODESIGN_TIMESTAMP "$FINAL_DMG"
 if ! codesign --verify "$FINAL_DMG" 2>&1; then
     echo "❌ ERROR: DMG signature verification failed"
     exit 1

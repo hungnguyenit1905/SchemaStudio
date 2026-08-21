@@ -1,0 +1,55 @@
+{
+  "id": "ecommerce",
+  "name": "E-commerce",
+  "summary": "Customers, products, orders and order lines.",
+  "tables": [
+    {
+      "table": "users",
+      "rowCount": 200,
+      "columns": [
+        { "column": "email", "generator": "Email" },
+        { "column": "username", "generator": "Username" },
+        { "column": "first_name", "generator": "FirstName" },
+        { "column": "last_name", "generator": "LastName" },
+        { "column": "full_name", "generator": "FullName" },
+        { "column": "phone", "generator": "PhoneNumber" },
+        { "column": "city", "generator": "City" },
+        { "column": "country", "generator": "Country" },
+        { "column": "postal_code", "generator": "PostalCode" },
+        { "column": "created_at", "generator": "DateTime" }
+      ]
+    },
+    {
+      "table": "products",
+      "rowCount": 500,
+      "columns": [
+        { "column": "name", "generator": "ProductName" },
+        { "column": "sku", "generator": "SKU" },
+        { "column": "description", "generator": "LoremParagraph" },
+        { "column": "price", "generator": "Price" },
+        { "column": "currency", "generator": "CurrencyCode" },
+        { "column": "barcode", "generator": "EAN13" },
+        { "column": "slug", "generator": "Slug" },
+        { "column": "created_at", "generator": "DateTime" }
+      ]
+    },
+    {
+      "table": "orders",
+      "rowCount": 1000,
+      "columns": [
+        { "column": "total", "generator": "Price" },
+        { "column": "currency", "generator": "CurrencyCode" },
+        { "column": "shipping_address", "generator": "FullAddress" },
+        { "column": "created_at", "generator": "DateTime" }
+      ]
+    },
+    {
+      "table": "order_items",
+      "rowCount": 3000,
+      "columns": [
+        { "column": "quantity", "generator": "Integer" },
+        { "column": "unit_price", "generator": "Price" }
+      ]
+    }
+  ]
+}

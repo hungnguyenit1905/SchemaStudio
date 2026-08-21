@@ -150,6 +150,14 @@ internal final class DynamoDBPluginDriver: PluginDatabaseDriver, @unchecked Send
                     return ["N": value]
                 }
                 return ["S": value]
+            case .int, .double, .decimalText:
+                return ["N": param.textFallback]
+            case .bool(let value):
+                return ["BOOL": value]
+            case .date, .time, .timestamp, .uuid, .array:
+                return ["S": param.textFallback]
+            @unknown default:
+                return ["S": param.textFallback]
             }
         }
 

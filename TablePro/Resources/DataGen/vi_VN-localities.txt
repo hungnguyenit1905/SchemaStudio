@@ -1,0 +1,80 @@
+# Cấu trúc hai cấp sau sắp xếp 2025: phường/xã rồi tỉnh/thành phố. Toạ độ là gần đúng.
+# phường/xã\ttỉnh hoặc thành phố\tmã\tmã bưu chính\tmã quốc gia\tvĩ độ\tkinh độ\tmúi giờ
+Phường Hoàn Kiếm	Hà Nội	HN	100000	VN	21.0285	105.8542	Asia/Ho_Chi_Minh
+Phường Ba Đình	Hà Nội	HN	100000	VN	21.0355	105.8140	Asia/Ho_Chi_Minh
+Phường Đống Đa	Hà Nội	HN	100000	VN	21.0122	105.8271	Asia/Ho_Chi_Minh
+Phường Cầu Giấy	Hà Nội	HN	100000	VN	21.0313	105.7998	Asia/Ho_Chi_Minh
+Phường Hà Đông	Hà Nội	HN	100000	VN	20.9713	105.7788	Asia/Ho_Chi_Minh
+Xã Sóc Sơn	Hà Nội	HN	100000	VN	21.2600	105.8500	Asia/Ho_Chi_Minh
+Phường Sài Gòn	Hồ Chí Minh	SG	700000	VN	10.7769	106.7009	Asia/Ho_Chi_Minh
+Phường Bến Thành	Hồ Chí Minh	SG	700000	VN	10.7720	106.6980	Asia/Ho_Chi_Minh
+Phường Chợ Lớn	Hồ Chí Minh	SG	700000	VN	10.7540	106.6520	Asia/Ho_Chi_Minh
+Phường Thủ Đức	Hồ Chí Minh	SG	700000	VN	10.8494	106.7537	Asia/Ho_Chi_Minh
+Phường Tân Sơn Nhất	Hồ Chí Minh	SG	700000	VN	10.8188	106.6520	Asia/Ho_Chi_Minh
+Phường Bình Dương	Hồ Chí Minh	SG	700000	VN	10.9804	106.6519	Asia/Ho_Chi_Minh
+Phường Vũng Tàu	Hồ Chí Minh	SG	700000	VN	10.3460	107.0843	Asia/Ho_Chi_Minh
+Phường Hồng Bàng	Hải Phòng	HP	180000	VN	20.8600	106.6800	Asia/Ho_Chi_Minh
+Phường Ngô Quyền	Hải Phòng	HP	180000	VN	20.8560	106.6930	Asia/Ho_Chi_Minh
+Phường Hải Dương	Hải Phòng	HP	180000	VN	20.9373	106.3145	Asia/Ho_Chi_Minh
+Phường Hải Châu	Đà Nẵng	DN	550000	VN	16.0678	108.2208	Asia/Ho_Chi_Minh
+Phường Thanh Khê	Đà Nẵng	DN	550000	VN	16.0640	108.1870	Asia/Ho_Chi_Minh
+Phường Tam Kỳ	Đà Nẵng	DN	550000	VN	15.5736	108.4740	Asia/Ho_Chi_Minh
+Phường Hội An	Đà Nẵng	DN	550000	VN	15.8801	108.3380	Asia/Ho_Chi_Minh
+Phường Ninh Kiều	Cần Thơ	CT	900000	VN	10.0452	105.7469	Asia/Ho_Chi_Minh
+Phường Cái Răng	Cần Thơ	CT	900000	VN	10.0100	105.7800	Asia/Ho_Chi_Minh
+Phường Vị Thanh	Cần Thơ	CT	900000	VN	9.7840	105.4700	Asia/Ho_Chi_Minh
+Phường Phú Xuân	Huế	HU	530000	VN	16.4637	107.5909	Asia/Ho_Chi_Minh
+Phường Thuận Hoá	Huế	HU	530000	VN	16.4610	107.5850	Asia/Ho_Chi_Minh
+Phường Tuyên Quang	Tuyên Quang	TQ	300000	VN	21.8230	105.2140	Asia/Ho_Chi_Minh
+Phường Hà Giang	Tuyên Quang	TQ	300000	VN	22.8233	104.9784	Asia/Ho_Chi_Minh
+Phường Lào Cai	Lào Cai	LC	330000	VN	22.4856	103.9707	Asia/Ho_Chi_Minh
+Phường Yên Bái	Lào Cai	LC	330000	VN	21.7229	104.9113	Asia/Ho_Chi_Minh
+Phường Thái Nguyên	Thái Nguyên	TN	250000	VN	21.5942	105.8480	Asia/Ho_Chi_Minh
+Phường Bắc Kạn	Thái Nguyên	TN	250000	VN	22.1470	105.8348	Asia/Ho_Chi_Minh
+Phường Việt Trì	Phú Thọ	PT	290000	VN	21.3227	105.4024	Asia/Ho_Chi_Minh
+Phường Hoà Bình	Phú Thọ	PT	290000	VN	20.8133	105.3383	Asia/Ho_Chi_Minh
+Phường Vĩnh Yên	Phú Thọ	PT	290000	VN	21.3089	105.6049	Asia/Ho_Chi_Minh
+Phường Bắc Ninh	Bắc Ninh	BN	220000	VN	21.1861	106.0763	Asia/Ho_Chi_Minh
+Phường Bắc Giang	Bắc Ninh	BN	220000	VN	21.2731	106.1946	Asia/Ho_Chi_Minh
+Phường Phố Hiến	Hưng Yên	HY	160000	VN	20.6464	106.0511	Asia/Ho_Chi_Minh
+Phường Thái Bình	Hưng Yên	HY	160000	VN	20.4463	106.3366	Asia/Ho_Chi_Minh
+Phường Hoa Lư	Ninh Bình	NB	430000	VN	20.2506	105.9744	Asia/Ho_Chi_Minh
+Phường Nam Định	Ninh Bình	NB	430000	VN	20.4388	106.1621	Asia/Ho_Chi_Minh
+Phường Phủ Lý	Ninh Bình	NB	430000	VN	20.5411	105.9139	Asia/Ho_Chi_Minh
+Phường Đông Hà	Quảng Trị	QT	520000	VN	16.8163	107.1003	Asia/Ho_Chi_Minh
+Phường Đồng Hới	Quảng Trị	QT	520000	VN	17.4689	106.6223	Asia/Ho_Chi_Minh
+Phường Quảng Ngãi	Quảng Ngãi	QN	570000	VN	15.1214	108.8044	Asia/Ho_Chi_Minh
+Phường Kon Tum	Quảng Ngãi	QN	570000	VN	14.3497	108.0005	Asia/Ho_Chi_Minh
+Phường Quy Nhơn	Gia Lai	GL	600000	VN	13.7829	109.2196	Asia/Ho_Chi_Minh
+Phường Pleiku	Gia Lai	GL	600000	VN	13.9833	108.0000	Asia/Ho_Chi_Minh
+Phường Nha Trang	Khánh Hoà	KH	650000	VN	12.2388	109.1967	Asia/Ho_Chi_Minh
+Phường Phan Rang	Khánh Hoà	KH	650000	VN	11.5645	108.9899	Asia/Ho_Chi_Minh
+Phường Đà Lạt	Lâm Đồng	LD	670000	VN	11.9404	108.4583	Asia/Ho_Chi_Minh
+Phường Phan Thiết	Lâm Đồng	LD	670000	VN	10.9280	108.1020	Asia/Ho_Chi_Minh
+Phường Buôn Ma Thuột	Đắk Lắk	DL	630000	VN	12.6667	108.0500	Asia/Ho_Chi_Minh
+Phường Tuy Hoà	Đắk Lắk	DL	630000	VN	13.0955	109.3200	Asia/Ho_Chi_Minh
+Phường Biên Hoà	Đồng Nai	DNA	760000	VN	10.9447	106.8243	Asia/Ho_Chi_Minh
+Phường Long Khánh	Đồng Nai	DNA	760000	VN	10.9370	107.2420	Asia/Ho_Chi_Minh
+Phường Tây Ninh	Tây Ninh	TNH	840000	VN	11.3100	106.0983	Asia/Ho_Chi_Minh
+Phường Tân An	Tây Ninh	TNH	840000	VN	10.5350	106.4130	Asia/Ho_Chi_Minh
+Phường Vĩnh Long	Vĩnh Long	VL	890000	VN	10.2537	105.9722	Asia/Ho_Chi_Minh
+Phường Trà Vinh	Vĩnh Long	VL	890000	VN	9.9347	106.3453	Asia/Ho_Chi_Minh
+Phường Bến Tre	Vĩnh Long	VL	890000	VN	10.2415	106.3759	Asia/Ho_Chi_Minh
+Phường Cao Lãnh	Đồng Tháp	DT	870000	VN	10.4599	105.6323	Asia/Ho_Chi_Minh
+Phường Mỹ Tho	Đồng Tháp	DT	870000	VN	10.3600	106.3600	Asia/Ho_Chi_Minh
+Phường Cà Mau	Cà Mau	CM	970000	VN	9.1769	105.1524	Asia/Ho_Chi_Minh
+Phường Bạc Liêu	Cà Mau	CM	970000	VN	9.2940	105.7215	Asia/Ho_Chi_Minh
+Phường Long Xuyên	An Giang	AG	880000	VN	10.3860	105.4380	Asia/Ho_Chi_Minh
+Phường Rạch Giá	An Giang	AG	880000	VN	10.0125	105.0808	Asia/Ho_Chi_Minh
+Phường Phú Quốc	An Giang	AG	880000	VN	10.2270	103.9670	Asia/Ho_Chi_Minh
+Phường Cao Bằng	Cao Bằng	CB	270000	VN	22.6657	106.2570	Asia/Ho_Chi_Minh
+Phường Điện Biên Phủ	Điện Biên	DB	380000	VN	21.3833	103.0167	Asia/Ho_Chi_Minh
+Phường Hà Tĩnh	Hà Tĩnh	HT	480000	VN	18.3428	105.9057	Asia/Ho_Chi_Minh
+Phường Lai Châu	Lai Châu	LCH	390000	VN	22.3964	103.4589	Asia/Ho_Chi_Minh
+Phường Lạng Sơn	Lạng Sơn	LS	240000	VN	21.8537	106.7610	Asia/Ho_Chi_Minh
+Phường Thành Vinh	Nghệ An	NA	460000	VN	18.6790	105.6813	Asia/Ho_Chi_Minh
+Phường Hạ Long	Quảng Ninh	QNI	200000	VN	20.9515	107.0748	Asia/Ho_Chi_Minh
+Phường Móng Cái	Quảng Ninh	QNI	200000	VN	21.5333	107.9667	Asia/Ho_Chi_Minh
+Phường Hạc Thành	Thanh Hoá	TH	440000	VN	19.8069	105.7772	Asia/Ho_Chi_Minh
+Phường Sầm Sơn	Thanh Hoá	TH	440000	VN	19.7333	105.9000	Asia/Ho_Chi_Minh
+Phường Sơn La	Sơn La	SL	360000	VN	21.3273	103.9141	Asia/Ho_Chi_Minh

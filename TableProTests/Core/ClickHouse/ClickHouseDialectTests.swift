@@ -28,11 +28,19 @@ struct ClickHouseDialectTests {
         #expect(adapter.dataTypes.contains("UInt32"))
     }
 
-    @Test("Factory returns empty dialect when plugin not loaded")
+    @Test("Factory serves the registry default dialect before the plugin loads")
     @MainActor
     func testFactoryFallbackWithoutPlugin() {
         let dialect = SQLDialectFactory.createDialect(for: .clickhouse)
-        // Without plugin loaded, factory returns empty fallback
+        #expect(dialect.identifierQuote == "`")
+        #expect(dialect.keywords.contains("PREWHERE"))
+        #expect(dialect.keywords.contains("FINAL"))
+    }
+
+    @Test("Factory returns the empty dialect for a type no plugin describes")
+    @MainActor
+    func testFactoryFallbackForUnknownType() {
+        let dialect = SQLDialectFactory.createDialect(for: DatabaseType(rawValue: "NotARealEngine"))
         #expect(dialect.keywords.isEmpty)
     }
 }

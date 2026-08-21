@@ -61,6 +61,10 @@ extension MainContentView {
                     value = s
                 case .bytes(let data):
                     value = BlobFormattingService.shared.format(data, for: .copy)
+                case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                    value = row[i].textFallback
+                @unknown default:
+                    value = row[i].textFallback
                 }
             }
             let type = i < tableRows.columnTypes.count ? tableRows.columnTypes[i].displayName : "string"

@@ -339,6 +339,20 @@ private actor SQLiteConnectionActor {
                     let baseAddress = rawBuffer.baseAddress
                     return sqlite3_bind_blob(statement, bindIndex, baseAddress, Int32(data.count), sqliteTransient)
                 }
+            case .int(let value):
+                bindResult = sqlite3_bind_int64(statement, bindIndex, value)
+            case .double(let value):
+                bindResult = sqlite3_bind_double(statement, bindIndex, value)
+            case .bool(let value):
+                bindResult = sqlite3_bind_int64(statement, bindIndex, value ? 1 : 0)
+            // Decimals bind as text on purpose. SQLite has no exact numeric type,
+            // so binding a decimal as a double reintroduces exactly the rounding
+            // the case exists to avoid. Column affinity converts the text where
+            // the column really is numeric.
+            case .decimalText, .date, .time, .timestamp, .uuid, .array:
+                bindResult = sqlite3_bind_text(statement, bindIndex, param.textFallback, -1, sqliteTransient)
+            @unknown default:
+                bindResult = sqlite3_bind_text(statement, bindIndex, param.textFallback, -1, sqliteTransient)
             }
 
             if bindResult != SQLITE_OK {
@@ -450,6 +464,7 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
             .truncateTable,
             .cancelQuery,
             .batchExecute,
+            .typedCellValues,
         ]
     }
 

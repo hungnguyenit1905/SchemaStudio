@@ -115,12 +115,15 @@ struct EtcdPrefixRangeEndTests {
         #expect(result == "abd")
     }
 
-    @Test("All 0xFF bytes returns null byte")
-    func allMaxBytes() {
-        // 0xFF bytes aren't valid UTF-8; test with lossy decoding to exercise the all-max-byte path
+    @Test("Replacement-character prefix increments its final byte")
+    func replacementCharacterPrefix() {
+        // 0xFF is never a valid UTF-8 byte, so a Swift String can never carry one and the
+        // all-max-byte rollback path is unreachable through this API. Decoding 0xFF lossily
+        // yields U+FFFD (EF BF BD), whose last byte increments to EF BF BE (U+FFFE).
+        // swiftlint:disable:next optional_data_string_conversion
         let input = String(decoding: [0xFF, 0xFF, 0xFF] as [UInt8], as: UTF8.self)
         let result = TestEtcdPrefixRange.rangeEnd(for: input)
-        #expect(result == "\0")
+        #expect(result == "\u{FFFD}\u{FFFD}\u{FFFE}")
     }
 
     @Test("Prefix ending with high-value byte rolls back correctly")

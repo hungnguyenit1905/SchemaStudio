@@ -182,4 +182,16 @@ colon:
 comma: warning
 
 # No print statements is now disabled - use Logger in the future
-custom_rules: {}
+custom_rules:
+  generation_seeded_random:
+    name: "Seeded Random Required"
+    included: ".*/TablePro/Core/Services/Generation/.*\\.swift"
+    regex: "\\.random\\((?![^)]*using:)"
+    message: "Generation must draw from the column's SplitMix64 stream: .random(in:using:)"
+    severity: error
+  generation_no_process_seeded_hashing:
+    name: "Process-Seeded Hashing Banned"
+    included: ".*/TablePro/Core/Services/Generation/.*\\.swift"
+    regex: "(Hasher\\(\\)|\\.hashValue\\b)"
+    message: "Swift's Hasher is seeded per process. Use FNV1aHasher or stableHash."
+    severity: error

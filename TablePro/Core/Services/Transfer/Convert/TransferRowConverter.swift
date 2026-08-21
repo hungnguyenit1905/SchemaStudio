@@ -104,6 +104,10 @@ struct TransferRowConverter: Sendable {
             return (text as NSString).length > 64 ? String(text.prefix(64)) + "\u{2026}" : text
         case .bytes(let data):
             return String(format: String(localized: "%d bytes"), data.count)
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return describe(.text(value.textFallback))
+        @unknown default:
+            return describe(.text(value.textFallback))
         }
     }
 }

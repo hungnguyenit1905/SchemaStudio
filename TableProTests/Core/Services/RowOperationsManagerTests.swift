@@ -78,7 +78,7 @@ struct RowOperationsManagerTests {
     }
 
     @Test("addNewRow assigns inserted RowID to new row")
-    func addNewRowAssignsInsertedRowID() {
+    func addNewRowAssignsInsertedRowID() throws {
         let (manager, _) = makeManager()
         var tableRows = makeTableRows(rowCount: 2)
 
@@ -88,8 +88,7 @@ struct RowOperationsManagerTests {
             tableRows: &tableRows
         )
 
-        #expect(result != nil)
-        let newIndex = result!.rowIndex
+        let newIndex = try #require(result?.rowIndex)
         #expect(tableRows.rows[newIndex].id.isInserted)
     }
 
@@ -114,8 +113,8 @@ struct RowOperationsManagerTests {
         #expect(result?.values[2] == "__DEFAULT__")
     }
 
-    @Test("addNewRow uses nil for columns without defaults")
-    func addNewRowUsesNilForNoDefaults() {
+    @Test("addNewRow uses NULL for columns without defaults")
+    func addNewRowUsesNullForNoDefaults() {
         let (manager, _) = makeManager()
         var tableRows = emptyTableRows()
         let defaults: [String: String?] = [
@@ -129,12 +128,12 @@ struct RowOperationsManagerTests {
         )
 
         #expect(result != nil)
-        #expect(result?.values[1] == nil)
-        #expect(result?.values[2] == nil)
+        #expect(result?.values[1] == .null)
+        #expect(result?.values[2] == .null)
     }
 
     @Test("addNewRow records insertion in change manager")
-    func addNewRowRecordsInsertion() {
+    func addNewRowRecordsInsertion() throws {
         let (manager, changeManager) = makeManager()
         var tableRows = makeTableRows(rowCount: 2)
 
@@ -144,13 +143,13 @@ struct RowOperationsManagerTests {
             tableRows: &tableRows
         )
 
-        #expect(result != nil)
+        let rowIndex = try #require(result?.rowIndex)
         #expect(changeManager.hasChanges)
-        #expect(changeManager.isRowInserted(result!.rowIndex))
+        #expect(changeManager.isRowInserted(rowIndex))
     }
 
-    @Test("addNewRow increments change manager reload version")
-    func addNewRowIncrementsReloadVersion() {
+    @Test("addNewRow leaves the change manager reload version untouched")
+    func addNewRowKeepsReloadVersion() {
         let (manager, changeManager) = makeManager()
         var tableRows = makeTableRows(rowCount: 2)
         let versionBefore = changeManager.reloadVersion
@@ -161,7 +160,7 @@ struct RowOperationsManagerTests {
             tableRows: &tableRows
         )
 
-        #expect(changeManager.reloadVersion > versionBefore)
+        #expect(changeManager.reloadVersion == versionBefore)
     }
 
     @Test("multiple addNewRow calls append sequential rows")
@@ -246,7 +245,7 @@ struct RowOperationsManagerTests {
     }
 
     @Test("deleteSelectedRows removes inserted rows from tableRows and reports delta")
-    func deleteSelectedRowsRemovesInsertedRows() {
+    func deleteSelectedRowsRemovesInsertedRows() throws {
         let (manager, _) = makeManager()
         var tableRows = makeTableRows(rowCount: 3)
 
@@ -256,15 +255,16 @@ struct RowOperationsManagerTests {
             tableRows: &tableRows
         )
         #expect(tableRows.count == 4)
+        let insertedIndex = try #require(addResult?.rowIndex)
 
         let result = manager.deleteSelectedRows(
-            selectedIndices: [addResult!.rowIndex],
+            selectedIndices: [insertedIndex],
             tableRows: &tableRows
         )
 
         #expect(tableRows.count == 3)
         if case .rowsRemoved(let indices) = result.delta {
-            #expect(indices == IndexSet(integer: addResult!.rowIndex))
+            #expect(indices == IndexSet(integer: insertedIndex))
         } else {
             Issue.record("Expected .rowsRemoved delta")
         }
@@ -393,7 +393,7 @@ struct RowOperationsManagerTests {
     }
 
     @Test("addNewRow then edit cell preserves insertion state")
-    func addNewRowThenEditPreservesInsertion() {
+    func addNewRowThenEditPreservesInsertion() throws {
         let (manager, changeManager) = makeManager()
         var tableRows = makeTableRows(rowCount: 2)
 
@@ -402,8 +402,7 @@ struct RowOperationsManagerTests {
             columnDefaults: [:],
             tableRows: &tableRows
         )
-        #expect(result != nil)
-        let newIndex = result!.rowIndex
+        let newIndex = try #require(result?.rowIndex)
 
         changeManager.recordCellChange(
             rowIndex: newIndex,

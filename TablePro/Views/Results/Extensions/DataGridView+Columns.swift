@@ -104,6 +104,10 @@ extension TableViewCoordinator {
             return nil
         case .bytes:
             return nil
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return nil
+        @unknown default:
+            return nil
         }
     }
 

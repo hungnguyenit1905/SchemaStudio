@@ -190,6 +190,10 @@ struct TransferChunkPlanner: Sendable {
                 hex += String(format: "%02X", byte)
             }
             return hex
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return value.textFallback
+        @unknown default:
+            return value.textFallback
         }
     }
 }

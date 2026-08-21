@@ -282,6 +282,10 @@ final class ClickHousePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
 
     // MARK: - DML Statement Generation
 
+    /// `primaryKeyColumns` here is the MergeTree `primary_key`/`sorting_key`, a
+    /// sparse index rather than a uniqueness constraint, and ClickHouse has no
+    /// unique constraints at all. Rows sharing a key are legal, so a mutation
+    /// must keep matching the full row.
     func generateStatements(
         table: String,
         columns: [String],
@@ -291,117 +295,17 @@ final class ClickHousePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         deletedRowIndices: Set<Int>,
         insertedRowIndices: Set<Int>
     ) -> [(statement: String, parameters: [PluginCellValue])]? {
-        var statements: [(statement: String, parameters: [PluginCellValue])] = []
-
-        for change in changes {
-            switch change.type {
-            case .insert:
-                guard insertedRowIndices.contains(change.rowIndex) else { continue }
-                if let values = insertedRowData[change.rowIndex] {
-                    if let stmt = generateClickHouseInsert(table: table, columns: columns, values: values) {
-                        statements.append(stmt)
-                    }
-                }
-            case .update:
-                if let stmt = generateClickHouseUpdate(table: table, columns: columns, change: change) {
-                    statements.append(stmt)
-                }
-            case .delete:
-                guard deletedRowIndices.contains(change.rowIndex) else { continue }
-                if let stmt = generateClickHouseDelete(table: table, columns: columns, change: change) {
-                    statements.append(stmt)
-                }
-            }
-        }
-
-        return statements.isEmpty ? nil : statements
-    }
-
-    private func generateClickHouseInsert(
-        table: String,
-        columns: [String],
-        values: [PluginCellValue]
-    ) -> (statement: String, parameters: [PluginCellValue])? {
-        var nonDefaultColumns: [String] = []
-        var parameters: [PluginCellValue] = []
-
-        for (index, value) in values.enumerated() {
-            if value.asText == "__DEFAULT__" { continue }
-            guard index < columns.count else { continue }
-            nonDefaultColumns.append("`\(columns[index].replacingOccurrences(of: "`", with: "``"))`")
-            parameters.append(value)
-        }
-
-        guard !nonDefaultColumns.isEmpty else { return nil }
-
-        let columnList = nonDefaultColumns.joined(separator: ", ")
-        let placeholders = parameters.map { _ in "?" }.joined(separator: ", ")
-        let sql = "INSERT INTO `\(table.replacingOccurrences(of: "`", with: "``"))` (\(columnList)) VALUES (\(placeholders))"
-        return (statement: sql, parameters: parameters)
-    }
-
-    private func generateClickHouseUpdate(
-        table: String,
-        columns: [String],
-        change: PluginRowChange
-    ) -> (statement: String, parameters: [PluginCellValue])? {
-        guard !change.cellChanges.isEmpty else { return nil }
-
-        let escapedTable = "`\(table.replacingOccurrences(of: "`", with: "``"))`"
-        var parameters: [PluginCellValue] = []
-
-        let setClauses = change.cellChanges.map { cellChange -> String in
-            let col = "`\(cellChange.columnName.replacingOccurrences(of: "`", with: "``"))`"
-            parameters.append(cellChange.newValue)
-            return "\(col) = ?"
-        }.joined(separator: ", ")
-
-        guard let whereClause = buildWhereClause(
-            columns: columns, change: change, parameters: &parameters
-        ) else { return nil }
-
-        let sql = "ALTER TABLE \(escapedTable) UPDATE \(setClauses) WHERE \(whereClause)"
-        return (statement: sql, parameters: parameters)
-    }
-
-    private func generateClickHouseDelete(
-        table: String,
-        columns: [String],
-        change: PluginRowChange
-    ) -> (statement: String, parameters: [PluginCellValue])? {
-        let escapedTable = "`\(table.replacingOccurrences(of: "`", with: "``"))`"
-        var parameters: [PluginCellValue] = []
-
-        guard let whereClause = buildWhereClause(
-            columns: columns, change: change, parameters: &parameters
-        ) else { return nil }
-
-        let sql = "ALTER TABLE \(escapedTable) DELETE WHERE \(whereClause)"
-        return (statement: sql, parameters: parameters)
-    }
-
-    private func buildWhereClause(
-        columns: [String],
-        change: PluginRowChange,
-        parameters: inout [PluginCellValue]
-    ) -> String? {
-        guard let originalRow = change.originalRow else { return nil }
-
-        var conditions: [String] = []
-        for (index, columnName) in columns.enumerated() {
-            guard index < originalRow.count else { continue }
-            let col = "`\(columnName.replacingOccurrences(of: "`", with: "``"))`"
-            let value = originalRow[index]
-            if value.isNull {
-                conditions.append("\(col) IS NULL")
-            } else {
-                parameters.append(value)
-                conditions.append("\(col) = ?")
-            }
-        }
-
-        guard !conditions.isEmpty else { return nil }
-        return conditions.joined(separator: " AND ")
+        ClickHouseStatementGenerator(
+            table: table,
+            columns: columns,
+            primaryKeyColumns: primaryKeyColumns,
+            keyIsUnique: false
+        ).generateStatements(
+            changes: changes,
+            insertedRowData: insertedRowData,
+            deletedRowIndices: deletedRowIndices,
+            insertedRowIndices: insertedRowIndices
+        )
     }
 
     func cancelQuery() throws {

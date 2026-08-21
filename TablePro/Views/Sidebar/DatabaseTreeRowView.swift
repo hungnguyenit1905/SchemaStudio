@@ -15,6 +15,7 @@ struct DatabaseTreeRowActions {
     let setActiveSchema: (_ database: String, _ schema: String) -> Void
     let refreshDatabase: (String) -> Void
     let openDataTransfer: (String) -> Void
+    let openDataGeneration: (String) -> Void
     let refreshObjects: (_ database: String, _ schema: String?) -> Void
     let showRoutineDDL: (RoutineInfo) -> Void
     let batchToggleTruncate: (_ connectionId: UUID, _ tableNames: [String]) -> Void
@@ -240,6 +241,9 @@ struct DatabaseTreeRowView: View {
             Divider()
             Button(String(localized: "Data Transfer\u{2026}")) {
                 actions.openDataTransfer(metadata.name)
+            }
+            Button(String(localized: "Generate Data\u{2026}")) {
+                actions.openDataGeneration(metadata.name)
             }
         case .schema(_, let database, let schema):
             Button(String(format: String(localized: "Use as Active %@"), schemaEntityName)) {

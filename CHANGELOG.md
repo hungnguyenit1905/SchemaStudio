@@ -9,10 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Generate test data into your tables from Tools > Generate Data, or by right-clicking a database in the sidebar. Pick the tables, review the generator it chose for each column, preview the exact rows, then run. Generated rows respect the constraints already on the table: types and lengths, required columns, primary keys, unique constraints (single and multi-column), foreign keys, enum value lists, and `CHECK` ranges where they can be read. A run is repeatable: the same seed writes the same rows.
+- Data generation covers business columns: company names, departments, product names, prices with realistic endings, currency codes, tax identifiers, and stock codes. Card numbers, IBANs, EAN-13 and ISBN-13 carry correct check digits, and a column too short to hold one is refused rather than filled with a broken value. Company, department and product names come in English and Vietnamese.
+- Data generation covers addresses: city, state, postal code, country, coordinates, time zone, street name, building number, and the full address on one line. Every address column in a row describes the same real place, so a generated row never pairs a ward with the wrong province. English and Vietnamese, with Vietnamese following the two-tier province and ward structure.
+- Data generation covers people: first, middle and last names, full names, gender, age, honorific, job title, and national identifier shapes. Names follow the order the locale writes them in, so a Vietnamese full name runs family name first and takes a Vietnamese middle name that agrees with the given name. Identifiers carry no valid registry check digit, so a generated one is never accepted as real.
+- Data generation covers contact columns: email addresses, usernames, phone and mobile numbers, domains, URLs, IPv4, IPv6, and MAC addresses. None of it can reach anyone: addresses and hosts use names reserved by the RFCs, US numbers come from the 555 block set aside for fiction, network addresses come from the documentation and private ranges, and MAC addresses are locally administered. Vietnamese names fold to ASCII, so a row for Nguyễn Thị Hương gets nguyen.thi.huong. A column too short to hold a whole number or address is refused instead of storing a broken one.
+- Data generation covers text columns: lorem sentences, paragraphs and multi-paragraph text, slugs built from another column, colours as hex, rgb or a name, file names, media types, browser user agents, and semantic versions. A slug folds diacritics, so a title of Đèn bàn LED gives den-ban-led.
+- Data generation can build a column from the rest of its row: Expression writes a template such as {{first_name}}.{{last_name}}@example.com, Relative date and time offsets one timestamp from another so updated_at never lands before created_at, and SQL query fills a column from a read-only SELECT that runs once before the rows.
+- Data generation can fill a column from a regular expression: Regex takes a pattern such as `[A-Z]{3}-[0-9]{4}` and writes values that match it. A `CHECK` constraint carrying a pattern the generator understands now sets the column up on its own. A construct outside the supported set is refused when you write it, naming what it was, rather than part way through a run.
+- Numeric generators take a distribution: uniform, normal, or exponential, so generated data can be shaped like real data instead of spread evenly. Reference columns take a strategy: random, round robin, one to one, ensure coverage, or weighted. One to one is refused before anything is written when the parent has fewer rows than the table being filled, and ensure coverage gives every parent a child before any parent gets a second.
+- Data generation writes through the database's own bulk load path where it has one, `COPY` on PostgreSQL and `LOAD DATA LOCAL INFILE` on MySQL, and falls back to prepared batches with no setting to change when the server has it turned off. Batch size follows the server's parameter and packet limits instead of a fixed number.
+- A data generation run that was stopped, failed, or lost its connection can be started again and continues where it left off: finished tables are skipped, the interrupted table picks up at the row it stopped on, and the resumed rows carry on the same seeded sequence, so the result matches an uninterrupted run.
+- Data generation now picks the real generator for a column instead of a placeholder: an email column gets an email, a city gets a city, a price gets a price, and description columns get paragraphs.
+- A data generation setup can be saved as a named profile and run again later. Profiles are listed in the wizard under Profiles, and loading one shows what changed in the database since it was saved before it is applied. A profile can be exported to a JSON file and imported again: the file holds the tables, generators and seed, and no host, user or password, so it is safe to share.
+- Data generation ships with two templates, e-commerce and CRM. Applying one matches its tables and columns against your schema by name and fills what it finds, auto-maps the rest, and says what it could not place. A template that matches nothing is refused instead of leaving you an empty setup.
 - Optional crash reporting, off by default. Turn it on in Settings > General > Diagnostics. Crash reports carry the stack trace, app and OS version, and nothing about your connections, queries, or data.
 
 ### Changed
 
+- Database drivers installed from the plugin registry need to be updated for this release. Open Settings > Plugins and update them; a driver still on the old version shows as outdated instead of loading.
 - The "Share anonymous usage data" setting is back in Settings > General, now off by default.
 - The sidebar lists every saved connection, grouped into the same folders as the welcome window. Expanding a connection connects it and loads its databases. A connect that fails shows the reason on the connection with a retry button, and reopening the app connects nothing until you expand something yourself.
 - Right-clicking a connection in the sidebar offers Connect, Disconnect, Refresh, New Query, and Edit Connection.
@@ -23,6 +38,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The app is now SchemaStudio, a fork of TablePro. Stored settings, connections, and window state start fresh because the app now uses its own storage location and no data is migrated from TablePro.
 - New app icon, with light, dark, and tinted variants.
 - Sidebar connection rows no longer show the database type logo before the name.
+
+### Fixed
+
+- Saving on a read-only connection now says the connection is read-only instead of reporting that the SQL could not be generated.
+- Undo in the table structure editor steps back one edit at a time. Edits made in the same moment were folded into one step, so a single undo could revert several of them.
+- Oracle zoned and local timestamps now render the actual zone offset (e.g. `+07:00`) instead of always showing `Z`.
+- SequelAce now shows up as an available import source when its favorites file exists but the app itself is not installed.
+- A settings file with one malformed value (for example a row-height entry of the wrong type) no longer fails to load entirely; the one bad value falls back to its default and the rest of your settings still apply.
+- Row counts reported during a bulk-load transfer no longer double-count rows written past the internal pipeline buffer.
+- A transfer retrying a retryable server error now stops after the configured number of attempts instead of one extra try beyond it.
+- SSH host key verification now correctly flags a mismatch when a host's key changes between ports, instead of treating it as an unknown key.
+- Connections saved before this release, or whose SSH or SSL configuration is missing a field a newer build added, now load instead of failing to decode.
+- Copying the connection URL for a connection that uses a saved SSH profile now includes that profile's SSH host and user instead of leaving the tunnel out of the URL.
+- AI tool schemas sent to GitHub Copilot now always declare a `required` field, which Copilot's tool-calling API expects even when nothing is required.
+- Consuming an expired MCP pairing code now reports it as expired instead of not found.
 
 ### Removed
 

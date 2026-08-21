@@ -16,38 +16,42 @@ final class CopilotIdleStopController {
     private let isAuthenticated: () -> Bool
     private let isRunning: () -> Bool
     private let onStopRequest: () async -> Void
-    private var task: Task<Void, Never>?
+    private let waitForTimeout: @Sendable (Duration) async throws -> Void
+    private(set) var scheduledStop: Task<Void, Never>?
 
     init(
         timeout: Duration,
         isAuthenticated: @escaping () -> Bool,
         isRunning: @escaping () -> Bool,
-        onStopRequest: @escaping () async -> Void
+        onStopRequest: @escaping () async -> Void,
+        waitForTimeout: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
     ) {
         self.timeout = timeout
         self.isAuthenticated = isAuthenticated
         self.isRunning = isRunning
         self.onStopRequest = onStopRequest
+        self.waitForTimeout = waitForTimeout
     }
 
     deinit {
-        task?.cancel()
+        scheduledStop?.cancel()
     }
 
     /// Cancel any prior schedule and start a new one. No-op when already authenticated.
     func schedule() {
-        task?.cancel()
+        scheduledStop?.cancel()
         guard !isAuthenticated() else {
-            task = nil
+            scheduledStop = nil
             return
         }
         let timeout = self.timeout
         let isAuthenticated = self.isAuthenticated
         let isRunning = self.isRunning
         let onStopRequest = self.onStopRequest
-        task = Task {
+        let waitForTimeout = self.waitForTimeout
+        scheduledStop = Task {
             do {
-                try await Task.sleep(for: timeout)
+                try await waitForTimeout(timeout)
             } catch {
                 return
             }
@@ -59,7 +63,7 @@ final class CopilotIdleStopController {
 
     /// Cancel any pending stop without triggering it.
     func cancel() {
-        task?.cancel()
-        task = nil
+        scheduledStop?.cancel()
+        scheduledStop = nil
     }
 }

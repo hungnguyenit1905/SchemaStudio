@@ -14,6 +14,63 @@ TEAM_ID="D7HJ5TFYCU"
 NOTARIZE="${NOTARIZE:-false}"
 APPLE_ID="${APPLE_ID:-datngoquoc@icloud.com}"
 
+# Fall back to ad-hoc signing when the Developer ID identity is not in the
+# keychain, so a build without signing secrets produces a runnable app instead
+# of failing. Ad-hoc rather than unsigned is deliberate: macOS refuses to launch
+# an unsigned arm64 binary at all, while an ad-hoc signature runs locally and
+# still passes `codesign --verify`. It cannot be notarized, so Gatekeeper asks
+# the user to confirm the first launch.
+# A release build must never take that fallback: it cannot be notarized, and it
+# drops the keychain access group, so the shipped app cannot read the user's
+# saved passwords. CI sets REQUIRE_SIGNED_RELEASE on a v* tag.
+if [ "$SIGN_IDENTITY" != "-" ] && ! security find-identity -v -p codesigning 2>/dev/null | grep -qF "$SIGN_IDENTITY"; then
+    if [ "${REQUIRE_SIGNED_RELEASE:-false}" = "true" ]; then
+        echo "❌ ERROR: signing identity '$SIGN_IDENTITY' not in the keychain and REQUIRE_SIGNED_RELEASE is set."
+        echo "   Refusing to publish an ad-hoc signed release. Check the CERTIFICATES_P12 secret."
+        exit 1
+    fi
+    echo "⚠️  Signing identity not available; falling back to ad-hoc signing"
+    SIGN_IDENTITY="-"
+fi
+
+if [ "$SIGN_IDENTITY" = "-" ] && [ "${REQUIRE_SIGNED_RELEASE:-false}" = "true" ]; then
+    echo "❌ ERROR: ad-hoc signing requested while REQUIRE_SIGNED_RELEASE is set."
+    exit 1
+fi
+
+if [ "$SIGN_IDENTITY" = "-" ]; then
+    # A secure timestamp needs a real certificate and Apple's timestamp server.
+    CODESIGN_TIMESTAMP="--timestamp=none"
+    TEAM_ID=""
+    if [ "$NOTARIZE" = "true" ]; then
+        echo "⚠️  Ad-hoc signed builds cannot be notarized; disabling notarization"
+        NOTARIZE="false"
+    fi
+else
+    CODESIGN_TIMESTAMP="--timestamp"
+fi
+
+# xcodebuild signs during the build, but this script re-signs the whole bundle
+# from the inside out afterwards. In ad-hoc mode xcodebuild is told not to sign
+# at all: Manual style demands a provisioning profile and fails the build
+# without one, and its output would be replaced by the ad-hoc pass regardless.
+# Entitlements still reach the binary through that final codesign call.
+if [ "$SIGN_IDENTITY" = "-" ]; then
+    XCODE_SIGN_ARGS=(
+        CODE_SIGNING_ALLOWED=NO
+        CODE_SIGNING_REQUIRED=NO
+        CODE_SIGN_IDENTITY=""
+        CODE_SIGN_ENTITLEMENTS=""
+    )
+else
+    XCODE_SIGN_ARGS=(
+        CODE_SIGN_IDENTITY="$SIGN_IDENTITY"
+        CODE_SIGN_STYLE=Manual
+        DEVELOPMENT_TEAM="$TEAM_ID"
+    )
+fi
+export SIGN_IDENTITY CODESIGN_TIMESTAMP NOTARIZE
+
 echo "🏗️  Building SchemaStudio for: $ARCH"
 
 # Ensure libmariadb.a has correct architecture
@@ -327,7 +384,11 @@ build_for_arch() {
     # Command-line PROVISIONING_PROFILE_SPECIFIER applies to ALL targets (plugins,
     # SPM packages) which breaks them. Instead, replace the empty specifier in
     # the main app target's build settings directly.
-    PROFILE_PATH=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.provisionprofile" -print -quit 2>/dev/null)
+    # `|| true` matters: with `set -e`, find exiting non-zero because the
+    # directory does not exist would abort the build. That happens on any
+    # machine with no provisioning profile installed, which is the normal case
+    # for an ad-hoc build.
+    PROFILE_PATH=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.provisionprofile" -print -quit 2>/dev/null || true)
     if [ -n "${PROFILE_PATH:-}" ]; then
         PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< "$(security cms -D -i "$PROFILE_PATH" 2>/dev/null)" || true)
         if [ -n "${PROFILE_UUID:-}" ]; then
@@ -346,9 +407,7 @@ build_for_arch() {
         -configuration "$CONFIG" \
         -arch "$arch" \
         ONLY_ACTIVE_ARCH=YES \
-        CODE_SIGN_IDENTITY="$SIGN_IDENTITY" \
-        CODE_SIGN_STYLE=Manual \
-        DEVELOPMENT_TEAM="$TEAM_ID" \
+        "${XCODE_SIGN_ARGS[@]}" \
         GCC_OPTIMIZATION_LEVEL=s \
         SWIFT_OPTIMIZATION_LEVEL=-O \
         LLVM_LTO=YES_THIN \
@@ -507,34 +566,34 @@ build_for_arch() {
 
     # Sign the entire app bundle with Developer ID.
     # Sign from inside out: nested binaries → frameworks → dylibs → app.
-    echo "🔏 Signing app bundle with: $SIGN_IDENTITY"
+    echo "🔏 Signing app bundle with: ${SIGN_IDENTITY/#-/ad-hoc}"
     FRAMEWORKS_DIR="$BUILD_DIR/$OUTPUT_NAME/Contents/Frameworks"
 
     # Sign all nested XPC services, helper apps, and executables inside frameworks
     while IFS= read -r -d '' binary; do
-        codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp "$binary"
+        codesign -fs "$SIGN_IDENTITY" --force --options runtime $CODESIGN_TIMESTAMP "$binary"
     done < <(find "$FRAMEWORKS_DIR" -type f \( -name "*.xpc" -o -perm +111 \) -not -name "*.dylib" -not -name "*.plist" -not -name "*.h" -not -name "*.strings" -not -name "*.nib" -not -name "*.png" -not -name "*.icns" -not -name "*.car" -not -name "CodeResources" -not -name "Info.plist" -print0 2>/dev/null)
 
     # Sign XPC service bundles
     while IFS= read -r -d '' xpc; do
-        codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp "$xpc"
+        codesign -fs "$SIGN_IDENTITY" --force --options runtime $CODESIGN_TIMESTAMP "$xpc"
     done < <(find "$FRAMEWORKS_DIR" -name "*.xpc" -type d -print0 2>/dev/null)
 
     # Sign nested .app bundles (e.g., Sparkle's Updater.app)
     while IFS= read -r -d '' app; do
-        codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp "$app"
+        codesign -fs "$SIGN_IDENTITY" --force --options runtime $CODESIGN_TIMESTAMP "$app"
     done < <(find "$FRAMEWORKS_DIR" -name "*.app" -type d -print0 2>/dev/null)
 
     # Sign top-level frameworks
     for fw in "$FRAMEWORKS_DIR"/*.framework; do
         [ -d "$fw" ] || continue
-        codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp "$fw"
+        codesign -fs "$SIGN_IDENTITY" --force --options runtime $CODESIGN_TIMESTAMP "$fw"
     done
 
     # Sign top-level dylibs
     for dylib in "$FRAMEWORKS_DIR"/*.dylib; do
         [ -f "$dylib" ] || continue
-        codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp "$dylib"
+        codesign -fs "$SIGN_IDENTITY" --force --options runtime $CODESIGN_TIMESTAMP "$dylib"
     done
 
     # Sign plugin bundles (stripped binaries need re-signing)
@@ -547,10 +606,10 @@ build_for_arch() {
             local plugin_binary="$plugin/Contents/MacOS/$plugin_name"
             # Sign the binary inside the bundle first
             if [ -f "$plugin_binary" ]; then
-                codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp "$plugin_binary"
+                codesign -fs "$SIGN_IDENTITY" --force --options runtime $CODESIGN_TIMESTAMP "$plugin_binary"
             fi
             # Then sign the bundle
-            codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp "$plugin"
+            codesign -fs "$SIGN_IDENTITY" --force --options runtime $CODESIGN_TIMESTAMP "$plugin"
         done
     fi
 
@@ -559,18 +618,32 @@ build_for_arch() {
     for helper in "$MACOS_DIR"/*; do
         [ -f "$helper" ] || continue
         [ "$(basename "$helper")" = "SchemaStudio" ] && continue
-        codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp "$helper"
+        codesign -fs "$SIGN_IDENTITY" --force --options runtime $CODESIGN_TIMESTAMP "$helper"
     done
 
     # Embed provisioning profile (required for iCloud entitlements)
-    PROFILE=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.provisionprofile" -print -quit 2>/dev/null)
-    if [ -n "$PROFILE" ]; then
+    PROFILE=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.provisionprofile" -print -quit 2>/dev/null || true)
+    if [ -n "${PROFILE:-}" ]; then
         echo "📋 Embedding provisioning profile: $(basename "$PROFILE")"
         cp "$PROFILE" "$BUILD_DIR/$OUTPUT_NAME/Contents/embedded.provisionprofile"
     fi
 
     # Sign the app bundle last
-    codesign -fs "$SIGN_IDENTITY" --force --options runtime --timestamp --entitlements "TablePro/SchemaStudio.entitlements" "$BUILD_DIR/$OUTPUT_NAME"
+    # The entitlements file kept its original name through the rebrand, matching
+    # CODE_SIGN_ENTITLEMENTS for the Release configuration in the pbxproj.
+    ENTITLEMENTS_FILE="TablePro/TablePro.entitlements"
+    if [ "$SIGN_IDENTITY" = "-" ]; then
+        # keychain-access-groups resolves $(AppIdentifierPrefix) from the team
+        # identifier. An ad-hoc signature has no team, so the group stays
+        # unresolved and AMFI refuses to launch the app ("Launchd job spawn
+        # failed"). Drop it: the app then uses its default access group, which
+        # is all a locally signed build needs, and the Keychain still works.
+        ENTITLEMENTS_FILE="$BUILD_DIR/adhoc.entitlements"
+        cp "TablePro/TablePro.entitlements" "$ENTITLEMENTS_FILE"
+        /usr/libexec/PlistBuddy -c "Delete :keychain-access-groups" "$ENTITLEMENTS_FILE" >/dev/null 2>&1 || true
+        echo "🔑 Ad-hoc build: dropped keychain-access-groups from entitlements"
+    fi
+    codesign -fs "$SIGN_IDENTITY" --force --options runtime $CODESIGN_TIMESTAMP --entitlements "$ENTITLEMENTS_FILE" "$BUILD_DIR/$OUTPUT_NAME"
     echo "✅ Code signing complete"
 
     # Verify signature

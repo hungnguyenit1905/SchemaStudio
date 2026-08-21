@@ -154,13 +154,13 @@ extension SSHConfiguration {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        enabled = try container.decode(Bool.self, forKey: .enabled)
-        host = try container.decode(String.self, forKey: .host)
+        enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? false
+        host = try container.decodeIfPresent(String.self, forKey: .host) ?? ""
         port = try container.decodeIfPresent(Int.self, forKey: .port)
-        username = try container.decode(String.self, forKey: .username)
+        username = try container.decodeIfPresent(String.self, forKey: .username) ?? ""
         authMethod = (try? container.decodeIfPresent(SSHAuthMethod.self, forKey: .authMethod)) ?? .password
-        privateKeyPath = try container.decode(String.self, forKey: .privateKeyPath)
-        agentSocketPath = try container.decode(String.self, forKey: .agentSocketPath)
+        privateKeyPath = try container.decodeIfPresent(String.self, forKey: .privateKeyPath) ?? ""
+        agentSocketPath = try container.decodeIfPresent(String.self, forKey: .agentSocketPath) ?? ""
         jumpHosts = try container.decodeIfPresent([SSHJumpHost].self, forKey: .jumpHosts) ?? []
         totpMode = try container.decodeIfPresent(TOTPMode.self, forKey: .totpMode) ?? .none
         totpAlgorithm = try container.decodeIfPresent(TOTPAlgorithm.self, forKey: .totpAlgorithm) ?? .sha1

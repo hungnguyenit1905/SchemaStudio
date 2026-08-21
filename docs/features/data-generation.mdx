@@ -1,0 +1,327 @@
+---
+title: Data Generation
+description: Fill tables with valid test data generated from their own schema, with foreign keys, unique constraints and column types respected.
+---
+
+Data Generation writes test rows into your tables. It reads the structure of each table you pick,
+chooses a generator for every column, and inserts rows that satisfy the constraints already on the
+table: types and lengths, `NOT NULL`, primary keys, unique constraints, foreign keys, enum value
+lists, and auto-increment columns. Open it from **Tools > Generate Data…**, or right-click a
+database in the sidebar and pick **Generate Data…** to start with that connection and database
+already filled in.
+
+<Note>
+The target connection has to allow writes, so a read-only [Safe Mode](/features/safe-mode) level
+blocks the run. Generation writes into the database you point it at and never into a second
+connection.
+</Note>
+
+It opens as a dialog you fill in, run, and close.
+
+## The three steps
+
+1. **Scope.** Pick a connection, a database, and a schema, then tick the tables to fill and set how
+   many rows each one gets. The list is ordered by foreign key dependency, not alphabetically, so a
+   parent table always appears above its children, and the tables a selected table points at are
+   named next to it. Ticking a table whose foreign key points at an unticked table asks whether to
+   add the parent as well.
+2. **Columns.** Review the generator picked for each column and change it where you want something
+   different. This is where most of the work happens. **Preview** shows the rows the run will write.
+3. **Options.** Choose how the rows are written, read what the pre-flight found, then start. The run
+   replaces this step with a live log.
+
+The seed is on the first step. Two runs with the same seed against the same schema write the same
+rows, which is what makes a generated database worth keeping. A new dialog starts with a new seed;
+copy one out if you want to reproduce a run later.
+
+## Table settings
+
+| Setting | What it does | Default |
+| ------- | ------------ | ------- |
+| Number of records | How many rows to insert into this table. | 100 |
+| Empty table before generating | Removes the existing rows first. `TRUNCATE` when nothing points at the table, `DELETE` when a foreign key does. | Off |
+
+## How a column gets its generator
+
+Every column arrives with a generator already chosen. Four rules run in order, and the first one
+that matches wins.
+
+1. **The constraint decides.** A generated or computed column is left out of the insert entirely. An
+   auto-increment or identity column is left to the server. A column with a foreign key gets
+   **Reference**, which draws from the parent's keys. A column with an enum type gets **List**,
+   filled with that type's own values.
+2. **The name decides.** A column called `email` gets **Email**, `first_name` gets **First name**,
+   `created_at` gets a **Date and time** in the past, `updated_at` gets a time that is always at or
+   after `created_at`. Around fifty name patterns are recognised. Names that end in a known word are
+   read too, so `proof_url` is a URL and `tx_serial` is a code. The column's own name is tried first
+   and then the name with the table's name stripped off, so `user_email` on table `users` is read as
+   `email` while `username` on the same table is still a username.
+3. **The type decides.** Anything the name rules do not recognise falls back to its type: an
+   integer column gets a number in a readable range, a `varchar` gets words sized to fit its length,
+   a `uuid` column gets a UUID.
+4. **The CHECK constraint narrows it.** `age > 0` sets a minimum. `status IN ('a','b')` switches the
+   column to a **List** of exactly those values. `length(code) <= 8` caps the length. A CHECK the
+   app cannot read leaves the generator alone and marks the column with a warning icon, so you know
+   the constraint is not being enforced by the generator.
+
+The type always beats the name. A column called `email` that holds an integer skips the name rules
+and falls through to its type.
+
+## Generators
+
+Every generator takes its own settings, shown in the panel below the column list. These settings
+apply to all of them:
+
+- **Null percentage**: share of rows where the column is `NULL`. Refused on a `NOT NULL` column.
+- **Blank percentage**: share of rows where the column is an empty string. Ignored on a column that
+  is also set to **Unique**, since an empty string repeated is a repeated value; the run reports this
+  once per column.
+- **Unique**: no two rows repeat a value, compared the way the server compares it: under a
+  case-insensitive collation such as `utf8mb4_general_ci` or `CITEXT`, `Alice` and `alice` count as
+  one value. A column whose values are a whole finite range is filled from a shuffle of that range,
+  so nothing is drawn twice and nothing is wasted retrying. Refused before the run starts if the
+  generator cannot
+  produce as many distinct values as there are rows. Nulls are exempt, because SQL uniqueness does
+  not constrain them.
+- **Prefix**, **suffix**, and **case**: applied to the generated value before the length limit is
+  checked.
+- **Sort**: writes the values in ascending or descending order rather than in generation order.
+
+The catalog:
+
+| Group | Generators |
+| ----- | ---------- |
+| Control | Auto increment, Fixed, List, Reference, Regex, SQL query, Expression, Sequence, Null, Column default, Copy from column |
+| Basic | Integer, Decimal, Double, Boolean, Random string, Random bytes, UUID, Bit, JSON, XML |
+| Date and time | Date, Time, Date and time, Timestamp, Relative date and time |
+| Person | First name, Last name, Middle name, Full name, Gender, Age, Title, National ID, Job title |
+| Contact | Email, Phone number, Mobile number, URL, Domain, Username, IPv4, IPv6, MAC address |
+| Address | Country, Country code, State, City, Street address, Street name, Building number, Postal code, Latitude, Longitude, Full address, Time zone |
+| Business | Company name, Department, Product name, Price, Currency code, Credit card number, Card expiry, CVV, IBAN, SWIFT, Tax ID, SKU, EAN-13, ISBN-13 |
+| Text | Lorem word, Lorem sentence, Lorem paragraph, Lorem text, Slug, Colour, File name, MIME type, User agent, SemVer |
+
+Credit card numbers, EAN-13 and ISBN-13 carry correct check digits, so a column validated by the
+application that reads it still passes.
+
+Contact values are deliberately unreachable. Email addresses and generated hosts use domains the RFCs
+reserve, US phone numbers come from the 555 block set aside for fiction, IPv4 and IPv6 addresses come
+from the documentation and private ranges, and MAC addresses are locally administered so no real
+vendor owns them. Vietnamese phone numbers are the exception: Vietnam reserves no fictional block, so
+they use real prefixes with a random subscriber number and are plausible rather than impossible.
+
+### Columns that depend on each other
+
+Some generators read another column in the same row:
+
+- **Copy from column** repeats another column's value.
+- **Expression** builds a string from a template: `{{first_name}}.{{last_name}}@example.com`.
+- **Relative date and time** takes a base column and an offset range, so `updated_at` is always at
+  or after `created_at` instead of landing before it.
+- **Slug** takes a source column and writes its URL-safe ASCII form, so a title of `Đèn bàn LED`
+  becomes `den-ban-led` in the column beside it.
+
+The columns are ordered by these dependencies before the row is built. Two columns that point at
+each other are a configuration error and are reported before the run.
+
+Expression and Slug read whatever the source column ended up holding, so a number, a date or a
+generated name all work. A placeholder naming a column that has no generator is reported by name.
+
+### SQL query
+
+A **SQL query** column draws from a query you write against the connection being generated into. The
+query runs once, before the first row, and the values it returns are the pool for the whole table. It
+has to be a single `SELECT` (or a `WITH` that ends in one); anything else is refused before it is
+sent, and generated values are never pasted into it. Name a column of the result, or leave that empty
+to use the first one. A query that returns nothing leaves a nullable column empty with a warning, and
+fails the run on a column that cannot be null.
+
+### Reference, and where the keys come from
+
+A **Reference** column draws from the parent table's keys. When the parent is also being generated,
+its keys are collected as they are inserted. When it is not, they are read from the table that is
+already there. A parent with no rows and a `NOT NULL` foreign key fails before anything is written,
+and the message names both tables.
+
+| Strategy | What it does |
+| -------- | ------------ |
+| Random | Any parent key, evenly. |
+| Round robin | Each parent key in turn, so the children are spread exactly evenly. |
+| One to one | Each parent key used once. Refused before the run when there are fewer parent rows than child rows. |
+| Ensure coverage | Every parent gets one child before any parent gets a second, so a join never drops a row. |
+| Weighted | A few parents get most of the children, which is closer to how real data looks. Skew sets how hard. |
+
+A **SQL query** column picks from its result the same way, minus one to one and ensure coverage:
+those pair each row with a parent, which only a foreign key has.
+
+### Regex
+
+A **Regex** column takes a pattern and writes values that match it: `[A-Z]{3}-[0-9]{4}` gives
+`QRV-8801`. The supported subset is literals, character classes such as `[a-z0-9]` and `[^0-9]`, the
+escapes `\d \w \s \D \W \S`, the quantifiers `{n}`, `{n,m}`, `*`, `+` and `?`, alternation,
+groups, and the anchors `^` and `$`. Backreferences and lookaround cannot be produced left to right,
+so a pattern using one is refused when you write it, with the construct named. `*`, `+` and `{n,}`
+repeat 16 times at most, or fewer where the column is shorter than that.
+
+A `CHECK` constraint carrying a pattern the generator understands sets the column up on its own.
+
+## Distribution
+
+Numeric generators take a distribution: uniform, normal, or exponential. Uniform data makes an index
+benchmark meaningless, because a real column is rarely evenly spread. The reference strategies above
+do the same job for foreign keys.
+
+| Distribution | Settings |
+| ------------ | -------- |
+| Uniform | None. Every value in the range is as likely as any other. |
+| Normal | Mean and standard deviation, in the column's own units. Empty centres on the middle of the range and spreads it over six deviations. |
+| Exponential | Rate. Higher rates push more values towards the minimum. |
+
+A draw that lands outside the column's range is redrawn rather than folded onto the end value.
+
+## Locale
+
+Names, addresses, companies and phone numbers come from locale datasets. `en_US` and `vi_VN` ship
+with the app. Every address column in a row describes the same place, so a ward always belongs to the
+province written next to it rather than being picked on its own. Vietnamese follows the two-tier
+structure in use since 2025: province, then ward, with no district level.
+
+Names follow the order the locale writes them in. English runs given name, middle name, family name.
+Vietnamese runs family name, middle name, given name, and draws a middle name that agrees with the
+given name.
+
+## Preview
+
+**Preview** generates a few dozen rows and shows them in a grid without writing anything. It runs
+the same code and the same seed as the real run, so a preview row is a row you will actually get.
+
+## The seed
+
+A run is reproducible. The same profile and the same seed produce the same data every time. The seed
+is shown in the run options and can be copied, so a data set can be recreated exactly, which is what
+you want when reporting a bug against generated data. Each column draws from its own stream, so
+changing one table's row count does not change what another table gets.
+
+## Run options
+
+| Option | What it does |
+| ------ | ------------ |
+| Use a single transaction | Wraps the whole run in one transaction, so a failure leaves the database untouched. On a run of more than a million rows this grows the server's undo or write-ahead log, and the wizard warns before starting. |
+| Continue on error | Skips a batch the server rejected and carries on. Only available when a single transaction is off. |
+| Records per batch | How many rows go in one insert. Reduced automatically when the server's own limits are lower. |
+| Disable foreign key checks | Turns constraint checking off for the run where the engine allows it. |
+| Disable triggers | Stops triggers firing during the insert. Reported as skipped on engines that cannot do it. |
+
+## What runs, and in what order
+
+Everything that can be checked is checked before anything is written. The schema is read again at
+the start of the run rather than trusted from the profile, because the table may have changed since
+the profile was saved. Then the app confirms that every generator suits its column's type, that no
+`NOT NULL` column is set to produce nulls, that every unique column can produce enough distinct
+values for the requested row count, and that every referenced parent has keys available. A failure
+here stops the run before a single row is written.
+
+The tables are then sorted so a parent is always filled before its children. For each table in turn:
+the table is emptied if asked, the rows are generated and written in batches, the new keys are
+collected for any child table that references them, and the table's sequence is lifted past the
+largest key that was written. That last step matters: without it the next insert your application
+makes collides with a generated row.
+
+A table that points at itself, such as `employee.manager_id`, is not treated as a loop. It is filled
+with the column left null, then a second pass sets it from the keys that were just created. That
+first pass writes a null, so a self-referencing column declared `NOT NULL` cannot be filled this way:
+the run is refused before it starts and names the column.
+
+Two tables that point at each other are a loop. When one of the foreign keys allows null, the loop
+is broken there and filled in on a second pass. When none of them do, the run needs foreign key
+checks turned off. When neither is possible the run fails and names the tables in the loop.
+
+## Limits
+
+- Views, materialized views and foreign tables are not listed and cannot be filled.
+- Spatial, geometry, vector and user-defined composite types are not generated.
+- Generated and computed columns are left to the server and shown read-only.
+- A table with no primary key can be filled, but its keys cannot be collected, so no other table can
+  reference it and a column that needs a second pass stays empty. The run says which column and why.
+- A CHECK constraint too complex to read is not enforced by the generator. The column carries a
+  warning and the server may still reject the row.
+- A second pass reads back at most the reference pool limit worth of keys. On a table larger than
+  that, rows past the limit keep their deferred column empty and the run says so.
+
+## How rows reach the server
+
+Where the database has a native bulk load path, the run uses it: `COPY FROM STDIN` on PostgreSQL,
+`LOAD DATA LOCAL INFILE` on MySQL. Both are faster than inserts, and both are optional. The run
+falls back to prepared batches, with no interruption and no setting to change, when the server has
+local infile turned off, when **Continue on error** is on (a bulk stream fails as a whole, so a
+single bad row would take the batch with it), or when a child table needs the parent's new keys read
+back, which a bulk stream cannot report.
+
+Batch size follows the server's own limits rather than a fixed number: PostgreSQL's 65,535 bind
+parameters, MySQL's `max_allowed_packet`, SQL Server's 2,100 parameters, SQLite's variable limit.
+A bulk stream carries no bind parameters, so it is cut by size alone and takes far more rows per
+chunk.
+
+## Resuming an interrupted run
+
+A run that is stopped, fails, or is cut off by a lost connection records how far each table got.
+Starting the same run again continues from there: tables already finished are skipped and not
+emptied again, and the table that was interrupted picks up at the row it stopped on. The resumed
+rows continue the same seeded sequence, so the finished data is identical to what an uninterrupted
+run would have written, with no repeated values in unique columns.
+
+Resuming needs the same configuration. Change the seed, the row counts, or any column's generator
+and the run starts over from the beginning, because the recorded progress no longer describes the
+data on the server. A run with **Use a single transaction** on records nothing to resume from: an
+interruption rolls it back, so there is nothing left to continue.
+
+## Stopping a run
+
+**Stop** ends the run after the current batch. A statement already running on the server finishes
+first. With a single transaction on, everything is rolled back. With it off, the rows already
+committed stay, and the report says exactly how many rows landed in each table. Foreign key checks
+and triggers are turned back on either way, including after a failure.
+
+## The report
+
+The report lists each table with the rows written, the time it took, and any warning raised along
+the way: a value truncated to fit its column, a CHECK that could not be read, a trigger option the
+engine ignored. When **Continue on error** is on, it also counts the batches that failed and shows
+the first failing row of each, so the cause is visible without re-running.
+
+## Profiles
+
+The whole configuration is saved as a named profile and run again later. Open **Profiles…** from the
+first or second step of the wizard to save what you have set up, load something you saved before, or
+start from a template.
+
+Profiles store table and column names rather than internal identifiers, so a profile still opens
+after the schema changes. On load, the current schema is compared against it: a column that no
+longer exists is dropped, a new column is auto-mapped, and a column whose type changed is checked
+against its generator and reset to the type default if the two no longer suit each other. When
+anything would change, the list of changes is shown first, and the profile is only applied once you
+accept it. A profile that still fits the schema loads without asking.
+
+### Export and import
+
+**Export** writes a profile to a JSON file, and **Import…** reads one back. An exported profile
+holds the tables, the generators, their settings and the seed. It holds no host, port, user or
+password, and nothing that identifies a connection on your machine, so it is safe to attach to a bug
+report or commit to a repository. A profile records the connection, database and schema it was built
+against by name only, and an imported profile is bound to whatever connection the wizard has open.
+
+### Templates
+
+A template is a profile written against a shape rather than against one database. Two ship with the
+app:
+
+| Template | Tables |
+|---|---|
+| E-commerce | `users`, `products`, `orders`, `order_items` |
+| CRM | `companies`, `contacts`, `deals`, `activities` |
+
+Applying one matches its tables and columns against the real schema by name, ignoring case. Columns
+the template does not name, and columns whose generator does not fit the column as it is now, are
+auto-mapped instead, and the wizard says which ones. A template that matches none of the tables in
+the database is refused rather than applied, so it never leaves you with an empty profile to debug.
+
+Scheduled runs are not available. A generation run happens when you start it.

@@ -513,8 +513,8 @@ struct DataChangeManagerTests {
 
     // MARK: - Reload Version Tests
 
-    @Test("reloadVersion increments on change")
-    func reloadVersionIncrementsOnChange() {
+    @Test("reloadVersion stays put when a change is recorded")
+    func reloadVersionUnchangedOnChange() {
         let manager = DataChangeManager()
         manager.configureForTable(
             tableName: "users",
@@ -533,7 +533,7 @@ struct DataChangeManagerTests {
             newValue: "Bob"
         )
 
-        #expect(manager.reloadVersion == initialVersion + 1)
+        #expect(manager.reloadVersion == initialVersion)
     }
 
     @Test("reloadVersion increments on clearChanges")

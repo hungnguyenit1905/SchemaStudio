@@ -206,7 +206,7 @@ struct TablePlusImporterTests {
             ("MSSQL", "SQL Server"),
             ("Redshift", "Redshift"),
             ("MariaDB", "MariaDB"),
-            ("CockroachDB", "PostgreSQL")
+            ("CockroachDB", "CockroachDB")
         ]
 
         var entries: [[String: Any]] = []

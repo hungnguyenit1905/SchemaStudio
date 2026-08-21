@@ -79,6 +79,15 @@ extension DatabaseTreeOutlineCoordinator {
                     )
                 )
             },
+            openDataGeneration: { [weak self] database in
+                self?.mainCoordinator?.openDataGenerationWizard(
+                    preselectedScope: DatabaseScope(
+                        connectionId: nodeConnectionId,
+                        database: database,
+                        schema: nil
+                    )
+                )
+            },
             refreshObjects: { [weak self] database, schema in
                 self?.refreshObjects(database: database, schema: schema, connectionId: nodeConnectionId)
             },

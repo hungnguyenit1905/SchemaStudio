@@ -18,6 +18,10 @@ internal enum RowValueCopyFormatter {
             return value
         case .bytes(let data):
             return String(data: data, encoding: .isoLatin1)?.formattedAsCompactHex() ?? ""
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return copyText(cell: .text(cell.textFallback), columnType: columnType)
+        @unknown default:
+            return copyText(cell: .text(cell.textFallback), columnType: columnType)
         }
     }
 

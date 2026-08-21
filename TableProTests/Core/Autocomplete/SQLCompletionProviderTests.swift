@@ -255,7 +255,7 @@ struct SQLCompletionProviderTests {
     func testFewerThan20Returned() async {
         let text = "SELECT * FROM users ORDER BY name ASC LIMIT 10 OFF"
         let (items, _) = await provider.getCompletions(text: text, cursorPosition: text.count)
-        #expect(items.count >= 0)
+        #expect(items.count <= 20)
     }
 
     @Test("Exactly 20 items when many matches")
@@ -294,24 +294,40 @@ struct SQLCompletionProviderTests {
 
     // MARK: - P0: CF-1 - DatabaseType Threading
 
-    @Test("Provider accepts databaseType parameter")
+    private static func dialect(dataTypes: Set<String>, quote: String) -> SQLDialectDescriptor {
+        SQLDialectDescriptor(
+            identifierQuote: quote,
+            keywords: [],
+            functions: [],
+            dataTypes: dataTypes
+        )
+    }
+
+    @Test("Provider surfaces the dialect's data types")
     func testProviderAcceptsDatabaseType() async {
-        let pgProvider = SQLCompletionProvider(schemaProvider: schemaProvider, databaseType: .postgresql)
+        let pgProvider = SQLCompletionProvider(
+            schemaProvider: schemaProvider,
+            databaseType: .postgresql,
+            dialect: Self.dialect(dataTypes: ["JSON", "JSONB", "TEXT", "UUID"], quote: "\"")
+        )
         // Use prefix "JSON" to filter past the 20-item limit so JSONB appears
         let text = "CREATE TABLE test (col JSON"
         let (items, _) = await pgProvider.getCompletions(text: text, cursorPosition: text.count)
-        // PostgreSQL-specific types should appear
         let hasJsonb = items.contains { $0.label == "JSONB" }
-        #expect(hasJsonb, "PostgreSQL provider should include JSONB type")
+        #expect(hasJsonb, "PostgreSQL dialect data types should include JSONB")
     }
 
     @Test("MySQL provider shows MySQL-specific types")
     func testMySQLProviderTypes() async {
-        let mysqlProvider = SQLCompletionProvider(schemaProvider: schemaProvider, databaseType: .mysql)
+        let mysqlProvider = SQLCompletionProvider(
+            schemaProvider: schemaProvider,
+            databaseType: .mysql,
+            dialect: Self.dialect(dataTypes: ["ENUM", "SET", "TEXT"], quote: "`")
+        )
         let text = "CREATE TABLE test (col "
         let (items, _) = await mysqlProvider.getCompletions(text: text, cursorPosition: text.count)
         let hasEnum = items.contains { $0.label == "ENUM" }
-        #expect(hasEnum, "MySQL provider should include ENUM type")
+        #expect(hasEnum, "MySQL dialect data types should include ENUM")
     }
 
     @Test("SQLite provider does not show JSONB")
@@ -1209,7 +1225,7 @@ struct SQLCompletionProviderTests {
         let (items, context) = await provider.getCompletions(text: text, cursorPosition: text.count)
 
         #expect(context.clauseType == .where_)
-        #expect(items.contains { $0.kind == .column && $0.label == "user_name" })
-        #expect(items.contains { $0.kind == .column && $0.label == "order_total" })
+        #expect(items.contains { $0.kind == .column && $0.label == "u.user_name" })
+        #expect(items.contains { $0.kind == .column && $0.label == "o.order_total" })
     }
 }

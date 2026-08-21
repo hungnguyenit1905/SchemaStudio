@@ -28,6 +28,11 @@ extension RowEditingCoordinator {
             return
         }
 
+        guard !parent.safeModeLevel.blocksAllWrites else {
+            failSave(message: String(localized: "Cannot save changes: connection is read-only"))
+            return
+        }
+
         guard let scope = parent.selectedTabScope else {
             failSave(message: String(localized: "Not connected to database"))
             return

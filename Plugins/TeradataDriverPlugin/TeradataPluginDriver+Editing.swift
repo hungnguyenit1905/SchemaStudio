@@ -11,6 +11,10 @@ extension TeradataPluginDriver {
             return "'" + string.replacingOccurrences(of: "'", with: "''") + "'"
         case .bytes(let data):
             return "'" + data.map { String(format: "%02X", $0) }.joined() + "'XB"
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return sqlLiteral(.text(value.textFallback))
+        @unknown default:
+            return sqlLiteral(.text(value.textFallback))
         }
     }
 

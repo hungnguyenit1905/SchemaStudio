@@ -64,6 +64,9 @@ struct TransferBatchSplitter: Sendable {
             case .null: return partial + 4
             case .text(let string): return partial + string.utf8.count
             case .bytes(let data): return partial + data.count
+            case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                return partial + value.textFallback.utf8.count
+            @unknown default: return partial + value.textFallback.utf8.count
             }
         }
     }

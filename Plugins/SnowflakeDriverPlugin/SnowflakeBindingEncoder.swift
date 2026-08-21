@@ -28,8 +28,10 @@ enum SnowflakeBindingEncoder {
             return ["type": "TEXT", "value": text]
         case .bytes(let data):
             return ["type": "BINARY", "value": hex(data)]
-        default:
-            return ["type": "TEXT", "value": NSNull()]
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return ["type": "TEXT", "value": value.textFallback]
+        @unknown default:
+            return ["type": "TEXT", "value": value.textFallback]
         }
     }
 

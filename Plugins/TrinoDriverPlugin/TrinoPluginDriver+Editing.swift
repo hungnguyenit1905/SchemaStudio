@@ -124,6 +124,10 @@ extension TrinoPluginDriver {
             return .text(text)
         case .bytes(let data):
             return .bytes([UInt8](data))
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return .text(cell.textFallback)
+        @unknown default:
+            return .text(cell.textFallback)
         }
     }
 }

@@ -26,6 +26,7 @@ final class RedshiftPluginDriver: LibPQBackedDriver, @unchecked Sendable {
             .multiSchema,
             .cancelQuery,
             .batchExecute,
+            .typedCellValues,
         ]
     }
 

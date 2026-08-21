@@ -138,6 +138,10 @@ actor DuckDBConnectionActor {
                     }
                     return duckdb_bind_blob(stmt, paramIdx, baseAddress, idx_t(data.count))
                 }
+            case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+                bindState = duckdb_bind_varchar(stmt, paramIdx, param.textFallback)
+            @unknown default:
+                bindState = duckdb_bind_varchar(stmt, paramIdx, param.textFallback)
             }
             if bindState == DuckDBError {
                 throw DuckDBPluginError.queryFailed("Failed to bind parameter at index \(index)")

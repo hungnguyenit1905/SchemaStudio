@@ -26,7 +26,7 @@ private final class MockDriverPlugin: NSObject, TableProPlugin, DriverPlugin {
         fatalError("Not used in tests")
     }
 
-    required override init() {
+    override required init() {
         super.init()
     }
 
@@ -98,9 +98,12 @@ struct ValidateDriverDescriptorTests {
     @Test("rejects duplicate primary type ID already registered")
     @MainActor
     func rejectsDuplicatePrimaryTypeId() {
-        // "MySQL" is registered by the built-in MySQL plugin
-        MockDriverPlugin.reset(typeId: "MySQL", displayName: "Fake MySQL")
         let pm = PluginManager.shared
+        let occupiedId = "occupied-test-db-type"
+        pm.driverPlugins[occupiedId] = MockDriverPlugin()
+        defer { pm.driverPlugins.removeValue(forKey: occupiedId) }
+
+        MockDriverPlugin.reset(typeId: occupiedId, displayName: "Fake Occupant")
         #expect(throws: PluginError.self) {
             try pm.validateDriverDescriptor(MockDriverPlugin.self, pluginId: "test")
         }
@@ -109,12 +112,16 @@ struct ValidateDriverDescriptorTests {
     @Test("rejects duplicate additional type ID already registered")
     @MainActor
     func rejectsDuplicateAdditionalTypeId() {
+        let pm = PluginManager.shared
+        let occupiedId = "occupied-test-db-alias"
+        pm.driverPlugins[occupiedId] = MockDriverPlugin()
+        defer { pm.driverPlugins.removeValue(forKey: occupiedId) }
+
         MockDriverPlugin.reset(
             typeId: "unique-test-db-type-2",
             displayName: "Test DB",
-            additionalIds: ["MySQL"]
+            additionalIds: [occupiedId]
         )
-        let pm = PluginManager.shared
         #expect(throws: PluginError.self) {
             try pm.validateDriverDescriptor(MockDriverPlugin.self, pluginId: "test")
         }

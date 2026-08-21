@@ -348,10 +348,37 @@ public protocol PluginDatabaseDriver: AnyObject, Sendable {
     /// false when the token is not usable (wrong engine, expired, the
     /// exporting transaction already closed).
     func adoptSnapshotToken(_ token: String) async throws -> Bool
+
+    /// Inserts `rows` and hands back the values `harvestColumns` ended up with
+    /// on each inserted row, in insertion order.
+    ///
+    /// Filling a foreign key column requires the keys the server assigned to
+    /// the parent rows, and an identity or sequence default only produces them
+    /// during the insert. PostgreSQL and SQLite express this as `RETURNING`,
+    /// SQL Server as `OUTPUT INSERTED`, and an engine with neither can re-read
+    /// inside the same transaction. Return nil where the driver has no way to
+    /// do it and the caller falls back to keys it chose itself.
+    func insertHarvestingKeys(
+        table: String,
+        schema: String?,
+        columns: [String],
+        rows: [[PluginCellValue]],
+        harvestColumns: [String]
+    ) async throws -> [[PluginCellValue]]?
 }
 
 public extension PluginDatabaseDriver {
     var capabilities: PluginCapabilities { [] }
+
+    /// Nil means "no keys harvested", which degrades to the caller choosing its
+    /// own keys rather than to a driver that fails to load.
+    func insertHarvestingKeys(
+        table: String,
+        schema: String?,
+        columns: [String],
+        rows: [[PluginCellValue]],
+        harvestColumns: [String]
+    ) async throws -> [[PluginCellValue]]? { nil }
 
     func fetchTriggers(table: String, schema: String?) async throws -> [PluginTriggerInfo] { [] }
 
@@ -869,6 +896,12 @@ public extension PluginDatabaseDriver {
             }
             hex.append("'")
             return hex
+        case .int, .double, .decimalText, .bool:
+            return value.textFallback
+        case .timestamp(let instant):
+            return escapedParameterValue(PluginCellValue.portableTimestampLiteral(instant))
+        case .date, .time, .uuid, .array:
+            return escapedParameterValue(value.textFallback)
         }
     }
 

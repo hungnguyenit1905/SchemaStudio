@@ -54,14 +54,14 @@ enum TransferErrorClassifier {
         maxAttempts: Int = 5,
         body: @Sendable () async throws -> T
     ) async throws -> T {
-        var attempt = 0
+        var attempt = 1
         while true {
             do {
                 return try await body()
             } catch {
                 guard classify(error) == .retryable, attempt < maxAttempts else { throw error }
-                attempt += 1
                 try await Task.sleep(nanoseconds: UInt64(retryDelay(afterAttempt: attempt) * 1_000_000_000))
+                attempt += 1
             }
         }
     }

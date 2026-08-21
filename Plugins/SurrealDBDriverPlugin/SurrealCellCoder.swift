@@ -28,6 +28,10 @@ public enum SurrealCellCoder {
             let payload = data.dropFirst(magic.count)
             guard let decoded = try? SurrealCBOR.decode(Data(payload)) else { return .bytes(data) }
             return decoded
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return .string(cell.textFallback)
+        @unknown default:
+            return .string(cell.textFallback)
         }
     }
 
@@ -39,6 +43,10 @@ public enum SurrealCellCoder {
             return .bytes(data)
         case .text(let text):
             return value(fromText: text, kind: kind)
+        case .int, .double, .decimalText, .bool, .date, .time, .timestamp, .uuid, .array:
+            return value(fromText: cell.textFallback, kind: kind)
+        @unknown default:
+            return value(fromText: cell.textFallback, kind: kind)
         }
     }
 

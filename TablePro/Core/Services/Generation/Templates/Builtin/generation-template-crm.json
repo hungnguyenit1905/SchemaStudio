@@ -1,0 +1,60 @@
+{
+  "id": "crm",
+  "name": "CRM",
+  "summary": "Contacts, companies, deals and activities.",
+  "tables": [
+    {
+      "table": "companies",
+      "rowCount": 100,
+      "columns": [
+        { "column": "name", "generator": "CompanyName" },
+        { "column": "domain", "generator": "Domain" },
+        { "column": "website", "generator": "URL" },
+        { "column": "phone", "generator": "PhoneNumber" },
+        { "column": "city", "generator": "City" },
+        { "column": "state", "generator": "State" },
+        { "column": "country", "generator": "Country" },
+        { "column": "tax_id", "generator": "TaxID" },
+        { "column": "created_at", "generator": "DateTime" }
+      ]
+    },
+    {
+      "table": "contacts",
+      "rowCount": 500,
+      "columns": [
+        { "column": "first_name", "generator": "FirstName" },
+        { "column": "last_name", "generator": "LastName" },
+        { "column": "full_name", "generator": "FullName" },
+        { "column": "email", "generator": "Email" },
+        { "column": "phone", "generator": "PhoneNumber" },
+        { "column": "mobile", "generator": "MobileNumber" },
+        { "column": "job_title", "generator": "JobTitle" },
+        { "column": "city", "generator": "City" },
+        { "column": "country", "generator": "Country" },
+        { "column": "created_at", "generator": "DateTime" }
+      ]
+    },
+    {
+      "table": "deals",
+      "rowCount": 300,
+      "columns": [
+        { "column": "name", "generator": "LoremSentence" },
+        { "column": "amount", "generator": "Price" },
+        { "column": "currency", "generator": "CurrencyCode" },
+        { "column": "notes", "generator": "LoremParagraph" },
+        { "column": "closed_at", "generator": "Date" },
+        { "column": "created_at", "generator": "DateTime" }
+      ]
+    },
+    {
+      "table": "activities",
+      "rowCount": 1000,
+      "columns": [
+        { "column": "subject", "generator": "LoremSentence" },
+        { "column": "notes", "generator": "LoremParagraph" },
+        { "column": "due_at", "generator": "DateTime" },
+        { "column": "created_at", "generator": "DateTime" }
+      ]
+    }
+  ]
+}

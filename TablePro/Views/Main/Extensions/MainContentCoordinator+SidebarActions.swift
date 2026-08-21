@@ -160,6 +160,11 @@ extension MainContentCoordinator {
         activeSheet = .dataTransfer
     }
 
+    func openDataGenerationWizard(preselectedScope: DatabaseScope? = nil) {
+        dataGenerationPreselectedScope = preselectedScope
+        activeSheet = .dataGeneration
+    }
+
     func openExportQueryResultsDialog() {
         guard let tab = tabManager.selectedTab,
               !tabSessionRegistry.tableRows(for: tab.id).rows.isEmpty else { return }

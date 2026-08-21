@@ -65,12 +65,12 @@ struct DataChangeManagerExtendedTests {
         #expect(!manager.isRowInserted(0))
     }
 
-    @Test("Record row insertion increments reloadVersion by 1")
-    func recordRowInsertionIncrementsReloadVersion() {
+    @Test("Record row insertion leaves reloadVersion untouched")
+    func recordRowInsertionKeepsReloadVersion() {
         let manager = makeManager()
         let before = manager.reloadVersion
         manager.recordRowInsertion(rowIndex: 5, values: ["a", "b", "c"])
-        #expect(manager.reloadVersion == before + 1)
+        #expect(manager.reloadVersion == before)
     }
 
     @Test("Record row insertion enables undo")
@@ -329,9 +329,8 @@ struct DataChangeManagerExtendedTests {
         #expect(!manager.isCellModified(rowIndex: 0, columnIndex: 1))
     }
 
-    @Test("discardChanges preserves undo/redo stacks unlike clearChanges")
+    @Test("discardChanges preserves undo/redo stacks unlike clearChangesAndUndoHistory")
     func discardChangesPreservesUndoRedoUnlikeClearChanges() {
-        // discardChanges preserves undo/redo
         let manager1 = makeManager()
         manager1.recordCellChange(
             rowIndex: 0, columnIndex: 1, columnName: "name",
@@ -342,7 +341,6 @@ struct DataChangeManagerExtendedTests {
         manager1.discardChanges()
         #expect(manager1.canRedo)
 
-        // clearChanges clears undo/redo
         let manager2 = makeManager()
         manager2.recordCellChange(
             rowIndex: 0, columnIndex: 1, columnName: "name",
@@ -350,7 +348,7 @@ struct DataChangeManagerExtendedTests {
         )
         manager2.undoManagerProvider?()?.undo()
         #expect(manager2.canRedo)
-        manager2.clearChanges()
+        manager2.clearChangesAndUndoHistory()
         #expect(!manager2.canUndo)
         #expect(!manager2.canRedo)
     }
@@ -578,7 +576,7 @@ struct DataChangeManagerExtendedTests {
         )
         manager.undoManagerProvider?()?.undo()
         let state = manager.saveState()
-        #expect(state.insertedRowData[0]?[1] == nil)
+        #expect(state.insertedRowData[0]?[1] == .null)
     }
 
     @Test("Edit multiple cells in same row all tracked")
