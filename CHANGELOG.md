@@ -102,6 +102,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changing a tab's database from its toolbar now repoints only that tab and leaves the sidebar where it is. (#2026)
 - `describe_table` and `get_table_ddl` now take a `database` argument, in AI chat and over MCP, so a table in another database can be inspected without changing the database selected in the app. `list_schemas` in AI chat takes one too. (#2026)
 
+### Security
+
+- A raw SQL filter can no longer smuggle a second statement past the confirmation the app shows for a destructive change. The check used to look for a list of keywords after a semicolon, which missed several ways to write the same thing, and on PostgreSQL the extra statement then ran. Semicolons and comment markers are now refused anywhere in a filter condition.
+
 ## [0.63.0] - 2026-08-05
 
 ### Added
