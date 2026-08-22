@@ -133,13 +133,15 @@ enum DuplicateWarning: Sendable, Hashable {
     case rowLevelSecurityMayHideRows
     case partitionedTableNotSupported(String)
     case foreignKeyNotCarried(String)
+    case bestEffortStepFailed(step: String, serverMessage: String)
 
     /// A blocking warning means the plan carries no statements and the UI must refuse to run.
     var isBlocking: Bool {
         switch self {
         case .partitionedTableNotSupported:
             return true
-        case .rowLevelSecurityPoliciesNotCopied, .rowLevelSecurityMayHideRows, .foreignKeyNotCarried:
+        case .rowLevelSecurityPoliciesNotCopied, .rowLevelSecurityMayHideRows, .foreignKeyNotCarried,
+             .bestEffortStepFailed:
             return false
         }
     }
@@ -164,6 +166,12 @@ enum DuplicateWarning: Sendable, Hashable {
             return String(
                 format: String(localized: "Foreign key '%@' could not be read completely and is not created."),
                 constraint
+            )
+        case .bestEffortStepFailed(let step, let serverMessage):
+            return String(
+                format: String(localized: "The table was created, but %1$@ did not run. %2$@"),
+                step,
+                serverMessage
             )
         }
     }
