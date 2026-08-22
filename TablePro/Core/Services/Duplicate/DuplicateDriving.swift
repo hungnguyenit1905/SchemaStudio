@@ -25,6 +25,14 @@ protocol DuplicateDriving: Sendable {
     func begin() async throws
     func commit() async throws
     func rollback() async throws
+
+    /// Structured reads go through the plugin driver rather than hand-written catalog SQL, and
+    /// they return the PluginKit types rather than the app-level ones: `ColumnInfo` drops
+    /// `identityKind`, which decides whether the copy needs `OVERRIDING SYSTEM VALUE`.
+    func fetchColumns(table: String, schema: String?) async throws -> [PluginColumnInfo]
+    func fetchIndexes(table: String, schema: String?) async throws -> [PluginIndexInfo]
+    func fetchForeignKeys(table: String, schema: String?) async throws -> [PluginForeignKeyInfo]
+    func fetchApproximateRowCount(table: String, schema: String?) async throws -> Int?
 }
 
 extension DuplicateDriving {
@@ -51,6 +59,17 @@ extension DuplicateDriving {
 /// the guarantee, which is why `SQLBoundaryValidator` and not this is the primary defense.
 struct DatabaseDriverDuplicateAdapter: DuplicateDriving {
     let driver: DatabaseDriver
+    private let pluginAdapter: PluginDriverAdapter
+
+    /// Fails when the driver is not plugin-backed, because the structured reads below have no
+    /// equivalent on the app-level protocol.
+    init?(driver: DatabaseDriver) {
+        guard let pluginAdapter = driver as? PluginDriverAdapter else { return nil }
+        self.driver = driver
+        self.pluginAdapter = pluginAdapter
+    }
+
+    private var pluginDriver: any PluginDatabaseDriver { pluginAdapter.schemaPluginDriver }
 
     var supportsTransactionalDDL: Bool { driver.supportsTransactionalDDL }
 
@@ -71,6 +90,22 @@ struct DatabaseDriverDuplicateAdapter: DuplicateDriving {
     func commit() async throws { try await driver.commitTransaction() }
 
     func rollback() async throws { try await driver.rollbackTransaction() }
+
+    func fetchColumns(table: String, schema: String?) async throws -> [PluginColumnInfo] {
+        try await pluginDriver.fetchColumns(table: table, schema: schema)
+    }
+
+    func fetchIndexes(table: String, schema: String?) async throws -> [PluginIndexInfo] {
+        try await pluginDriver.fetchIndexes(table: table, schema: schema)
+    }
+
+    func fetchForeignKeys(table: String, schema: String?) async throws -> [PluginForeignKeyInfo] {
+        try await pluginDriver.fetchForeignKeys(table: table, schema: schema)
+    }
+
+    func fetchApproximateRowCount(table: String, schema: String?) async throws -> Int? {
+        try await pluginDriver.fetchApproximateRowCount(table: table, schema: schema)
+    }
 
     private static func rows(from result: QueryResult) -> [[String?]] {
         result.rows.map { row in row.map(\.asText) }
