@@ -188,6 +188,15 @@ struct MainContentView: View {
                 isPresented: dismissBinding,
                 preselectedScope: coordinator.dataGenerationPreselectedScope
             )
+        case .duplicateTable(let scope, let table):
+            DuplicateTableSheet(
+                isPresented: dismissBinding,
+                scope: scope,
+                databaseType: DatabaseManager.shared.session(for: scope.connectionId)?.connection.type
+                    ?? connection.type,
+                source: DuplicateTableRef(schema: scope.schema, name: table),
+                onCompleted: { result in coordinator.finishDuplicate(result, scope: scope) }
+            )
         case .createDatabase:
             let viewModel = DatabaseSwitcherViewModel(
                 connectionId: connection.id,

@@ -1,0 +1,103 @@
+//
+//  DuplicateSheetEnvironmentLive.swift
+//  TablePro
+//
+
+import Foundation
+import TableProPluginKit
+
+extension DuplicateSheetEnvironment {
+    /// Wires the sheet to the app: quoting and the schema capability come from the connection's
+    /// driver, the reads go through the metadata pool, and the run goes through the service with
+    /// the execution gate and the query history attached.
+    ///
+    /// Returns `nil` when the connection has no live plugin-backed driver, because every
+    /// structured read this feature makes exists only on the plugin protocol.
+    @MainActor
+    static func live(
+        scope: DatabaseScope,
+        databaseType: DatabaseType,
+        source: DuplicateTableRef
+    ) -> DuplicateSheetEnvironment? {
+        guard let driver = DatabaseManager.shared.driver(for: scope.connectionId),
+              let adapter = DatabaseDriverDuplicateAdapter(driver: driver) else { return nil }
+
+        let session = DatabaseManagerDuplicateSession(scope: scope)
+        let service = DuplicateTableService(
+            databaseType: databaseType,
+            session: session,
+            hooks: hooks(scope: scope, databaseType: databaseType, source: source)
+        )
+
+        return DuplicateSheetEnvironment(
+            quoting: adapter.quoting,
+            supportsSchemas: (driver as? PluginDriverAdapter)?.schemaPluginDriver.supportsSchemas ?? false,
+            runsOnSharedConnection: session.runsOnSharedConnection,
+            loadSchemas: {
+                try await DatabaseManager.shared.withMetadataDriver(scope: scope) { driver in
+                    try await driver.fetchSchemas()
+                }
+            },
+            loadTakenNames: { schema in
+                let target = DatabaseScope(
+                    connectionId: scope.connectionId,
+                    database: scope.database,
+                    schema: schema
+                )
+                let listed = try await DatabaseManager.shared.withMetadataDriver(scope: target) { driver in
+                    try await driver.fetchTables(schema: schema)
+                }
+                return Set(listed.map(\.name))
+            },
+            introspect: {
+                try await session.withDriver(tracksCancellation: false) { driver in
+                    try await DuplicateIntrospector(driver: driver).introspect(source)
+                }
+            },
+            run: { request, token, onProgress in
+                try await service.run(request, token: token, onProgress: onProgress)
+            }
+        )
+    }
+
+    private static func hooks(
+        scope: DatabaseScope,
+        databaseType: DatabaseType,
+        source: DuplicateTableRef
+    ) -> DuplicateServiceHooks {
+        var hooks = DuplicateServiceHooks()
+        hooks.authorize = {
+            let decision = await ExecutionGateProvider.shared.authorize(
+                OperationRequest(
+                    connectionId: scope.connectionId,
+                    databaseType: databaseType,
+                    sql: nil,
+                    kind: .schemaMutation,
+                    caller: .userInterface,
+                    capabilities: .interactiveUser,
+                    operationDescription: String(
+                        format: String(localized: "Duplicate table '%@'"),
+                        source.name
+                    )
+                )
+            )
+            guard case .authorized = decision else {
+                throw ExecutionGateError.denied(
+                    decision.deniedReason ?? String(localized: "Operation not permitted")
+                )
+            }
+        }
+        hooks.recordHistory = { stage, sql, succeeded, error in
+            QueryHistoryManager.shared.recordQuery(
+                query: sql.isEmpty ? "-- \(stage): \(source.name)" : sql,
+                connectionId: scope.connectionId,
+                databaseName: scope.database,
+                executionTime: 0,
+                rowCount: 0,
+                wasSuccessful: succeeded,
+                errorMessage: error
+            )
+        }
+        return hooks
+    }
+}

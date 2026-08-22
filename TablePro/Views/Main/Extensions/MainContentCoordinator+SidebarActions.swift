@@ -165,6 +165,46 @@ extension MainContentCoordinator {
         activeSheet = .dataGeneration
     }
 
+    /// The scope comes from the clicked node, not from this window: the tree spans every saved
+    /// connection, so the duplicate has to run on the connection and database the user right
+    /// clicked. Safe mode and the execution gate are resolved against that same connection, the
+    /// first by the menu item's own read-only state and the second when the run is authorized.
+    func openDuplicateTableSheet(_ table: TableInfo, scope: DatabaseScope) {
+        activeSheet = .duplicateTable(scope: scope, table: table.name)
+    }
+
+    /// Refresh first, open second: the tree has to know the new table exists before a tab asks
+    /// it for the table's columns. A node under another connection never routes through this
+    /// window's coordinator, which would bind the tab to the wrong connection.
+    func finishDuplicate(_ result: DuplicateResult, scope: DatabaseScope) {
+        Task { [weak self] in
+            guard let self else { return }
+            guard scope.connectionId == self.connectionId else {
+                await self.refreshDuplicateSource(scope)
+                self.openDuplicatedTableInNodeConnection(result, scope: scope)
+                return
+            }
+            await self.refreshTables(currentDatabaseOnly: true)
+            self.openTableTab(result.target.name, schema: result.target.schema)
+        }
+    }
+
+    private func refreshDuplicateSource(_ scope: DatabaseScope) async {
+        guard let connection = services.databaseManager.session(for: scope.connectionId)?.connection else { return }
+        await services.schemaRefreshService.refresh(connection: connection, database: scope.database)
+    }
+
+    private func openDuplicatedTableInNodeConnection(_ result: DuplicateResult, scope: DatabaseScope) {
+        let payload = EditorTabPayload(
+            connectionId: scope.connectionId,
+            tabType: .table,
+            tableName: result.target.name,
+            databaseName: scope.database,
+            schemaName: result.target.schema
+        )
+        WindowManager.shared.openTab(payload: payload, tabGroup: .shared, anchor: contentWindow)
+    }
+
     func openExportQueryResultsDialog() {
         guard let tab = tabManager.selectedTab,
               !tabSessionRegistry.tableRows(for: tab.id).rows.isEmpty else { return }

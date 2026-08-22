@@ -9,6 +9,31 @@ Right-click tables in the sidebar to drop, truncate, run maintenance, or manage 
 
 Click the plus button in the bottom-left of the sidebar and choose **New Table** or **New View**. New Table opens the visual structure editor (see [Table Structure](/features/table-structure)). New View opens a SQL editor tab with a CREATE VIEW template for your database type. The button is disabled while [safe mode](/features/safe-mode) blocks writes.
 
+## Duplicate Table
+
+Right-click a table and choose **Duplicate Table...** to copy it into the same database. The sheet has two tabs: **Options** and **Preview SQL**.
+
+Options:
+
+| Option | Effect |
+|--------|--------|
+| Target schema | Where the copy is created. Defaults to the source table's schema, and is hidden on engines without schemas. |
+| New table name | Defaults to `<source>_copy`, then `_copy1`, `_copy2` until one is free. Validated as you type against the server's name length limit, which is counted in bytes. |
+| Duplicate structure only / structure and data | Whether the rows are copied. |
+| Advanced options | Which parts of the structure travel: indexes, keys and check constraints, foreign keys (off by default), defaults, identity and auto increment, generated columns, comments, and table options. |
+| Row filter and Limit rows | A `WHERE` condition and a row cap. Both only apply when data is copied. |
+| If the target exists | Cancel, or drop and recreate. Drop and recreate is not available yet, so pick a name that is free. |
+
+The **Preview SQL** tab shows the script the run sends, and it updates as you change the options. Statements that cannot exist until the run starts, the index rebuilds whose names the server assigns to the new table, appear as a labelled line saying how many statements they stand for.
+
+The copy is independent of the original: it gets its own sequences with the source's `INCREMENT`, `MINVALUE`, `MAXVALUE`, `CACHE`, and `CYCLE`, and no unintended links back. Row-level security policies, grants, ownership, and triggers are not copied, and the sheet says so when they apply. Partitioned tables are not supported yet.
+
+While the copy runs, the sheet shows the current step, elapsed time, and a **Stop** button. The rows are copied by one server-side statement, so there is no percentage to show. Stopping rolls the new table back. When it finishes, the sidebar refreshes and the new table opens in a tab.
+
+<Note>
+Duplicate Table is available on PostgreSQL. The menu item is hidden on engines without support, on views, materialized views, foreign tables, and external tables, and disabled when more than one table is selected.
+</Note>
+
 ## Drop and Truncate
 
 Right-click a table and choose **Delete** to drop it, or **Truncate** to remove all rows while keeping the structure. Hold Cmd and click to select multiple tables; the same options apply to all of them.
@@ -54,6 +79,7 @@ Views appear in the sidebar with an eye icon in your accent color. Materialized 
 | Action | Tables | Views |
 |--------|--------|-------|
 | Show Structure | Yes | Yes |
+| Duplicate Table | Yes | No |
 | Export | Yes | Yes |
 | Import | Yes | No |
 | Truncate | Yes | No |
