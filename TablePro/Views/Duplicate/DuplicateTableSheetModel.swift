@@ -121,7 +121,8 @@ final class DuplicateTableSheetModel {
         guard let plan, let introspection else { return "" }
         return DuplicatePlanPreview.script(
             plan: plan,
-            harvestedIndexCount: DuplicatePlanPreview.estimatedHarvestedIndexCount(introspection.indexes)
+            harvestedIndexCount: DuplicatePlanPreview.estimatedHarvestedIndexCount(introspection.indexes),
+            quoting: environment.quoting
         )
     }
 
@@ -227,20 +228,34 @@ final class DuplicateTableSheetModel {
 
     /// A server-side `INSERT … SELECT` reports nothing while it runs, so an atomic plan never
     /// pretends to know a percentage. Only a chunked plan, which commits batch by batch, has a
-    /// fraction worth drawing.
+    /// fraction worth drawing, and it counts rows rather than statements: the step number stands
+    /// still while hundreds of batches run.
     var progressFraction: Double? {
-        guard plan?.copyMode == .chunked, let progress, progress.totalSteps > 0 else { return nil }
-        return Double(progress.step) / Double(progress.totalSteps)
+        guard let progress, let copied = progress.copiedRows, let total = progress.totalRows, total > 0 else {
+            return nil
+        }
+        return min(1, Double(copied) / Double(total))
     }
 
+    /// A limit caps the copy however large the source is, so the number shown is the smaller of
+    /// the two rather than a figure the run will never reach.
     var estimatedRowCount: Int {
         guard isRowSelectionEnabled, let rows = plan?.estimatedRowCount else { return 0 }
-        return Int(rows)
+        guard let limit = request.options.limit else { return Int(rows) }
+        return Int(min(rows, limit))
     }
 
     var progressFootnote: String {
         guard isRowSelectionEnabled else {
             return String(localized: "Stopping rolls back the new table.")
+        }
+        guard plan?.copyMode != .chunked else {
+            return String(
+                localized: """
+                The rows are copied in batches that each commit. Stopping finishes the batch that is \
+                running and then asks whether to keep or delete what was copied.
+                """
+            )
         }
         return String(
             localized: """

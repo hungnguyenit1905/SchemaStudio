@@ -36,6 +36,9 @@ final class DuplicateDrivingStub: DuplicateDriving, @unchecked Sendable {
     private var columnReadCount = 0
     /// Errors thrown for a SQL string, matched the same way.
     var errorForQueryContaining: [String: any Error] = [:]
+    /// Consulted before the tables above, for a test whose answer depends on which call this is:
+    /// a chunked copy asks the same shape of question once per batch.
+    var respond: (@Sendable (String) -> [[String?]]?)?
 
     init(supportsTransactionalDDL: Bool = true) {
         self.supportsTransactionalDDL = supportsTransactionalDDL
@@ -100,6 +103,9 @@ final class DuplicateDrivingStub: DuplicateDriving, @unchecked Sendable {
     private func result(for sql: String) throws -> [[String?]] {
         if let match = errorForQueryContaining.first(where: { sql.contains($0.key) }) {
             throw match.value
+        }
+        if let scripted = respond?(sql) {
+            return scripted
         }
         if let match = rowsForQueryContaining.first(where: { sql.contains($0.key) }) {
             return match.value

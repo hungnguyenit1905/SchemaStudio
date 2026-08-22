@@ -202,6 +202,29 @@ struct DuplicateTableSheetModelTests {
         #expect(model.progressFraction == nil)
     }
 
+    /// The estimate is what the run will actually copy, so a limit caps it rather than showing a
+    /// figure the copy stops short of.
+    @Test("A row limit caps the estimated row count the sheet shows")
+    func limitCapsTheEstimate() async {
+        let model = makeModel()
+        await model.load()
+        model.mode = .structureAndData
+        model.limitText = "10"
+        #expect(model.estimatedRowCount == 10)
+    }
+
+    /// A chunked copy commits every batch, so the footnote must not promise a rollback.
+    @Test("A chunked plan's footnote describes batches, not a rollback")
+    func chunkedFootnoteDescribesBatches() async {
+        let model = makeModel()
+        await model.load()
+        model.mode = .structureAndData
+        model.options.copyMode = .chunked
+        #expect(model.plan?.copyMode == .chunked)
+        #expect(!model.progressFootnote.contains("rolls"))
+        #expect(model.warnings.contains(.chunkedCopyIsNotASnapshot))
+    }
+
     // MARK: - Running
 
     @Test("Duplicate runs the request the sheet built")

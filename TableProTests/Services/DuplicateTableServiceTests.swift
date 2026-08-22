@@ -18,6 +18,9 @@ struct DuplicateTableServiceTests {
         driver.columns = columns ?? DuplicateFixtures.serialTable.columns
         driver.rowsForQueryContaining["obj_description"] = [[nil, "f", "t", "f"]]
         driver.rowsForQueryContaining["has_schema_privilege"] = [["t", "t"]]
+        // An analyzed table, so the copy is the single statement these tests assert on. The
+        // chunked path has its own suite.
+        driver.approximateRowCount = Int(DuplicateFixtures.analyzedRowCount)
         return driver
     }
 

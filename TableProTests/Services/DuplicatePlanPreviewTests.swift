@@ -23,7 +23,8 @@ struct DuplicatePlanPreviewTests {
         )
         return DuplicatePlanPreview.script(
             plan: plan,
-            harvestedIndexCount: DuplicatePlanPreview.estimatedHarvestedIndexCount(introspection.indexes)
+            harvestedIndexCount: DuplicatePlanPreview.estimatedHarvestedIndexCount(introspection.indexes),
+            quoting: DuplicateFixtures.quoting
         )
     }
 
@@ -66,7 +67,11 @@ struct DuplicatePlanPreviewTests {
             introspection: DuplicateFixtures.threeIndexTable,
             quoting: DuplicateFixtures.quoting
         )
-        let rendered = DuplicatePlanPreview.script(plan: plan, harvestedIndexCount: 3)
+        let rendered = DuplicatePlanPreview.script(
+            plan: plan,
+            harvestedIndexCount: 3,
+            quoting: DuplicateFixtures.quoting
+        )
         #expect(rendered.components(separatedBy: "\n\n").count == plan.statements.count)
     }
 

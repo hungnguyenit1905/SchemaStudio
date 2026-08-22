@@ -24,11 +24,21 @@ struct DuplicateProgress: Sendable, Hashable {
     /// the first value it sees as final.
     let totalSteps: Int
     let kind: DuplicateStatement.Kind
+    /// Only a chunked copy reports rows: an atomic `INSERT … SELECT` says nothing until it ends.
+    var copiedRows: Int64?
+    var totalRows: Int64?
 }
 
 struct DuplicateExecutionOutcome: Sendable, Hashable {
     let executedStatements: [String]
     let warnings: [DuplicateWarning]
+    let copiedRows: Int64
+
+    init(executedStatements: [String], warnings: [DuplicateWarning], copiedRows: Int64 = 0) {
+        self.executedStatements = executedStatements
+        self.warnings = warnings
+        self.copiedRows = copiedRows
+    }
 }
 
 /// Walks a plan against one driver. Two things happen here that cannot happen in the builder:
@@ -37,15 +47,18 @@ struct DuplicateExecutionOutcome: Sendable, Hashable {
 struct DuplicateExecutor: Sendable {
     let driver: any DuplicateDriving
     let token: DuplicateCancellationToken
+    let ledger: DuplicateCopyLedger
     let onProgress: @Sendable (DuplicateProgress) -> Void
 
     init(
         driver: any DuplicateDriving,
         token: DuplicateCancellationToken = DuplicateCancellationToken(),
+        ledger: DuplicateCopyLedger = DuplicateCopyLedger(),
         onProgress: @escaping @Sendable (DuplicateProgress) -> Void = { _ in }
     ) {
         self.driver = driver
         self.token = token
+        self.ledger = ledger
         self.onProgress = onProgress
     }
 
@@ -55,6 +68,7 @@ struct DuplicateExecutor: Sendable {
         var warnings: [DuplicateWarning] = []
         var step = 0
         var total = plan.statements.count
+        var copiedRows: Int64 = 0
 
         for statement in plan.statements {
             try checkCancellation()
@@ -70,6 +84,12 @@ struct DuplicateExecutor: Sendable {
                     total += harvested.count * 2 - 2
                 }
 
+            case .chunked(let spec):
+                step += 1
+                let copy = try await runChunked(spec, plan: plan, statement: statement, step: step, total: total)
+                copiedRows = copy.copiedRows
+                executed.append(contentsOf: copy.executedStatements)
+
             case .deferred(.fromHarvestedIndexes):
                 for index in harvested {
                     try checkCancellation()
@@ -82,7 +102,51 @@ struct DuplicateExecutor: Sendable {
             }
         }
 
-        return DuplicateExecutionOutcome(executedStatements: executed, warnings: warnings)
+        return DuplicateExecutionOutcome(
+            executedStatements: executed,
+            warnings: warnings,
+            copiedRows: copiedRows
+        )
+    }
+
+    /// Progress for a chunked copy counts rows, not statements: the step number stands still while
+    /// hundreds of batches run, and the number the user cares about is how much of the table has
+    /// landed.
+    private func runChunked(
+        _ spec: DuplicateChunkedCopySpec,
+        plan: DuplicatePlan,
+        statement: DuplicateStatement,
+        step: Int,
+        total: Int
+    ) async throws -> DuplicateChunkedCopy.Outcome {
+        let totalRows = spec.totalRows(estimatedRowCount: plan.estimatedRowCount)
+        let onProgress = onProgress
+        onProgress(
+            DuplicateProgress(
+                step: step,
+                totalSteps: total,
+                kind: statement.kind,
+                copiedRows: 0,
+                totalRows: totalRows
+            )
+        )
+        return try await DuplicateChunkedCopy(
+            spec: spec,
+            driver: driver,
+            token: token,
+            ledger: ledger,
+            onBatch: { copied in
+                onProgress(
+                    DuplicateProgress(
+                        step: step,
+                        totalSteps: total,
+                        kind: statement.kind,
+                        copiedRows: copied,
+                        totalRows: totalRows
+                    )
+                )
+            }
+        ).run()
     }
 
     // MARK: - Statement execution

@@ -13,9 +13,9 @@ import TableProPluginKit
 /// the count instead of an invented statement: the names come from the server once the new table
 /// exists, and guessing them here is the text rewriting this feature refuses to do.
 enum DuplicatePlanPreview {
-    static func script(plan: DuplicatePlan, harvestedIndexCount: Int) -> String {
+    static func script(plan: DuplicatePlan, harvestedIndexCount: Int, quoting: DuplicateSQLQuoting) -> String {
         plan.statements
-            .map { block(for: $0, harvestedIndexCount: harvestedIndexCount) }
+            .map { block(for: $0, harvestedIndexCount: harvestedIndexCount, plan: plan, quoting: quoting) }
             .joined(separator: "\n\n")
     }
 
@@ -27,12 +27,19 @@ enum DuplicatePlanPreview {
         indexes.filter { !$0.isPrimary && !$0.isUnique }.count
     }
 
-    private static func block(for statement: DuplicateStatement, harvestedIndexCount: Int) -> String {
+    private static func block(
+        for statement: DuplicateStatement,
+        harvestedIndexCount: Int,
+        plan: DuplicatePlan,
+        quoting: DuplicateSQLQuoting
+    ) -> String {
         switch statement.body {
         case .sql(let sql):
             return "\(sql);"
         case .deferred(.fromHarvestedIndexes):
             return deferredLabel(for: statement.kind, count: harvestedIndexCount)
+        case .chunked(let spec):
+            return spec.previewScript(estimatedRowCount: plan.estimatedRowCount, quoting: quoting)
         }
     }
 

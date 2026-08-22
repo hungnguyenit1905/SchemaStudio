@@ -19,6 +19,10 @@ struct DuplicateServiceHooks: Sendable {
     var authorize: @Sendable () async throws -> Void = {}
     var recordHistory: @Sendable (_ stage: String, _ sql: String, _ succeeded: Bool, _ error: String?) -> Void
         = { _, _, _, _ in }
+    /// Asked only when a chunked copy has already committed rows and then failed or was stopped.
+    /// The default keeps the table: deleting rows the user can still see is not a decision this
+    /// service gets to make on its own.
+    var confirmDropPartialCopy: @Sendable (_ copiedRows: Int64) async -> Bool = { _ in false }
     var didFinish: @Sendable (DuplicateResult) -> Void = { _ in }
 }
 
@@ -124,7 +128,8 @@ struct DuplicateTableService: Sendable {
             try await driver.begin()
         }
 
-        let executor = DuplicateExecutor(driver: driver, token: token, onProgress: onProgress)
+        let ledger = DuplicateCopyLedger()
+        let executor = DuplicateExecutor(driver: driver, token: token, ledger: ledger, onProgress: onProgress)
         do {
             // The validation statement already ran before authorization; running it again would
             // charge the user for the same EXPLAIN twice.
@@ -158,6 +163,7 @@ struct DuplicateTableService: Sendable {
                 plan: plan,
                 driver: driver,
                 transactional: transactional,
+                copiedRows: ledger.copiedRows,
                 originalError: error
             )
             throw error
@@ -174,30 +180,42 @@ struct DuplicateTableService: Sendable {
         plan: DuplicatePlan,
         driver: any DuplicateDriving,
         transactional: Bool,
+        copiedRows: Int64,
         originalError: some Error
     ) async throws {
         let action = DuplicateRecovery.action(
             supportsTransactionalDDL: transactional,
             copyMode: plan.copyMode,
-            hasCommittedRows: false
+            hasCommittedRows: copiedRows > 0
         )
         switch action {
         case .rollback:
             // Sent even when the transaction is already aborted: a connection returned to the
             // pool mid-transaction is unusable for whoever picks it up next.
             try? await driver.rollback()
-        case .dropTarget, .askBeforeDropping:
-            let statement = DuplicateRecovery.dropStatement(target: request.target, quoting: driver.quoting)
-            guard case .sql(let sql) = statement.body else { return }
-            do {
-                _ = try await driver.run(statement, sql: sql)
-            } catch {
-                throw DuplicateError.cleanupFailed(
-                    target: request.targetName,
-                    command: sql,
-                    serverMessage: originalError.localizedDescription
-                )
-            }
+        case .askBeforeDropping:
+            guard await hooks.confirmDropPartialCopy(copiedRows) else { return }
+            try await drop(request, driver: driver, originalError: originalError)
+        case .dropTarget:
+            try await drop(request, driver: driver, originalError: originalError)
+        }
+    }
+
+    private func drop(
+        _ request: DuplicateTableRequest,
+        driver: any DuplicateDriving,
+        originalError: some Error
+    ) async throws {
+        let statement = DuplicateRecovery.dropStatement(target: request.target, quoting: driver.quoting)
+        guard case .sql(let sql) = statement.body else { return }
+        do {
+            _ = try await driver.run(statement, sql: sql)
+        } catch {
+            throw DuplicateError.cleanupFailed(
+                target: request.targetName,
+                command: sql,
+                serverMessage: originalError.localizedDescription
+            )
         }
     }
 }

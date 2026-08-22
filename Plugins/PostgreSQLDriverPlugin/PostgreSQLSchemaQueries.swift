@@ -191,6 +191,27 @@ enum PostgreSQLSchemaQueries {
         """
     }
 
+    /// The planner's row estimate for one table.
+    ///
+    /// The schema the caller asked about wins over the connection's current schema, and that
+    /// choice is made here rather than at the call site: resolving it there is what let this
+    /// query ignore its own `schema` argument and estimate a same-named table in the search path
+    /// instead of the one being asked about.
+    static func approximateRowCount(
+        schemaLiteral: String?,
+        currentSchemaLiteral: String,
+        tableLiteral: String
+    ) -> String {
+        let schema = schemaLiteral.flatMap { $0.isEmpty ? nil : $0 } ?? currentSchemaLiteral
+        return """
+        SELECT reltuples::bigint
+        FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE c.relname = '\(tableLiteral)'
+          AND n.nspname = '\(schema)'
+        """
+    }
+
     static func setSearchPath(toSchema schema: String) -> String {
         let quotedIdentifier = "\"\(schema.replacingOccurrences(of: "\"", with: "\"\""))\""
         return "SET search_path TO \(quotedIdentifier)"

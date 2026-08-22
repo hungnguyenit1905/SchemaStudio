@@ -17,7 +17,8 @@ extension DuplicateSheetEnvironment {
     static func live(
         scope: DatabaseScope,
         databaseType: DatabaseType,
-        source: DuplicateTableRef
+        source: DuplicateTableRef,
+        partialCopyPrompt: DuplicatePartialCopyPrompt
     ) -> DuplicateSheetEnvironment? {
         guard let driver = DatabaseManager.shared.driver(for: scope.connectionId),
               let adapter = DatabaseDriverDuplicateAdapter(driver: driver) else { return nil }
@@ -26,7 +27,12 @@ extension DuplicateSheetEnvironment {
         let service = DuplicateTableService(
             databaseType: databaseType,
             session: session,
-            hooks: hooks(scope: scope, databaseType: databaseType, source: source)
+            hooks: hooks(
+                scope: scope,
+                databaseType: databaseType,
+                source: source,
+                partialCopyPrompt: partialCopyPrompt
+            )
         )
 
         return DuplicateSheetEnvironment(
@@ -63,7 +69,8 @@ extension DuplicateSheetEnvironment {
     private static func hooks(
         scope: DatabaseScope,
         databaseType: DatabaseType,
-        source: DuplicateTableRef
+        source: DuplicateTableRef,
+        partialCopyPrompt: DuplicatePartialCopyPrompt
     ) -> DuplicateServiceHooks {
         var hooks = DuplicateServiceHooks()
         hooks.authorize = {
@@ -97,6 +104,9 @@ extension DuplicateSheetEnvironment {
                 wasSuccessful: succeeded,
                 errorMessage: error
             )
+        }
+        hooks.confirmDropPartialCopy = { copiedRows in
+            await partialCopyPrompt.ask(copiedRows: copiedRows)
         }
         return hooks
     }

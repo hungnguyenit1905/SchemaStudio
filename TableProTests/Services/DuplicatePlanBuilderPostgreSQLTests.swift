@@ -315,6 +315,7 @@ struct DuplicatePlanBuilderPostgreSQLTests {
     func rowFilterIsValidatedAndApplied() {
         var options = DuplicateOptions()
         options.rowFilter = "status = 'paid'"
+        options.copyMode = .atomic
         let result = plan(DuplicateFixtures.serialTable, request: DuplicateFixtures.request(options: options))
         #expect(sql(result, .validateRowFilter).first == "EXPLAIN SELECT 1 FROM \"public\".\"orders\" WHERE status = 'paid'")
         #expect(sql(result, .copyData).first?.contains("WHERE status = 'paid'") == true)

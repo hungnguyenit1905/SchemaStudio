@@ -28,7 +28,18 @@ The **Preview SQL** tab shows the script the run sends, and it updates as you ch
 
 The copy is independent of the original: it gets its own sequences with the source's `INCREMENT`, `MINVALUE`, `MAXVALUE`, `CACHE`, and `CYCLE`, and no unintended links back. Row-level security policies, grants, ownership, and triggers are not copied, and the sheet says so when they apply. Partitioned tables are not supported yet.
 
-While the copy runs, the sheet shows the current step, elapsed time, and a **Stop** button. The rows are copied by one server-side statement, so there is no percentage to show. Stopping rolls the new table back. When it finishes, the sidebar refreshes and the new table opens in a tab.
+While the copy runs, the sheet shows the current step, elapsed time, and a **Stop** button. When it finishes, the sidebar refreshes and the new table opens in a tab.
+
+How the rows are copied depends on how many there are:
+
+| Rows | How it runs |
+|------|-------------|
+| Up to a million, and the planner knows the count | One server-side statement. No percentage to show. Stopping rolls the new table back. |
+| More than a million, an unknown count, a row filter, or an engine without transactional DDL | Batches of 10,000 rows that each commit, walking the table's primary key. The progress bar counts rows. Stopping ends the batch that is running, then asks whether to keep or delete what was copied. |
+
+The planner's row count is unknown until a table has been analyzed, so a table that was never analyzed is copied in batches rather than assumed to be small.
+
+Batches use the primary key, not `OFFSET`, so no batch rereads rows an earlier one already copied. A table without a single-column primary key is copied in one statement instead, and the sheet says so. Batched copies are not a single snapshot: each batch commits on its own, so writes another session makes to the source while the copy runs can land in the copy, and the sheet says that too.
 
 <Note>
 Duplicate Table is available on PostgreSQL. The menu item is hidden on engines without support, on views, materialized views, foreign tables, and external tables, and disabled when more than one table is selected.

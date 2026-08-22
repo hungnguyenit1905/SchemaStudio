@@ -134,6 +134,8 @@ enum DuplicateWarning: Sendable, Hashable {
     case partitionedTableNotSupported(String)
     case foreignKeyNotCarried(String)
     case bestEffortStepFailed(step: String, serverMessage: String)
+    case chunkedNeedsSingleColumnKey
+    case chunkedCopyIsNotASnapshot
 
     /// A blocking warning means the plan carries no statements and the UI must refuse to run.
     var isBlocking: Bool {
@@ -141,7 +143,7 @@ enum DuplicateWarning: Sendable, Hashable {
         case .partitionedTableNotSupported:
             return true
         case .rowLevelSecurityPoliciesNotCopied, .rowLevelSecurityMayHideRows, .foreignKeyNotCarried,
-             .bestEffortStepFailed:
+             .bestEffortStepFailed, .chunkedNeedsSingleColumnKey, .chunkedCopyIsNotASnapshot:
             return false
         }
     }
@@ -166,6 +168,20 @@ enum DuplicateWarning: Sendable, Hashable {
             return String(
                 format: String(localized: "Foreign key '%@' could not be read completely and is not created."),
                 constraint
+            )
+        case .chunkedNeedsSingleColumnKey:
+            return String(
+                localized: """
+                This table has no single-column primary key, so the rows are copied in one \
+                statement. There is no percentage and no way to stop part way.
+                """
+            )
+        case .chunkedCopyIsNotASnapshot:
+            return String(
+                localized: """
+                The rows are copied in batches that each commit, so changes another session makes \
+                to the source while this runs can land in the copy.
+                """
             )
         case .bestEffortStepFailed(let step, let serverMessage):
             return String(
@@ -202,6 +218,9 @@ struct DuplicateStatement: Sendable, Hashable {
     enum Body: Sendable, Hashable {
         case sql(String)
         case deferred(DeferredSource)
+        /// A loop of committed batches rather than one statement. The spec renders every batch,
+        /// so the preview and the run still share one description of the copy.
+        case chunked(DuplicateChunkedCopySpec)
     }
 
     enum DeferredSource: Sendable, Hashable {
@@ -226,6 +245,11 @@ struct DuplicateStatement: Sendable, Hashable {
     init(kind: Kind, deferred: DeferredSource) {
         self.kind = kind
         body = .deferred(deferred)
+    }
+
+    init(kind: Kind, chunked: DuplicateChunkedCopySpec) {
+        self.kind = kind
+        body = .chunked(chunked)
     }
 }
 

@@ -57,12 +57,25 @@ struct TransferChunkPlanner: Sendable {
     func chunkQuery(after cursor: TransferChunkCursor?, upperBound: String? = nil) -> String {
         guard !isSequential else { return "SELECT * FROM \(qualifiedTable)" }
         var sql = "SELECT * FROM \(qualifiedTable)"
-        let predicates = predicates(after: cursor, upperBound: upperBound)
-        if !predicates.isEmpty {
-            sql += " WHERE \(predicates.joined(separator: " AND "))"
+        if let boundary = boundaryPredicate(after: cursor, upperBound: upperBound) {
+            sql += " WHERE \(boundary)"
         }
         sql += " \(orderByClause()) LIMIT \(chunkSize)"
         return sql
+    }
+
+    /// The keyset boundary on its own, so a feature that builds a different statement around it
+    /// still gets the same predicate. Duplicate's chunked copy is an `INSERT … SELECT` with an
+    /// explicit column list, which `chunkQuery`'s `SELECT *` cannot express.
+    func boundaryPredicate(after cursor: TransferChunkCursor?, upperBound: String? = nil) -> String? {
+        let predicates = predicates(after: cursor, upperBound: upperBound)
+        guard !predicates.isEmpty else { return nil }
+        return predicates.joined(separator: " AND ")
+    }
+
+    func orderByClause() -> String {
+        let parts = primaryKeyColumns.map { "\(quoteIdentifier($0)) ASC" }
+        return "ORDER BY \(parts.joined(separator: ", "))"
     }
 
     private func predicates(after cursor: TransferChunkCursor?, upperBound: String?) -> [String] {
@@ -130,11 +143,6 @@ struct TransferChunkPlanner: Sendable {
             conditions.append(condition)
         }
         return conditions
-    }
-
-    private func orderByClause() -> String {
-        let parts = primaryKeyColumns.map { "\(quoteIdentifier($0)) ASC" }
-        return "ORDER BY \(parts.joined(separator: ", "))"
     }
 
     private func literal(_ value: String, column: String) -> String {

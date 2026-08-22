@@ -20,6 +20,7 @@ struct DuplicateTableSheet: View {
     let onCompleted: (DuplicateResult) -> Void
 
     @State private var model: DuplicateTableSheetModel?
+    @State private var partialCopyPrompt = DuplicatePartialCopyPrompt()
     @State private var pane: Pane = .options
     @State private var unavailableMessage: String?
 
@@ -49,8 +50,34 @@ struct DuplicateTableSheet: View {
             Button(String(localized: "Keep Running"), role: .cancel) {}
             Button(String(localized: "Stop"), role: .destructive) { model?.confirmStop() }
         } message: {
-            Text("The new table is rolled back. The source table is not touched.")
+            Text(stopMessage)
         }
+        .alert(
+            String(localized: "Keep the rows that were copied?"),
+            isPresented: $partialCopyPrompt.isPresented
+        ) {
+            Button(String(localized: "Keep Table"), role: .cancel) {
+                partialCopyPrompt.answer(shouldDrop: false)
+            }
+            Button(String(localized: "Delete Table"), role: .destructive) {
+                partialCopyPrompt.answer(shouldDrop: true)
+            }
+        } message: {
+            Text(partialCopyPrompt.message)
+        }
+    }
+
+    /// A chunked copy has committed rows, so stopping it cannot promise a rollback.
+    private var stopMessage: String {
+        guard model?.plan?.copyMode == .chunked else {
+            return String(localized: "The new table is rolled back. The source table is not touched.")
+        }
+        return String(
+            localized: """
+            The batch that is running finishes first, then you choose whether to keep or delete what \
+            was copied. The source table is not touched.
+            """
+        )
     }
 
     // MARK: - Chrome
@@ -120,7 +147,8 @@ struct DuplicateTableSheet: View {
         guard let environment = DuplicateSheetEnvironment.live(
             scope: scope,
             databaseType: databaseType,
-            source: source
+            source: source,
+            partialCopyPrompt: partialCopyPrompt
         ) else {
             unavailableMessage = DuplicateError.unsupportedDatabase(databaseType.rawValue).localizedDescription
             return

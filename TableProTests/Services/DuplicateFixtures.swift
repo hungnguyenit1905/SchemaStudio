@@ -15,6 +15,11 @@ enum DuplicateFixtures {
         stringLiteral: { "'\($0.replacingOccurrences(of: "'", with: "''"))'" }
     )
 
+    /// The row estimate an analyzed table reports. Fixtures carry it so the builder picks the
+    /// single-statement copy: an unknown estimate is what selects chunked mode, and the chunked
+    /// path has fixtures of its own.
+    static let analyzedRowCount: Int64 = 42
+
     static func request(
         source: DuplicateTableRef = DuplicateTableRef(schema: "public", name: "orders"),
         targetSchema: String? = "public",
@@ -82,26 +87,29 @@ enum DuplicateFixtures {
         DuplicateTableIntrospection(
             columns: [column("id", primaryKey: true), column("total", "numeric(10,2)")],
             sequencesByColumn: ["id": nonDefaultSequence],
-            estimatedRowCount: 42
+            estimatedRowCount: analyzedRowCount
         )
     }
 
     static var renamedSequenceTable: DuplicateTableIntrospection {
         DuplicateTableIntrospection(
             columns: [column("id", primaryKey: true)],
-            sequencesByColumn: ["id": renamedSequence]
+            sequencesByColumn: ["id": renamedSequence],
+            estimatedRowCount: analyzedRowCount
         )
     }
 
     static var identityAlwaysTable: DuplicateTableIntrospection {
         DuplicateTableIntrospection(
-            columns: [column("id", primaryKey: true, identity: .always), column("label", "text")]
+            columns: [column("id", primaryKey: true, identity: .always), column("label", "text")],
+            estimatedRowCount: analyzedRowCount
         )
     }
 
     static var identityByDefaultTable: DuplicateTableIntrospection {
         DuplicateTableIntrospection(
-            columns: [column("id", primaryKey: true, identity: .byDefault), column("label", "text")]
+            columns: [column("id", primaryKey: true, identity: .byDefault), column("label", "text")],
+            estimatedRowCount: analyzedRowCount
         )
     }
 
@@ -111,7 +119,8 @@ enum DuplicateFixtures {
                 column("id", primaryKey: true),
                 column("price", "numeric(10,2)"),
                 column("price_with_tax", "numeric(10,2)", generated: true)
-            ]
+            ],
+            estimatedRowCount: analyzedRowCount
         )
     }
 
@@ -142,7 +151,8 @@ enum DuplicateFixtures {
                     whereClause: nil,
                     descendingColumns: nil
                 )
-            ]
+            ],
+            estimatedRowCount: analyzedRowCount
         )
     }
 
@@ -151,20 +161,23 @@ enum DuplicateFixtures {
     static var awkwardlyNamedTable: DuplicateTableIntrospection {
         DuplicateTableIntrospection(
             columns: [column("id", primaryKey: true)],
-            indexes: [PluginIndexInfo(name: "idx_order_orders_id", columns: ["id"])]
+            indexes: [PluginIndexInfo(name: "idx_order_orders_id", columns: ["id"])],
+            estimatedRowCount: analyzedRowCount
         )
     }
 
     static var commentedTable: DuplicateTableIntrospection {
         DuplicateTableIntrospection(
             columns: [column("id", primaryKey: true)],
-            tableComment: "Customer orders, don't drop"
+            tableComment: "Customer orders, don't drop",
+            estimatedRowCount: analyzedRowCount
         )
     }
 
     static var rowLevelSecurityOwnedTable: DuplicateTableIntrospection {
         DuplicateTableIntrospection(
             columns: [column("id", primaryKey: true)],
+            estimatedRowCount: analyzedRowCount,
             hasRowLevelSecurity: true,
             isOwner: true
         )
@@ -173,6 +186,7 @@ enum DuplicateFixtures {
     static var rowLevelSecurityForeignTable: DuplicateTableIntrospection {
         DuplicateTableIntrospection(
             columns: [column("id", primaryKey: true)],
+            estimatedRowCount: analyzedRowCount,
             hasRowLevelSecurity: true,
             isOwner: false
         )
@@ -181,6 +195,7 @@ enum DuplicateFixtures {
     static var partitionedTable: DuplicateTableIntrospection {
         DuplicateTableIntrospection(
             columns: [column("id", primaryKey: true)],
+            estimatedRowCount: analyzedRowCount,
             isPartitioned: true
         )
     }
@@ -213,7 +228,8 @@ enum DuplicateFixtures {
                     referencedColumn: "order_no",
                     referencedSchema: "public"
                 )
-            ]
+            ],
+            estimatedRowCount: analyzedRowCount
         )
     }
 
@@ -230,7 +246,8 @@ enum DuplicateFixtures {
                     onDelete: "CASCADE",
                     onUpdate: "NO ACTION"
                 )
-            ]
+            ],
+            estimatedRowCount: analyzedRowCount
         )
     }
 }

@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A data generation setup can be saved as a named profile and run again later. Profiles are listed in the wizard under Profiles, and loading one shows what changed in the database since it was saved before it is applied. A profile can be exported to a JSON file and imported again: the file holds the tables, generators and seed, and no host, user or password, so it is safe to share.
 - Data generation ships with two templates, e-commerce and CRM. Applying one matches its tables and columns against your schema by name and fills what it finds, auto-maps the rest, and says what it could not place. A template that matches nothing is refused instead of leaving you an empty setup.
 - Duplicate a table from the sidebar: right-click a table and choose Duplicate Table. Pick the target schema and name, choose structure only or structure and data, and narrow the rows with a `WHERE` condition or a row limit. A Preview SQL tab shows the script and follows the options as you change them. The copy gets its own sequences and no unintended links back to the original. PostgreSQL for now.
+- Duplicating a large table copies the rows in batches that each commit, with a progress bar that counts rows and a Stop that ends on the next batch boundary and then asks whether to keep or delete what was copied. Batches walk the primary key, so no batch rereads rows an earlier one already copied. A table with no single-column primary key copies in one statement instead, and says so.
 - Optional crash reporting, off by default. Turn it on in Settings > General > Diagnostics. Crash reports carry the stack trace, app and OS version, and nothing about your connections, queries, or data.
 
 ### Changed
@@ -42,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- PostgreSQL reported the wrong estimated row count for a table outside the connection's current schema, reading a same-named table in the search path instead.
 - Saving on a read-only connection now says the connection is read-only instead of reporting that the SQL could not be generated.
 - Undo in the table structure editor steps back one edit at a time. Edits made in the same moment were folded into one step, so a single undo could revert several of them.
 - Oracle zoned and local timestamps now render the actual zone offset (e.g. `+07:00`) instead of always showing `Z`.

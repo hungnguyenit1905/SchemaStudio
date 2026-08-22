@@ -30,6 +30,13 @@ struct PostgreSqlDuplicatePlanBuilder: DuplicatePlanBuilding {
         let target = qualified(request.target, quoting: quoting)
         let copiesData = request.mode == .structureAndData
         let rewritesIndexes = copiesData && request.options.indexes
+        let copyMode = DuplicateCopyModeResolver.resolve(
+            request: request,
+            introspection: introspection,
+            supportsTransactionalDDL: true,
+            databaseType: .postgresql
+        )
+        warnings.append(contentsOf: copyMode.warnings)
 
         var statements: [DuplicateStatement] = []
 
@@ -69,7 +76,8 @@ struct PostgreSqlDuplicatePlanBuilder: DuplicatePlanBuilding {
                     introspection: introspection,
                     source: source,
                     target: target,
-                    quoting: quoting
+                    quoting: quoting,
+                    copyMode: copyMode
                 )
             )
         }
@@ -95,7 +103,7 @@ struct PostgreSqlDuplicatePlanBuilder: DuplicatePlanBuilding {
         return DuplicatePlan(
             statements: statements,
             warnings: warnings,
-            copyMode: .atomic,
+            copyMode: copyMode.mode,
             estimatedRowCount: introspection.estimatedRowCount
         )
     }
@@ -263,11 +271,23 @@ struct PostgreSqlDuplicatePlanBuilder: DuplicatePlanBuilding {
         introspection: DuplicateTableIntrospection,
         source: String,
         target: String,
-        quoting: DuplicateSQLQuoting
+        quoting: DuplicateSQLQuoting,
+        copyMode: DuplicateCopyModeDecision
     ) -> DuplicateStatement {
         let columns = introspection.writableColumns.map { quoting.identifier($0.name) }
         let columnList = columns.joined(separator: ", ")
         let overriding = introspection.hasIdentityAlwaysColumn ? " OVERRIDING SYSTEM VALUE" : ""
+
+        if let spec = chunkedSpec(
+            request: request,
+            source: source,
+            target: target,
+            columnList: columnList,
+            overriding: overriding,
+            copyMode: copyMode
+        ) {
+            return DuplicateStatement(kind: .copyData, chunked: spec)
+        }
 
         var sql = "INSERT INTO \(target) (\(columnList))\(overriding)\n"
         sql += "SELECT \(columnList) FROM \(source)"
@@ -282,6 +302,34 @@ struct PostgreSqlDuplicatePlanBuilder: DuplicatePlanBuilding {
             sql += " LIMIT \(limit)"
         }
         return DuplicateStatement(kind: .copyData, sql: sql)
+    }
+
+    /// PostgreSQL reads the last key of a batch off the insert itself: a data-modifying CTE
+    /// returns the keys it wrote, and `MAX` over them is one extra aggregate rather than a second
+    /// round trip.
+    private func chunkedSpec(
+        request: DuplicateTableRequest,
+        source: String,
+        target: String,
+        columnList: String,
+        overriding: String,
+        copyMode: DuplicateCopyModeDecision
+    ) -> DuplicateChunkedCopySpec? {
+        guard copyMode.isChunked, let key = copyMode.keyColumn, let kind = copyMode.keyLiteralKind else {
+            return nil
+        }
+        return DuplicateChunkedCopySpec(
+            source: source,
+            target: target,
+            columnList: columnList,
+            overriding: overriding,
+            keyColumn: key,
+            keyLiteralKind: kind,
+            rowFilter: activeRowFilter(request),
+            batchSize: request.options.batchSize,
+            limit: request.options.limit,
+            strategy: .insertReturning
+        )
     }
 
     private func foreignKeys(

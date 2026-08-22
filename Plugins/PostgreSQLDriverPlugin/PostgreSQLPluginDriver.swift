@@ -536,14 +536,11 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
     }
 
     func fetchApproximateRowCount(table: String, schema: String?) async throws -> Int? {
-        let query = """
-        SELECT reltuples::bigint
-        FROM pg_class
-        WHERE relname = '\(escapeLiteral(table))'
-          AND relnamespace = (
-              SELECT oid FROM pg_namespace WHERE nspname = current_schema()
-          )
-        """
+        let query = PostgreSQLSchemaQueries.approximateRowCount(
+            schemaLiteral: schema.map { escapeLiteral($0) },
+            currentSchemaLiteral: escapeLiteral(core.currentSchema),
+            tableLiteral: escapeLiteral(table)
+        )
         let result = try await execute(query: query)
         guard let firstRow = result.rows.first, let value = firstRow[0].asText,
               let count = Int(value) else { return nil }
