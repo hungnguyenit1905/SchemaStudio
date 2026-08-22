@@ -58,6 +58,37 @@ enum DuplicateForeignKeyGrouping {
         return Result(keys: grouped, warnings: warnings)
     }
 
+    /// `ALTER TABLE … ADD FOREIGN KEY` is spelled the same at both vendors, so it lives here
+    /// rather than once per builder. The constraint name is left to the server: a copied name
+    /// collides with the source's on PostgreSQL, where constraint names are schema-wide.
+    static func statements(
+        request: DuplicateTableRequest,
+        keys: [DuplicateGroupedForeignKey],
+        quoting: DuplicateSQLQuoting
+    ) -> [DuplicateStatement] {
+        let target = quoting.qualified(request.target)
+        return keys.map { key in
+            let selfReferencing = isSelfReferencing(key, source: request.source)
+            let localColumns = key.localColumns.map { quoting.identifier($0) }.joined(separator: ", ")
+            let referencedColumns = key.referencedColumns.map { quoting.identifier($0) }.joined(separator: ", ")
+            let referenced = quoting.qualified(
+                DuplicateTableRef(
+                    schema: selfReferencing ? request.targetSchema : key.referencedSchema,
+                    name: selfReferencing ? request.targetName : key.referencedTable
+                )
+            )
+            var sql = "ALTER TABLE \(target) ADD FOREIGN KEY (\(localColumns))"
+            sql += " REFERENCES \(referenced) (\(referencedColumns))"
+            if let onDelete = key.onDelete {
+                sql += " ON DELETE \(onDelete)"
+            }
+            if let onUpdate = key.onUpdate {
+                sql += " ON UPDATE \(onUpdate)"
+            }
+            return DuplicateStatement(kind: .addForeignKey, sql: sql)
+        }
+    }
+
     /// A self-referencing key must point at the copy, not the original, or the new table stays
     /// tied to the table it was duplicated from.
     static func isSelfReferencing(_ key: DuplicateGroupedForeignKey, source: DuplicateTableRef) -> Bool {

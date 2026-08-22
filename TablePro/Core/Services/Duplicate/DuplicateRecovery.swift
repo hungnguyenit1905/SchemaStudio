@@ -35,13 +35,12 @@ enum DuplicateRecovery {
 
     /// Kept as a statement so it goes through the same executor, history and error handling as
     /// everything else rather than being a side channel.
+    ///
+    /// One statement is enough at both vendors and there is no ledger to replay backwards: the
+    /// only object either builder creates before the copy is the table itself, and dropping it
+    /// takes its indexes and any sequence owned by its columns with it. Never write `CASCADE`
+    /// here; MySQL parses it and then does nothing, which reads as a working cleanup that is not.
     static func dropStatement(target: DuplicateTableRef, quoting: DuplicateSQLQuoting) -> DuplicateStatement {
-        let name: String
-        if let schema = target.schema, !schema.isEmpty {
-            name = "\(quoting.identifier(schema)).\(quoting.identifier(target.name))"
-        } else {
-            name = quoting.identifier(target.name)
-        }
-        return DuplicateStatement(kind: .dropTarget, sql: "DROP TABLE IF EXISTS \(name)")
+        DuplicateStatement(kind: .dropTarget, sql: "DROP TABLE IF EXISTS \(quoting.qualified(target))")
     }
 }

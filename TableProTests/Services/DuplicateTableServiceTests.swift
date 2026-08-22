@@ -305,10 +305,10 @@ struct DuplicateTableServiceTests {
     func unsupportedDatabaseRefused() async throws {
         let driver = makeDriver()
         let unsupported = DuplicateTableService(
-            databaseType: .mysql,
+            databaseType: .sqlite,
             session: DuplicateSessionStub(driver: driver)
         )
-        await #expect(throws: DuplicateError.unsupportedDatabase("MySQL")) {
+        await #expect(throws: DuplicateError.unsupportedDatabase("SQLite")) {
             _ = try await unsupported.run(request())
         }
         #expect(driver.calls.isEmpty)

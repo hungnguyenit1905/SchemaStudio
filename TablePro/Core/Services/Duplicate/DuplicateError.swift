@@ -13,6 +13,7 @@ enum DuplicateError: LocalizedError, Sendable, Hashable {
     case targetExists(String)
     case missingCreatePrivilege(String)
     case missingSelectPrivilege(String)
+    case missingPrivilege(privilege: String, schema: String)
     case unsafeRowFilter
     case invalidRowFilter(String)
     case invalidTargetName(DuplicateTargetNameError)
@@ -45,6 +46,12 @@ enum DuplicateError: LocalizedError, Sendable, Hashable {
             return String(format: String(localized: "You do not have CREATE permission on '%@'."), schema)
         case .missingSelectPrivilege(let table):
             return String(format: String(localized: "You do not have SELECT permission on '%@'."), table)
+        case .missingPrivilege(let privilege, let schema):
+            return String(
+                format: String(localized: "You do not have the %1$@ privilege on '%2$@'."),
+                privilege,
+                schema
+            )
         case .unsafeRowFilter:
             return String(
                 localized: "The row filter cannot contain a semicolon or a comment marker."

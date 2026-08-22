@@ -63,7 +63,7 @@ struct DuplicateExecutor: Sendable {
     }
 
     func run(_ plan: DuplicatePlan) async throws -> DuplicateExecutionOutcome {
-        var harvested: [HarvestedIndex] = []
+        var deferred: [DuplicateStatement.Kind: [String]] = [:]
         var executed: [String] = []
         var warnings: [DuplicateWarning] = []
         var step = 0
@@ -79,9 +79,12 @@ struct DuplicateExecutor: Sendable {
                 onProgress(DuplicateProgress(step: step, totalSteps: total, kind: statement.kind))
                 let rows = try await perform(statement, sql: sql, executed: &executed, warnings: &warnings)
                 if statement.kind == .harvestIndexes {
-                    harvested = Self.harvestedIndexes(from: rows)
-                    // Each deferred placeholder stands in for one statement per harvested index.
-                    total += harvested.count * 2 - 2
+                    let harvested = plan.indexDialect.harvestedIndexes(from: rows)
+                    deferred[.dropIndex] = plan.indexDialect.dropSQL(for: harvested, quoting: driver.quoting)
+                    deferred[.replayIndex] = plan.indexDialect.replaySQL(for: harvested)
+                    // The two placeholders in the plan are replaced by however many statements the
+                    // vendor needs: one per index on PostgreSQL, one combined ALTER on MySQL.
+                    total += deferred.values.reduce(0) { $0 + $1.count } - 2
                 }
 
             case .chunked(let spec):
@@ -91,12 +94,10 @@ struct DuplicateExecutor: Sendable {
                 executed.append(contentsOf: copy.executedStatements)
 
             case .deferred(.fromHarvestedIndexes):
-                for index in harvested {
+                for sql in deferred[statement.kind] ?? [] {
                     try checkCancellation()
                     step += 1
                     onProgress(DuplicateProgress(step: step, totalSteps: total, kind: statement.kind))
-                    let sql = Self.deferredSQL(for: statement.kind, index: index)
-                    guard let sql else { continue }
                     _ = try await perform(statement, sql: sql, executed: &executed, warnings: &warnings)
                 }
             }
@@ -183,38 +184,14 @@ struct DuplicateExecutor: Sendable {
 
     // MARK: - Deferred statements
 
-    struct HarvestedIndex: Sendable, Hashable {
-        /// Already schema-qualified and quoted by `regclass`, so it is used verbatim. Quoting it
-        /// again would turn `public.idx` into a single identifier named `public.idx`.
-        let reference: String
-        let definition: String
-    }
-
-    static func harvestedIndexes(from rows: [[String?]]) -> [HarvestedIndex] {
-        rows.compactMap { row in
-            guard row.count >= 2, let reference = row[0], let definition = row[1] else { return nil }
-            guard !reference.isEmpty, !definition.isEmpty else { return nil }
-            return HarvestedIndex(reference: reference, definition: definition)
-        }
-    }
-
-    static func deferredSQL(for kind: DuplicateStatement.Kind, index: HarvestedIndex) -> String? {
-        switch kind {
-        case .dropIndex:
-            return "DROP INDEX \(index.reference)"
-        case .replayIndex:
-            return index.definition
-        default:
-            return nil
-        }
-    }
-
     static func stepDescription(_ kind: DuplicateStatement.Kind) -> String {
         switch kind {
         case .analyze:
             return String(localized: "updating table statistics")
         case .tableComment:
             return String(localized: "copying the table comment")
+        case .resetAutoIncrement:
+            return String(localized: "setting the auto-increment counter")
         default:
             return String(localized: "one step")
         }

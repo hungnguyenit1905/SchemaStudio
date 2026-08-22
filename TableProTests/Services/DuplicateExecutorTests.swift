@@ -109,7 +109,7 @@ struct DuplicateExecutorTests {
 
     @Test("A harvest row missing a column is skipped rather than producing a broken statement")
     func malformedHarvestRowIsSkipped() {
-        let indexes = DuplicateExecutor.harvestedIndexes(from: [
+        let indexes = DuplicateIndexDialect.postgresql.harvestedIndexes(from: [
             ["public.idx_a", "CREATE INDEX idx_a ON t (a)"],
             ["public.idx_b", nil],
             [nil, "CREATE INDEX idx_c ON t (c)"],

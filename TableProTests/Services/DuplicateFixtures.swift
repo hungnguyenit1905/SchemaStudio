@@ -15,6 +15,28 @@ enum DuplicateFixtures {
         stringLiteral: { "'\($0.replacingOccurrences(of: "'", with: "''"))'" }
     )
 
+    /// MySQL quotes with backquotes and doubles an embedded one, the same shape the driver uses.
+    static let mysqlQuoting = DuplicateSQLQuoting(
+        identifier: { "`\($0.replacingOccurrences(of: "`", with: "``"))`" },
+        stringLiteral: { "'\($0.replacingOccurrences(of: "'", with: "''"))'" }
+    )
+
+    /// MySQL has no schema layer inside a database, so the sheet hides the dropdown and the
+    /// request carries no schema at all.
+    static func mysqlRequest(
+        targetName: String = "orders_copy",
+        mode: DuplicateMode = .structureAndData,
+        options: DuplicateOptions = DuplicateOptions()
+    ) -> DuplicateTableRequest {
+        DuplicateTableRequest(
+            source: DuplicateTableRef(schema: nil, name: "orders"),
+            targetSchema: nil,
+            targetName: targetName,
+            mode: mode,
+            options: options
+        )
+    }
+
     /// The row estimate an analyzed table reports. Fixtures carry it so the builder picks the
     /// single-statement copy: an unknown estimate is what selects chunked mode, and the chunked
     /// path has fixtures of its own.
@@ -197,6 +219,27 @@ enum DuplicateFixtures {
             columns: [column("id", primaryKey: true)],
             estimatedRowCount: analyzedRowCount,
             isPartitioned: true
+        )
+    }
+
+    /// An `AUTO_INCREMENT` primary key, a plain column and a stored generated column: the three
+    /// shapes spec tests 14 and 16 turn on.
+    static var mysqlAutoIncrementTable: DuplicateTableIntrospection {
+        DuplicateTableIntrospection(
+            columns: [
+                column("id", "int", primaryKey: true, identity: .byDefault),
+                column("email", "varchar(255)"),
+                column("total", "decimal(10,2)", generated: true)
+            ],
+            estimatedRowCount: analyzedRowCount
+        )
+    }
+
+    static var mysqlExpressionIndexTable: DuplicateTableIntrospection {
+        DuplicateTableIntrospection(
+            columns: [column("id", "int", primaryKey: true), column("email", "varchar(255)")],
+            estimatedRowCount: analyzedRowCount,
+            hasExpressionIndex: true
         )
     }
 

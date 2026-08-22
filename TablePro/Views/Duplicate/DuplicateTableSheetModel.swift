@@ -351,6 +351,8 @@ final class DuplicateTableSheetModel {
             return String(localized: "Recreating indexes…")
         case .resetSequence:
             return String(localized: "Resetting sequences…")
+        case .resetAutoIncrement:
+            return String(localized: "Setting the auto-increment counter…")
         case .addForeignKey:
             return String(localized: "Creating foreign keys…")
         case .analyze:

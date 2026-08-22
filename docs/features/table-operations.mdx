@@ -41,9 +41,25 @@ The planner's row count is unknown until a table has been analyzed, so a table t
 
 Batches use the primary key, not `OFFSET`, so no batch rereads rows an earlier one already copied. A table without a single-column primary key is copied in one statement instead, and the sheet says so. Batched copies are not a single snapshot: each batch commits on its own, so writes another session makes to the source while the copy runs can land in the copy, and the sheet says that too.
 
+### MySQL and MariaDB
+
+The copy is built on `CREATE TABLE new LIKE original`, so the storage engine, row format, character set, collation, every column's precision and flags, the keys, the indexes and the `CHECK` constraints come across exactly as the server has them. Foreign keys and triggers are not carried by that statement: foreign keys are added afterwards when you ask for them, triggers are not copied.
+
+Some of the Advanced options cannot be turned off here, because `LIKE` is all or nothing for them: keys and check constraints, defaults, auto increment, generated columns, and table options. The sheet lists the ones you switched off and says they are carried over anyway, rather than leaving a switch that quietly does nothing. Indexes and comments can still be turned off, and the run removes them after the table is created.
+
+MySQL and MariaDB commit every DDL statement, so a copy can never be rolled back. Rows are always copied in batches, and a run that fails or is stopped removes the table it created. If that cleanup itself fails, the error names the leftover table and gives you the exact `DROP TABLE` to run, with a copy button.
+
+A step that only affects derived data, updating table statistics or setting the auto-increment counter, is allowed to fail without discarding the copy. The table is correct and usable either way, and the counter is derived from the rows on the next insert.
+
+When the rows are copied, indexes are set aside first and rebuilt afterwards in a single `ALTER TABLE`, so the table is rebuilt once rather than once per index. A table with an index on an expression (MySQL 8.0.13 and later) keeps its indexes in place instead: the copy is slower, and the sheet says so, but no index can be lost.
+
 <Note>
-Duplicate Table is available on PostgreSQL. The menu item is hidden on engines without support, on views, materialized views, foreign tables, and external tables, and disabled when more than one table is selected.
+Duplicate Table is available on PostgreSQL, MySQL, and MariaDB. The menu item is hidden on engines without support, on views, materialized views, foreign tables, and external tables, and disabled when more than one table is selected.
 </Note>
+
+<Warning>
+On MySQL and MariaDB, if the app is force-quit while a copy is running, the new table can be left without the indexes that were set aside for the copy. Nothing on disk records that they are missing. Check the new table's indexes, or drop it and duplicate again.
+</Warning>
 
 ## Drop and Truncate
 

@@ -56,8 +56,11 @@ extension DuplicateSheetEnvironment {
                 return Set(listed.map(\.name))
             },
             introspect: {
-                try await session.withDriver(tracksCancellation: false) { driver in
-                    try await DuplicateIntrospector(driver: driver).introspect(source)
+                guard let catalog = DuplicateVendorCatalogRegistry.catalog(for: databaseType) else {
+                    throw DuplicateError.unsupportedDatabase(databaseType.rawValue)
+                }
+                return try await session.withDriver(tracksCancellation: false) { driver in
+                    try await DuplicateIntrospector(driver: driver, catalog: catalog).introspect(source)
                 }
             },
             run: { request, token, onProgress in

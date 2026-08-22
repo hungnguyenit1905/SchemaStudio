@@ -28,9 +28,12 @@ struct DuplicateStatementClassificationTests {
         }
     }
 
-    @Test("Only statistics and comments are best effort")
+    /// Statistics, the table comment and the auto-increment counter are all derived or cosmetic:
+    /// losing one leaves a table that is correct and usable, and dropping it would throw away the
+    /// rows that already landed.
+    @Test("Only statistics, comments and the auto-increment counter are best effort")
     func bestEffortKinds() {
-        let bestEffort: Set<DuplicateStatement.Kind> = [.analyze, .tableComment]
+        let bestEffort: Set<DuplicateStatement.Kind> = [.analyze, .tableComment, .resetAutoIncrement]
         for kind in DuplicateStatement.Kind.allCases {
             let expected: DuplicateStatement.Severity = bestEffort.contains(kind) ? .bestEffort : .fatal
             #expect(statement(kind).severity == expected, "\(kind) is classified wrong for severity")
@@ -39,7 +42,7 @@ struct DuplicateStatementClassificationTests {
 
     @Test("Every kind is classified, so a new case cannot slip through untouched")
     func everyKindClassified() {
-        #expect(DuplicateStatement.Kind.allCases.count == 15)
+        #expect(DuplicateStatement.Kind.allCases.count == 16)
         for kind in DuplicateStatement.Kind.allCases {
             _ = statement(kind).carriesRowFilter
             _ = statement(kind).severity

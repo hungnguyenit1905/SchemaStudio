@@ -18,15 +18,15 @@ extension DuplicateStatement {
         case .validateRowFilter, .copyData:
             return true
         case .createTable, .tableComment, .harvestIndexes, .dropIndex, .createSequence,
-             .setColumnDefault, .ownSequence, .replayIndex, .resetSequence, .addForeignKey,
-             .analyze, .dropTarget, .dropReferencingForeignKey:
+             .setColumnDefault, .ownSequence, .replayIndex, .resetSequence, .resetAutoIncrement,
+             .addForeignKey, .analyze, .dropTarget, .dropReferencingForeignKey:
             return false
         }
     }
 
     var severity: Severity {
         switch kind {
-        case .analyze, .tableComment:
+        case .analyze, .tableComment, .resetAutoIncrement:
             return .bestEffort
         case .validateRowFilter, .createTable, .harvestIndexes, .dropIndex, .createSequence,
              .setColumnDefault, .ownSequence, .copyData, .replayIndex, .resetSequence,

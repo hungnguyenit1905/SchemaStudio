@@ -44,15 +44,18 @@ struct DuplicateTableService: Sendable {
         token: DuplicateCancellationToken = DuplicateCancellationToken(),
         onProgress: @escaping @Sendable (DuplicateProgress) -> Void = { _ in }
     ) async throws -> DuplicateResult {
-        guard let builder = DuplicatePlanBuilder.builder(for: databaseType) else {
+        guard let builder = DuplicatePlanBuilder.builder(for: databaseType),
+              let catalog = DuplicateVendorCatalogRegistry.catalog(for: databaseType) else {
             throw DuplicateError.unsupportedDatabase(databaseType.rawValue)
         }
 
         try validateRowFilterText(request)
 
         let introspection = try await session.withDriver(tracksCancellation: false) { driver in
-            let introspection = try await DuplicateIntrospector(driver: driver).introspect(request.source)
-            try await DuplicatePreflight(driver: driver).check(request, introspection: introspection)
+            let introspection = try await DuplicateIntrospector(driver: driver, catalog: catalog)
+                .introspect(request.source)
+            try await DuplicatePreflight(driver: driver, catalog: catalog)
+                .check(request, introspection: introspection)
             return introspection
         }
 

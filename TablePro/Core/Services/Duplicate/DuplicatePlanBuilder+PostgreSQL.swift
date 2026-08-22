@@ -94,7 +94,11 @@ struct PostgreSqlDuplicatePlanBuilder: DuplicatePlanBuilding {
 
         if let groupedForeignKeys {
             statements.append(
-                contentsOf: foreignKeys(request: request, keys: groupedForeignKeys.keys, quoting: quoting)
+                contentsOf: DuplicateForeignKeyGrouping.statements(
+                    request: request,
+                    keys: groupedForeignKeys.keys,
+                    quoting: quoting
+                )
             )
         }
 
@@ -104,7 +108,8 @@ struct PostgreSqlDuplicatePlanBuilder: DuplicatePlanBuilding {
             statements: statements,
             warnings: warnings,
             copyMode: copyMode.mode,
-            estimatedRowCount: introspection.estimatedRowCount
+            estimatedRowCount: introspection.estimatedRowCount,
+            indexDialect: .postgresql
         )
     }
 
@@ -332,35 +337,6 @@ struct PostgreSqlDuplicatePlanBuilder: DuplicatePlanBuilding {
         )
     }
 
-    private func foreignKeys(
-        request: DuplicateTableRequest,
-        keys: [DuplicateGroupedForeignKey],
-        quoting: DuplicateSQLQuoting
-    ) -> [DuplicateStatement] {
-        let target = qualified(request.target, quoting: quoting)
-        return keys.map { key in
-            let selfReferencing = DuplicateForeignKeyGrouping.isSelfReferencing(key, source: request.source)
-            let localColumns = key.localColumns.map { quoting.identifier($0) }.joined(separator: ", ")
-            let referencedColumns = key.referencedColumns.map { quoting.identifier($0) }.joined(separator: ", ")
-            let referenced = qualified(
-                DuplicateTableRef(
-                    schema: selfReferencing ? request.targetSchema : key.referencedSchema,
-                    name: selfReferencing ? request.targetName : key.referencedTable
-                ),
-                quoting: quoting
-            )
-            var sql = "ALTER TABLE \(target) ADD FOREIGN KEY (\(localColumns))"
-            sql += " REFERENCES \(referenced) (\(referencedColumns))"
-            if let onDelete = key.onDelete {
-                sql += " ON DELETE \(onDelete)"
-            }
-            if let onUpdate = key.onUpdate {
-                sql += " ON UPDATE \(onUpdate)"
-            }
-            return DuplicateStatement(kind: .addForeignKey, sql: sql)
-        }
-    }
-
     // MARK: - Naming
 
     private func activeRowFilter(_ request: DuplicateTableRequest) -> String? {
@@ -378,8 +354,7 @@ struct PostgreSqlDuplicatePlanBuilder: DuplicatePlanBuilding {
     }
 
     private func qualified(_ ref: DuplicateTableRef, quoting: DuplicateSQLQuoting) -> String {
-        guard let schema = ref.schema, !schema.isEmpty else { return quoting.identifier(ref.name) }
-        return "\(quoting.identifier(schema)).\(quoting.identifier(ref.name))"
+        quoting.qualified(ref)
     }
 
     /// The text form a `regclass` cast or `pg_get_serial_sequence` expects: the same

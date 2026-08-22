@@ -25,12 +25,15 @@ protocol DuplicatePlanBuilding: Sendable {
 /// CockroachDB and PGlite with PostgreSQL, which is right for column-type syntax but wrong here:
 /// Redshift's `CREATE TABLE (LIKE …)` accepts only `INCLUDING DEFAULTS`, so handing it this
 /// builder would emit `INCLUDING CONSTRAINTS` and fail at the server instead of being refused up
-/// front.
+/// front. MySQL and MariaDB share a builder because `CREATE TABLE … LIKE` behaves the same on
+/// both; where they differ is in what `SHOW CREATE TABLE` prints, which the harvest handles.
 enum DuplicatePlanBuilder {
     static func builder(for databaseType: DatabaseType) -> DuplicatePlanBuilding? {
         switch databaseType {
         case .postgresql:
             return PostgreSqlDuplicatePlanBuilder()
+        case .mysql, .mariadb:
+            return MySqlDuplicatePlanBuilder()
         default:
             return nil
         }

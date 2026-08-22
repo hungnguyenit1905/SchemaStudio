@@ -13,6 +13,15 @@ struct DuplicateSQLQuoting: Sendable {
     let stringLiteral: @Sendable (String) -> String
 }
 
+extension DuplicateSQLQuoting {
+    /// The one spelling of a qualified table name this feature uses. A blank schema is treated as
+    /// no schema, because MySQL has no schema layer and PostgreSQL falls back to `search_path`.
+    func qualified(_ ref: DuplicateTableRef) -> String {
+        guard let schema = ref.schema, !schema.isEmpty else { return identifier(ref.name) }
+        return "\(identifier(schema)).\(identifier(ref.name))"
+    }
+}
+
 struct DuplicateTableRef: Sendable, Hashable {
     let schema: String?
     let name: String
@@ -89,6 +98,10 @@ struct DuplicateTableIntrospection: Sendable {
     let hasRowLevelSecurity: Bool
     let isOwner: Bool
     let isPartitioned: Bool
+    /// MySQL only: whether any index is defined on an expression. Such an index cannot be read
+    /// back out of `SHOW CREATE TABLE` with any confidence, so its presence turns off the
+    /// drop-and-replay speedup for the whole table rather than risking one lost index.
+    let hasExpressionIndex: Bool
 
     init(
         columns: [PluginColumnInfo],
@@ -99,7 +112,8 @@ struct DuplicateTableIntrospection: Sendable {
         estimatedRowCount: Int64? = nil,
         hasRowLevelSecurity: Bool = false,
         isOwner: Bool = true,
-        isPartitioned: Bool = false
+        isPartitioned: Bool = false,
+        hasExpressionIndex: Bool = false
     ) {
         self.columns = columns
         self.indexes = indexes
@@ -110,6 +124,7 @@ struct DuplicateTableIntrospection: Sendable {
         self.hasRowLevelSecurity = hasRowLevelSecurity
         self.isOwner = isOwner
         self.isPartitioned = isPartitioned
+        self.hasExpressionIndex = hasExpressionIndex
     }
 
     /// Columns whose default is a sequence the source owns, as opposed to an identity column.
@@ -126,6 +141,11 @@ struct DuplicateTableIntrospection: Sendable {
     var writableColumns: [PluginColumnInfo] {
         columns.filter { !$0.isGenerated }
     }
+
+    /// MySQL allows one `AUTO_INCREMENT` column per table, so this is a yes-or-no question.
+    var hasAutoIncrementColumn: Bool {
+        columns.contains { $0.identityKind != nil }
+    }
 }
 
 enum DuplicateWarning: Sendable, Hashable {
@@ -136,6 +156,8 @@ enum DuplicateWarning: Sendable, Hashable {
     case bestEffortStepFailed(step: String, serverMessage: String)
     case chunkedNeedsSingleColumnKey
     case chunkedCopyIsNotASnapshot
+    case indexesKeptDuringCopy
+    case optionsAlwaysCopied([String])
 
     /// A blocking warning means the plan carries no statements and the UI must refuse to run.
     var isBlocking: Bool {
@@ -143,7 +165,8 @@ enum DuplicateWarning: Sendable, Hashable {
         case .partitionedTableNotSupported:
             return true
         case .rowLevelSecurityPoliciesNotCopied, .rowLevelSecurityMayHideRows, .foreignKeyNotCarried,
-             .bestEffortStepFailed, .chunkedNeedsSingleColumnKey, .chunkedCopyIsNotASnapshot:
+             .bestEffortStepFailed, .chunkedNeedsSingleColumnKey, .chunkedCopyIsNotASnapshot,
+             .indexesKeptDuringCopy, .optionsAlwaysCopied:
             return false
         }
     }
@@ -183,6 +206,24 @@ enum DuplicateWarning: Sendable, Hashable {
                 to the source while this runs can land in the copy.
                 """
             )
+        case .indexesKeptDuringCopy:
+            return String(
+                localized: """
+                This table has an index on an expression, which cannot be recreated from what the \
+                server reports. The indexes are left in place while the rows are copied, so the \
+                copy is slower but no index is lost.
+                """
+            )
+        case .optionsAlwaysCopied(let names):
+            return String(
+                format: String(
+                    localized: """
+                    MySQL copies these with the table and cannot leave them out, so they are \
+                    carried over anyway: %@.
+                    """
+                ),
+                names.formatted(.list(type: .and))
+            )
         case .bestEffortStepFailed(let step, let serverMessage):
             return String(
                 format: String(localized: "The table was created, but %1$@ did not run. %2$@"),
@@ -207,6 +248,7 @@ struct DuplicateStatement: Sendable, Hashable {
         case replayIndex
         case resetSequence
         case addForeignKey
+        case resetAutoIncrement
         case analyze
         case dropTarget
         case dropReferencingForeignKey
@@ -258,17 +300,23 @@ struct DuplicatePlan: Sendable, Hashable {
     let warnings: [DuplicateWarning]
     let copyMode: DuplicateCopyMode
     let estimatedRowCount: Int64?
+    /// How the deferred index statements are read back and written. It belongs to the plan
+    /// because a plan is built by exactly one vendor's builder, so the executor never has to ask
+    /// which dialect it is walking.
+    let indexDialect: DuplicateIndexDialect
 
     init(
         statements: [DuplicateStatement],
         warnings: [DuplicateWarning] = [],
         copyMode: DuplicateCopyMode = .atomic,
-        estimatedRowCount: Int64? = nil
+        estimatedRowCount: Int64? = nil,
+        indexDialect: DuplicateIndexDialect = .postgresql
     ) {
         self.statements = statements
         self.warnings = warnings
         self.copyMode = copyMode
         self.estimatedRowCount = estimatedRowCount
+        self.indexDialect = indexDialect
     }
 
     var isBlocked: Bool {
