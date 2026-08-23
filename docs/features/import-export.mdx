@@ -14,6 +14,22 @@ Export data in five formats (CSV, JSON, SQL, MQL, XLSX), import SQL, JSON, and C
 
 SchemaStudio remembers the last format and options you exported with. Option changes stick only after a successful export; cancelling the dialog discards them. **Reset to Defaults** under the options restores the stock settings for the current format.
 
+### Export Scope
+
+When you export the rows of a table or a query result, the dialog offers a scope with a live row count:
+
+| Scope | What it exports |
+|-------|-----------------|
+| All rows | Re-runs the query against the server with no row limit, so it is not capped by the loaded page |
+| Filtered rows | The rows the grid is currently showing, in display order |
+| Selected rows | The rows you have selected, in display order |
+
+Per-column value filters and grid sorting are applied in the app, not on the server, so **Filtered rows** and **Selected rows** export from the rows already loaded. When more rows are available than are loaded, the dialog says how many loaded rows those two scopes cover. **All rows** re-queries the server instead, so it is unaffected.
+
+Rows marked for deletion and unsaved rows you have added are excluded from every scope, and the counts in the picker match what lands in the file.
+
+If the result set changes while the dialog is open, the export stops with a message asking you to close it and export again, rather than writing the wrong rows.
+
 <Note>
 **MongoDB**: SQL export is not available. Use MQL, which generates `db.collection.insertMany([...])` scripts for `mongosh`. **Redis**: SQL and MQL exports are not available.
 </Note>

@@ -28,6 +28,7 @@ struct ExportDialog: View {
     @State private var exportedFileURL: URL?
     @State private var settingsSnapshot: PluginSettingsSnapshot?
     @State private var exportSucceeded = false
+    @State private var rowScope: ExportRowScope = .allRows
 
     // MARK: - User Preferences
 
@@ -42,23 +43,35 @@ struct ExportDialog: View {
     private var connection: DatabaseConnection {
         switch mode {
         case .tables(let conn, _): return conn
-        case .queryResults(let conn, _, _): return conn
-        case .streamingQuery(let conn, _, _): return conn
+        case .resultSet(let conn, _, _): return conn
         }
+    }
+
+    private var rowSelection: ExportRowSelection? {
+        if case .resultSet(_, let selection, _) = mode {
+            return selection
+        }
+        return nil
     }
 
     private var isQueryResultsMode: Bool {
-        switch mode {
-        case .queryResults, .streamingQuery: return true
-        default: return false
-        }
+        rowSelection != nil
     }
 
-    private var queryResultsRowCount: Int {
-        if case .queryResults(_, let tableRows, _) = mode {
-            return tableRows.count
-        }
-        return 0
+    private var scopeAvailability: ExportScopeAvailability? {
+        rowSelection.map { ExportScopeAvailability.resolve($0) }
+    }
+
+    private var effectiveRowScope: ExportRowScope {
+        scopeAvailability?.resolvedScope(preferring: rowScope) ?? .allRows
+    }
+
+    private var streamsAllRowsFromServer: Bool {
+        scopeAvailability?.streamsFromServer(for: effectiveRowScope) ?? false
+    }
+
+    private var scopedRowCount: Int? {
+        scopeAvailability?.count(for: effectiveRowScope)
     }
 
     private var preselectedTables: Set<String> {
@@ -117,13 +130,8 @@ struct ExportDialog: View {
         }
         .task {
             if isQueryResultsMode {
-                switch mode {
-                case .queryResults(_, _, let suggestedFileName):
+                if case .resultSet(_, _, let suggestedFileName) = mode {
                     config.fileName = suggestedFileName
-                case .streamingQuery(_, _, let suggestedFileName):
-                    config.fileName = suggestedFileName
-                default:
-                    break
                 }
                 isLoading = false
             } else {
@@ -307,14 +315,19 @@ struct ExportDialog: View {
                 }
 
                 VStack(spacing: 2) {
-                    if case .streamingQuery = mode {
-                        Text("All rows")
+                    if let availability = scopeAvailability {
+                        if availability.showsPicker {
+                            ExportScopePicker(availability: availability, scope: $rowScope)
+                                .frame(maxWidth: 360)
+                        }
+                        Text(scopeSummary(availability))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                    } else if isQueryResultsMode {
-                        Text("\(queryResultsRowCount) row\(queryResultsRowCount == 1 ? "" : "s") to export")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        if availability.isPartialLoad(for: effectiveRowScope) {
+                            Text(partialLoadNotice(availability))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
                     } else {
                         Text("\(exportableCount) table\(exportableCount == 1 ? "" : "s") to export")
                             .font(.subheadline)
@@ -455,11 +468,9 @@ struct ExportDialog: View {
         if isExporting || !isFileNameValid || availableFormats.isEmpty {
             return true
         }
-        if case .streamingQuery = mode {
-            return false
-        }
-        if isQueryResultsMode {
-            return queryResultsRowCount == 0
+        if scopeAvailability != nil {
+            if streamsAllRowsFromServer { return false }
+            return (scopedRowCount ?? 0) == 0
         }
         return exportableCount == 0
     }
@@ -791,12 +802,12 @@ struct ExportDialog: View {
         }
 
         let formatName = currentPlugin.map { type(of: $0).formatDisplayName } ?? config.formatId.uppercased()
-        if case .streamingQuery = mode {
+        if streamsAllRowsFromServer {
             savePanel.message = String(format: String(localized: "Export query results to %@"), formatName)
-        } else if isQueryResultsMode {
+        } else if let count = scopedRowCount {
             savePanel.message = String(
                 format: String(localized: "Export %d row(s) to %@"),
-                queryResultsRowCount,
+                count,
                 formatName
             )
         } else {
@@ -882,11 +893,37 @@ struct ExportDialog: View {
         try await service.export(tables: exportableTables, config: config, to: url)
     }
 
+    /// Every all-rows route runs inside the scoped lease so the export targets the database
+    /// the dialog was opened for rather than wherever the shared driver was last parked.
     @MainActor
-    private func runStreamingExport(on driver: DatabaseDriver, query: String, to url: URL) async throws {
+    private func runAllRowsExport(on driver: DatabaseDriver, query: ExportAllRowsQuery, to url: URL) async throws {
         let service = ExportService(driver: driver, databaseType: connection.type)
         exportService = service
-        try await service.exportStreamingQuery(query: query, config: config, to: url)
+        guard query.isParameterized else {
+            try await service.exportStreamingQuery(query: query.sql, config: config, to: url)
+            return
+        }
+        try await service.exportParameterizedQuery(
+            query: query.sql,
+            parameterValues: query.parameterValues ?? [],
+            config: config,
+            to: url
+        )
+    }
+
+    private func scopeSummary(_ availability: ExportScopeAvailability) -> String {
+        if streamsAllRowsFromServer, availability.count(for: effectiveRowScope) == nil {
+            return String(localized: "All rows")
+        }
+        let count = availability.count(for: effectiveRowScope) ?? 0
+        return String(format: String(localized: "Export %d row(s)"), count)
+    }
+
+    private func partialLoadNotice(_ availability: ExportScopeAvailability) -> String {
+        String(
+            format: String(localized: "Exports the %@ loaded rows."),
+            availability.loadedRowCount.formatted()
+        )
     }
 
     @MainActor
@@ -896,8 +933,19 @@ struct ExportDialog: View {
         showProgressDialog = true
 
         do {
-            switch mode {
-            case .streamingQuery(_, let query, _):
+            guard let selection = rowSelection else {
+                showProgressDialog = false
+                isExporting = false
+                return
+            }
+            guard selection.isStillCurrent() else {
+                showProgressDialog = false
+                isExporting = false
+                showExportError(ExportError.resultSetChanged)
+                return
+            }
+
+            if streamsAllRowsFromServer, let allRowsQuery = selection.allRowsQuery {
                 guard let scope = exportScope else { throw ExportError.notConnected }
                 let route = DatabaseManager.shared.executionRoute(for: scope)
                 try await DatabaseManager.shared.withScopedDriver(
@@ -905,16 +953,16 @@ struct ExportDialog: View {
                     route: route,
                     workload: .bulk
                 ) { driver in
-                    try await runStreamingExport(on: driver, query: query, to: url)
+                    try await runAllRowsExport(on: driver, query: allRowsQuery, to: url)
                 }
-            case .queryResults(_, let tableRows, _):
+            } else {
                 let service = ExportService(databaseType: connection.type)
                 exportService = service
-                try await service.exportQueryResults(tableRows: tableRows, config: config, to: url)
-            default:
-                showProgressDialog = false
-                isExporting = false
-                return
+                try await service.exportQueryResults(
+                    tableRows: selection.resolvedRows(for: effectiveRowScope),
+                    config: config,
+                    to: url
+                )
             }
 
             showProgressDialog = false

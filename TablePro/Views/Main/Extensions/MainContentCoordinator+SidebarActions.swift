@@ -205,8 +205,12 @@ extension MainContentCoordinator {
         WindowManager.shared.openTab(payload: payload, tabGroup: .shared, anchor: contentWindow)
     }
 
+    /// A snapshot taken while rows are still being replaced resolves to real-but-wrong rows,
+    /// because `RowID` is positional.
     func openExportQueryResultsDialog() {
         guard let tab = tabManager.selectedTab,
+              !tab.execution.isExecuting,
+              !tab.pagination.isLoadingMore,
               !tabSessionRegistry.tableRows(for: tab.id).rows.isEmpty else { return }
         activeSheet = .exportQueryResults
     }
