@@ -11,6 +11,8 @@ import Foundation
 struct PostgreSqlDuplicateCatalog: DuplicateVendorCatalog {
     var identifierPolicy: TransferIdentifierPolicy { TransferIdentifierPolicy.policy(for: .postgresql) }
 
+    var dropDialect: DuplicateDropDialect { .cascadeKeyword }
+
     // MARK: - Facts
 
     /// `relkind = 'p'` is a partitioned table. `relrowsecurity` is the flag, not the policy list:
@@ -107,6 +109,30 @@ struct PostgreSqlDuplicateCatalog: DuplicateVendorCatalog {
 
     func targetIsTaken(_ request: DuplicateTableRequest, driver: any DuplicateDriving) async throws -> Bool {
         try await !driver.runSimple(Self.targetExistsSQL(request, quoting: driver.quoting)).isEmpty
+    }
+
+    /// `$1` rather than a quoted literal: the target name is text the user typed. `::regclass`
+    /// resolves the quoted, possibly schema-qualified name the same way every other statement in
+    /// this feature spells it.
+    static let referencingForeignKeysSQL = """
+    SELECT c.conname, n.nspname, r.relname
+    FROM pg_constraint c
+    JOIN pg_class r ON r.oid = c.conrelid
+    JOIN pg_namespace n ON n.oid = r.relnamespace
+    WHERE c.confrelid = $1::regclass
+      AND c.contype = 'f'
+    ORDER BY n.nspname, r.relname, c.conname
+    """
+
+    func referencingForeignKeys(
+        _ target: DuplicateTableRef,
+        driver: any DuplicateDriving
+    ) async throws -> [ReferencingForeignKey] {
+        let rows = try await driver.runParameterized(
+            Self.referencingForeignKeysSQL,
+            parameters: [driver.quoting.qualified(target)]
+        )
+        return DuplicateReferencingForeignKeyReader.read(rows)
     }
 
     static func privilegesSQL(_ request: DuplicateTableRequest, quoting: DuplicateSQLQuoting) -> String {

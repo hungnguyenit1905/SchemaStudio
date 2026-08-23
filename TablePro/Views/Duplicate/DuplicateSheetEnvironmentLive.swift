@@ -111,6 +111,43 @@ extension DuplicateSheetEnvironment {
         hooks.confirmDropPartialCopy = { copiedRows in
             await partialCopyPrompt.ask(copiedRows: copiedRows)
         }
+        hooks.confirmDropReferencedTarget = { target, referencing in
+            await confirmDropReferencedTarget(target: target, referencing: referencing)
+        }
         return hooks
+    }
+
+    /// The second dialog of the `Drop and recreate` policy. It names the owning table next to
+    /// every constraint, because dropping one changes a table the user did not ask about.
+    ///
+    /// This is an app-level confirmation, not an execution gate: the run still goes through
+    /// `ExecutionGateProvider` afterwards. When per-connection blocking of destructive operations
+    /// lands, this path has to be blocked outright rather than confirmed.
+    @MainActor
+    private static func confirmDropReferencedTarget(
+        target: DuplicateTableRef,
+        referencing: [ReferencingForeignKey]
+    ) async -> Bool {
+        let listed = referencing.map { "• \($0.describedForDialog)" }.joined(separator: "\n")
+        return await AlertHelper.confirmDestructive(
+            title: String(
+                format: String(localized: "Replace '%@'?"),
+                target.name
+            ),
+            message: String(
+                format: String(
+                    localized: """
+                    These foreign keys point at it and are deleted with it:
+
+                    %@
+                    """
+                ),
+                listed
+            ),
+            confirmButton: String(
+                format: String(localized: "Drop with CASCADE (will delete %lld foreign key constraints)"),
+                Int64(referencing.count)
+            )
+        )
     }
 }

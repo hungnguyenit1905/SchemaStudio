@@ -159,18 +159,22 @@ final class DuplicateTableSheetModel {
         return nil
     }
 
-    /// The drop path belongs to the dialog that lists the foreign keys pointing at the target and
-    /// asks before cascading. Until that exists the option is refused here rather than at the
-    /// server: the preflight lets it through and `CREATE TABLE` then fails on the existing name.
-    var replaceUnsupportedProblem: String? {
-        guard options.onExists == .dropAndRecreate else { return nil }
-        return String(localized: "Replacing an existing table is not available yet. Pick a name that is free.")
+    /// Shown only when the name is actually taken, because the policy is otherwise inert. The
+    /// foreign keys pointing at the target are a server read, so they are listed later, in the
+    /// dialog the run puts up before anything is dropped.
+    var replaceWarning: String? {
+        guard options.onExists == .dropAndRecreate, nameCollides else { return nil }
+        return String(
+            localized: """
+            The existing table and its rows are deleted first. If other tables point at it, you \
+            are asked before anything is dropped.
+            """
+        )
     }
 
     var canDuplicate: Bool {
         guard phase == .options, introspection != nil else { return false }
         guard nameError == nil, rowFilterProblem == nil, limitProblem == nil else { return false }
-        guard replaceUnsupportedProblem == nil else { return false }
         return plan?.isBlocked == false
     }
 

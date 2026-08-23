@@ -152,6 +152,94 @@ struct DuplicateTableServiceTests {
         }
     }
 
+    // MARK: - Drop and recreate
+
+    private func dropAndRecreateRequest() -> DuplicateTableRequest {
+        var options = DuplicateOptions()
+        options.onExists = .dropAndRecreate
+        return DuplicateFixtures.request(mode: .structureAndData, options: options)
+    }
+
+    private func makeReplaceDriver(referencing: [[String?]] = []) -> DuplicateDrivingStub {
+        let driver = makeDriver()
+        driver.rowsForQueryContaining["FROM pg_class c\nJOIN pg_namespace"] = [["1"]]
+        driver.rowsForQueryContaining["FROM pg_constraint"] = referencing
+        return driver
+    }
+
+    @Test("Replacing a target nothing points at drops it without CASCADE and asks nothing")
+    func replaceWithoutReferencesDropsPlainly() async throws {
+        let driver = makeReplaceDriver()
+        let asked = Mutex<Bool>(false)
+        var hooks = DuplicateServiceHooks()
+        hooks.confirmDropReferencedTarget = { _, _ in
+            asked.withLock { $0 = true }
+            return true
+        }
+
+        _ = try await service(driver, hooks: hooks).run(dropAndRecreateRequest())
+
+        #expect(asked.withLock { $0 } == false)
+        #expect(driver.executedSQL.contains("DROP TABLE IF EXISTS \"public\".\"orders_copy\""))
+        #expect(!driver.executedSQL.contains { $0.contains("CASCADE") })
+    }
+
+    @Test("The drop runs before the table is created again")
+    func dropPrecedesCreate() async throws {
+        let driver = makeReplaceDriver()
+        _ = try await service(driver).run(dropAndRecreateRequest())
+
+        let sql = driver.executedSQL
+        let drop = try #require(sql.firstIndex { $0.hasPrefix("DROP TABLE") })
+        let create = try #require(sql.firstIndex { $0.hasPrefix("CREATE TABLE") })
+        #expect(drop < create)
+    }
+
+    @Test("Declining the cascade dialog runs nothing and names the constraints")
+    func decliningCascadeRunsNothing() async throws {
+        let driver = makeReplaceDriver(referencing: [["fk_invoice_order", "public", "invoices"]])
+        var hooks = DuplicateServiceHooks()
+        hooks.confirmDropReferencedTarget = { _, _ in false }
+
+        await #expect(
+            throws: DuplicateError.dropCancelled(
+                target: "orders_copy",
+                constraints: ["fk_invoice_order on public.invoices"]
+            )
+        ) {
+            _ = try await service(driver, hooks: hooks).run(dropAndRecreateRequest())
+        }
+        #expect(!driver.executedSQL.contains { $0.hasPrefix("DROP TABLE") })
+        #expect(!driver.executedSQL.contains { $0.hasPrefix("CREATE TABLE") })
+    }
+
+    @Test("Accepting the cascade dialog cascades the drop on PostgreSQL")
+    func acceptingCascadeDropsWithCascade() async throws {
+        let driver = makeReplaceDriver(referencing: [["fk_invoice_order", "public", "invoices"]])
+        var hooks = DuplicateServiceHooks()
+        hooks.confirmDropReferencedTarget = { _, _ in true }
+
+        _ = try await service(driver, hooks: hooks).run(dropAndRecreateRequest())
+
+        #expect(driver.executedSQL.contains("DROP TABLE IF EXISTS \"public\".\"orders_copy\" CASCADE"))
+    }
+
+    /// The dialog is an app-level confirmation, not a gate. A refused gate has to stop the drop
+    /// even after the user has agreed to cascade.
+    @Test("A refused execution gate stops the drop even after the cascade dialog was accepted")
+    func refusedGateStopsCascadedDrop() async throws {
+        let driver = makeReplaceDriver(referencing: [["fk_invoice_order", "public", "invoices"]])
+        var hooks = DuplicateServiceHooks()
+        hooks.confirmDropReferencedTarget = { _, _ in true }
+        hooks.authorize = { throw DuplicateStubError(message: "denied") }
+
+        await #expect(throws: DuplicateStubError(message: "denied")) {
+            _ = try await service(driver, hooks: hooks).run(dropAndRecreateRequest())
+        }
+        #expect(!driver.executedSQL.contains { $0.hasPrefix("DROP TABLE") })
+        #expect(!driver.executedSQL.contains { $0.hasPrefix("CREATE TABLE") })
+    }
+
     @Test("Missing CREATE permission is reported as a permission problem")
     func missingCreatePermission() async throws {
         let driver = makeDriver()

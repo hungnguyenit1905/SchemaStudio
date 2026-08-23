@@ -11,6 +11,8 @@ enum DuplicateError: LocalizedError, Sendable, Hashable {
     case sourceNotATable(String)
     case partitionedSource(String)
     case targetExists(String)
+    /// The user was shown what dropping the target would delete and chose not to.
+    case dropCancelled(target: String, constraints: [String])
     case missingCreatePrivilege(String)
     case missingSelectPrivilege(String)
     case missingPrivilege(privilege: String, schema: String)
@@ -42,6 +44,17 @@ enum DuplicateError: LocalizedError, Sendable, Hashable {
             )
         case .targetExists(let name):
             return String(format: String(localized: "'%@' already exists in the target schema."), name)
+        case .dropCancelled(let target, let constraints):
+            return String(
+                format: String(
+                    localized: """
+                    '%1$@' was not replaced. These foreign keys point at it and would have been \
+                    deleted: %2$@
+                    """
+                ),
+                target,
+                constraints.formatted(.list(type: .and))
+            )
         case .missingCreatePrivilege(let schema):
             return String(format: String(localized: "You do not have CREATE permission on '%@'."), schema)
         case .missingSelectPrivilege(let table):

@@ -37,6 +37,9 @@ protocol DuplicateVendorCatalog: Sendable {
     /// The byte budget for the one name this feature invents.
     var identifierPolicy: TransferIdentifierPolicy { get }
 
+    /// How this vendor removes a table other tables still point at.
+    var dropDialect: DuplicateDropDialect { get }
+
     func facts(_ source: DuplicateTableRef, driver: any DuplicateDriving) async throws -> DuplicateTableFacts
 
     /// Only PostgreSQL has these. MySQL's `AUTO_INCREMENT` lives on the column and travels with
@@ -49,6 +52,15 @@ protocol DuplicateVendorCatalog: Sendable {
     /// Whether anything at all already holds the target name. Views, sequences and indexes count:
     /// they share the namespace, so filtering to tables only moves the failure later.
     func targetIsTaken(_ request: DuplicateTableRequest, driver: any DuplicateDriving) async throws -> Bool
+
+    /// The foreign keys other tables hold against the target name, read before a
+    /// `Drop and recreate` run so the user can be shown exactly what dropping it would delete.
+    /// The target name is bound as a parameter, never escaped into the string: it is text the
+    /// user typed, and this path only runs because it matched an object that already exists.
+    func referencingForeignKeys(
+        _ target: DuplicateTableRef,
+        driver: any DuplicateDriving
+    ) async throws -> [ReferencingForeignKey]
 
     /// The first permission the user is missing, or `nil` if the check passed or could not run.
     func missingPrivilege(

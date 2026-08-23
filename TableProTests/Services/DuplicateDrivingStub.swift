@@ -14,6 +14,7 @@ final class DuplicateDrivingStub: DuplicateDriving, @unchecked Sendable {
     enum Call: Sendable, Hashable {
         case simple(String)
         case extended(String)
+        case parameterized(sql: String, parameters: [String])
         case begin
         case commit
         case rollback
@@ -52,6 +53,7 @@ final class DuplicateDrivingStub: DuplicateDriving, @unchecked Sendable {
         calls.compactMap { call in
             switch call {
             case .simple(let sql), .extended(let sql): return sql
+            case .parameterized(let sql, _): return sql
             case .begin, .commit, .rollback: return nil
             }
         }
@@ -72,6 +74,11 @@ final class DuplicateDrivingStub: DuplicateDriving, @unchecked Sendable {
 
     func runExtended(_ sql: String) async throws -> [[String?]] {
         lock.withLock { recorded.append(.extended(sql)) }
+        return try result(for: sql)
+    }
+
+    func runParameterized(_ sql: String, parameters: [String]) async throws -> [[String?]] {
+        lock.withLock { recorded.append(.parameterized(sql: sql, parameters: parameters)) }
         return try result(for: sql)
     }
 

@@ -255,13 +255,27 @@ struct DuplicateTableSheetModelTests {
         #expect(model.errorMessage != nil)
     }
 
-    @Test("Replacing an existing table is refused until the drop dialog exists")
-    func dropAndRecreateRefused() async {
+    @Test("Drop and recreate explains what it deletes once the name is taken")
+    func replaceWarningWhenNameIsTaken() async {
+        let model = makeModel(taken: ["orders_copy"])
+        await model.load()
+        model.name = "orders_copy"
+
+        #expect(model.replaceWarning == nil)
+
+        model.options.onExists = .dropAndRecreate
+        #expect(model.replaceWarning != nil)
+        #expect(model.canDuplicate)
+    }
+
+    @Test("Drop and recreate says nothing when the name is free")
+    func replaceWarningOnlyWhenNameIsTaken() async {
         let model = makeModel()
         await model.load()
         model.options.onExists = .dropAndRecreate
-        #expect(model.replaceUnsupportedProblem != nil)
-        #expect(!model.canDuplicate)
+
+        #expect(model.replaceWarning == nil)
+        #expect(model.canDuplicate)
     }
 
     private actor Recorder {

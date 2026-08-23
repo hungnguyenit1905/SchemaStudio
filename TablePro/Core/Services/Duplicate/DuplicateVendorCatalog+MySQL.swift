@@ -11,6 +11,8 @@ import Foundation
 struct MySqlDuplicateCatalog: DuplicateVendorCatalog {
     var identifierPolicy: TransferIdentifierPolicy { TransferIdentifierPolicy.policy(for: .mysql) }
 
+    var dropDialect: DuplicateDropDialect { .dropReferencingFirst }
+
     // MARK: - Facts
 
     static func factsSQL(_ source: DuplicateTableRef, quoting: DuplicateSQLQuoting) -> String {
@@ -84,6 +86,33 @@ struct MySqlDuplicateCatalog: DuplicateVendorCatalog {
 
     func targetIsTaken(_ request: DuplicateTableRequest, driver: any DuplicateDriving) async throws -> Bool {
         try await !driver.runSimple(Self.targetExistsSQL(request, quoting: driver.quoting)).isEmpty
+    }
+
+    /// The target name is bound, not escaped into the string. The schema is a placeholder too
+    /// when the user picked one; with no schema the server's own `DATABASE()` answers, which is
+    /// not user text.
+    static func referencingForeignKeysSQL(schema: String?) -> String {
+        let schemaExpression = schema.map { _ in "?" } ?? "DATABASE()"
+        return """
+        SELECT DISTINCT k.CONSTRAINT_NAME, k.TABLE_SCHEMA, k.TABLE_NAME
+        FROM information_schema.KEY_COLUMN_USAGE k
+        WHERE k.REFERENCED_TABLE_SCHEMA = \(schemaExpression)
+          AND k.REFERENCED_TABLE_NAME = ?
+        ORDER BY k.TABLE_SCHEMA, k.TABLE_NAME, k.CONSTRAINT_NAME
+        """
+    }
+
+    func referencingForeignKeys(
+        _ target: DuplicateTableRef,
+        driver: any DuplicateDriving
+    ) async throws -> [ReferencingForeignKey] {
+        let schema = target.schema.flatMap { $0.isEmpty ? nil : $0 }
+        let parameters = schema.map { [$0, target.name] } ?? [target.name]
+        let rows = try await driver.runParameterized(
+            Self.referencingForeignKeysSQL(schema: schema),
+            parameters: parameters
+        )
+        return DuplicateReferencingForeignKeyReader.read(rows)
     }
 
     func missingPrivilege(

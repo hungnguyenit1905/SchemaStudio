@@ -23,6 +23,12 @@ struct DuplicateServiceHooks: Sendable {
     /// The default keeps the table: deleting rows the user can still see is not a decision this
     /// service gets to make on its own.
     var confirmDropPartialCopy: @Sendable (_ copiedRows: Int64) async -> Bool = { _ in false }
+    /// Asked only when the target the user chose to replace is pointed at by foreign keys other
+    /// tables own. The default refuses: nothing cascades without an explicit answer.
+    var confirmDropReferencedTarget: @Sendable (
+        _ target: DuplicateTableRef,
+        _ referencing: [ReferencingForeignKey]
+    ) async -> Bool = { _, _ in false }
     var didFinish: @Sendable (DuplicateResult) -> Void = { _ in }
 }
 
@@ -34,6 +40,14 @@ struct DuplicateServiceHooks: Sendable {
 /// 3. Re-read the source structure, because step 2 is a human-paced gap during which another tab
 ///    can alter it, and the server-side `LIKE` would then disagree with the column list the copy
 ///    statement was built from.
+/// What the reads before authorization learned. Carried as one value because the driver lease is
+/// released between the reads and the run.
+private struct DuplicateSetup: Sendable {
+    let introspection: DuplicateTableIntrospection
+    let referencing: [ReferencingForeignKey]
+    let targetExists: Bool
+}
+
 struct DuplicateTableService: Sendable {
     let databaseType: DatabaseType
     let session: any DuplicateSessionProviding
@@ -51,15 +65,26 @@ struct DuplicateTableService: Sendable {
 
         try validateRowFilterText(request)
 
-        let introspection = try await session.withDriver(tracksCancellation: false) { driver in
+        let setup = try await session.withDriver(tracksCancellation: false) { driver in
             let introspection = try await DuplicateIntrospector(driver: driver, catalog: catalog)
                 .introspect(request.source)
-            try await DuplicatePreflight(driver: driver, catalog: catalog)
+            let outcome = try await DuplicatePreflight(driver: driver, catalog: catalog)
                 .check(request, introspection: introspection)
-            return introspection
+            guard outcome.targetExists else {
+                return DuplicateSetup(introspection: introspection, referencing: [], targetExists: false)
+            }
+            let referencing = try await DuplicateTargetConflictResolver(catalog: catalog)
+                .referencingForeignKeys(target: request.target, driver: driver)
+            return DuplicateSetup(
+                introspection: introspection,
+                referencing: referencing,
+                targetExists: true
+            )
         }
 
-        try await runFilterValidation(request, builder: builder, introspection: introspection)
+        try await runFilterValidation(request, builder: builder, introspection: setup.introspection)
+
+        try await confirmCascade(request, setup: setup)
 
         try await hooks.authorize()
 
@@ -67,10 +92,29 @@ struct DuplicateTableService: Sendable {
             try await execute(
                 request,
                 builder: builder,
-                introspection: introspection,
+                introspection: setup.introspection,
+                dropStatements: setup.targetExists
+                    ? DuplicateTargetConflictResolver(catalog: catalog).dropPlan(
+                        target: request.target,
+                        referencing: setup.referencing,
+                        quoting: driver.quoting
+                    )
+                    : [],
                 driver: driver,
                 token: token,
                 onProgress: onProgress
+            )
+        }
+    }
+
+    /// The second dialog. It runs outside any driver lease, because it waits on a person, and
+    /// before the execution gate, because a cancelled drop means there is nothing to authorize.
+    private func confirmCascade(_ request: DuplicateTableRequest, setup: DuplicateSetup) async throws {
+        guard !setup.referencing.isEmpty else { return }
+        guard await hooks.confirmDropReferencedTarget(request.target, setup.referencing) else {
+            throw DuplicateError.dropCancelled(
+                target: request.targetName,
+                constraints: setup.referencing.map(\.describedForDialog)
             )
         }
     }
@@ -112,6 +156,7 @@ struct DuplicateTableService: Sendable {
         _ request: DuplicateTableRequest,
         builder: any DuplicatePlanBuilding,
         introspection: DuplicateTableIntrospection,
+        dropStatements: [DuplicateStatement],
         driver: any DuplicateDriving,
         token: DuplicateCancellationToken,
         onProgress: @escaping @Sendable (DuplicateProgress) -> Void
@@ -137,7 +182,7 @@ struct DuplicateTableService: Sendable {
             // The validation statement already ran before authorization; running it again would
             // charge the user for the same EXPLAIN twice.
             let executable = DuplicatePlan(
-                statements: plan.statements.filter { $0.kind != .validateRowFilter },
+                statements: dropStatements + plan.statements.filter { $0.kind != .validateRowFilter },
                 warnings: plan.warnings,
                 copyMode: plan.copyMode,
                 estimatedRowCount: plan.estimatedRowCount

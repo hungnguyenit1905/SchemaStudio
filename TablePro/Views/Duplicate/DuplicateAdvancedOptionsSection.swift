@@ -45,10 +45,10 @@ struct DuplicateAdvancedOptionsSection: View {
                 Text("Drop and recreate").tag(DuplicateExistsPolicy.dropAndRecreate)
             }
             .pickerStyle(.radioGroup)
-            if let problem = model.replaceUnsupportedProblem {
-                Text(problem)
+            if let warning = model.replaceWarning {
+                Text(warning)
                     .font(.callout)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 4)

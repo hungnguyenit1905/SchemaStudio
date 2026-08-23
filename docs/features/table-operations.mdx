@@ -22,7 +22,15 @@ Options:
 | Duplicate structure only / structure and data | Whether the rows are copied. |
 | Advanced options | Which parts of the structure travel: indexes, keys and check constraints, foreign keys (off by default), defaults, identity and auto increment, generated columns, comments, and table options. |
 | Row filter and Limit rows | A `WHERE` condition and a row cap. Both only apply when data is copied. |
-| If the target exists | Cancel, or drop and recreate. Drop and recreate is not available yet, so pick a name that is free. |
+| If the target exists | Cancel, or drop and recreate. Drop and recreate deletes the existing table and its rows before the copy is created. |
+
+### Replacing a table that already exists
+
+Set **If the target exists** to **Drop and recreate** to replace a table of that name. Before anything is dropped, the run checks which foreign keys other tables hold against it. If there are none, the table is dropped and recreated.
+
+If there are, a second dialog lists every constraint with the table that owns it, and offers **Cancel** or **Drop with CASCADE**. Nothing cascades without that answer. On PostgreSQL the drop runs with `CASCADE`; on MySQL and MariaDB each constraint is dropped by name first, because MySQL accepts `CASCADE` on `DROP TABLE` and then ignores it.
+
+Dropping a constraint changes a table you did not ask about, which is why the dialog names the owner. Cancel stops the run before anything is dropped.
 
 The **Preview SQL** tab shows the script the run sends, and it updates as you change the options. Statements that cannot exist until the run starts, the index rebuilds whose names the server assigns to the new table, appear as a labelled line saying how many statements they stand for.
 

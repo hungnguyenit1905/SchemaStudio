@@ -22,6 +22,11 @@ protocol DuplicateDriving: Sendable {
     func runSimple(_ sql: String) async throws -> [[String?]]
     func runExtended(_ sql: String) async throws -> [[String?]]
 
+    /// The extended path with real bind parameters. A catalog read whose value is a name the user
+    /// typed takes this rather than being escaped into the string, so no escaping rule has to be
+    /// trusted for it.
+    func runParameterized(_ sql: String, parameters: [String]) async throws -> [[String?]]
+
     func begin() async throws
     func commit() async throws
     func rollback() async throws
@@ -83,6 +88,10 @@ struct DatabaseDriverDuplicateAdapter: DuplicateDriving {
 
     func runExtended(_ sql: String) async throws -> [[String?]] {
         Self.rows(from: try await driver.executeParameterized(query: sql, parameters: []))
+    }
+
+    func runParameterized(_ sql: String, parameters: [String]) async throws -> [[String?]] {
+        Self.rows(from: try await driver.executeParameterized(query: sql, parameters: parameters))
     }
 
     func begin() async throws { try await driver.beginTransaction(mode: .readWrite) }
