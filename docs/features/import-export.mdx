@@ -53,6 +53,9 @@ If the result set changes while the dialog is open, the export stops with a mess
     | Line ending (LF, CRLF, CR) | LF |
     | Decimal separator (period, comma) | Period |
     | Formula sanitization | Yes |
+    | Encoding (UTF-8, UTF-8 with BOM) | UTF-8 |
+
+    Choose **UTF-8 with BOM** when the file is headed for Windows Excel, which needs the byte order mark to read Vietnamese, CJK and other non-ASCII text correctly.
   </Tab>
   <Tab title="JSON">
     Exports as an array of objects.

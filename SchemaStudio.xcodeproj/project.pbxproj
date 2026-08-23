@@ -642,6 +642,13 @@
 			);
 			target = 5A86F003000000000 /* CSVImport */;
 		};
+		5A86A004900000000 /* Exceptions for "Plugins/CSVExportPlugin" folder in "TableProTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				CSVExportEncoder.swift,
+			);
+			target = 5ABCC5A62F43856700EAF3FC /* TableProTests */;
+		};
 		5A86F004900000000 /* Exceptions for "Plugins/CSVImportPlugin" folder in "TableProTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -821,6 +828,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				5A86A000900000000 /* Exceptions for "Plugins/CSVExportPlugin" folder in "CSVExport" target */,
+				5A86A004900000000 /* Exceptions for "Plugins/CSVExportPlugin" folder in "TableProTests" target */,
 			);
 			path = Plugins/CSVExportPlugin;
 			sourceTree = "<group>";

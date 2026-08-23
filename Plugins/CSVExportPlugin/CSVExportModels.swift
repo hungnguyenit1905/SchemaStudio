@@ -77,6 +77,7 @@ public struct CSVExportOptions: Equatable, Codable {
     public var lineBreak: CSVLineBreak = .lf
     public var decimalFormat: CSVDecimalFormat = .period
     public var sanitizeFormulas: Bool = true
+    public var encoding: CSVExportEncoding = .utf8
 
     public init() {}
 }
