@@ -49,6 +49,17 @@ The planner's row count is unknown until a table has been analyzed, so a table t
 
 Batches use the primary key, not `OFFSET`, so no batch rereads rows an earlier one already copied. A table without a single-column primary key is copied in one statement instead, and the sheet says so. Batched copies are not a single snapshot: each batch commits on its own, so writes another session makes to the source while the copy runs can land in the copy, and the sheet says that too.
 
+### PostgreSQL
+
+The copy is built on `CREATE TABLE new (LIKE original INCLUDING ...)`, so the server reproduces the column types, collations, index expressions, partial predicates and storage parameters itself. Four limits come with that:
+
+- **The copy's indexes get the names the server picks**, derived from the new table's name. They do not match the source's index names, and nothing renames them afterwards.
+- **The primary key, unique keys and check constraints travel together.** `INCLUDING CONSTRAINTS` cannot split them, so Advanced options offers one switch for all three rather than a switch that would quietly do nothing.
+- **The tablespace is not copied.** The copy is created in the default tablespace for the target schema, even when the source sits in another one.
+- **A table comment is applied by its own `COMMENT ON TABLE` statement** after the table is created, because `LIKE` does not carry it. That step is allowed to fail without discarding the copy, so a copy can exist without its comment; the sheet says so when it happens.
+
+Row-level security is reported, never copied: the policies stay behind and the copy is created with row-level security off. If the policies are hiding rows from you in the source, the copy holds only the rows you can read, and the sheet warns about that separately.
+
 ### MySQL and MariaDB
 
 The copy is built on `CREATE TABLE new LIKE original`, so the storage engine, row format, character set, collation, every column's precision and flags, the keys, the indexes and the `CHECK` constraints come across exactly as the server has them. Foreign keys and triggers are not carried by that statement: foreign keys are added afterwards when you ask for them, triggers are not copied.
