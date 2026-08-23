@@ -1,9 +1,9 @@
 ---
 title: Import & Export
-description: Export to CSV, JSON, SQL, MQL, or XLSX. Import SQL, JSON, and CSV files with column mapping and transaction safety.
+description: Export to CSV, JSON, SQL, MQL, or XLSX. Import SQL, JSON, CSV, and Excel files with column mapping and transaction safety.
 ---
 
-Export data in five formats (CSV, JSON, SQL, MQL, XLSX), import SQL, JSON, and CSV files (gzip supported for SQL), and paste tabular data from the clipboard into the grid.
+Export data in five formats (CSV, JSON, SQL, MQL, XLSX), import SQL, JSON, CSV, and Excel files (gzip supported for SQL), and paste tabular data from the clipboard into the grid.
 
 ## Export Data
 
@@ -190,8 +190,32 @@ Choose **File** > **Import** > **From CSV** and pick a `.csv` or `.tsv` file. Sc
 
 Quoted fields keep embedded commas and newlines (RFC 4180), and doubled quotes (`""`) decode to a single quote.
 
+### Import Excel Data
+
+Choose **File** > **Import** > **From Excel** and pick an `.xlsx` file. SchemaStudio opens the same row import sheet used for CSV and JSON. Destination options match them: map into an existing table or create a new one.
+
+When the workbook holds more than one sheet, a **Sheet** picker appears. Changing the sheet re-reads the field list. The choice applies to the file you opened and is not remembered between files or across restarts.
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| Sheet | Which sheet to import, shown for multi-sheet workbooks | First sheet |
+| First row is a header | Use row 1 as column names; off imports every row as data | Yes |
+| Trim leading and trailing spaces | Trim each value before import | No |
+| Treat empty values as NULL | Insert NULL for empty cells instead of empty text | Yes |
+| NULL text | An extra value imported as NULL, for example `\N` | None |
+
+How cells are read:
+
+- Formula cells import as their last calculated value, not the formula text
+- Dates import as dates, including workbooks that use the 1904 date system
+- Numbers keep their exact digits, so long identifiers do not lose precision
+- Merged cells contribute their top-left value; the rest of the range is empty
+- Gaps in a row keep their column position, so nothing shifts left
+
+Not supported: the older `.xls` format, macro-enabled `.xlsm` workbooks, and password-protected workbooks. Charts, images and pivot tables are ignored.
+
 ### Row Import Options
 
-CSV and JSON imports insert rows in batches through parameterized statements. The on-error and transaction options work the same as SQL import. They add one option of their own: **Delete existing rows before import**, which clears the target table first. The delete runs inside the import transaction, so a failed import in the default Stop and Rollback mode restores the deleted rows.
+CSV, JSON and Excel imports insert rows in batches through parameterized statements. The on-error and transaction options work the same as SQL import. They add one option of their own: **Delete existing rows before import**, which clears the target table first. The delete runs inside the import transaction, so a failed import in the default Stop and Rollback mode restores the deleted rows.
 
 During import, a progress bar shows rows processed and overall completion.
