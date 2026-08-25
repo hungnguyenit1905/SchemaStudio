@@ -16,6 +16,7 @@ enum WindowTitleResolver {
     static func resolveTitle(
         payload: EditorTabPayload?,
         databaseType: DatabaseType?,
+        connectionName: String?,
         queryLanguageName: String?
     ) -> String {
         resolveTitle(
@@ -25,6 +26,7 @@ enum WindowTitleResolver {
             explicitTitle: payload?.tabTitle,
             sourceFileURL: payload?.sourceFileURL,
             databaseType: databaseType,
+            connectionName: connectionName,
             queryLanguageName: queryLanguageName
         )
     }
@@ -32,6 +34,7 @@ enum WindowTitleResolver {
     static func resolveTitle(
         tab: QueryTab?,
         connection: DatabaseConnection,
+        connectionName: String,
         queryLanguageName: String?
     ) -> String {
         resolveTitle(
@@ -41,6 +44,7 @@ enum WindowTitleResolver {
             explicitTitle: tab?.title,
             sourceFileURL: tab?.content.sourceFileURL,
             databaseType: connection.type,
+            connectionName: connectionName,
             queryLanguageName: queryLanguageName
         )
     }
@@ -66,7 +70,36 @@ enum WindowTitleResolver {
         return previous.isBlank ? fallbackTitle : previous
     }
 
+    static func qualified(_ base: String, connectionName: String?) -> String {
+        guard let connectionName, !connectionName.isBlank, !base.isBlank else { return base }
+        return String(format: String(localized: "%1$@: %2$@"), connectionName, base)
+    }
+
     private static func resolveTitle(
+        tabType: TabType?,
+        tableName: String?,
+        schemaName: String?,
+        explicitTitle: String?,
+        sourceFileURL: URL?,
+        databaseType: DatabaseType?,
+        connectionName: String?,
+        queryLanguageName: String?
+    ) -> String {
+        qualified(
+            baseTitle(
+                tabType: tabType,
+                tableName: tableName,
+                schemaName: schemaName,
+                explicitTitle: explicitTitle,
+                sourceFileURL: sourceFileURL,
+                databaseType: databaseType,
+                queryLanguageName: queryLanguageName
+            ),
+            connectionName: connectionName
+        )
+    }
+
+    private static func baseTitle(
         tabType: TabType?,
         tableName: String?,
         schemaName: String?,

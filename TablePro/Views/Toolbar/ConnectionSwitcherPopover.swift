@@ -27,6 +27,8 @@ enum ConnectionSwitcherSelection {
 }
 
 struct ConnectionSwitcherPopover: View {
+    let coordinator: MainContentCoordinator
+
     @Environment(\.dismiss) private var dismiss
 
     @State private var savedConnections: [DatabaseConnection] = []
@@ -268,11 +270,16 @@ struct ConnectionSwitcherPopover: View {
         activate(connectionId: id)
     }
 
+    private var anchorWindow: NSWindow? {
+        coordinator.windowId.flatMap { WindowLifecycleMonitor.shared.window(for: $0) }
+    }
+
     private func activate(connectionId: UUID) {
+        let anchor = anchorWindow
         dismiss()
         Task {
             do {
-                try await TabRouter.shared.route(.openConnection(connectionId))
+                try await TabRouter.shared.route(.openConnection(connectionId), anchor: anchor)
             } catch {
                 await MainActor.run {
                     AlertHelper.showErrorSheet(

@@ -409,6 +409,12 @@ struct MainContentView: View {
             ) { _ in
                 handleConnectionStatusChange()
             }
+            .onReceive(
+                AppEvents.shared.connectionUpdated
+                    .filter { $0 == nil || $0 == connection.id }
+            ) { _ in
+                updateWindowTitleAndFileState()
+            }
 
             .onChange(of: coordinator.windowSidebarState.selectedTables) { oldTables, newTables in
                 guard !coordinator.isTearingDown else {

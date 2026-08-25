@@ -43,10 +43,10 @@ internal final class TabRouter {
         self.externalConnectionGate = externalConnectionGate ?? ExternalConnectionGate()
     }
 
-    internal func route(_ intent: LaunchIntent) async throws {
+    internal func route(_ intent: LaunchIntent, anchor: NSWindow? = nil) async throws {
         switch intent {
         case .openConnection(let id):
-            try await openConnection(id: id)
+            try await openConnection(id: id, anchor: anchor)
 
         case .openTable(let id, let database, let schema, let table, let isView):
             try await openTable(
@@ -90,7 +90,7 @@ internal final class TabRouter {
 
     // MARK: - Connection
 
-    private func openConnection(id: UUID) async throws {
+    private func openConnection(id: UUID, anchor: NSWindow?) async throws {
         guard let connection = ConnectionStorage.shared.loadConnections().first(where: { $0.id == id }) else {
             throw TabRouterError.connectionNotFound(id)
         }
@@ -103,7 +103,11 @@ internal final class TabRouter {
         }
         try await runPreConnectScriptIfNeeded(connection)
         let payload = EditorTabPayload(connectionId: connection.id, intent: .restoreOrDefault)
-        WindowManager.shared.openTab(payload: payload)
+        WindowManager.shared.openTab(
+            payload: payload,
+            tabGroup: ConnectionSwitchPlacement.tabGroup(anchor: anchor),
+            anchor: anchor
+        )
         NSApp.activate(ignoringOtherApps: true)
         try await DatabaseManager.shared.ensureConnected(connection)
         guard WindowManager.shared.hasOpenWindow(for: connection.id) else {

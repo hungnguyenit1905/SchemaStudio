@@ -22,7 +22,7 @@ struct ConnectionToolbarButton: View {
             for: .switchConnection
         ))
         .popover(isPresented: $coordinator.isConnectionSwitcherShown, arrowEdge: .bottom) {
-            ConnectionSwitcherPopover()
+            ConnectionSwitcherPopover(coordinator: coordinator)
         }
     }
 }

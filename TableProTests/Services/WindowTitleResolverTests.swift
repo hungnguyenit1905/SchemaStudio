@@ -7,7 +7,7 @@ import Testing
 struct WindowTitleResolverPayloadTitleTests {
     @Test("Nil payload falls back to SQL Query")
     func nilPayloadFallsBackToSQLQuery() {
-        let title = WindowTitleResolver.resolveTitle(payload: nil, databaseType: nil, queryLanguageName: nil)
+        let title = WindowTitleResolver.resolveTitle(payload: nil, databaseType: nil, connectionName: nil, queryLanguageName: nil)
         #expect(title == String(localized: "SQL Query"))
     }
 
@@ -15,7 +15,7 @@ struct WindowTitleResolverPayloadTitleTests {
     func serverDashboardLabel() {
         let payload = EditorTabPayload(connectionId: UUID(), tabType: .serverDashboard)
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == String(localized: "Server Dashboard"))
     }
@@ -24,7 +24,7 @@ struct WindowTitleResolverPayloadTitleTests {
     func erDiagramLabel() {
         let payload = EditorTabPayload(connectionId: UUID(), tabType: .erDiagram)
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == String(localized: "ER Diagram"))
     }
@@ -33,7 +33,7 @@ struct WindowTitleResolverPayloadTitleTests {
     func createTableLabel() {
         let payload = EditorTabPayload(connectionId: UUID(), tabType: .createTable)
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == String(localized: "Create Table"))
     }
@@ -46,7 +46,7 @@ struct WindowTitleResolverPayloadTitleTests {
             tabTitle: "report"
         )
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == "report")
     }
@@ -60,7 +60,7 @@ struct WindowTitleResolverPayloadTitleTests {
             sourceFileURL: url
         )
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == QueryTab.fileDisplayTitle(for: url))
         #expect(title != "PostgreSQL Query")
@@ -77,7 +77,7 @@ struct WindowTitleResolverPayloadTitleTests {
             tabTitle: "Renamed"
         )
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == "Renamed")
     }
@@ -92,7 +92,7 @@ struct WindowTitleResolverPayloadTitleTests {
             sourceFileURL: url
         )
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == QueryTab.fileDisplayTitle(for: url))
     }
@@ -105,7 +105,7 @@ struct WindowTitleResolverPayloadTitleTests {
             tableName: "users"
         )
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == "users")
     }
@@ -117,7 +117,7 @@ struct WindowTitleResolverPayloadTitleTests {
             tabType: .table,
             tableName: "users"
         )
-        let title = WindowTitleResolver.resolveTitle(payload: payload, databaseType: nil, queryLanguageName: nil)
+        let title = WindowTitleResolver.resolveTitle(payload: payload, databaseType: nil, connectionName: nil, queryLanguageName: nil)
         #expect(title == "users")
     }
 
@@ -125,7 +125,7 @@ struct WindowTitleResolverPayloadTitleTests {
     func queryWithLanguageFallback() {
         let payload = EditorTabPayload(connectionId: UUID(), tabType: .query)
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == String(format: String(localized: "%@ Query"), "PostgreSQL"))
     }
@@ -136,6 +136,7 @@ struct WindowTitleResolverPayloadTitleTests {
         let title = WindowTitleResolver.resolveTitle(
             payload: payload,
             databaseType: .postgresql,
+            connectionName: nil,
             queryLanguageName: nil
         )
         #expect(title == String(localized: "SQL Query"))
@@ -151,7 +152,7 @@ struct WindowTitleResolverPayloadTitleTests {
             tabTitle: ""
         )
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == "orders")
     }
@@ -166,7 +167,7 @@ struct WindowTitleResolverPayloadTitleTests {
             tabTitle: ""
         )
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == "auth.audit_log_entries")
     }
@@ -181,7 +182,7 @@ struct WindowTitleResolverPayloadTitleTests {
             tabTitle: "stale carried-over name"
         )
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == "auth.orders")
     }
@@ -195,7 +196,7 @@ struct WindowTitleResolverPayloadTitleTests {
             tabTitle: "auth.users"
         )
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == "auth.users")
     }
@@ -210,7 +211,7 @@ struct WindowTitleResolverPayloadTitleTests {
             tabTitle: ""
         )
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == QueryTab.fileDisplayTitle(for: url))
     }
@@ -223,7 +224,7 @@ struct WindowTitleResolverPayloadTitleTests {
             tabTitle: "   "
         )
         let title = WindowTitleResolver.resolveTitle(
-            payload: payload, databaseType: .postgresql, queryLanguageName: "PostgreSQL"
+            payload: payload, databaseType: .postgresql, connectionName: nil, queryLanguageName: "PostgreSQL"
         )
         #expect(title == String(format: String(localized: "%@ Query"), "PostgreSQL"))
     }
@@ -235,7 +236,7 @@ struct WindowTitleResolverPayloadTitleTests {
             tabType: .query,
             tabTitle: ""
         )
-        let title = WindowTitleResolver.resolveTitle(payload: payload, databaseType: nil, queryLanguageName: nil)
+        let title = WindowTitleResolver.resolveTitle(payload: payload, databaseType: nil, connectionName: nil, queryLanguageName: nil)
         #expect(title == WindowTitleResolver.fallbackTitle)
         #expect(!title.isBlank)
     }
@@ -250,29 +251,104 @@ struct WindowTitleResolverTabTitleTests {
     func tableTabWithEmptyTitleResolvesTableName() {
         var tab = QueryTab(id: UUID(), title: "", query: "SELECT 1", tabType: .table, tableName: "orders")
         tab.tableContext.schemaName = "public"
-        let title = WindowTitleResolver.resolveTitle(tab: tab, connection: connection, queryLanguageName: "PostgreSQL")
-        #expect(title == "orders")
+        let title = WindowTitleResolver.resolveTitle(
+            tab: tab, connection: connection,
+            connectionName: connection.name, queryLanguageName: "PostgreSQL"
+        )
+        #expect(title == "MyConnection: orders")
     }
 
     @Test("Table tab in a non-default schema resolves the qualified name")
     func tableTabNonDefaultSchemaQualifies() {
         var tab = QueryTab(id: UUID(), title: "", query: "SELECT 1", tabType: .table, tableName: "audit_log_entries")
         tab.tableContext.schemaName = "auth"
-        let title = WindowTitleResolver.resolveTitle(tab: tab, connection: connection, queryLanguageName: "PostgreSQL")
-        #expect(title == "auth.audit_log_entries")
+        let title = WindowTitleResolver.resolveTitle(
+            tab: tab, connection: connection,
+            connectionName: connection.name, queryLanguageName: "PostgreSQL"
+        )
+        #expect(title == "MyConnection: auth.audit_log_entries")
     }
 
     @Test("Query tab keeps its own title")
     func queryTabKeepsOwnTitle() {
         let tab = QueryTab(id: UUID(), title: "Query 2", query: "SELECT 1", tabType: .query)
-        let title = WindowTitleResolver.resolveTitle(tab: tab, connection: connection, queryLanguageName: "PostgreSQL")
-        #expect(title == "Query 2")
+        let title = WindowTitleResolver.resolveTitle(
+            tab: tab, connection: connection,
+            connectionName: connection.name, queryLanguageName: "PostgreSQL"
+        )
+        #expect(title == "MyConnection: Query 2")
     }
 
     @Test("Nil tab resolves to the language label")
     func nilTabResolvesLanguageLabel() {
-        let title = WindowTitleResolver.resolveTitle(tab: nil, connection: connection, queryLanguageName: "PostgreSQL")
-        #expect(title == String(format: String(localized: "%@ Query"), "PostgreSQL"))
+        let title = WindowTitleResolver.resolveTitle(
+            tab: nil, connection: connection,
+            connectionName: connection.name, queryLanguageName: "PostgreSQL"
+        )
+        #expect(
+            title == "MyConnection: " + String(format: String(localized: "%@ Query"), "PostgreSQL")
+        )
+    }
+}
+
+@Suite("WindowTitleResolver connection qualifier")
+@MainActor
+struct WindowTitleResolverQualifierTests {
+    @Test("A connection name prefixes the base title")
+    func qualifierPrefixesBase() {
+        #expect(WindowTitleResolver.qualified("users", connectionName: "Localhost") == "Localhost: users")
+    }
+
+    @Test("A nil connection name leaves the base title alone")
+    func nilQualifierPassesThrough() {
+        #expect(WindowTitleResolver.qualified("users", connectionName: nil) == "users")
+    }
+
+    @Test("A blank connection name leaves the base title alone")
+    func blankQualifierPassesThrough() {
+        #expect(WindowTitleResolver.qualified("users", connectionName: "   ") == "users")
+    }
+
+    @Test("A blank base stays blank so sanitizeTitle can still catch it")
+    func blankBaseStaysBlank() {
+        let title = WindowTitleResolver.qualified("", connectionName: "Localhost")
+        #expect(title.isBlank)
+        #expect(title != "Localhost: ")
+    }
+
+    @Test("Fixed-label tabs carry the prefix too")
+    func fixedLabelTabsArePrefixed() {
+        let payload = EditorTabPayload(connectionId: UUID(), tabType: .serverDashboard)
+        let title = WindowTitleResolver.resolveTitle(
+            payload: payload, databaseType: .postgresql,
+            connectionName: "Localhost", queryLanguageName: "PostgreSQL"
+        )
+        #expect(title == "Localhost: " + String(localized: "Server Dashboard"))
+    }
+
+    @Test("The language fallback carries the prefix too")
+    func fallbackIsPrefixed() {
+        let title = WindowTitleResolver.resolveTitle(
+            payload: nil, databaseType: nil,
+            connectionName: "Localhost", queryLanguageName: nil
+        )
+        #expect(title == "Localhost: " + String(localized: "SQL Query"))
+    }
+
+    @Test("Two connections showing the same table produce different titles")
+    func sameTableDifferentConnectionsDiffer() {
+        let payload = EditorTabPayload(
+            connectionId: UUID(), tabType: .table, tableName: "users"
+        )
+        let first = WindowTitleResolver.resolveTitle(
+            payload: payload, databaseType: .postgresql,
+            connectionName: "Localhost", queryLanguageName: "PostgreSQL"
+        )
+        let second = WindowTitleResolver.resolveTitle(
+            payload: payload, databaseType: .postgresql,
+            connectionName: "Staging", queryLanguageName: "PostgreSQL"
+        )
+        #expect(first != second)
     }
 }
 

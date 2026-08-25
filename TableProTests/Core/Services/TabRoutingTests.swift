@@ -82,6 +82,21 @@ struct TabRoutingTests {
         #expect(identifier == "com.SchemaStudio.main")
     }
 
+    // MARK: - Connection switch placement
+
+    /// The switcher used to pass no anchor at all, so `.fromSettings` sent every
+    /// switch into a per-connection group and the tab became a standalone window.
+    @Test("A switch made from a window joins that window's tab group")
+    func anchoredSwitchForcesTheSharedGroup() {
+        #expect(ConnectionSwitchPlacement.tabGroup(anchor: "window") == .shared)
+    }
+
+    @Test("A switch with no originating window keeps the settings-driven placement")
+    func unanchoredSwitchKeepsSettingsPlacement() {
+        let anchor: String? = nil
+        #expect(ConnectionSwitchPlacement.tabGroup(anchor: anchor) == nil)
+    }
+
     // MARK: - Which tab group a new tab joins
 
     /// `NSApp.windows` is roughly creation order, so picking its first match

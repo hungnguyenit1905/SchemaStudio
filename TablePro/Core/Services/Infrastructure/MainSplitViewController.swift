@@ -98,6 +98,7 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
         self.windowTitle = WindowTitleResolver.resolveTitle(
             payload: payload,
             databaseType: titleConnection?.type,
+            connectionName: titleConnection?.name,
             queryLanguageName: queryLanguageName
         )
         if let titleConnection {
@@ -122,7 +123,9 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
             if payload?.intent == .newEmptyTab,
                let tabTitle = state.coordinator.tabManager.selectedTab?.title,
                !tabTitle.isBlank {
-                self.windowTitle = tabTitle
+                self.windowTitle = WindowTitleResolver.qualified(
+                    tabTitle, connectionName: titleConnection?.name
+                )
             }
         }
 

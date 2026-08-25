@@ -271,15 +271,21 @@ extension MainContentView {
         toolbarState.hasPendingChanges = hasDataChanges || hasFileChanges
     }
 
+    var liveConnectionName: String {
+        ConnectionStorage.shared.loadConnection(id: connection.id)?.name ?? connection.name
+    }
+
     /// Update window title, proxy icon, and dirty dot based on the selected tab.
     func updateWindowTitleAndFileState() {
         let selectedTab = tabManager.selectedTab
+        let resolvedName = liveConnectionName
         if selectedTab == nil, tabManager.tabs.isEmpty {
-            windowTitle = connection.name
+            windowTitle = resolvedName
         } else {
             windowTitle = WindowTitleResolver.resolveTitle(
                 tab: selectedTab,
                 connection: connection,
+                connectionName: resolvedName,
                 queryLanguageName: PluginManager.shared.queryLanguageName(for: connection.type)
             )
         }
