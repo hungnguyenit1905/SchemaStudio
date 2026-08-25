@@ -2,12 +2,14 @@
 set -euo pipefail
 
 # Uploads debug symbols to Sentry so crash reports arrive symbolicated.
-# Covers the app and every bundled plugin: they come out of the same xcodebuild
-# invocation, so their dSYMs share one products directory.
+#
+# With no argument it covers the app and every bundled plugin, which come out of
+# the same xcodebuild invocation and share one products directory. The plugin
+# release workflow passes its own per-arch directory instead.
 #
 # Requires SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT in the environment.
 
-PRODUCTS_DIR="build/DerivedData/Build/Products/Release"
+PRODUCTS_DIR="${1:-build/DerivedData/Build/Products/Release}"
 
 if [[ ! -d "$PRODUCTS_DIR" ]]; then
     echo "❌ FATAL: $PRODUCTS_DIR not found. Run the release build first."
