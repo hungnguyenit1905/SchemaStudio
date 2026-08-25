@@ -82,10 +82,7 @@ internal final class WindowManager {
 
         if let sibling {
             if groupAll {
-                let otherMains = NSApp.windows.filter {
-                    $0 !== window && Self.isMainWindow($0) && $0.isVisible
-                }
-                for existing in otherMains {
+                for existing in Self.retagTargets(joining: sibling, excluding: window) {
                     existing.tabbingIdentifier = tabbingId
                 }
             }
@@ -169,6 +166,15 @@ internal final class WindowManager {
         case .perConnection:
             return "\(sharedTabbingIdentifier).\(connectionId.uuidString)"
         }
+    }
+
+    /// The windows `addTabbedWindow` needs to agree on an identifier before it
+    /// will merge: the group being joined, and nothing else. Retagging every
+    /// visible main window instead would overwrite the per-connection
+    /// identifiers of unrelated groups, so a later per-connection open would no
+    /// longer find its own sibling and would open standalone.
+    internal static func retagTargets(joining sibling: NSWindow, excluding window: NSWindow) -> [NSWindow] {
+        (sibling.tabbedWindows ?? [sibling]).filter { $0 !== window }
     }
 
     private func findSibling(

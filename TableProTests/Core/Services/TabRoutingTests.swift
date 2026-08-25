@@ -8,6 +8,7 @@
 //  coordinator the bottom bar acts through.
 //
 
+import AppKit
 import Foundation
 import Testing
 
@@ -82,19 +83,46 @@ struct TabRoutingTests {
         #expect(identifier == "com.SchemaStudio.main")
     }
 
+    // MARK: - Shared-group retagging
+
+    /// Retagging every visible main window overwrote the per-connection
+    /// identifiers of unrelated groups, so the next per-connection open found
+    /// no sibling and opened standalone instead of joining its own group.
+    @Test("Only the group being joined is retagged")
+    func retagIsConfinedToTheJoinedGroup() {
+        let sibling = NSWindow()
+        let unrelated = NSWindow()
+        let joining = NSWindow()
+
+        let targets = WindowManager.retagTargets(joining: sibling, excluding: joining)
+
+        #expect(targets.contains { $0 === sibling })
+        #expect(!targets.contains { $0 === unrelated })
+    }
+
+    @Test("The window being added is never retagged as part of the group")
+    func retagExcludesTheJoiningWindow() {
+        let sibling = NSWindow()
+
+        let targets = WindowManager.retagTargets(joining: sibling, excluding: sibling)
+
+        #expect(targets.isEmpty)
+    }
+
     // MARK: - Connection switch placement
 
     /// The switcher used to pass no anchor at all, so `.fromSettings` sent every
     /// switch into a per-connection group and the tab became a standalone window.
     @Test("A switch made from a window joins that window's tab group")
     func anchoredSwitchForcesTheSharedGroup() {
-        #expect(ConnectionSwitchPlacement.tabGroup(anchor: "window") == .shared)
+        let anchor = NSWindow()
+
+        #expect(ConnectionSwitchPlacement.tabGroup(anchor: anchor) == .shared)
     }
 
     @Test("A switch with no originating window keeps the settings-driven placement")
     func unanchoredSwitchKeepsSettingsPlacement() {
-        let anchor: String? = nil
-        #expect(ConnectionSwitchPlacement.tabGroup(anchor: anchor) == nil)
+        #expect(ConnectionSwitchPlacement.tabGroup(anchor: nil) == nil)
     }
 
     // MARK: - Which tab group a new tab joins

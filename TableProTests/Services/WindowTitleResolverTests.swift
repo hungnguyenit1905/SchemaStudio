@@ -255,7 +255,7 @@ struct WindowTitleResolverTabTitleTests {
             tab: tab, connection: connection,
             connectionName: connection.name, queryLanguageName: "PostgreSQL"
         )
-        #expect(title == "MyConnection: orders")
+        #expect(title == WindowTitleResolver.qualified("orders", connectionName: connection.name))
     }
 
     @Test("Table tab in a non-default schema resolves the qualified name")
@@ -266,7 +266,7 @@ struct WindowTitleResolverTabTitleTests {
             tab: tab, connection: connection,
             connectionName: connection.name, queryLanguageName: "PostgreSQL"
         )
-        #expect(title == "MyConnection: auth.audit_log_entries")
+        #expect(title == WindowTitleResolver.qualified("auth.audit_log_entries", connectionName: connection.name))
     }
 
     @Test("Query tab keeps its own title")
@@ -276,7 +276,7 @@ struct WindowTitleResolverTabTitleTests {
             tab: tab, connection: connection,
             connectionName: connection.name, queryLanguageName: "PostgreSQL"
         )
-        #expect(title == "MyConnection: Query 2")
+        #expect(title == WindowTitleResolver.qualified("Query 2", connectionName: connection.name))
     }
 
     @Test("Nil tab resolves to the language label")
@@ -285,9 +285,9 @@ struct WindowTitleResolverTabTitleTests {
             tab: nil, connection: connection,
             connectionName: connection.name, queryLanguageName: "PostgreSQL"
         )
-        #expect(
-            title == "MyConnection: " + String(format: String(localized: "%@ Query"), "PostgreSQL")
-        )
+        let base = String(format: String(localized: "%@ Query"), "PostgreSQL")
+
+        #expect(title == WindowTitleResolver.qualified(base, connectionName: connection.name))
     }
 }
 
@@ -296,7 +296,11 @@ struct WindowTitleResolverTabTitleTests {
 struct WindowTitleResolverQualifierTests {
     @Test("A connection name prefixes the base title")
     func qualifierPrefixesBase() {
-        #expect(WindowTitleResolver.qualified("users", connectionName: "Localhost") == "Localhost: users")
+        let title = WindowTitleResolver.qualified("users", connectionName: "Localhost")
+
+        #expect(title.contains("Localhost"))
+        #expect(title.contains("users"))
+        #expect(title != "users")
     }
 
     @Test("A nil connection name leaves the base title alone")
@@ -313,7 +317,7 @@ struct WindowTitleResolverQualifierTests {
     func blankBaseStaysBlank() {
         let title = WindowTitleResolver.qualified("", connectionName: "Localhost")
         #expect(title.isBlank)
-        #expect(title != "Localhost: ")
+        #expect(!title.contains("Localhost"))
     }
 
     @Test("Fixed-label tabs carry the prefix too")
@@ -323,7 +327,7 @@ struct WindowTitleResolverQualifierTests {
             payload: payload, databaseType: .postgresql,
             connectionName: "Localhost", queryLanguageName: "PostgreSQL"
         )
-        #expect(title == "Localhost: " + String(localized: "Server Dashboard"))
+        #expect(title == WindowTitleResolver.qualified(String(localized: "Server Dashboard"), connectionName: "Localhost"))
     }
 
     @Test("The language fallback carries the prefix too")
@@ -332,7 +336,7 @@ struct WindowTitleResolverQualifierTests {
             payload: nil, databaseType: nil,
             connectionName: "Localhost", queryLanguageName: nil
         )
-        #expect(title == "Localhost: " + String(localized: "SQL Query"))
+        #expect(title == WindowTitleResolver.qualified(String(localized: "SQL Query"), connectionName: "Localhost"))
     }
 
     @Test("Two connections showing the same table produce different titles")

@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- With "Group all connections in one window" off, opening a tab into a shared group no longer stops later tabs for other connections from joining their own window.
 - PostgreSQL reported the wrong estimated row count for a table outside the connection's current schema, reading a same-named table in the search path instead.
 - Saving on a read-only connection now says the connection is read-only instead of reporting that the SQL could not be generated.
 - Undo in the table structure editor steps back one edit at a time. Edits made in the same moment were folded into one step, so a single undo could revert several of them.
