@@ -9,6 +9,77 @@ Right-click tables in the sidebar to drop, truncate, run maintenance, or manage 
 
 Click the plus button in the bottom-left of the sidebar and choose **New Table** or **New View**. New Table opens the visual structure editor (see [Table Structure](/features/table-structure)). New View opens a SQL editor tab with a CREATE VIEW template for your database type. The button is disabled while [safe mode](/features/safe-mode) blocks writes.
 
+## Duplicate Table
+
+Right-click a table and choose **Duplicate Table...** to copy it into the same database. The sheet has two tabs: **Options** and **Preview SQL**.
+
+Options:
+
+| Option | Effect |
+|--------|--------|
+| Target schema | Where the copy is created. Defaults to the source table's schema, and is hidden on engines without schemas. |
+| New table name | Defaults to `<source>_copy`, then `_copy1`, `_copy2` until one is free. Validated as you type against the server's name length limit, which is counted in bytes. |
+| Duplicate structure only / structure and data | Whether the rows are copied. |
+| Advanced options | Which parts of the structure travel: indexes, keys and check constraints, foreign keys (off by default), defaults, identity and auto increment, generated columns, comments, and table options. |
+| Row filter and Limit rows | A `WHERE` condition and a row cap. Both only apply when data is copied. |
+| If the target exists | Cancel, or drop and recreate. Drop and recreate deletes the existing table and its rows before the copy is created. |
+
+### Replacing a table that already exists
+
+Set **If the target exists** to **Drop and recreate** to replace a table of that name. Before anything is dropped, the run checks which foreign keys other tables hold against it. If there are none, the table is dropped and recreated.
+
+If there are, a second dialog lists every constraint with the table that owns it, and offers **Cancel** or **Drop with CASCADE**. Nothing cascades without that answer. On PostgreSQL the drop runs with `CASCADE`; on MySQL and MariaDB each constraint is dropped by name first, because MySQL accepts `CASCADE` on `DROP TABLE` and then ignores it.
+
+Dropping a constraint changes a table you did not ask about, which is why the dialog names the owner. Cancel stops the run before anything is dropped.
+
+The **Preview SQL** tab shows the script the run sends, and it updates as you change the options. Statements that cannot exist until the run starts, the index rebuilds whose names the server assigns to the new table, appear as a labelled line saying how many statements they stand for.
+
+The copy is independent of the original: it gets its own sequences with the source's `INCREMENT`, `MINVALUE`, `MAXVALUE`, `CACHE`, and `CYCLE`, and no unintended links back. Row-level security policies, grants, ownership, and triggers are not copied, and the sheet says so when they apply. Partitioned tables are not supported yet.
+
+While the copy runs, the sheet shows the current step, elapsed time, and a **Stop** button. When it finishes, the sidebar refreshes and the new table opens in a tab.
+
+How the rows are copied depends on how many there are:
+
+| Rows | How it runs |
+|------|-------------|
+| Up to a million, and the planner knows the count | One server-side statement. No percentage to show. Stopping rolls the new table back. |
+| More than a million, an unknown count, a row filter, or an engine without transactional DDL | Batches of 10,000 rows that each commit, walking the table's primary key. The progress bar counts rows. Stopping ends the batch that is running, then asks whether to keep or delete what was copied. |
+
+The planner's row count is unknown until a table has been analyzed, so a table that was never analyzed is copied in batches rather than assumed to be small.
+
+Batches use the primary key, not `OFFSET`, so no batch rereads rows an earlier one already copied. A table without a single-column primary key is copied in one statement instead, and the sheet says so. Batched copies are not a single snapshot: each batch commits on its own, so writes another session makes to the source while the copy runs can land in the copy, and the sheet says that too.
+
+### PostgreSQL
+
+The copy is built on `CREATE TABLE new (LIKE original INCLUDING ...)`, so the server reproduces the column types, collations, index expressions, partial predicates and storage parameters itself. Four limits come with that:
+
+- **The copy's indexes get the names the server picks**, derived from the new table's name. They do not match the source's index names, and nothing renames them afterwards.
+- **The primary key, unique keys and check constraints travel together.** `INCLUDING CONSTRAINTS` cannot split them, so Advanced options offers one switch for all three rather than a switch that would quietly do nothing.
+- **The tablespace is not copied.** The copy is created in the default tablespace for the target schema, even when the source sits in another one.
+- **A table comment is applied by its own `COMMENT ON TABLE` statement** after the table is created, because `LIKE` does not carry it. That step is allowed to fail without discarding the copy, so a copy can exist without its comment; the sheet says so when it happens.
+
+Row-level security is reported, never copied: the policies stay behind and the copy is created with row-level security off. If the policies are hiding rows from you in the source, the copy holds only the rows you can read, and the sheet warns about that separately.
+
+### MySQL and MariaDB
+
+The copy is built on `CREATE TABLE new LIKE original`, so the storage engine, row format, character set, collation, every column's precision and flags, the keys, the indexes and the `CHECK` constraints come across exactly as the server has them. Foreign keys and triggers are not carried by that statement: foreign keys are added afterwards when you ask for them, triggers are not copied.
+
+Some of the Advanced options cannot be turned off here, because `LIKE` is all or nothing for them: keys and check constraints, defaults, auto increment, generated columns, and table options. The sheet lists the ones you switched off and says they are carried over anyway, rather than leaving a switch that quietly does nothing. Indexes and comments can still be turned off, and the run removes them after the table is created.
+
+MySQL and MariaDB commit every DDL statement, so a copy can never be rolled back. Rows are always copied in batches, and a run that fails or is stopped removes the table it created. If that cleanup itself fails, the error names the leftover table and gives you the exact `DROP TABLE` to run, with a copy button.
+
+A step that only affects derived data, updating table statistics or setting the auto-increment counter, is allowed to fail without discarding the copy. The table is correct and usable either way, and the counter is derived from the rows on the next insert.
+
+When the rows are copied, indexes are set aside first and rebuilt afterwards in a single `ALTER TABLE`, so the table is rebuilt once rather than once per index. A table with an index on an expression (MySQL 8.0.13 and later) keeps its indexes in place instead: the copy is slower, and the sheet says so, but no index can be lost.
+
+<Note>
+Duplicate Table is available on PostgreSQL, MySQL, and MariaDB. The menu item is hidden on engines without support, on views, materialized views, foreign tables, and external tables, and disabled when more than one table is selected.
+</Note>
+
+<Warning>
+On MySQL and MariaDB, if the app is force-quit while a copy is running, the new table can be left without the indexes that were set aside for the copy. Nothing on disk records that they are missing. Check the new table's indexes, or drop it and duplicate again.
+</Warning>
+
 ## Drop and Truncate
 
 Right-click a table and choose **Delete** to drop it, or **Truncate** to remove all rows while keeping the structure. Hold Cmd and click to select multiple tables; the same options apply to all of them.
@@ -54,6 +125,7 @@ Views appear in the sidebar with an eye icon in your accent color. Materialized 
 | Action | Tables | Views |
 |--------|--------|-------|
 | Show Structure | Yes | Yes |
+| Duplicate Table | Yes | No |
 | Export | Yes | Yes |
 | Import | Yes | No |
 | Truncate | Yes | No |

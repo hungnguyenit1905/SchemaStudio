@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Data generation now picks the real generator for a column instead of a placeholder: an email column gets an email, a city gets a city, a price gets a price, and description columns get paragraphs.
 - A data generation setup can be saved as a named profile and run again later. Profiles are listed in the wizard under Profiles, and loading one shows what changed in the database since it was saved before it is applied. A profile can be exported to a JSON file and imported again: the file holds the tables, generators and seed, and no host, user or password, so it is safe to share.
 - Data generation ships with two templates, e-commerce and CRM. Applying one matches its tables and columns against your schema by name and fills what it finds, auto-maps the rest, and says what it could not place. A template that matches nothing is refused instead of leaving you an empty setup.
+- Duplicate a table from the sidebar: right-click a table and choose Duplicate Table. Pick the target schema and name, choose structure only or structure and data, and narrow the rows with a `WHERE` condition or a row limit. A Preview SQL tab shows the script and follows the options as you change them. The copy gets its own sequences and no unintended links back to the original. PostgreSQL for now.
+- Duplicating a large table copies the rows in batches that each commit, with a progress bar that counts rows and a Stop that ends on the next batch boundary and then asks whether to keep or delete what was copied. Batches walk the primary key, so no batch rereads rows an earlier one already copied. A table with no single-column primary key copies in one statement instead, and says so.
+- Duplicate Table now works on MySQL and MariaDB. The copy keeps the storage engine, row format, character set, collation, keys, indexes and check constraints, and resets the auto-increment counter after the rows land. Generated columns are computed by the server instead of being copied. Rows are always copied in batches, and a run that fails or is stopped removes the table it created; if that cleanup fails too, the error gives you the exact `DROP TABLE` to run.
+- Duplicate Table can replace a table that already exists: set "If the target exists" to Drop and recreate. If other tables point at it with foreign keys, a dialog lists each constraint with the table that owns it and asks before anything is dropped. Nothing cascades unless you say so.
+- Exporting a table or query result now offers a scope: All rows, Filtered rows, or Selected rows, each with a live count. All rows re-queries the server with no row limit, so it is no longer capped by the page on screen. Filtered and Selected export exactly what the grid shows, in display order, and the dialog says how many loaded rows they cover when more are available. Rows marked for deletion and unsaved added rows are left out of every scope.
+- CSV export can write UTF-8 with a byte order mark, so Vietnamese and CJK text opens correctly in Windows Excel. Plain UTF-8 stays the default and its output is unchanged.
+- Import Excel workbooks: File > Import > From Excel reads an `.xlsx` file into a new or existing table, with a sheet picker for multi-sheet workbooks. Formulas import as their last calculated value, dates import as dates including 1904-system workbooks, long identifiers keep their exact digits, and gaps in a row keep their column position. Password-protected, `.xls` and `.xlsm` workbooks are refused with a clear message.
 - Optional crash reporting, off by default. Turn it on in Settings > General > Diagnostics. Crash reports carry the stack trace, app and OS version, and nothing about your connections, queries, or data.
 
 ### Changed
@@ -41,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- PostgreSQL reported the wrong estimated row count for a table outside the connection's current schema, reading a same-named table in the search path instead.
 - Saving on a read-only connection now says the connection is read-only instead of reporting that the SQL could not be generated.
 - Undo in the table structure editor steps back one edit at a time. Edits made in the same moment were folded into one step, so a single undo could revert several of them.
 - Oracle zoned and local timestamps now render the actual zone offset (e.g. `+07:00`) instead of always showing `Z`.
@@ -101,6 +109,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A tab's window subtitle now shows the database it is bound to, for query tabs as well as table tabs. (#2026)
 - Changing a tab's database from its toolbar now repoints only that tab and leaves the sidebar where it is. (#2026)
 - `describe_table` and `get_table_ddl` now take a `database` argument, in AI chat and over MCP, so a table in another database can be inspected without changing the database selected in the app. `list_schemas` in AI chat takes one too. (#2026)
+
+### Security
+
+- A raw SQL filter can no longer smuggle a second statement past the confirmation the app shows for a destructive change. The check used to look for a list of keywords after a semicolon, which missed several ways to write the same thing, and on PostgreSQL the extra statement then ran. Semicolons and comment markers are now refused anywhere in a filter condition.
 
 ## [0.63.0] - 2026-08-05
 

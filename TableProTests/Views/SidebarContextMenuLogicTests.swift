@@ -236,4 +236,54 @@ struct SidebarContextMenuLogicTests {
     func externalTableDeleteLabel() {
         #expect(SidebarContextMenuLogic.deleteLabel(for: .externalTable) == "Drop External Table")
     }
+
+    // MARK: - Duplicate Table
+
+    @Test("Duplicate is offered for a table on a supported type")
+    func duplicateVisibleForTable() {
+        let table = TableInfo(name: "orders", type: .table, rowCount: nil)
+        #expect(SidebarContextMenuLogic.duplicateVisible(clickedTable: table, databaseType: .postgresql))
+    }
+
+    @Test("Duplicate is hidden for read-only object kinds", arguments: [
+        TableInfo.TableType.view,
+        .materializedView,
+        .foreignTable,
+        .systemTable,
+        .externalTable
+    ])
+    func duplicateHiddenForReadOnlyKinds(_ type: TableInfo.TableType) {
+        let object = TableInfo(name: "orders", type: type, rowCount: nil)
+        #expect(!SidebarContextMenuLogic.duplicateVisible(clickedTable: object, databaseType: .postgresql))
+    }
+
+    @Test("Duplicate is hidden for a type with no plan builder")
+    func duplicateHiddenWithoutBuilder() {
+        let table = TableInfo(name: "orders", type: .table, rowCount: nil)
+        #expect(!SidebarContextMenuLogic.duplicateVisible(clickedTable: table, databaseType: .sqlite))
+    }
+
+    @Test("Duplicate is hidden with nothing clicked")
+    func duplicateHiddenWithoutClickedTable() {
+        #expect(!SidebarContextMenuLogic.duplicateVisible(clickedTable: nil, databaseType: .postgresql))
+    }
+
+    @Test("Duplicate is enabled for a single clicked table")
+    func duplicateEnabledForSingleSelection() {
+        let table = TableInfo(name: "orders", type: .table, rowCount: nil)
+        #expect(SidebarContextMenuLogic.duplicateEnabled(clickedTable: table, selectedTables: []))
+        #expect(SidebarContextMenuLogic.duplicateEnabled(clickedTable: table, selectedTables: [table]))
+    }
+
+    @Test("Duplicate is disabled for a multi-selection")
+    func duplicateDisabledForMultiSelection() {
+        let orders = TableInfo(name: "orders", type: .table, rowCount: nil)
+        let customers = TableInfo(name: "customers", type: .table, rowCount: nil)
+        #expect(
+            !SidebarContextMenuLogic.duplicateEnabled(
+                clickedTable: orders,
+                selectedTables: [orders, customers]
+            )
+        )
+    }
 }

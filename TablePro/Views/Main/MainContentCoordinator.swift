@@ -43,6 +43,7 @@ enum ActiveSheet: Identifiable {
     case createDatabase
     case dataTransfer
     case dataGeneration
+    case duplicateTable(scope: DatabaseScope, table: String)
 
     var id: String {
         switch self {
@@ -57,6 +58,8 @@ enum ActiveSheet: Identifiable {
         case .createDatabase: "createDatabase"
         case .dataTransfer: "dataTransfer"
         case .dataGeneration: "dataGeneration"
+        case .duplicateTable(let scope, let table):
+            "duplicateTable-\(scope.connectionId)-\(scope.qualifiedDescription)-\(table)"
         }
     }
 }

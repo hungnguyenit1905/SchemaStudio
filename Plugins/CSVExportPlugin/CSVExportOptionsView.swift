@@ -74,6 +74,17 @@ struct CSVExportOptionsView: View {
                     .labelsHidden()
                     .frame(width: 140, alignment: .trailing)
                 }
+
+                optionRow(String(localized: "Encoding", bundle: .main)) {
+                    Picker("", selection: $plugin.settings.encoding) {
+                        ForEach(CSVExportEncoding.allCases) { encoding in
+                            Text(encoding.displayName).tag(encoding)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    .frame(width: 140, alignment: .trailing)
+                }
             }
         }
         .font(.system(size: 13))

@@ -8,11 +8,10 @@ import TableProPluginKit
 
 // MARK: - Export Mode
 
-/// Defines the export mode: either exporting database tables or in-memory query results.
+/// Defines the export mode: either exporting database tables or the rows of a result set.
 enum ExportMode {
     case tables(connection: DatabaseConnection, preselectedTables: Set<String>)
-    case queryResults(connection: DatabaseConnection, tableRows: TableRows, suggestedFileName: String)
-    case streamingQuery(connection: DatabaseConnection, query: String, suggestedFileName: String)
+    case resultSet(connection: DatabaseConnection, selection: ExportRowSelection, suggestedFileName: String)
 }
 
 // MARK: - Export Configuration

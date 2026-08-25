@@ -29,6 +29,21 @@ enum SidebarContextMenuLogic {
         return !isReadOnlyKind(clickedTable?.type)
     }
 
+    /// The item is offered for a real table on a vendor that has a duplicate plan builder. A type
+    /// without one is refused here rather than at the server, and phase-by-phase vendor support
+    /// follows the builder registry on its own.
+    static func duplicateVisible(clickedTable: TableInfo?, databaseType: DatabaseType) -> Bool {
+        guard let clickedTable, !isReadOnlyKind(clickedTable.type) else { return false }
+        return DuplicatePlanBuilder.builder(for: databaseType) != nil
+    }
+
+    /// Duplicating a batch needs its own progress and rollback story, so a multi-selection
+    /// disables the item instead of quietly duplicating the row that happened to be clicked.
+    static func duplicateEnabled(clickedTable: TableInfo?, selectedTables: Set<TableInfo>) -> Bool {
+        guard clickedTable != nil else { return false }
+        return selectedTables.count <= 1
+    }
+
     static func truncateVisible(clickedTable: TableInfo?) -> Bool {
         !isReadOnlyKind(clickedTable?.type)
     }
@@ -62,6 +77,13 @@ struct SidebarContextMenu: View {
     let onBatchToggleDelete: ([String]) -> Void
     let coordinator: MainContentCoordinator?
     var activateBeforeAction: (@MainActor () async -> Void)?
+
+    /// The clicked node's own connection type and duplicate action. The tree spans every saved
+    /// connection, so neither may be read from the window this menu happens to live in: a node
+    /// under another connection would be gated against the wrong dialect and duplicated on the
+    /// wrong server.
+    var duplicateDatabaseType: DatabaseType?
+    var onDuplicateTable: (() -> Void)?
 
     private var hasSelection: Bool {
         SidebarContextMenuLogic.hasSelection(selectedTables: selectedTables, clickedTable: clickedTable)
@@ -116,6 +138,26 @@ struct SidebarContextMenu: View {
                         coordinator?.openTableTab(clickedTable, showStructure: true, activateGridFocus: true)
                     }
                 }
+            }
+
+            if let duplicateDatabaseType, let onDuplicateTable,
+               SidebarContextMenuLogic.duplicateVisible(
+                   clickedTable: clickedTable,
+                   databaseType: duplicateDatabaseType
+               ) {
+                let canDuplicate = SidebarContextMenuLogic.duplicateEnabled(
+                    clickedTable: clickedTable,
+                    selectedTables: selectedTables
+                )
+                Button("Duplicate Table...") {
+                    onDuplicateTable()
+                }
+                .disabled(isReadOnly || !canDuplicate)
+                .help(
+                    canDuplicate
+                        ? String(localized: "Copy this table's structure, and its rows if you ask for them.")
+                        : String(localized: "Select a single table to duplicate.")
+                )
             }
         }
 

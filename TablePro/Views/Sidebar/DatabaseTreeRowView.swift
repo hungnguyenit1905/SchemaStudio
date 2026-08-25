@@ -16,6 +16,7 @@ struct DatabaseTreeRowActions {
     let refreshDatabase: (String) -> Void
     let openDataTransfer: (String) -> Void
     let openDataGeneration: (String) -> Void
+    let openDuplicateTable: (DatabaseTreeTableRef) -> Void
     let refreshObjects: (_ database: String, _ schema: String?) -> Void
     let showRoutineDDL: (RoutineInfo) -> Void
     let batchToggleTruncate: (_ connectionId: UUID, _ tableNames: [String]) -> Void
@@ -221,7 +222,9 @@ struct DatabaseTreeRowView: View {
                 onBatchToggleTruncate: { actions.batchToggleTruncate(ref.connectionId, $0) },
                 onBatchToggleDelete: { actions.batchToggleDelete(ref.connectionId, $0) },
                 coordinator: actions.coordinator,
-                activateBeforeAction: { await actions.activate(ref) }
+                activateBeforeAction: { await actions.activate(ref) },
+                duplicateDatabaseType: context.databaseType,
+                onDuplicateTable: { actions.openDuplicateTable(ref) }
             )
             Divider()
             Button(String(localized: "Remove from Recent")) {
@@ -261,7 +264,9 @@ struct DatabaseTreeRowView: View {
                 onBatchToggleTruncate: { actions.batchToggleTruncate(ref.connectionId, $0) },
                 onBatchToggleDelete: { actions.batchToggleDelete(ref.connectionId, $0) },
                 coordinator: actions.coordinator,
-                activateBeforeAction: { await actions.activate(ref) }
+                activateBeforeAction: { await actions.activate(ref) },
+                duplicateDatabaseType: context.databaseType,
+                onDuplicateTable: { actions.openDuplicateTable(ref) }
             )
         case .routine(let ref):
             RoutineContextMenu(routine: ref.routine, onShowDDL: actions.showRoutineDDL)

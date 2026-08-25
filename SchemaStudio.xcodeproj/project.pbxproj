@@ -53,7 +53,9 @@
 		5A86F001A00000000 /* TableProPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A860000100000000 /* TableProPluginKit.framework */; };
 		5A86F001D00000000 /* JSONImport.tableplugin in Copy Plug-Ins (12 items) */ = {isa = PBXBuildFile; fileRef = 5A86F001100000000 /* JSONImport.tableplugin */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		5A86F003A00000000 /* TableProPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A860000100000000 /* TableProPluginKit.framework */; };
+		5A86F103A00000000 /* TableProPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A860000100000000 /* TableProPluginKit.framework */; };
 		5A86F003D00000000 /* CSVImport.tableplugin in Copy Plug-Ins (12 items) */ = {isa = PBXBuildFile; fileRef = 5A86F003100000000 /* CSVImport.tableplugin */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		5A86F103D00000000 /* XLSXImport.tableplugin in Copy Plug-Ins (12 items) */ = {isa = PBXBuildFile; fileRef = 5A86F103100000000 /* XLSXImport.tableplugin */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		5A87A000A00000000 /* TableProPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A860000100000000 /* TableProPluginKit.framework */; };
 		5ABBED742FB55E1400A78382 /* TableProPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A860000100000000 /* TableProPluginKit.framework */; };
 		5ABBED802FB55E1400A78382 /* CSVInspectorPlugin.tableplugin in Copy Plug-Ins (12 items) */ = {isa = PBXBuildFile; fileRef = 5ABBED792FB55E1400A78382 /* CSVInspectorPlugin.tableplugin */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -338,6 +340,7 @@
 				5A86F000D00000000 /* SQLImport.tableplugin in Copy Plug-Ins (12 items) */,
 				5A86F001D00000000 /* JSONImport.tableplugin in Copy Plug-Ins (12 items) */,
 				5A86F003D00000000 /* CSVImport.tableplugin in Copy Plug-Ins (12 items) */,
+				5A86F103D00000000 /* XLSXImport.tableplugin in Copy Plug-Ins (12 items) */,
 				5ABBED802FB55E1400A78382 /* CSVInspectorPlugin.tableplugin in Copy Plug-Ins (12 items) */,
 			);
 			name = "Copy Plug-Ins (12 items)";
@@ -390,6 +393,7 @@
 		5A86F000100000000 /* SQLImport.tableplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SQLImport.tableplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A86F001100000000 /* JSONImport.tableplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JSONImport.tableplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A86F003100000000 /* CSVImport.tableplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CSVImport.tableplugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A86F103100000000 /* XLSXImport.tableplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XLSXImport.tableplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A87A000100000000 /* CassandraDriver.tableplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CassandraDriver.tableplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		5ABBED792FB55E1400A78382 /* CSVInspectorPlugin.tableplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CSVInspectorPlugin.tableplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		5ABC147400000000000003 /* BeancountDriver.tableplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BeancountDriver.tableplugin; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -635,12 +639,39 @@
 			);
 			target = 5ABCC5A62F43856700EAF3FC /* TableProTests */;
 		};
-		5A86F003900000000 /* Exceptions for "Plugins/CSVImportPlugin" folder in "CSVImport" target */ = {
+		5A86F103900000000 /* Exceptions for "Plugins/XLSXImportPlugin" folder in "XLSXImport" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 5A86F103000000000 /* XLSXImport */;
+		};5A86F003900000000 /* Exceptions for "Plugins/CSVImportPlugin" folder in "CSVImport" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 5A86F003000000000 /* CSVImport */;
+		};
+		5A86A004900000000 /* Exceptions for "Plugins/CSVExportPlugin" folder in "TableProTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				CSVExportEncoder.swift,
+			);
+			target = 5ABCC5A62F43856700EAF3FC /* TableProTests */;
+		};
+		5A86F104900000000 /* Exceptions for "Plugins/XLSXImportPlugin" folder in "TableProTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				XLSXCellDecoder.swift,
+				XLSXCellReference.swift,
+				XLSXImportOptions.swift,
+				XLSXRowMapper.swift,
+				XLSXDateConverter.swift,
+				XLSXWorkbookReader.swift,
+				XLSXXmlSafety.swift,
+				ZipArchiveReader.swift,
+			);
+			target = 5ABCC5A62F43856700EAF3FC /* TableProTests */;
 		};
 		5A86F004900000000 /* Exceptions for "Plugins/CSVImportPlugin" folder in "TableProTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -821,6 +852,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				5A86A000900000000 /* Exceptions for "Plugins/CSVExportPlugin" folder in "CSVExport" target */,
+				5A86A004900000000 /* Exceptions for "Plugins/CSVExportPlugin" folder in "TableProTests" target */,
 			);
 			path = Plugins/CSVExportPlugin;
 			sourceTree = "<group>";
@@ -874,7 +906,15 @@
 			path = Plugins/JSONImportPlugin;
 			sourceTree = "<group>";
 		};
-		5A86F003500000000 /* Plugins/CSVImportPlugin */ = {
+		5A86F103500000000 /* Plugins/XLSXImportPlugin */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				5A86F103900000000 /* Exceptions for "Plugins/XLSXImportPlugin" folder in "XLSXImport" target */,
+				5A86F104900000000 /* Exceptions for "Plugins/XLSXImportPlugin" folder in "TableProTests" target */,
+			);
+			path = Plugins/XLSXImportPlugin;
+			sourceTree = "<group>";
+		};5A86F003500000000 /* Plugins/CSVImportPlugin */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				5A86F003900000000 /* Exceptions for "Plugins/CSVImportPlugin" folder in "CSVImport" target */,
@@ -1132,7 +1172,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		5A86F003300000000 /* Frameworks */ = {
+		5A86F103300000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5A86F103A00000000 /* TableProPluginKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};5A86F003300000000 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1289,6 +1336,7 @@
 				5A86F000500000000 /* Plugins/SQLImportPlugin */,
 				5A86F001500000000 /* Plugins/JSONImportPlugin */,
 				5A86F003500000000 /* Plugins/CSVImportPlugin */,
+				5A86F103500000000 /* Plugins/XLSXImportPlugin */,
 				5ABCC5A82F43856700EAF3FC /* TableProTests */,
 				5AF00A122FB9000000000001 /* TableProUITests */,
 				5A32BC012F9D5F1300BAEB5F /* mcp-server */,
@@ -1325,6 +1373,7 @@
 				5A86F000100000000 /* SQLImport.tableplugin */,
 				5A86F001100000000 /* JSONImport.tableplugin */,
 				5A86F003100000000 /* CSVImport.tableplugin */,
+				5A86F103100000000 /* XLSXImport.tableplugin */,
 				5ABCC5A72F43856700EAF3FC /* TableProTests.xctest */,
 				5AF00A102FB9000000000001 /* TableProUITests.xctest */,
 				5AEA8B2A2F6808270040461A /* EtcdDriverPlugin.tableplugin */,
@@ -1912,7 +1961,26 @@
 			productReference = 5A86F001100000000 /* JSONImport.tableplugin */;
 			productType = "com.apple.product-type.bundle";
 		};
-		5A86F003000000000 /* CSVImport */ = {
+		5A86F103000000000 /* XLSXImport */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5A86F103800000000 /* Build configuration list for PBXNativeTarget "XLSXImport" */;
+			buildPhases = (
+				5A86F103200000000 /* Sources */,
+				5A86F103300000000 /* Frameworks */,
+				5A86F103400000000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				5A86F103500000000 /* Plugins/XLSXImportPlugin */,
+			);
+			name = XLSXImport;
+			productName = XLSXImport;
+			productReference = 5A86F103100000000 /* XLSXImport.tableplugin */;
+			productType = "com.apple.product-type.bundle";
+		};5A86F003000000000 /* CSVImport */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 5A86F003800000000 /* Build configuration list for PBXNativeTarget "CSVImport" */;
 			buildPhases = (
@@ -2324,6 +2392,7 @@
 				5A86F000000000000 /* SQLImport */,
 				5A86F001000000000 /* JSONImport */,
 				5A86F003000000000 /* CSVImport */,
+				5A86F103000000000 /* XLSXImport */,
 				5ABCC5A62F43856700EAF3FC /* TableProTests */,
 				5AF00A142FB9000000000001 /* TableProUITests */,
 				5AEA8B292F6808270040461A /* EtcdDriverPlugin */,
@@ -2490,7 +2559,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		5A86F003400000000 /* Resources */ = {
+		5A86F103400000000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};5A86F003400000000 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -2755,7 +2830,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		5A86F003200000000 /* Sources */ = {
+		5A86F103200000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};5A86F003200000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -4461,7 +4542,29 @@
 			};
 			name = Release;
 		};
-		5A86F003600000000 /* Debug */ = {
+		5A86F103600000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BSHY2NGYUK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Plugins/XLSXImportPlugin/Info.plist;
+				INFOPLIST_KEY_NSPrincipalClass = "$(PRODUCT_MODULE_NAME).XLSXImportPlugin";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.TablePro.XLSXImportPlugin;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.9;
+				WRAPPER_EXTENSION = tableplugin;
+			};
+			name = Debug;
+		};5A86F003600000000 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -4484,7 +4587,29 @@
 			};
 			name = Debug;
 		};
-		5A86F003700000000 /* Release */ = {
+		5A86F103700000000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BSHY2NGYUK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Plugins/XLSXImportPlugin/Info.plist;
+				INFOPLIST_KEY_NSPrincipalClass = "$(PRODUCT_MODULE_NAME).XLSXImportPlugin";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.TablePro.XLSXImportPlugin;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.9;
+				WRAPPER_EXTENSION = tableplugin;
+			};
+			name = Release;
+		};5A86F003700000000 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -5340,7 +5465,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5A86F003800000000 /* Build configuration list for PBXNativeTarget "CSVImport" */ = {
+		5A86F103800000000 /* Build configuration list for PBXNativeTarget "XLSXImport" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A86F103600000000 /* Debug */,
+				5A86F103700000000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};5A86F003800000000 /* Build configuration list for PBXNativeTarget "CSVImport" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5A86F003600000000 /* Debug */,

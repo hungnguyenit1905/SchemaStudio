@@ -138,6 +138,75 @@ struct TableQueryBuilder {
         return query
     }
 
+    func buildUnpaginatedQuery(
+        tableName: String,
+        schemaName: String? = nil,
+        filters: [TableFilter] = [],
+        logicMode: FilterLogicMode = .and,
+        sortState: SortState? = nil,
+        columns: [String] = [],
+        columnTypes: [ColumnType] = [],
+        selectColumns: [String]? = nil
+    ) -> String? {
+        guard !driverComposesQueries(
+            tableName: tableName,
+            schemaName: schemaName,
+            filters: filters,
+            logicMode: logicMode,
+            sortState: sortState,
+            columns: columns,
+            columnTypes: columnTypes,
+            selectColumns: selectColumns
+        ) else { return nil }
+        guard let dialect else { return nil }
+
+        let quotedTable = qualifiedTable(tableName, schema: schemaName)
+        var query = "SELECT \(selectClause(selectColumns)) FROM \(quotedTable)"
+
+        let activeFilters = filters.filter { $0.isEnabled && !$0.columnName.isEmpty }
+        let filterGen = FilterSQLGenerator(
+            dialect: dialect, columns: columns, columnTypes: columnTypes, quoteIdentifier: dialectQuote
+        )
+        let whereClause = filterGen.generateWhereClause(from: activeFilters, logicMode: logicMode)
+        if !whereClause.isEmpty {
+            query += " \(whereClause)"
+        }
+
+        if let orderBy = buildOrderByClause(sortState: sortState, columns: columns) {
+            query += " \(orderBy)"
+        }
+        return query
+    }
+
+    private func driverComposesQueries(
+        tableName: String,
+        schemaName: String?,
+        filters: [TableFilter],
+        logicMode: FilterLogicMode,
+        sortState: SortState?,
+        columns: [String],
+        columnTypes: [ColumnType],
+        selectColumns: [String]?
+    ) -> Bool {
+        guard let pluginDriver else { return false }
+        let sortCols = sortColumnsAsTuples(sortState)
+        let filterTuples = filters
+            .filter { $0.isEnabled && !$0.columnName.isEmpty }
+            .map(\.asPluginFilterTuple)
+        if pluginDriver.buildFilteredQuery(
+            table: tableName, schema: schemaName, filters: filterTuples,
+            logicMode: logicMode == .and ? "and" : "or",
+            sortColumns: sortCols, columns: selectColumns ?? columns, limit: 1, offset: 0,
+            columnKinds: pluginColumnKinds(columns: columns, columnTypes: columnTypes)
+        ) != nil {
+            return true
+        }
+        return pluginDriver.buildBrowseQuery(
+            table: tableName, schema: schemaName, sortColumns: sortCols,
+            columns: selectColumns ?? columns, limit: 1, offset: 0
+        ) != nil
+    }
+
     func buildKeyPatternBrowseQuery(
         tableName: String,
         schemaName: String? = nil,

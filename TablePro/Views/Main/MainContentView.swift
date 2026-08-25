@@ -188,6 +188,15 @@ struct MainContentView: View {
                 isPresented: dismissBinding,
                 preselectedScope: coordinator.dataGenerationPreselectedScope
             )
+        case .duplicateTable(let scope, let table):
+            DuplicateTableSheet(
+                isPresented: dismissBinding,
+                scope: scope,
+                databaseType: DatabaseManager.shared.session(for: scope.connectionId)?.connection.type
+                    ?? connection.type,
+                source: DuplicateTableRef(schema: scope.schema, name: table),
+                onCompleted: { result in coordinator.finishDuplicate(result, scope: scope) }
+            )
         case .createDatabase:
             let viewModel = DatabaseSwitcherViewModel(
                 connectionId: connection.id,
@@ -214,26 +223,14 @@ struct MainContentView: View {
             )
         case .exportQueryResults:
             if let tab = coordinator.tabManager.selectedTab {
-                let fileName = tab.tableContext.tableName ?? "query_results"
-                if tab.pagination.hasMoreRows, let baseQuery = tab.pagination.baseQueryForMore {
-                    ExportDialog(
-                        isPresented: dismissBinding,
-                        mode: .streamingQuery(
-                            connection: connectionWithCurrentDatabase,
-                            query: baseQuery,
-                            suggestedFileName: fileName
-                        )
+                ExportDialog(
+                    isPresented: dismissBinding,
+                    mode: .resultSet(
+                        connection: connectionWithCurrentDatabase,
+                        selection: coordinator.makeExportRowSelection(for: tab),
+                        suggestedFileName: tab.tableContext.tableName ?? "query_results"
                     )
-                } else {
-                    ExportDialog(
-                        isPresented: dismissBinding,
-                        mode: .queryResults(
-                            connection: connectionWithCurrentDatabase,
-                            tableRows: coordinator.tabSessionRegistry.tableRows(for: tab.id),
-                            suggestedFileName: fileName
-                        )
-                    )
-                }
+                )
             }
         case .importDialog(let formatId):
             let importDismiss = Binding<Bool>(

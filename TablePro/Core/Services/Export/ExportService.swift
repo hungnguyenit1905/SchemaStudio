@@ -18,6 +18,7 @@ enum ExportError: LocalizedError {
     case fileWriteFailed(String)
     case encodingFailed
     case formatNotFound(String)
+    case resultSetChanged
 
     var errorDescription: String? {
         switch self {
@@ -35,6 +36,8 @@ enum ExportError: LocalizedError {
             return String(localized: "Failed to encode content as UTF-8")
         case .formatNotFound(let formatId):
             return String(format: String(localized: "Export format '%@' not found"), formatId)
+        case .resultSetChanged:
+            return String(localized: "The result set changed while the export was open. Close it and export again.")
         }
     }
 }
@@ -270,6 +273,22 @@ final class ExportService {
         if !result.warnings.isEmpty {
             state.warningMessage = result.warnings.joined(separator: "\n")
         }
+    }
+
+    func exportParameterizedQuery(
+        query: String,
+        parameterValues: [String?],
+        config: ExportConfiguration,
+        to url: URL
+    ) async throws {
+        guard let driver else {
+            throw ExportError.exportFailed("No database connection")
+        }
+        let parameters: [Any?] = parameterValues.map { $0 as Any? }
+        let result = try await driver.executeUserQuery(query: query, rowCap: nil, parameters: parameters)
+        var tableRows = TableRows(columns: result.columns, columnTypes: result.columnTypes)
+        tableRows.appendPage(result.rows, startingAt: 0)
+        try await exportQueryResults(tableRows: tableRows, config: config, to: url)
     }
 
     func exportStreamingQuery(

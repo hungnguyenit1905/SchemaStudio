@@ -52,6 +52,8 @@ final class CSVExportPlugin: ExportFormatPlugin, SettablePlugin {
         }
 
         let lineBreak = settings.lineBreak.value
+        var encoder = CSVExportEncoder(encoding: settings.encoding)
+        try fileHandle.write(contentsOf: encoder.preamble())
 
         for (index, table) in tables.enumerated() {
             try progress.checkCancellation()
@@ -60,7 +62,7 @@ final class CSVExportPlugin: ExportFormatPlugin, SettablePlugin {
 
             if tables.count > 1 {
                 let sanitizedName = PluginExportUtilities.sanitizeForSQLComment(table.qualifiedName)
-                try fileHandle.write(contentsOf: "# Table: \(sanitizedName)\n".toUTF8Data())
+                try fileHandle.write(contentsOf: encoder.encode("# Table: \(sanitizedName)\n"))
             }
 
             var isFirstBatch = true
@@ -77,19 +79,19 @@ final class CSVExportPlugin: ExportFormatPlugin, SettablePlugin {
                         let headerLine = columns
                             .map { escapeCSVField($0, options: settings) }
                             .joined(separator: settings.delimiter.actualValue)
-                        try fileHandle.write(contentsOf: (headerLine + lineBreak).toUTF8Data())
+                        try fileHandle.write(contentsOf: encoder.encode(headerLine + lineBreak))
                     }
                     isFirstBatch = false
                 case .rows(let rows):
                     for row in rows {
-                        try writeCSVRow(row, options: settings, to: fileHandle)
+                        try writeCSVRow(row, options: settings, encoder: encoder, to: fileHandle)
                         progress.incrementRow()
                     }
                 }
             }
 
             if index < tables.count - 1 {
-                try fileHandle.write(contentsOf: "\(lineBreak)\(lineBreak)".toUTF8Data())
+                try fileHandle.write(contentsOf: encoder.encode("\(lineBreak)\(lineBreak)"))
             }
         }
 
@@ -106,6 +108,7 @@ final class CSVExportPlugin: ExportFormatPlugin, SettablePlugin {
     private func writeCSVRow(
         _ row: [PluginCellValue],
         options: CSVExportOptions,
+        encoder: CSVExportEncoder,
         to fileHandle: FileHandle
     ) throws {
         let delimiter = options.delimiter.actualValue
@@ -146,7 +149,7 @@ final class CSVExportPlugin: ExportFormatPlugin, SettablePlugin {
             return escapeCSVField(processed, options: options, originalHadLineBreaks: hadLineBreaks)
         }.joined(separator: delimiter)
 
-        try fileHandle.write(contentsOf: (rowLine + lineBreak).toUTF8Data())
+        try fileHandle.write(contentsOf: encoder.encode(rowLine + lineBreak))
     }
 
     private func escapeCSVField(

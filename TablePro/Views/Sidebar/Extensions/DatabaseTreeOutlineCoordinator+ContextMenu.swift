@@ -88,6 +88,16 @@ extension DatabaseTreeOutlineCoordinator {
                     )
                 )
             },
+            openDuplicateTable: { [weak self] ref in
+                self?.mainCoordinator?.openDuplicateTableSheet(
+                    ref.table,
+                    scope: DatabaseScope(
+                        connectionId: ref.connectionId,
+                        database: ref.database,
+                        schema: ref.schema ?? ref.table.schema
+                    )
+                )
+            },
             refreshObjects: { [weak self] database, schema in
                 self?.refreshObjects(database: database, schema: schema, connectionId: nodeConnectionId)
             },
