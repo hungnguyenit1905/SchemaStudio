@@ -66,6 +66,7 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
     // MARK: - Observers
 
     private var connectionStatusCancellable: AnyCancellable?
+    private var connectionRenameCancellable: AnyCancellable?
 
     // MARK: - Init
 
@@ -98,6 +99,7 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
         self.windowTitle = WindowTitleResolver.resolveTitle(
             payload: payload,
             databaseType: titleConnection?.type,
+            connectionName: titleConnection?.name,
             queryLanguageName: queryLanguageName
         )
         if let titleConnection {
@@ -122,11 +124,15 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
             if payload?.intent == .newEmptyTab,
                let tabTitle = state.coordinator.tabManager.selectedTab?.title,
                !tabTitle.isBlank {
-                self.windowTitle = tabTitle
+                self.windowTitle = WindowTitleResolver.qualified(
+                    tabTitle, connectionName: titleConnection?.name
+                )
             }
         }
 
         super.init(nibName: nil, bundle: nil)
+
+        observeConnectionRenames()
     }
 
     @available(*, unavailable)
@@ -218,6 +224,56 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
 
     private func removeObservers() {
         connectionStatusCancellable = nil
+    }
+
+    /// Subscribed from `init`, not `viewWillAppear`: a background tab window
+    /// never runs its appearance lifecycle, so a rename would otherwise only
+    /// reach the tab the user happens to be looking at.
+    private func observeConnectionRenames() {
+        connectionRenameCancellable = AppEvents.shared.connectionUpdated
+            .receive(on: RunLoop.main)
+            .sink { [weak self] updatedId in
+                guard let self, updatedId == nil || updatedId == self.titleConnectionId else { return }
+                self.reapplyConnectionQualifier()
+            }
+    }
+
+    private var titleConnectionId: UUID? {
+        payload?.connectionId ?? currentSession?.connection.id
+    }
+
+    private func reapplyConnectionQualifier() {
+        guard let connectionId = titleConnectionId else { return }
+        let connection = ConnectionStorage.shared.loadConnection(id: connectionId)
+            ?? DatabaseManager.shared.activeSessions[connectionId]?.connection
+            ?? currentSession?.connection
+            ?? payloadConnection
+        guard let connection else { return }
+
+        let queryLanguageName = PluginManager.shared.queryLanguageName(for: connection.type)
+        guard let tabManager = sessionState?.coordinator.tabManager else {
+            windowTitle = WindowTitleResolver.resolveTitle(
+                payload: payload,
+                databaseType: connection.type,
+                connectionName: connection.name,
+                queryLanguageName: queryLanguageName
+            )
+            windowSubtitle = WindowTitleResolver.resolveSubtitle(payload: payload, connection: connection)
+            return
+        }
+
+        let selectedTab = tabManager.selectedTab
+        if selectedTab == nil, tabManager.tabs.isEmpty {
+            windowTitle = connection.name
+        } else {
+            windowTitle = WindowTitleResolver.resolveTitle(
+                tab: selectedTab,
+                connection: connection,
+                connectionName: connection.name,
+                queryLanguageName: queryLanguageName
+            )
+        }
+        windowSubtitle = WindowTitleResolver.resolveSubtitle(tab: selectedTab, connection: connection)
     }
 
     // MARK: - Toolbar

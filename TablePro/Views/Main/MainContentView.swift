@@ -409,7 +409,6 @@ struct MainContentView: View {
             ) { _ in
                 handleConnectionStatusChange()
             }
-
             .onChange(of: coordinator.windowSidebarState.selectedTables) { oldTables, newTables in
                 guard !coordinator.isTearingDown else {
                     Self.lifecycleLogger
