@@ -11,6 +11,7 @@ import Foundation
 enum ValidationWarning: Sendable, Hashable {
     case uncheckedConstraint(column: String, expression: String)
     case guessedValues(column: String)
+    case affixClearedByCheck(column: String)
 
     var message: String {
         switch self {
@@ -25,6 +26,13 @@ enum ValidationWarning: Sendable, Hashable {
                 format: String(localized: "The values for %@ are a guess. Replace them with the ones your app uses."),
                 column
             )
+        case .affixClearedByCheck(let column):
+            return String(
+                format: String(
+                    localized: "A check replaced %@'s generator, so its prefix and suffix were cleared: they would have broken the check."
+                ),
+                column
+            )
         }
     }
 
@@ -32,6 +40,7 @@ enum ValidationWarning: Sendable, Hashable {
         switch self {
         case .uncheckedConstraint(let column, _): return column
         case .guessedValues(let column): return column
+        case .affixClearedByCheck(let column): return column
         }
     }
 }

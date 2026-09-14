@@ -677,6 +677,14 @@ final class PluginDriverAdapter: DatabaseDriver, SchemaSwitchable {
         pluginDriver.foreignKeyEnableStatements()
     }
 
+    func triggerDisableStatements(table: String, schema: String?) -> [String]? {
+        pluginDriver.triggerDisableStatements(table: table, schema: schema)
+    }
+
+    func triggerEnableStatements(table: String, schema: String?) -> [String]? {
+        pluginDriver.triggerEnableStatements(table: table, schema: schema)
+    }
+
     // MARK: - Maintenance Operations
 
     func supportedMaintenanceOperations() -> [String]? {

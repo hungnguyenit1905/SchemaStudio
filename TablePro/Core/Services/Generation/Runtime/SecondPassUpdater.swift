@@ -28,7 +28,18 @@ struct SecondPassUpdater {
         self.poolLimit = poolLimit
     }
 
-    func fill(table: TablePlan, runSeed: UInt64) async throws -> Outcome {
+    /// `harvestedOwnKeys` is the set of primary key rows the engine harvested
+    /// while inserting this table, projected onto its own primary key columns.
+    /// `nil` means no driver in this run harvested them: re-reading the whole
+    /// table would find rows this run did not write, so the pass only re-reads
+    /// when `table.emptyFirst` guarantees every row on the server belongs to this
+    /// run. Otherwise it leaves the column null and says why, rather than risk
+    /// updating a row a user already had.
+    func fill(
+        table: TablePlan,
+        runSeed: UInt64,
+        harvestedOwnKeys: [[PluginCellValue]]?
+    ) async throws -> Outcome {
         var outcome = Outcome(rowsUpdated: 0, warnings: [])
         guard !table.deferredColumns.isEmpty else { return outcome }
         guard !table.primaryKeyColumns.isEmpty else {
@@ -47,7 +58,26 @@ struct SecondPassUpdater {
             return outcome
         }
 
-        let ownKeys = try await keys(of: table.reference, columns: table.primaryKeyColumns)
+        let ownKeys: [[PluginCellValue]]
+        if let harvestedOwnKeys {
+            ownKeys = harvestedOwnKeys
+        } else if table.emptyFirst {
+            ownKeys = try await keys(of: table.reference, columns: table.primaryKeyColumns)
+        } else {
+            outcome.warnings.append(
+                GenerationWarning(
+                    column: table.deferredColumns.joined(separator: ", "),
+                    message: String(
+                        format: String(
+                            localized: "%@ cannot safely find the rows this run just wrote, so %@ stays empty rather than risk updating rows it did not create."
+                        ),
+                        table.qualifiedName,
+                        table.deferredColumns.joined(separator: ", ")
+                    )
+                )
+            )
+            return outcome
+        }
         guard !ownKeys.isEmpty else { return outcome }
         if ownKeys.count >= poolLimit {
             outcome.warnings.append(

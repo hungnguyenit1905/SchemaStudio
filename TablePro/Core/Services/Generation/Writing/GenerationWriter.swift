@@ -27,6 +27,11 @@ final class GenerationWriter {
     private var bulkWriter: (any PluginBulkLoadWriter)?
 
     private(set) var rowsWritten: Int
+    /// Every row handed to `append`, whether the server accepted it or
+    /// `continueOnError` let it be skipped. This is what a checkpoint has to
+    /// track, because it is what `GenerationEngine.fastForward` replays: the
+    /// generator already produced these indices and must not produce them again.
+    private(set) var rowsConsumed: Int
     private(set) var failedBatches: [String] = []
     private(set) var harvestedRows: [[PluginCellValue]]?
     private(set) var harvestSupported: Bool
@@ -51,6 +56,7 @@ final class GenerationWriter {
         self.onBatchWritten = onBatchWritten
         usesBulkLoad = strategy == .bulk
         rowsWritten = rowsAlreadyWritten
+        rowsConsumed = rowsAlreadyWritten
         splitter = Self.splitter(
             limits: limits,
             maxBindParameters: maxBindParameters,
@@ -100,11 +106,11 @@ final class GenerationWriter {
         let batch = pending
         pending.removeAll(keepingCapacity: true)
         splitter.reset()
+        rowsConsumed += batch.count
 
         do {
             try await write(batch)
             rowsWritten += batch.count
-            await reportProgress()
         } catch is CancellationError {
             throw CancellationError()
         } catch {
@@ -113,6 +119,7 @@ final class GenerationWriter {
             }
             failedBatches.append(error.localizedDescription)
         }
+        await reportProgress()
     }
 
     /// Ends the table. A bulk stream reports what the server accepted, which is
@@ -153,9 +160,14 @@ final class GenerationWriter {
     /// abort discards every chunk already streamed. Reporting per chunk would tell
     /// a resumed run that rows exist which the abort threw away, and it would skip
     /// them. A bulk table therefore reports once, after the stream ended.
+    ///
+    /// Reports `rowsConsumed`, not `rowsWritten`: a batch `continueOnError` let
+    /// through unwritten is still a batch the generator will never produce again,
+    /// so the checkpoint has to track the generator's position rather than the
+    /// server's row count.
     private func reportProgress() async {
         guard !usesBulkLoad || bulkWriter == nil else { return }
-        await onBatchWritten?(rowsWritten)
+        await onBatchWritten?(rowsConsumed)
     }
 
     private func write(_ batch: [[PluginCellValue]]) async throws {

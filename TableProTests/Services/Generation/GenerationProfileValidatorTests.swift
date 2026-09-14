@@ -143,6 +143,32 @@ struct GenerationProfileValidatorTests {
         })
     }
 
+    @Test("A unique column's domain is checked against the non-null rows, not every row")
+    func uniqueDomainAccountsForNullPercent() {
+        let schema = [Fixtures.table("t", columns: [
+            PluginColumnInfo(name: "code", dataType: "integer", isNullable: true)
+        ])]
+        func profile(nullPercent: Int) -> GenerationProfile {
+            Fixtures.profile(tables: [
+                Fixtures.tableProfile("t", rowCount: 100, columns: [
+                    GenerationColumnProfile(
+                        column: "code",
+                        generator: "Integer",
+                        params: .object(["min": .int(1), "max": .int(60)]),
+                        common: CommonParams(nullPercent: nullPercent, unique: true)
+                    )
+                ])
+            ])
+        }
+
+        // 60 distinct values for 100 rows fails outright, but with half the rows
+        // exempt as null only 50 need to be distinct, which the domain covers.
+        #expect(validate(profile: profile(nullPercent: 0), schema: schema).contains {
+            if case .uniqueDomainTooSmall = $0 { return true } else { return false }
+        })
+        #expect(validate(profile: profile(nullPercent: 50), schema: schema).isEmpty)
+    }
+
     @Test("A generator with no computable domain skips the cardinality check")
     func uncomputableDomainIsSkipped() {
         let schema = [Fixtures.table("t", columns: [
@@ -197,6 +223,21 @@ struct GenerationProfileValidatorTests {
         #expect(validate(profile: profile, schema: schema, existingRowCount: { _ in 25 }).isEmpty)
     }
 
+    @Test("An unknown parent row count blocks nothing, since unknown is never treated as empty")
+    func unknownParentRowCountIsNonBlocking() {
+        let schema = [Fixtures.table(
+            "orders",
+            columns: [PluginColumnInfo(name: "customer_id", dataType: "bigint", isNullable: false)],
+            foreignKeys: [Fixtures.foreignKey(from: "customer_id", to: "customers")]
+        )]
+        let profile = Fixtures.profile(tables: [
+            Fixtures.tableProfile("orders", columns: [
+                GenerationColumnProfile(column: "customer_id", generator: "Reference")
+            ])
+        ])
+        #expect(validate(profile: profile, schema: schema, existingRowCount: { _ in nil }).isEmpty)
+    }
+
     @Test("A parent inside the run is accepted even when it is empty now")
     func parentInsideTheRun() {
         let profile = Fixtures.autoProfile(for: Fixtures.shopSchema)
@@ -229,6 +270,35 @@ struct GenerationProfileValidatorTests {
         #expect(validate(profile: profile, schema: schema).contains {
             if case .invalidParameters = $0 { return true } else { return false }
         })
+    }
+
+    @Test("A table named twice in the profile is refused rather than silently deduplicated")
+    func duplicateTableIsRefused() {
+        let schema = [Fixtures.table("t", columns: [PluginColumnInfo(name: "a", dataType: "text")])]
+        let profile = Fixtures.profile(tables: [
+            Fixtures.tableProfile("t", columns: [
+                GenerationColumnProfile(column: "a", generator: "LoremWords")
+            ]),
+            Fixtures.tableProfile("t", columns: [
+                GenerationColumnProfile(column: "a", generator: "LoremWords")
+            ])
+        ])
+        #expect(validate(profile: profile, schema: schema).contains(.duplicateTableReference(table: "public.t")))
+    }
+
+    @Test("A column named twice for the same table is refused rather than silently deduplicated")
+    func duplicateColumnIsRefused() {
+        let schema = [Fixtures.table("t", columns: [PluginColumnInfo(name: "a", dataType: "text")])]
+        let profile = Fixtures.profile(tables: [
+            Fixtures.tableProfile("t", columns: [
+                GenerationColumnProfile(column: "a", generator: "LoremWords"),
+                GenerationColumnProfile(column: "a", generator: "LoremWords")
+            ])
+        ])
+        #expect(
+            validate(profile: profile, schema: schema)
+                .contains(.duplicateColumnReference(table: "public.t", column: "a"))
+        )
     }
 
     @Test("A column the table no longer has is reported")
@@ -273,6 +343,41 @@ struct GenerationProfileValidatorTests {
         #expect(description.contains("1"))
         #expect(error.recoverySuggestion?.contains("code") == true)
     }
+
+    @Test("A Decimal generator on a text column is refused as unsuitable")
+    func decimalOnTextColumnIsRefused() {
+        let schema = [Fixtures.table("t", columns: [
+            PluginColumnInfo(name: "code", dataType: "varchar(4)", isNullable: false)
+        ])]
+        let profile = Fixtures.profile(tables: [
+            Fixtures.tableProfile("t", columns: [
+                GenerationColumnProfile(column: "code", generator: "Decimal")
+            ])
+        ])
+        #expect(
+            validate(profile: profile, schema: schema)
+                .contains(.generatorUnsuitableForColumn(table: "public.t", column: "code", generator: "Decimal"))
+        )
+    }
+
+    @Test("A Decimal generator on a numeric column is not flagged unsuitable")
+    func decimalOnNumericColumnIsAllowed() {
+        let schema = [Fixtures.table("t", columns: [
+            PluginColumnInfo(name: "price", dataType: "numeric(10,2)", isNullable: false)
+        ])]
+        let profile = Fixtures.profile(tables: [
+            Fixtures.tableProfile("t", columns: [
+                GenerationColumnProfile(column: "price", generator: "Decimal")
+            ])
+        ])
+        #expect(
+            !validate(profile: profile, schema: schema)
+                .contains { error in
+                    if case .generatorUnsuitableForColumn = error { return true }
+                    return false
+                }
+        )
+    }
 }
 
 enum GenerationErrorSamples {
@@ -288,6 +393,7 @@ enum GenerationErrorSamples {
         .tableDependencyCycle(tables: ["a", "b"]),
         .columnDependencyCycle(table: "t", columns: ["a", "b"]),
         .unsupportedProfileVersion(found: 9, supported: 1),
-        .unknownColumn(table: "t", column: "c")
+        .unknownColumn(table: "t", column: "c"),
+        .generatorUnsuitableForColumn(table: "t", column: "c", generator: "Decimal")
     ]
 }

@@ -47,6 +47,10 @@ final class RelativeDateTimeGenerator: ValueGenerator {
     private let emits: DateTimeShape
     private let seed: UInt64
     private var rng: SplitMix64
+    private var runtimeWarnings: [GenerationWarning] = []
+    private var overflowWarningIssued = false
+
+    var warnings: [GenerationWarning] { runtimeWarnings }
 
     private enum DateTimeShape {
         case instant
@@ -104,7 +108,7 @@ final class RelativeDateTimeGenerator: ValueGenerator {
             }
             return .null
         }
-        let seconds = baseSeconds + rng.nextInt(in: offsetRange) * unitSeconds
+        let seconds = clampedSeconds(base: baseSeconds, offset: rng.nextInt(in: offsetRange))
         switch emits {
         case .instant:
             return .timestamp(Date(timeIntervalSince1970: TimeInterval(seconds)))
@@ -118,6 +122,45 @@ final class RelativeDateTimeGenerator: ValueGenerator {
 
     func reset() {
         rng = SplitMix64(seed: seed)
+        runtimeWarnings.removeAll(keepingCapacity: true)
+        overflowWarningIssued = false
+    }
+
+    /// The multiplication and the addition are both plain `Int` arithmetic, so a
+    /// large offset, or a large unit multiplier against a base near the end of
+    /// `Int`'s representable range, would otherwise trap. Both operations run
+    /// through the reporting-overflow form and clamp to `Int.min...Int.max`,
+    /// which is the representable range every downstream shape (`Date`,
+    /// `CivilDate`, epoch text) is built from.
+    private func clampedSeconds(base: Int, offset: Int) -> Int {
+        let (product, productOverflowed) = offset.multipliedReportingOverflow(by: unitSeconds)
+        guard !productOverflowed else {
+            warnAboutOverflow()
+            return (offset < 0) != (unitSeconds < 0) ? Int.min : Int.max
+        }
+        let (sum, sumOverflowed) = base.addingReportingOverflow(product)
+        guard !sumOverflowed else {
+            warnAboutOverflow()
+            return product < 0 ? Int.min : Int.max
+        }
+        return sum
+    }
+
+    private func warnAboutOverflow() {
+        guard !overflowWarningIssued else { return }
+        overflowWarningIssued = true
+        runtimeWarnings.append(
+            GenerationWarning(
+                column: columnName,
+                message: String(
+                    format: String(
+                        localized: "%@'s offset from %@ overflowed and was clamped to the representable range."
+                    ),
+                    columnName,
+                    baseColumn
+                )
+            )
+        )
     }
 
     /// An integer base is read as a Unix time, which is how a `bigint` column

@@ -88,42 +88,96 @@ final class SQLiteGenerationTestDriver: GenerationDriver, @unchecked Sendable {
         try execute("DELETE FROM \(Self.quote(table.table))")
     }
 
+    /// SQLite's own `RETURNING` clause is what a real driver's
+    /// `insertHarvestingKeys` would use, so this is written the same way a
+    /// production implementation would be: row by row only when a caller asked
+    /// to harvest something, and the batched `VALUES` insert otherwise.
     func insert(
         table: GenerationTableReference,
         columns: [String],
         rows: [[PluginCellValue]],
         harvestColumns: [String]
     ) async throws -> [[PluginCellValue]]? {
-        guard !rows.isEmpty else { return nil }
+        guard !rows.isEmpty else { return harvestColumns.isEmpty ? nil : [] }
         guard !columns.isEmpty else {
-            for _ in rows {
-                try execute("INSERT INTO \(Self.quote(table.table)) DEFAULT VALUES")
+            guard !harvestColumns.isEmpty else {
+                for _ in rows {
+                    try execute("INSERT INTO \(Self.quote(table.table)) DEFAULT VALUES")
+                }
+                return nil
             }
-            return nil
+            let sql = """
+            INSERT INTO \(Self.quote(table.table)) DEFAULT VALUES \
+            RETURNING \(harvestColumns.map(Self.quote).joined(separator: ", "))
+            """
+            var harvested: [[PluginCellValue]] = []
+            for _ in rows {
+                harvested.append(contentsOf: try queryReturningRow(sql, table: table.table, bindings: []))
+            }
+            return harvested
         }
 
         let columnList = columns.map(Self.quote).joined(separator: ", ")
         let tuple = "(\(columns.map { _ in "?" }.joined(separator: ", ")))"
-        let values = rows.map { _ in tuple }.joined(separator: ", ")
-        let sql = "INSERT INTO \(Self.quote(table.table)) (\(columnList)) VALUES \(values)"
 
+        guard !harvestColumns.isEmpty else {
+            let values = rows.map { _ in tuple }.joined(separator: ", ")
+            let sql = "INSERT INTO \(Self.quote(table.table)) (\(columnList)) VALUES \(values)"
+
+            var statement: OpaquePointer?
+            guard sqlite3_prepare_v2(handle, sql, -1, &statement, nil) == SQLITE_OK else {
+                throw SQLiteError(message: "\(lastErrorMessage) while preparing an insert into \(table.table)")
+            }
+            defer { sqlite3_finalize(statement) }
+
+            var index: Int32 = 1
+            for row in rows {
+                for value in row {
+                    bind(value, to: statement, at: index)
+                    index += 1
+                }
+            }
+            guard sqlite3_step(statement) == SQLITE_DONE else {
+                throw SQLiteError(message: "\(lastErrorMessage) while inserting into \(table.table)")
+            }
+            return nil
+        }
+
+        let sql = """
+        INSERT INTO \(Self.quote(table.table)) (\(columnList)) VALUES \(tuple) \
+        RETURNING \(harvestColumns.map(Self.quote).joined(separator: ", "))
+        """
+        var harvested: [[PluginCellValue]] = []
+        for row in rows {
+            harvested.append(contentsOf: try queryReturningRow(sql, table: table.table, bindings: row))
+        }
+        return harvested
+    }
+
+    private func queryReturningRow(
+        _ sql: String,
+        table: String,
+        bindings: [PluginCellValue]
+    ) throws -> [[PluginCellValue]] {
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(handle, sql, -1, &statement, nil) == SQLITE_OK else {
-            throw SQLiteError(message: "\(lastErrorMessage) while preparing an insert into \(table.table)")
+            throw SQLiteError(message: "\(lastErrorMessage) while preparing an insert into \(table)")
         }
         defer { sqlite3_finalize(statement) }
-
-        var index: Int32 = 1
-        for row in rows {
-            for value in row {
-                bind(value, to: statement, at: index)
-                index += 1
-            }
+        for (offset, value) in bindings.enumerated() {
+            bind(value, to: statement, at: Int32(offset + 1))
         }
-        guard sqlite3_step(statement) == SQLITE_DONE else {
-            throw SQLiteError(message: "\(lastErrorMessage) while inserting into \(table.table)")
+        var rows: [[PluginCellValue]] = []
+        var stepResult = sqlite3_step(statement)
+        while stepResult == SQLITE_ROW {
+            let count = Int(sqlite3_column_count(statement))
+            rows.append((0 ..< count).map { Self.value(statement, at: Int32($0)) })
+            stepResult = sqlite3_step(statement)
         }
-        return nil
+        guard stepResult == SQLITE_DONE else {
+            throw SQLiteError(message: "\(lastErrorMessage) while inserting into \(table)")
+        }
+        return rows
     }
 
     func update(

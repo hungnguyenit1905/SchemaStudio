@@ -227,6 +227,89 @@ struct GenerationPreviewTests {
         #expect(try await first != rows(seed: 2))
     }
 
+    @Test("A data-modifying CTE is refused before it ever reaches the driver")
+    func writingCTEIsRefusedBeforePreview() async throws {
+        let schema = [
+            Fixtures.table(
+                "customers",
+                columns: [
+                    Fixtures.identityColumn(),
+                    PluginColumnInfo(name: "status", dataType: "varchar(16)", isNullable: false)
+                ]
+            )
+        ]
+        let profile = GenerationProfile(name: "cte", seed: 1, tables: [
+            GenerationTableProfile(schema: "public", table: "customers", rowCount: 10, columns: [
+                GenerationColumnProfile(column: "id", generator: "Default"),
+                GenerationColumnProfile(
+                    column: "status",
+                    generator: "SQLQuery",
+                    params: .object([
+                        "query": .string("WITH gone AS (DELETE FROM orders RETURNING id) SELECT id FROM gone")
+                    ])
+                )
+            ])
+        ])
+
+        #expect(throws: GenerationError.self) {
+            try GenerationPlanCompiler().compile(profile: profile, schema: schema)
+        }
+    }
+
+    @Test("Preview against an empty schema feeds a parent's own previewed keys forward to its child")
+    func previewFeedsGeneratedParentKeysForward() async throws {
+        let schema = [
+            Fixtures.table(
+                "regions",
+                columns: [
+                    PluginColumnInfo(name: "code", dataType: "varchar(4)", isNullable: false, isPrimaryKey: true)
+                ]
+            ),
+            Fixtures.table(
+                "stores",
+                columns: [
+                    Fixtures.identityColumn(),
+                    PluginColumnInfo(name: "region_code", dataType: "varchar(4)", isNullable: false)
+                ],
+                foreignKeys: [
+                    Fixtures.foreignKey(from: "region_code", to: "regions", column: "code")
+                ]
+            )
+        ]
+        let profile = GenerationProfile(name: "empty-schema", seed: 42, tables: [
+            GenerationTableProfile(schema: "public", table: "regions", rowCount: 30, columns: [
+                GenerationColumnProfile(
+                    column: "code",
+                    generator: "RandomString",
+                    params: .object(["minLength": .int(4), "maxLength": .int(4)]),
+                    common: CommonParams(unique: true)
+                )
+            ]),
+            GenerationTableProfile(schema: "public", table: "stores", rowCount: 10, columns: [
+                GenerationColumnProfile(column: "id", generator: "Default"),
+                GenerationColumnProfile(column: "region_code", generator: "Reference")
+            ])
+        ])
+        let plan = try GenerationPlanCompiler().compile(profile: profile, schema: schema)
+
+        // The driver holds nothing at all: an empty schema, exactly what step 2's
+        // Preview has to work against on a fresh database.
+        let driver = FakeGenerationDriver()
+
+        let preview = try await GenerationPreviewService(driver: driver).preview(plan: plan, rowsPerTable: 20)
+
+        let regions = try #require(preview.tables.first { $0.table == "public.regions" })
+        let stores = try #require(preview.tables.first { $0.table == "public.stores" })
+        #expect(regions.rows.count == 20)
+        #expect(stores.rows.count == 10)
+
+        let regionCodes = Set(regions.rows.map { $0.first?.textFallback })
+        let regionCodeIndex = try #require(stores.columns.firstIndex(of: "region_code"))
+        for row in stores.rows {
+            #expect(regionCodes.contains(row[regionCodeIndex].textFallback))
+        }
+    }
+
     @Test("Previewing one table gives the same rows as previewing the whole plan")
     func singleTablePreviewMatches() async throws {
         let plan = try GenerationPlanCompiler().compile(profile: Self.profile(rows: 100), schema: Self.schema())

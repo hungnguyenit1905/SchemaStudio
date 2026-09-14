@@ -33,6 +33,7 @@ final class RegexGenerator: ValueGenerator {
     }
 
     private let node: RegexPatternNode
+    private let outputBudget: Int
     private let seed: UInt64
     private var rng: SplitMix64
 
@@ -54,12 +55,23 @@ final class RegexGenerator: ValueGenerator {
         } catch let error as RegexPatternError {
             throw GenerationError.invalidParameters(generator: Self.identifier, reason: error.reason)
         }
+        if let maxLength = column.maxLength {
+            let minimumLength = RegexStringSynthesizer.minimumLength(of: node)
+            guard minimumLength <= maxLength else {
+                throw GenerationError.invalidParameters(
+                    generator: Self.identifier,
+                    reason: "the shortest possible match is \(minimumLength) characters, " +
+                        "longer than the column's \(maxLength) character limit"
+                )
+            }
+        }
+        outputBudget = column.maxLength ?? RegexStringSynthesizer.hardCeiling
         self.seed = seed
         rng = SplitMix64(seed: seed)
     }
 
     func next(row: RowContext, index: Int) throws -> PluginCellValue {
-        .text(RegexStringSynthesizer.synthesize(node, using: &rng))
+        .text(RegexStringSynthesizer.synthesize(node, budget: outputBudget, using: &rng))
     }
 
     func reset() {

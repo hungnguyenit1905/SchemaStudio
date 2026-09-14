@@ -62,6 +62,19 @@ struct GenerationPlan: Sendable {
     let tables: [TablePlan]
     let requiresConstraintDisable: Bool
 
+    /// Which connection, database and schema the plan runs against. Carried so a
+    /// checkpoint's job id can tell two databases with identical table shapes and
+    /// the same seed apart; `nil` only for a plan built without one, such as a
+    /// preview that never checkpoints.
+    let scope: DatabaseScope?
+
+    init(seed: UInt64, tables: [TablePlan], requiresConstraintDisable: Bool, scope: DatabaseScope? = nil) {
+        self.seed = seed
+        self.tables = tables
+        self.requiresConstraintDisable = requiresConstraintDisable
+        self.scope = scope
+    }
+
     var totalRowCount: Int {
         tables.reduce(0) { $0 + $1.rowCount }
     }

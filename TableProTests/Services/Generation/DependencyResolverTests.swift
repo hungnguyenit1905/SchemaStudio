@@ -180,6 +180,12 @@ struct DependencyResolverTests {
         #expect(position(order, "join") == 3)
     }
 
+    @Test("A table passed in twice does not trap building the in-degree map")
+    func duplicateTableDoesNotTrap() throws {
+        let order = try DependencyResolver().resolve(Fixtures.shopSchema + [Fixtures.shopSchema[0]])
+        #expect(names(order) == ["customers", "orders", "order_items"])
+    }
+
     @Test("A foreign key to a table outside the run is not an edge")
     func foreignKeyOutsideTheRunIsIgnored() throws {
         let orders = Fixtures.table(

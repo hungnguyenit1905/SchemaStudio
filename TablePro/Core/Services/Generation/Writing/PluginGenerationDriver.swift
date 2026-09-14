@@ -16,12 +16,14 @@ struct PluginGenerationDriver: GenerationDriver {
     private let schema: String?
 
     let blocksDestructiveOperations: Bool
+    let blocksAllWrites: Bool
 
     init?(
         driver: DatabaseDriver,
         databaseType: DatabaseType,
         schema: String? = nil,
-        blocksDestructiveOperations: Bool = false
+        blocksDestructiveOperations: Bool = false,
+        blocksAllWrites: Bool = false
     ) {
         guard let adapter = driver as? PluginDriverAdapter else { return nil }
         self.driver = driver
@@ -29,6 +31,7 @@ struct PluginGenerationDriver: GenerationDriver {
         self.databaseType = databaseType
         self.schema = schema
         self.blocksDestructiveOperations = blocksDestructiveOperations
+        self.blocksAllWrites = blocksAllWrites
     }
 
     private var pluginDriver: any PluginDatabaseDriver { adapter.schemaPluginDriver }
@@ -86,6 +89,21 @@ struct PluginGenerationDriver: GenerationDriver {
         for statement in statements {
             _ = try await driver.execute(query: statement)
         }
+    }
+
+    var canDisableForeignKeyChecks: Bool {
+        adapter.foreignKeyDisableStatements() != nil
+    }
+
+    func setTriggerChecks(table: GenerationTableReference, enabled: Bool) async throws -> Bool {
+        let statements = enabled
+            ? adapter.triggerEnableStatements(table: table.table, schema: table.schema ?? schema)
+            : adapter.triggerDisableStatements(table: table.table, schema: table.schema ?? schema)
+        guard let statements else { return false }
+        for statement in statements {
+            _ = try await driver.execute(query: statement)
+        }
+        return true
     }
 
     func hasInboundForeignKeys(table: GenerationTableReference) async throws -> Bool {

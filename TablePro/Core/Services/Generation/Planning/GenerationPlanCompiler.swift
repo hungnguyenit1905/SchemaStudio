@@ -15,7 +15,11 @@ struct GenerationPlanCompiler {
         self.canDisableConstraints = canDisableConstraints
     }
 
-    func compile(profile: GenerationProfile, schema: [GenerationTable]) throws -> GenerationPlan {
+    func compile(
+        profile: GenerationProfile,
+        schema: [GenerationTable],
+        scope: DatabaseScope? = nil
+    ) throws -> GenerationPlan {
         let selected = profile.tables.compactMap { tableProfile in
             schema.first { $0.name == tableProfile.table && $0.schema == tableProfile.schema }
         }
@@ -40,7 +44,8 @@ struct GenerationPlanCompiler {
         return GenerationPlan(
             seed: profile.seed,
             tables: plans,
-            requiresConstraintDisable: order.requiresConstraintDisable
+            requiresConstraintDisable: order.requiresConstraintDisable,
+            scope: scope
         )
     }
 

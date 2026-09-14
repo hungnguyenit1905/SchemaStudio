@@ -67,9 +67,17 @@ struct GenerationPreviewService {
         var tables: [GenerationPreviewTable] = []
         var warnings: [GenerationWarning] = []
         let generated = Set(plan.tables.map(\.reference))
+        var previewed: [GenerationTableReference: PreviewedTableRows] = [:]
 
         for table in plan.tables {
-            let rows = try await self.rows(for: table, plan: plan, limit: rowsPerTable, warnings: &warnings)
+            let rows = try await self.rows(
+                for: table,
+                plan: plan,
+                limit: rowsPerTable,
+                warnings: &warnings,
+                previewed: previewed
+            )
+            previewed[table.reference] = PreviewedTableRows(columns: table.insertColumns, rows: rows)
             tables.append(
                 GenerationPreviewTable(
                     table: table.qualifiedName,
@@ -88,7 +96,7 @@ struct GenerationPreviewService {
         rowsPerTable: Int = GenerationPreviewService.defaultRowCount
     ) async throws -> GenerationPreviewTable {
         var warnings: [GenerationWarning] = []
-        let rows = try await rows(for: table, plan: plan, limit: rowsPerTable, warnings: &warnings)
+        let rows = try await rows(for: table, plan: plan, limit: rowsPerTable, warnings: &warnings, previewed: [:])
         return GenerationPreviewTable(
             table: table.qualifiedName,
             columns: table.insertColumns,
@@ -100,11 +108,32 @@ struct GenerationPreviewService {
         )
     }
 
+    /// A parent table's own previewed rows, keyed the same way `GenerationEngine`
+    /// keys `harvested`: by table, projected down to whichever columns a child's
+    /// foreign key actually names. A row that lacks one of those columns (a
+    /// server-assigned key the preview never generated locally) makes the
+    /// projection fail, and the caller falls back to the live driver exactly as
+    /// it did before this table was previewed.
+    private struct PreviewedTableRows {
+        let columns: [String]
+        let rows: [[PluginCellValue]]
+
+        func project(_ wanted: [String]) -> [[PluginCellValue]]? {
+            let positions = wanted.compactMap { columns.firstIndex(of: $0) }
+            guard positions.count == wanted.count else { return nil }
+            return rows.compactMap { row in
+                guard positions.allSatisfy({ $0 < row.count }) else { return nil }
+                return positions.map { row[$0] }
+            }
+        }
+    }
+
     private func rows(
         for table: TablePlan,
         plan: GenerationPlan,
         limit: Int,
-        warnings: inout [GenerationWarning]
+        warnings: inout [GenerationWarning],
+        previewed: [GenerationTableReference: PreviewedTableRows]
     ) async throws -> [[PluginCellValue]] {
         let builder = try RowBuilder(
             plan: table,
@@ -116,7 +145,13 @@ struct GenerationPreviewService {
         let binder = ReferencePoolBinder(
             strategy: options.referenceStrategy,
             values: { key in
-                try await driver.loadDistinctValues(key: key, limit: options.referencePoolLimit)
+                let reference = GenerationTableReference(schema: key.schema, table: key.table)
+                if let parentRows = previewed[reference],
+                   let projected = parentRows.project(key.columns),
+                   !projected.isEmpty {
+                    return projected
+                }
+                return try await driver.loadDistinctValues(key: key, limit: options.referencePoolLimit)
             },
             queryValues: { source in
                 try await driver.loadQueryValues(source: source, limit: options.referencePoolLimit)

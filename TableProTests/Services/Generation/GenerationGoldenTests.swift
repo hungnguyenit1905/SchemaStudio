@@ -192,4 +192,33 @@ struct GenerationGoldenTests {
         let second = try await Self.run()
         #expect(first == second)
     }
+
+    @Test("A bigint with no bounds and a mean far outside Int64 does not trap")
+    func unboundedBigintWithExtremeMeanDoesNotTrap() async throws {
+        let schema = [
+            GenerationPlanningFixtures.table("readings", columns: [
+                PluginColumnInfo(name: "value", dataType: "bigint", isNullable: false)
+            ])
+        ]
+        let profile = GenerationPlanningFixtures.profile(tables: [
+            GenerationPlanningFixtures.tableProfile("readings", rowCount: 100, columns: [
+                GenerationColumnProfile(
+                    column: "value",
+                    generator: "Integer",
+                    params: .object(["distribution": .string("normal"), "mean": .double(1e19)])
+                )
+            ])
+        ])
+        let driver = FakeGenerationDriver()
+        let plan = try GenerationPlanCompiler().compile(profile: profile, schema: schema)
+        let engine = GenerationRuntimeFixtures.engine(driver: driver)
+        _ = try await GenerationRuntimeFixtures.collect(engine.run(plan: plan))
+
+        let values = driver.rows(for: "readings").map { row -> Int64? in
+            guard case .int(let number) = row[0] else { return nil }
+            return number
+        }
+        #expect(values.count == 100)
+        #expect(values.allSatisfy { $0 != nil })
+    }
 }

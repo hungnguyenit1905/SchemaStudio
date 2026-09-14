@@ -30,6 +30,8 @@ struct PluginKitABIResilienceTests {
         #expect(driver.capabilities.isEmpty)
         #expect(driver.foreignKeyDisableStatements() == nil)
         #expect(driver.foreignKeyEnableStatements() == nil)
+        #expect(driver.triggerDisableStatements(table: "users", schema: nil) == nil)
+        #expect(driver.triggerEnableStatements(table: "users", schema: nil) == nil)
         #expect(driver.supportedMaintenanceOperations() == nil)
         #expect(driver.buildExplainQuery("SELECT 1") == nil)
         #expect(driver.injectRowLimit("SELECT 1", limit: 100) == nil)

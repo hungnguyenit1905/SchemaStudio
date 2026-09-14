@@ -22,6 +22,11 @@ final class DecimalGenerator: ValueGenerator {
         ParamField(key: "scale", label: "Decimal places", type: .integer(minimum: 0, maximum: 18), defaultValue: .null)
     ] + Distribution.paramFields)
 
+    /// Always emits `.decimalText`, so a column whose own type is not numeric
+    /// cannot suit it: an affix or a truncation makes the string it produces no
+    /// longer parse as a decimal.
+    static let producesKind: GenerationOutputKind = .decimalOnly
+
     private struct Params: Codable {
         var min: Double?
         var max: Double?

@@ -100,6 +100,19 @@ struct DistributionTests {
         }
     }
 
+    @Test("A non-finite mean, standard deviation or rate is refused rather than sampled")
+    func nonFiniteParametersThrow() {
+        #expect(throws: GenerationError.self) {
+            _ = try distribution(#"{"distribution":"normal","mean":1e400}"#)
+        }
+        #expect(throws: GenerationError.self) {
+            _ = try distribution(#"{"distribution":"normal","stddev":1e400}"#)
+        }
+        #expect(throws: GenerationError.self) {
+            _ = try distribution(#"{"distribution":"exponential","lambda":1e400}"#)
+        }
+    }
+
     // MARK: - Zipf
 
     @Test("Zipf gives the head of the pool most of the draws")

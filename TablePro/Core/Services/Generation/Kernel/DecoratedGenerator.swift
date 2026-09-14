@@ -37,7 +37,11 @@ final class DecoratedGenerator {
     private var unique: UniqueStrategy
     private var affixWarningIssued = false
     private var blankWarningIssued = false
-    private(set) var warnings: [GenerationWarning] = []
+    private var ownWarnings: [GenerationWarning] = []
+
+    /// The decorator's own warnings, plus whatever the generator it wraps
+    /// noticed about its own output (a clamped overflow, for instance).
+    var warnings: [GenerationWarning] { ownWarnings + inner.warnings }
 
     init(
         inner: any ValueGenerator,
@@ -148,7 +152,7 @@ final class DecoratedGenerator {
         inner.reset()
         rng = SplitMix64(seed: Self.decoratorSeed(from: seed))
         resetUniqueState()
-        warnings.removeAll(keepingCapacity: true)
+        ownWarnings.removeAll(keepingCapacity: true)
         affixWarningIssued = false
         blankWarningIssued = false
     }
@@ -169,7 +173,7 @@ final class DecoratedGenerator {
     private func warnBlanksSuppressed() {
         guard !blankWarningIssued else { return }
         blankWarningIssued = true
-        warnings.append(
+        ownWarnings.append(
             GenerationWarning(
                 column: columnName,
                 message: String(
@@ -210,20 +214,34 @@ final class DecoratedGenerator {
         }
     }
 
+    /// Prefix, suffix, case and the length limit apply to every case whose wire
+    /// form is already a string: `.text` and `.decimalText`. Every other case is
+    /// typed and keeps its type unshaped, because stringifying it would hand the
+    /// driver a value it can no longer bind natively.
     private func shaped(row: RowContext, index: Int) throws -> PluginCellValue {
         let produced = try inner.next(row: row, index: index)
-        guard case .text(let text) = produced else { return produced }
+        switch produced {
+        case .text(let text):
+            return .text(decorated(text))
+        case .decimalText(let text):
+            return .decimalText(decorated(text))
+        default:
+            return produced
+        }
+    }
+
+    private func decorated(_ text: String) -> String {
         let cased = common.textCase.apply(to: text)
         let affixed = common.prefix + cased + common.suffix
         warnIfAffixCannotFit()
-        return .text(truncator.truncate(affixed, to: maxLength))
+        return truncator.truncate(affixed, to: maxLength)
     }
 
     private func warnIfAffixCannotFit() {
         guard !affixWarningIssued, common.hasAffix, let maxLength else { return }
         guard truncator.unit.measure(common.affix) >= maxLength else { return }
         affixWarningIssued = true
-        warnings.append(
+        ownWarnings.append(
             GenerationWarning(
                 column: columnName,
                 message: String(

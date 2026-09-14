@@ -70,8 +70,26 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
         let rows: [[PluginCellValue]]
     }
 
+    struct ForeignKeyRestoreFailed: Error {}
+    struct TriggerRestoreFailed: Error {}
+
+    struct TriggerCheckCall: Sendable, Equatable {
+        let table: String
+        let enabled: Bool
+    }
+
     let blocksDestructiveOperations: Bool
-    let supportsTransactions = true
+    let blocksAllWrites: Bool
+    var supportsTransactions = true
+    var failsForeignKeyRestore = false
+    var failsSequenceReset = false
+    var canDisableForeignKeyChecks = true
+
+    /// Whether this fake can honour a trigger disable/enable request at all.
+    /// Off by default, which is what MySQL and SQLite report today.
+    var supportsTriggerDisable = false
+    var failsTriggerEnableFor: Set<String> = []
+    private(set) var triggerCheckCalls: [TriggerCheckCall] = []
 
     var supportsBulkLoad = false
     var requiresLocalInfile = false
@@ -83,6 +101,10 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
     var failsBulkWritesAfterChunks: Int?
     var failsBulkFinish = false
     var supportsLocalInfile: Bool?
+    /// What a driver that implements no limits reporting at all looks like: the
+    /// engine has to fall back to a per-vendor default rather than assuming
+    /// PostgreSQL's.
+    var reportsNilLimits = false
     private(set) var bulkWriters: [FakeBulkLoadWriter] = []
     private(set) var bulkWriterRequests: [GenerationTableReference] = []
 
@@ -92,6 +114,11 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
     private(set) var queriesRun: [SqlQuerySource] = []
     var inboundForeignKeyTables: Set<String> = []
     var failInsertsFor: Set<String> = []
+    /// 1-based count of every `insert` call attempted, successful or not, so a
+    /// test can reject one specific batch in the middle of a run without
+    /// rejecting every batch for the table the way `failInsertsFor` does.
+    var failInsertsOnAttempt: Set<Int> = []
+    private(set) var insertAttempts = 0
 
     /// Called with the number of batches written so far, which is how a test
     /// reaches in and cancels a run at a known point.
@@ -121,8 +148,9 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
     /// sequence reset lands after the commit rather than inside the transaction.
     private(set) var callOrder: [String] = []
 
-    init(blocksDestructiveOperations: Bool = false) {
+    init(blocksDestructiveOperations: Bool = false, blocksAllWrites: Bool = false) {
         self.blocksDestructiveOperations = blocksDestructiveOperations
+        self.blocksAllWrites = blocksAllWrites
     }
 
     var insertedTableOrder: [String] {
@@ -142,7 +170,8 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
     }
 
     func serverLimits() async throws -> PluginServerLimits? {
-        PluginServerLimits(
+        guard !reportsNilLimits else { return nil }
+        return PluginServerLimits(
             maxPacketBytes: 1_048_576,
             maxBindParameters: 900,
             supportsLocalInfile: supportsLocalInfile
@@ -183,6 +212,18 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
 
     func setForeignKeyChecks(enabled: Bool) async throws {
         foreignKeyCheckCalls.append(enabled)
+        if enabled, failsForeignKeyRestore {
+            throw ForeignKeyRestoreFailed()
+        }
+    }
+
+    func setTriggerChecks(table: GenerationTableReference, enabled: Bool) async throws -> Bool {
+        guard supportsTriggerDisable else { return false }
+        triggerCheckCalls.append(TriggerCheckCall(table: table.table, enabled: enabled))
+        if enabled, failsTriggerEnableFor.contains(table.table) {
+            throw TriggerRestoreFailed()
+        }
+        return true
     }
 
     func hasInboundForeignKeys(table: GenerationTableReference) async throws -> Bool {
@@ -199,7 +240,8 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
         rows: [[PluginCellValue]],
         harvestColumns: [String]
     ) async throws -> [[PluginCellValue]]? {
-        if failInsertsFor.contains(table.table) {
+        insertAttempts += 1
+        if failInsertsFor.contains(table.table) || failInsertsOnAttempt.contains(insertAttempts) {
             throw GenerationError.writeFailed(table: table.qualifiedName, reason: "rejected by the fake driver")
         }
         batches.append(Batch(table: table, columns: columns, rows: rows))
@@ -222,15 +264,18 @@ final class FakeGenerationDriver: GenerationDriver, @unchecked Sendable {
         )
     }
 
+    struct SequenceResetFailed: Error {}
+
     func resetSequence(
         table: GenerationTableReference,
         column: String,
         sequenceName: String?
     ) async throws {
+        callOrder.append("resetSequence")
+        guard !failsSequenceReset else { throw SequenceResetFailed() }
         sequenceResets.append(
             SequenceReset(table: table.table, column: column, sequenceName: sequenceName)
         )
-        callOrder.append("resetSequence")
     }
 
     func loadQueryValues(source: SqlQuerySource, limit: Int) async throws -> [PluginCellValue] {
@@ -264,13 +309,15 @@ enum GenerationRuntimeFixtures {
         driver: any GenerationDriver,
         registry: GeneratorRegistry = .standard,
         truncator: GenerationStringTruncator = GenerationStringTruncator(unit: .unicodeScalars),
-        maxBindParameters: Int = 65_535,
+        databaseType: DatabaseType = .postgresql,
+        maxBindParameters: Int? = nil,
         options: GenerationRunOptions = GenerationRunOptions()
     ) -> GenerationEngine {
         GenerationEngine(
             driver: driver,
             registry: registry,
             truncator: truncator,
+            databaseType: databaseType,
             maxBindParameters: maxBindParameters,
             options: options,
             checkpoints: checkpointStore()

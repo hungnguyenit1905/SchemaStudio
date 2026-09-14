@@ -53,6 +53,18 @@ struct Distribution: Sendable, Hashable {
         mean = decoded.mean
         stddev = decoded.stddev
         lambda = decoded.lambda ?? Self.defaultLambda
+        guard decoded.mean?.isFinite ?? true else {
+            throw GenerationError.invalidParameters(generator: generator, reason: "the mean has to be a finite number")
+        }
+        guard decoded.stddev?.isFinite ?? true else {
+            throw GenerationError.invalidParameters(
+                generator: generator,
+                reason: "the standard deviation has to be a finite number"
+            )
+        }
+        guard lambda.isFinite else {
+            throw GenerationError.invalidParameters(generator: generator, reason: "the rate has to be a finite number")
+        }
         guard shape != .normal || (stddev ?? 1) > 0 else {
             throw GenerationError.invalidParameters(
                 generator: generator,

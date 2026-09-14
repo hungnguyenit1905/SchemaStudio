@@ -181,7 +181,7 @@ extension DataTransferService {
         )
         state.splitter = TransferBatchSplitter(
             maxBytes: Self.batchMaxBytes(from: limits),
-            maxBindParameters: Self.maxBindParameters(for: target.databaseType, limits: limits),
+            maxBindParameters: TransferBindParameterLimits.maxBindParameters(for: target.databaseType, limits: limits),
             columnCount: max(targetColumns.count, 1)
         )
         guard state.foreignKeyScope == .none else { return }
@@ -520,18 +520,6 @@ extension DataTransferService {
             values.append(value)
         }
         return values
-    }
-
-    private static func maxBindParameters(
-        for databaseType: DatabaseType,
-        limits: PluginServerLimits?
-    ) -> Int {
-        if let maxBind = limits?.maxBindParameters { return maxBind }
-        switch databaseType {
-        case .sqlite: return 32_766
-        case .mssql: return 2_100
-        default: return 65_535
-        }
     }
 
     static func batchMaxBytes(from limits: PluginServerLimits?) -> Int {

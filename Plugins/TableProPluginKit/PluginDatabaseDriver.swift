@@ -263,6 +263,14 @@ public protocol PluginDatabaseDriver: AnyObject, Sendable {
     func foreignKeyDisableStatements() -> [String]?
     func foreignKeyEnableStatements() -> [String]?
 
+    /// Statements that disable, then re-enable, every trigger on one table.
+    /// `nil` means this engine cannot do it at all, which the caller reports
+    /// as skipped rather than issuing nothing silently. Unlike the foreign key
+    /// pair above, this is scoped to a single table rather than the whole
+    /// session, so both take the table it applies to.
+    func triggerDisableStatements(table: String, schema: String?) -> [String]?
+    func triggerEnableStatements(table: String, schema: String?) -> [String]?
+
     // Maintenance operations (optional — return nil if not supported)
     func supportedMaintenanceOperations() -> [String]?
     func maintenanceStatements(
@@ -647,6 +655,8 @@ public extension PluginDatabaseDriver {
     func dropObjectStatement(name: String, objectType: String, schema: String?, cascade: Bool) -> String? { nil }
     func foreignKeyDisableStatements() -> [String]? { nil }
     func foreignKeyEnableStatements() -> [String]? { nil }
+    func triggerDisableStatements(table: String, schema: String?) -> [String]? { nil }
+    func triggerEnableStatements(table: String, schema: String?) -> [String]? { nil }
 
     func supportedMaintenanceOperations() -> [String]? { nil }
     func maintenanceStatements(

@@ -94,12 +94,60 @@ struct DependencyResolverRegressionTests {
 
 @Suite("Regex quantifier bounds")
 struct RegexRepeatCapRegressionTests {
-    @Test("An explicit count is capped", arguments: ["[a-z]{1,10000000}", "[a-z]{5000}", "[a-z]{9000,}"])
-    func explicitCountIsCapped(pattern: String) throws {
+    /// The repeat cap no longer bounds an explicit count: only the
+    /// synthesizer's own output budget does, so a runaway `{n}` or `{n,m}` is
+    /// still finite, just not by the same number the user set for `*`/`+`/`{n,}`.
+    @Test(
+        "An explicit or fully bounded count is limited by the output budget, not the repeat cap",
+        arguments: ["[a-z]{1,10000000}", "[a-z]{5000}"]
+    )
+    func explicitCountStaysWithinTheOutputBudget(pattern: String) throws {
         let node = try RegexPatternParser.parse(pattern, repeatCap: 12)
         var rng = SplitMix64(seed: 7)
         for _ in 0 ..< 50 {
-            #expect(RegexStringSynthesizer.synthesize(node, using: &rng).count <= 12)
+            #expect(RegexStringSynthesizer.synthesize(node, budget: 200, using: &rng).count <= 200)
+        }
+    }
+
+    @Test("An explicit {n} is honoured exactly, uncapped by the repeat cap")
+    func explicitCountIsExact() throws {
+        let node = try RegexPatternParser.parse("[A-F0-9]{32}", repeatCap: 12)
+        var rng = SplitMix64(seed: 7)
+        #expect(RegexStringSynthesizer.synthesize(node, using: &rng).count == 32)
+    }
+
+    @Test("An explicit {n,m} produces a length inside its own range, uncapped")
+    func boundedRangeStaysWithinItsOwnBounds() throws {
+        let node = try RegexPatternParser.parse("[a-z]{20,30}", repeatCap: 12)
+        var rng = SplitMix64(seed: 7)
+        for _ in 0 ..< 50 {
+            let length = RegexStringSynthesizer.synthesize(node, using: &rng).count
+            #expect((20...30).contains(length))
+        }
+    }
+
+    @Test("An open-ended {n,} still stops at the repeat cap")
+    func openEndedRepeatIsStillCapped() throws {
+        let node = try RegexPatternParser.parse("[a-z]{9000,}", repeatCap: 12)
+        var rng = SplitMix64(seed: 7)
+        for _ in 0 ..< 50 {
+            #expect(RegexStringSynthesizer.synthesize(node, using: &rng).count == 12)
+        }
+    }
+
+    @Test("An explicit count longer than the column is refused, naming the limit")
+    func explicitCountLongerThanColumnIsRefused() {
+        do {
+            _ = try RegexGenerator(
+                params: GeneratorTestFixtures.params(#"{"pattern":"[a-z]{5000}"}"#),
+                column: GeneratorTestFixtures.column(dataType: "varchar(10)"),
+                seed: 1
+            )
+            Issue.record("a pattern whose shortest match cannot fit the column was accepted")
+        } catch let error as GenerationError {
+            #expect(error.errorDescription?.contains("10") == true)
+        } catch {
+            Issue.record("threw \(error)")
         }
     }
 
@@ -115,6 +163,22 @@ struct RegexRepeatCapRegressionTests {
         let node = try RegexPatternParser.parse("[a-z]{4}", repeatCap: 12)
         var rng = SplitMix64(seed: 7)
         #expect(RegexStringSynthesizer.synthesize(node, using: &rng).count == 4)
+    }
+
+    @Test("Nested quantifiers synthesize within an output budget instead of multiplying unbounded")
+    func nestedQuantifiersStayWithinBudget() throws {
+        let node = try RegexPatternParser.parse("(((((\\w{16}){16}){16}){16}){16})", repeatCap: 16)
+        var rng = SplitMix64(seed: 11)
+        let value = RegexStringSynthesizer.synthesize(node, budget: 1_000, using: &rng)
+        #expect(value.count <= 1_000)
+    }
+
+    @Test("A pattern nested past the depth cap is refused rather than overflowing the stack")
+    func excessiveNestingIsRefused() {
+        let pattern = String(repeating: "(", count: 200) + "a" + String(repeating: ")", count: 200)
+        #expect(throws: RegexPatternError.self) {
+            _ = try RegexPatternParser.parse(pattern, repeatCap: 16)
+        }
     }
 }
 

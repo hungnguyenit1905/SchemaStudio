@@ -61,11 +61,15 @@ struct SecondPassUpdaterTests {
         return driver
     }
 
+    private func harvested(_ keys: [Int64]) -> [[PluginCellValue]] {
+        keys.map { [PluginCellValue.int($0)] }
+    }
+
     @Test("A self-reference is filled from the keys the table now has")
     func selfReferenceIsFilled() async throws {
         let fake = driver(keys: [1, 2, 3, 4, 5])
         let outcome = try await SecondPassUpdater(driver: fake, poolLimit: 100)
-            .fill(table: try employeesPlan(), runSeed: 7)
+            .fill(table: try employeesPlan(), runSeed: 7, harvestedOwnKeys: harvested([1, 2, 3, 4, 5]))
 
         #expect(outcome.rowsUpdated == 5)
         #expect(outcome.warnings.isEmpty)
@@ -83,7 +87,7 @@ struct SecondPassUpdaterTests {
     func neverPointsAtItself() async throws {
         let fake = driver(keys: Array(1 ... 20))
         _ = try await SecondPassUpdater(driver: fake, poolLimit: 100)
-            .fill(table: try employeesPlan(rowCount: 20), runSeed: 3)
+            .fill(table: try employeesPlan(rowCount: 20), runSeed: 3, harvestedOwnKeys: harvested(Array(1 ... 20)))
         let update = try #require(fake.updates.first)
         for assignment in update.assignments {
             #expect(assignment[0].stableHash != assignment[1].stableHash)
@@ -94,7 +98,7 @@ struct SecondPassUpdaterTests {
     func singleRowStaysEmpty() async throws {
         let fake = driver(keys: [1])
         let outcome = try await SecondPassUpdater(driver: fake, poolLimit: 100)
-            .fill(table: try employeesPlan(rowCount: 1), runSeed: 3)
+            .fill(table: try employeesPlan(rowCount: 1), runSeed: 3, harvestedOwnKeys: harvested([1]))
         #expect(outcome.rowsUpdated == 0)
         #expect(fake.updates.isEmpty)
     }
@@ -104,7 +108,7 @@ struct SecondPassUpdaterTests {
         func run() async throws -> [[PluginCellValue]] {
             let fake = driver(keys: Array(1 ... 10))
             _ = try await SecondPassUpdater(driver: fake, poolLimit: 100)
-                .fill(table: try employeesPlan(rowCount: 10), runSeed: 11)
+                .fill(table: try employeesPlan(rowCount: 10), runSeed: 11, harvestedOwnKeys: harvested(Array(1 ... 10)))
             return fake.updates.first?.assignments ?? []
         }
         let first = try await run()
@@ -127,7 +131,8 @@ struct SecondPassUpdaterTests {
             sequenceBackedColumns: []
         )
         let fake = driver(keys: [1, 2, 3])
-        let outcome = try await SecondPassUpdater(driver: fake, poolLimit: 100).fill(table: plan, runSeed: 1)
+        let outcome = try await SecondPassUpdater(driver: fake, poolLimit: 100)
+            .fill(table: plan, runSeed: 1, harvestedOwnKeys: harvested([1, 2, 3]))
         #expect(outcome.rowsUpdated == 0)
         #expect(fake.updates.isEmpty)
         let warning = try #require(outcome.warnings.first)
@@ -139,9 +144,22 @@ struct SecondPassUpdaterTests {
     func emptyParentWarns() async throws {
         let fake = FakeGenerationDriver()
         let outcome = try await SecondPassUpdater(driver: fake, poolLimit: 100)
-            .fill(table: try employeesPlan(), runSeed: 1)
+            .fill(table: try employeesPlan(), runSeed: 1, harvestedOwnKeys: [])
         #expect(outcome.rowsUpdated == 0)
         #expect(fake.updates.isEmpty)
+    }
+
+    @Test("An append run with no harvested keys warns and leaves the column null instead of reading the table")
+    func appendWithoutHarvestWarnsAndLeavesColumnNull() async throws {
+        let fake = driver(keys: [1, 2, 3])
+        let outcome = try await SecondPassUpdater(driver: fake, poolLimit: 100)
+            .fill(table: try employeesPlan(), runSeed: 1, harvestedOwnKeys: nil)
+
+        #expect(outcome.rowsUpdated == 0)
+        #expect(fake.updates.isEmpty)
+        let warning = try #require(outcome.warnings.first)
+        #expect(warning.message.contains("employees"))
+        #expect(warning.message.contains("manager_id"))
     }
 
     @Test("A table with nothing deferred is not touched")
@@ -159,7 +177,8 @@ struct SecondPassUpdaterTests {
             sequenceBackedColumns: []
         )
         let fake = driver(keys: [1, 2])
-        let outcome = try await SecondPassUpdater(driver: fake, poolLimit: 100).fill(table: quiet, runSeed: 1)
+        let outcome = try await SecondPassUpdater(driver: fake, poolLimit: 100)
+            .fill(table: quiet, runSeed: 1, harvestedOwnKeys: nil)
         #expect(outcome.rowsUpdated == 0)
         #expect(fake.updates.isEmpty)
     }
@@ -200,7 +219,7 @@ struct SequenceResetterTests {
     @Test("Every sequence the run wrote into is reset")
     func resetsEachSequence() async throws {
         let fake = FakeGenerationDriver()
-        try await SequenceResetter(driver: fake).reset(
+        let warnings = await SequenceResetter(driver: fake).reset(
             table: try plan(sequenceBacked: [
                 SequenceBackedColumn(column: "id", sequenceName: "orders_id_seq")
             ])
@@ -208,23 +227,38 @@ struct SequenceResetterTests {
         #expect(fake.sequenceResets == [
             FakeGenerationDriver.SequenceReset(table: "orders", column: "id", sequenceName: "orders_id_seq")
         ])
+        #expect(warnings.isEmpty)
     }
 
     @Test("A table the server filled itself has no sequence to reset")
     func nothingToReset() async throws {
         let fake = FakeGenerationDriver()
-        try await SequenceResetter(driver: fake).reset(table: try plan(sequenceBacked: []))
+        let warnings = await SequenceResetter(driver: fake).reset(table: try plan(sequenceBacked: []))
         #expect(fake.sequenceResets.isEmpty)
+        #expect(warnings.isEmpty)
     }
 
     @Test("A column with no named sequence still asks the driver, which knows its own vendor")
     func unnamedSequenceStillResets() async throws {
         let fake = FakeGenerationDriver()
-        try await SequenceResetter(driver: fake).reset(
+        let warnings = await SequenceResetter(driver: fake).reset(
             table: try plan(sequenceBacked: [SequenceBackedColumn(column: "id", sequenceName: nil)])
         )
         #expect(fake.sequenceResets.first?.sequenceName == nil)
         #expect(fake.sequenceResets.count == 1)
+        #expect(warnings.isEmpty)
+    }
+
+    @Test("A column whose reset fails is reported back as a warning, not thrown")
+    func failedResetBecomesAWarning() async throws {
+        let fake = FakeGenerationDriver()
+        fake.failsSequenceReset = true
+        let warnings = await SequenceResetter(driver: fake).reset(
+            table: try plan(sequenceBacked: [SequenceBackedColumn(column: "id", sequenceName: "orders_id_seq")])
+        )
+        #expect(fake.sequenceResets.isEmpty)
+        #expect(warnings.count == 1)
+        #expect(warnings.first?.column == "public.orders.id")
     }
 }
 

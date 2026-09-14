@@ -42,6 +42,28 @@ struct GenerationOptionsStep: View {
 
             Toggle(String(localized: "Keep going after a failed batch"), isOn: $model.continueOnError)
 
+            Toggle(String(localized: "Disable foreign key checks"), isOn: $model.disablesForeignKeyChecks)
+                .disabled(model.disablesForeignKeyChecksDisabledReason != nil)
+                .accessibilityIdentifier("generation.disablesForeignKeyChecks")
+            if let reason = model.disablesForeignKeyChecksDisabledReason {
+                Text(reason)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 20)
+            } else {
+                Text("Lets tables that point at each other load out of order. Turned back on before the run ends.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 20)
+            }
+
+            Toggle(String(localized: "Disable triggers"), isOn: $model.disablesTriggers)
+                .accessibilityIdentifier("generation.disablesTriggers")
+            Text("Reported as skipped on engines that cannot do it. Turned back on per table as soon as its rows are written.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.leading, 20)
+
             Spacer()
         }
         .padding(20)

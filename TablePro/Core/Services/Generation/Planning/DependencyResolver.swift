@@ -28,7 +28,7 @@ struct DependencyResolver {
 
     func resolve(_ tables: [GenerationTable]) throws -> TableDependencyOrder {
         try Self.validateSelfReferences(tables)
-        let nodes = tables.map(Self.reference)
+        let nodes = Self.distinctReferences(tables.map(Self.reference))
         let present = Set(nodes)
         var deferred: [GenerationTableReference: [String]] = [:]
         var edges = Self.edges(in: tables, present: present, deferred: &deferred)
@@ -130,13 +130,26 @@ struct DependencyResolver {
         }
     }
 
+    /// A profile that names the same table twice reaches here before the
+    /// validator can refuse it in every path except an imported profile, so the
+    /// resolver has to survive the duplicate rather than trust callers to have
+    /// already removed it. `Dictionary(uniqueKeysWithValues:)` traps on a repeat
+    /// key, and letting the duplicate through would double-count the table in
+    /// `ordered` instead.
+    private static func distinctReferences(
+        _ references: [GenerationTableReference]
+    ) -> [GenerationTableReference] {
+        var seen: Set<GenerationTableReference> = []
+        return references.filter { seen.insert($0).inserted }
+    }
+
     private func breakCyclesAtNullableKeys(
         tables: [GenerationTable],
         present: Set<GenerationTableReference>,
         edges: inout [GenerationTableReference: Set<GenerationTableReference>],
         deferred: inout [GenerationTableReference: [String]]
     ) {
-        let nodes = tables.map(Self.reference)
+        let nodes = Self.distinctReferences(tables.map(Self.reference))
         for table in tables {
             let child = Self.reference(table)
             for parent in Self.distinctParents(of: table) {

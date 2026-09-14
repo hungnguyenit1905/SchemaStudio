@@ -40,19 +40,36 @@ actor GenerationCheckpointStore {
         try? FileManager.default.createDirectory(at: resolved, withIntermediateDirectories: true)
     }
 
-    /// The seed, every table's shape and every column's generator go into the id.
-    /// Row counts included: resuming a 1M-row table into a plan that now asks for
-    /// 100 rows would write past the end of what the user asked for.
+    /// The connection, database and schema; the seed; every table's shape; and
+    /// every column's generator and settings all go into the id. Row counts
+    /// included: resuming a 1M-row table into a plan that now asks for 100 rows
+    /// would write past the end of what the user asked for. The scope is
+    /// included so two databases with identical table shapes and the same seed
+    /// never share a checkpoint, and a column's own `params`/`common` are hashed
+    /// alongside its generator identifier so editing what a generator does
+    /// starts the run over rather than resuming onto rows written under the old
+    /// settings.
     static func jobId(for plan: GenerationPlan) -> UUID {
         var material = ["seed:\(plan.seed)"]
+        if let scope = plan.scope {
+            material.append("connection:\(scope.connectionId.uuidString)")
+            material.append("database:\(scope.database)")
+            material.append("schema:\(scope.schema ?? "")")
+        }
         for table in plan.tables {
             material.append(table.qualifiedName)
             material.append("rows:\(table.rowCount)")
             material.append("empty:\(table.emptyFirst)")
             material.append(table.insertColumns.joined(separator: ","))
-            material.append(table.columns.map { "\($0.name)=\($0.generator)" }.joined(separator: ","))
+            material.append(table.columns.map(Self.columnMaterial).joined(separator: ","))
         }
         return Self.uuid(from: material.joined(separator: "|"))
+    }
+
+    private static func columnMaterial(_ column: ColumnPlan) -> String {
+        let paramsDigest = column.params.base64EncodedString()
+        let commonDigest = (try? JSONEncoder().encode(column.common))?.base64EncodedString() ?? ""
+        return "\(column.name)=\(column.generator)|\(paramsDigest)|\(commonDigest)"
     }
 
     func load(jobId: UUID) -> [GenerationCheckpoint] {

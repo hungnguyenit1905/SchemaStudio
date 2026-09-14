@@ -80,12 +80,11 @@ apply to all of them:
   case-insensitive collation such as `utf8mb4_general_ci` or `CITEXT`, `Alice` and `alice` count as
   one value. A column whose values are a whole finite range is filled from a shuffle of that range,
   so nothing is drawn twice and nothing is wasted retrying. Refused before the run starts if the
-  generator cannot
-  produce as many distinct values as there are rows. Nulls are exempt, because SQL uniqueness does
-  not constrain them.
+  generator cannot produce as many distinct values as the row count leaves non-null. Nulls are
+  exempt, because SQL uniqueness does not constrain them, so a high null percentage lowers how many
+  distinct values the generator actually needs.
 - **Prefix**, **suffix**, and **case**: applied to the generated value before the length limit is
   checked.
-- **Sort**: writes the values in ascending or descending order rather than in generation order.
 
 The catalog:
 
@@ -159,8 +158,11 @@ A **Regex** column takes a pattern and writes values that match it: `[A-Z]{3}-[0
 `QRV-8801`. The supported subset is literals, character classes such as `[a-z0-9]` and `[^0-9]`, the
 escapes `\d \w \s \D \W \S`, the quantifiers `{n}`, `{n,m}`, `*`, `+` and `?`, alternation,
 groups, and the anchors `^` and `$`. Backreferences and lookaround cannot be produced left to right,
-so a pattern using one is refused when you write it, with the construct named. `*`, `+` and `{n,}`
-repeat 16 times at most, or fewer where the column is shorter than that.
+so a pattern using one is refused when you write it, with the construct named. Only `*`, `+` and
+`{n,}` repeat 16 times at most, or fewer where the column is shorter than that: an explicit `{n}` or
+`{n,m}` is honoured exactly, bounded only by the column's own length and by the run's own output
+budget. A pattern whose shortest possible match cannot fit the column is refused when you write it,
+naming the limit.
 
 A `CHECK` constraint carrying a pattern the generator understands sets the column up on its own.
 
@@ -194,6 +196,12 @@ given name.
 **Preview** generates a few dozen rows and shows them in a grid without writing anything. It runs
 the same code and the same seed as the real run, so a preview row is a row you will actually get.
 
+Tables are previewed parent first, the same order the run itself fills them in, so a foreign key
+pointing at a table that is also being generated draws from that table's own previewed rows instead
+of whatever the parent already holds on the server. This is what makes Preview work against a
+brand-new, empty schema: tick a parent and a child together and both preview successfully, even
+though the parent has no rows yet on the server.
+
 ## The seed
 
 A run is reproducible. The same profile and the same seed produce the same data every time. The seed
@@ -208,8 +216,8 @@ changing one table's row count does not change what another table gets.
 | Use a single transaction | Wraps the whole run in one transaction, so a failure leaves the database untouched. On a run of more than a million rows this grows the server's undo or write-ahead log, and the wizard warns before starting. |
 | Continue on error | Skips a batch the server rejected and carries on. Only available when a single transaction is off. |
 | Records per batch | How many rows go in one insert. Reduced automatically when the server's own limits are lower. |
-| Disable foreign key checks | Turns constraint checking off for the run where the engine allows it. |
-| Disable triggers | Stops triggers firing during the insert. Reported as skipped on engines that cannot do it. |
+| Disable foreign key checks | Turns constraint checking off for the run where the engine allows it. Also what lets two tables with mutually `NOT NULL` foreign keys be generated at all. |
+| Disable triggers | Stops triggers firing while a table's rows are written, then turns them back on for that table before the next one starts. PostgreSQL and SQL Server support it; MySQL and SQLite report it as skipped, and the run writes through their triggers as usual. |
 
 ## What runs, and in what order
 
@@ -224,16 +232,20 @@ The tables are then sorted so a parent is always filled before its children. For
 the table is emptied if asked, the rows are generated and written in batches, the new keys are
 collected for any child table that references them, and the table's sequence is lifted past the
 largest key that was written. That last step matters: without it the next insert your application
-makes collides with a generated row.
+makes collides with a generated row. If it fails, the run still finishes and the rows it already
+wrote still count: the report carries a warning naming the table and column instead of reporting the
+whole run as failed for data that landed correctly.
 
 A table that points at itself, such as `employee.manager_id`, is not treated as a loop. It is filled
 with the column left null, then a second pass sets it from the keys that were just created. That
 first pass writes a null, so a self-referencing column declared `NOT NULL` cannot be filled this way:
-the run is refused before it starts and names the column.
+the run is refused before it starts and names the column. Where the second pass cannot find its own
+rows again, such as a table with no primary key, the column is left null and the run says so instead
+of failing.
 
 Two tables that point at each other are a loop. When one of the foreign keys allows null, the loop
-is broken there and filled in on a second pass. When none of them do, the run needs foreign key
-checks turned off. When neither is possible the run fails and names the tables in the loop.
+is broken there and filled in on a second pass. When none of them do, the run needs **Disable foreign
+key checks** turned on: without it, a loop like this is refused and names the tables in it.
 
 ## Limits
 
@@ -256,8 +268,9 @@ local infile turned off, when **Continue on error** is on (a bulk stream fails a
 single bad row would take the batch with it), or when a child table needs the parent's new keys read
 back, which a bulk stream cannot report.
 
-Batch size follows the server's own limits rather than a fixed number: PostgreSQL's 65,535 bind
-parameters, MySQL's `max_allowed_packet`, SQL Server's 2,100 parameters, SQLite's variable limit.
+Batch size follows the server's own reported limits where it reports any. Where it does not, each
+vendor gets its own known ceiling instead of another vendor's: PostgreSQL's 65,535 bind parameters,
+MySQL's `max_allowed_packet`, SQL Server's 2,100 parameters, SQLite's 32,766.
 A bulk stream carries no bind parameters, so it is cut by size alone and takes far more rows per
 chunk.
 
@@ -269,10 +282,17 @@ emptied again, and the table that was interrupted picks up at the row it stopped
 rows continue the same seeded sequence, so the finished data is identical to what an uninterrupted
 run would have written, with no repeated values in unique columns.
 
-Resuming needs the same configuration. Change the seed, the row counts, or any column's generator
-and the run starts over from the beginning, because the recorded progress no longer describes the
-data on the server. A run with **Use a single transaction** on records nothing to resume from: an
-interruption rolls it back, so there is nothing left to continue.
+Resuming needs the same configuration against the same target. Change the seed, the row counts, a
+column's generator, or that generator's own settings, and the run starts over from the beginning,
+because the recorded progress no longer describes the data on the server. Running the same profile
+against a different connection, database, or schema starts over too, even with everything else
+identical: the recorded progress is tied to where the earlier run actually wrote. A run with **Use a
+single transaction** on records nothing to resume from: an interruption rolls it back, so there is
+nothing left to continue.
+
+A batch that **Continue on error** skips is not retried by a resume: the recorded progress tracks
+what the run produced, not only what the server accepted, so a resumed run picks up after the
+skipped batch rather than rewriting it.
 
 ## Stopping a run
 

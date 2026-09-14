@@ -127,16 +127,17 @@ enum AutoMapper {
     private static func apply(_ constraint: CheckConstraint, to draft: inout Draft) -> Bool {
         switch constraint {
         case .lowerBound(let value, let inclusive):
-            let minimum = bound(value, inclusive: inclusive, raising: true, draft: draft)
+            guard let minimum = bound(value, inclusive: inclusive, raising: true, draft: draft) else { return false }
             return applyBound(key: "min", value: minimum, to: &draft)
         case .upperBound(let value, let inclusive):
-            let maximum = bound(value, inclusive: inclusive, raising: false, draft: draft)
+            guard let maximum = bound(value, inclusive: inclusive, raising: false, draft: draft) else { return false }
             return applyBound(key: "max", value: maximum, to: &draft)
         case .allowedValues(let values):
             draft.identifier = ListGenerator.identifier
             draft.params = .object(["values": .array(values.map(JSONValue.string))])
             let guessed = ValidationWarning.guessedValues(column: draft.column.name)
             draft.warnings.removeAll { $0 == guessed }
+            clearAffixReplacedByCheck(&draft)
             return true
         case .maximumLength(let limit):
             return applyMaximumLength(limit, to: &draft)
@@ -163,7 +164,21 @@ enum AutoMapper {
         }
         draft.identifier = RegexGenerator.identifier
         draft.params = .object(["pattern": .string(pattern)])
+        clearAffixReplacedByCheck(&draft)
         return true
+    }
+
+    /// A prefix or suffix chosen for the generator the name rule picked survives
+    /// nothing about switching to a CHECK-derived one: `DecoratedGenerator` still
+    /// applies it after the fact, so an untouched affix would make the written
+    /// value satisfy neither the CHECK nor what the affix was for. The CHECK is
+    /// the server's own rule, so it wins and the affix is dropped, with a warning
+    /// so the drop is visible rather than silent.
+    private static func clearAffixReplacedByCheck(_ draft: inout Draft) {
+        guard draft.common.hasAffix else { return }
+        draft.common.prefix = ""
+        draft.common.suffix = ""
+        draft.warnings.append(.affixClearedByCheck(column: draft.column.name))
     }
 
     /// Every generator that takes the same `min` and `max` pair, which is what a
@@ -208,19 +223,32 @@ enum AutoMapper {
         inclusive: Bool,
         raising: Bool,
         draft: Draft
-    ) -> JSONValue {
+    ) -> JSONValue? {
+        guard value.isFinite else { return nil }
         let base = draft.column.type.base
         let isInteger = [.int8, .int16, .int32, .int64].contains(base)
         guard !inclusive else {
-            return isInteger ? .int(Int(raising ? value.rounded(.up) : value.rounded(.down))) : .double(value)
+            return isInteger
+                ? .int(Self.clampedInt(raising ? value.rounded(.up) : value.rounded(.down)))
+                : .double(value)
         }
         if isInteger {
-            return .int(Int(raising ? value.rounded(.down) + 1 : value.rounded(.up) - 1))
+            return .int(Self.clampedInt(raising ? value.rounded(.down) + 1 : value.rounded(.up) - 1))
         }
         guard base == .decimal else { return .double(raising ? value.nextUp : value.nextDown) }
         let scale = max(0, min(draft.column.type.scale ?? 2, 18))
         let step = pow(10.0, -Double(scale))
         return .double(raising ? value + step : value - step)
+    }
+
+    /// `Int(Double)` traps outside the representable range, and a CHECK literal
+    /// like `18446744073709551615` (a `bigint unsigned` maximum) is well past
+    /// `Int.max` while still a perfectly finite `Double`.
+    private static func clampedInt(_ value: Double) -> Int {
+        guard value.isFinite else { return 0 }
+        guard value < Double(Int.max) else { return Int.max }
+        guard value > Double(Int.min) else { return Int.min }
+        return Int(value)
     }
 
     /// A length cap the current generator cannot honour is switched to

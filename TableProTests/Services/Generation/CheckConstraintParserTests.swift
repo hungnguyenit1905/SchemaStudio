@@ -57,6 +57,22 @@ struct CheckConstraintParserTests {
         ))
     }
 
+    @Test("Stripping the leading check keyword requires a word boundary after it")
+    func checkKeywordRequiresWordBoundary() {
+        #expect(parse("CHECK (checkin_count >= 0)", "checkin_count") == ParsedCheckConstraint(
+            constraints: [.lowerBound(value: 0, inclusive: true)],
+            isComplete: true
+        ))
+        #expect(parse("CHECK (age > 0)", "age") == ParsedCheckConstraint(
+            constraints: [.lowerBound(value: 0, inclusive: false)],
+            isComplete: true
+        ))
+        #expect(parse("check(age > 0)", "age") == ParsedCheckConstraint(
+            constraints: [.lowerBound(value: 0, inclusive: false)],
+            isComplete: true
+        ))
+    }
+
     @Test("A reversed comparison still names the column's side")
     func reversedComparison() {
         #expect(parse("0 <= price", "price") == ParsedCheckConstraint(
@@ -355,6 +371,34 @@ struct AutoMapperCheckRefinementTests {
         #expect(resolution.warnings.isEmpty)
     }
 
+    @Test("A value-list check clears a name rule's prefix and suffix, not just its generator")
+    func valueListCheckClearsTheNameRulesAffix() {
+        let resolution = Fixtures.resolve(
+            "avatar",
+            "varchar(64)",
+            table: "users",
+            checkExpressions: ["avatar IN ('a.png','b.png')"]
+        )
+        #expect(resolution.identifier == "List")
+        #expect(resolution.common.prefix.isEmpty)
+        #expect(resolution.common.suffix.isEmpty)
+        #expect(resolution.warnings.contains(.affixClearedByCheck(column: "avatar")))
+    }
+
+    @Test("A pattern check clears a name rule's prefix and suffix, not just its generator")
+    func patternCheckClearsTheNameRulesAffix() {
+        let resolution = Fixtures.resolve(
+            "avatar",
+            "varchar(64)",
+            table: "users",
+            checkExpressions: ["CHECK (((avatar)::text ~ '^[a-z]{6}$'::text))"]
+        )
+        #expect(resolution.identifier == RegexGenerator.identifier)
+        #expect(resolution.common.prefix.isEmpty)
+        #expect(resolution.common.suffix.isEmpty)
+        #expect(resolution.warnings.contains(.affixClearedByCheck(column: "avatar")))
+    }
+
     @Test("A pattern outside the supported subset is reported instead of half applied")
     func unsupportedPatternWarns() {
         let expression = "CHECK (((sku)::text ~ '^(?=.*[0-9])[A-Z]+$'::text))"
@@ -432,6 +476,37 @@ struct AutoMapperCheckRefinementTests {
         )
         #expect(resolution.common.nullPercent == 0)
         #expect(resolution.warnings.isEmpty)
+    }
+
+    @Test("A CHECK literal past Int's range maps without trapping, clamped to the column's range")
+    func outOfRangeCheckLiteralDoesNotTrap() throws {
+        let column = Fixtures.column(
+            "qty",
+            "bigint",
+            table: "orders",
+            checkExpressions: ["CHECK ((qty <= 18446744073709551615))"]
+        )
+        let resolution = AutoMapper.resolve(column, table: "orders")
+        let profile = GenerationColumnProfile(
+            column: "qty",
+            generator: resolution.identifier,
+            params: resolution.params,
+            common: resolution.common
+        )
+        let generator = try GeneratorRegistry.standard.make(
+            identifier: resolution.identifier,
+            params: profile.paramData,
+            column: column,
+            seed: 5
+        )
+        for index in 0..<20 {
+            let value = try generator.next(row: RowContext(table: "orders", rowIndex: index), index: index)
+            guard case .int(let number) = value else {
+                Issue.record("expected an int, got \(value)")
+                continue
+            }
+            #expect(number >= 0)
+        }
     }
 
     @Test("A refined mapping still builds a generator")

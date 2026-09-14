@@ -218,7 +218,7 @@ enum CheckConstraintParser {
 
     private static func normalize(_ expression: String) -> String {
         var text = expression.trimmingCharacters(in: .whitespacesAndNewlines)
-        if text.lowercased().hasPrefix("check") {
+        if text.lowercased().hasPrefix("check"), Self.followsWithWordBoundary(text, afterPrefixLength: 5) {
             text = String(text.dropFirst(5)).trimmingCharacters(in: .whitespaces)
         }
         for type in multiWordTypes {
@@ -244,6 +244,15 @@ enum CheckConstraintParser {
             guard stripped != text else { return text }
             text = stripped
         }
+    }
+
+    /// `CHECK (checkin_count >= 0)` must not be mistaken for `check` followed by
+    /// `in_count >= 0`: the character right after the keyword has to be
+    /// whitespace or `(`, never another identifier character.
+    private static func followsWithWordBoundary(_ text: String, afterPrefixLength length: Int) -> Bool {
+        guard text.count > length else { return true }
+        let next = text[text.index(text.startIndex, offsetBy: length)]
+        return next.isWhitespace || next == "("
     }
 
     private static func strippingOuterParentheses(_ expression: String) -> String {

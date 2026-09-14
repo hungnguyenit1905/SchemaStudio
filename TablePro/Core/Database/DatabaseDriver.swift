@@ -218,6 +218,9 @@ protocol DatabaseDriver: AnyObject, Sendable {
     func foreignKeyDisableStatements() -> [String]?
     func foreignKeyEnableStatements() -> [String]?
 
+    func triggerDisableStatements(table: String, schema: String?) -> [String]?
+    func triggerEnableStatements(table: String, schema: String?) -> [String]?
+
     // Definition SQL for clipboard copy
     func generateColumnDefinitionSQL(column: PluginColumnDefinition) -> String?
     func generateIndexDefinitionSQL(index: PluginIndexDefinition, tableName: String?) -> String?
@@ -260,6 +263,9 @@ extension DatabaseDriver {
 
     func foreignKeyDisableStatements() -> [String]? { nil }
     func foreignKeyEnableStatements() -> [String]? { nil }
+
+    func triggerDisableStatements(table: String, schema: String?) -> [String]? { nil }
+    func triggerEnableStatements(table: String, schema: String?) -> [String]? { nil }
 
     func generateColumnDefinitionSQL(column: PluginColumnDefinition) -> String? { nil }
     func generateIndexDefinitionSQL(index: PluginIndexDefinition, tableName: String?) -> String? { nil }

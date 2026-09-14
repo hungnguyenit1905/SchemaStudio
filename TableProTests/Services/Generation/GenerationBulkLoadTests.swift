@@ -267,6 +267,23 @@ struct GenerationBulkLoadTests {
         }
     }
 
+    @Test("A driver reporting nil limits on an MSSQL-typed connection splits at 2,100 parameters")
+    func nilLimitsFallBackToTheVendorCeiling() async throws {
+        let driver = FakeGenerationDriver()
+        driver.reportsNilLimits = true
+        let plan = try Self.plan(rows: 10_000)
+        let engine = GenerationRuntimeFixtures.engine(driver: driver, databaseType: .mssql)
+
+        _ = try await GenerationRuntimeFixtures.collect(engine.run(plan: plan))
+
+        // "name" and "weight" are two columns, so 2,100 bind parameters allow
+        // 1,050 rows per batch: fewer batches would mean the fallback used
+        // PostgreSQL's ceiling instead of MSSQL's.
+        let batchSizes = driver.batches.filter { $0.table.table == "events" }.map { $0.rows.count }
+        #expect(batchSizes.allSatisfy { $0 <= 1_050 })
+        #expect(batchSizes.contains(1_050))
+    }
+
     @Test("A bulk chunk is cut by bytes alone")
     func bulkChunkIgnoresParameterCeiling() async throws {
         let driver = FakeGenerationDriver()

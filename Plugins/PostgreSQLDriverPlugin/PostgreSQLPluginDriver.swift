@@ -115,6 +115,16 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         ["SET session_replication_role = DEFAULT"]
     }
 
+    // MARK: - Triggers
+
+    func triggerDisableStatements(table: String, schema: String?) -> [String]? {
+        ["ALTER TABLE \(qualifiedTable(table, schema: schema)) DISABLE TRIGGER USER"]
+    }
+
+    func triggerEnableStatements(table: String, schema: String?) -> [String]? {
+        ["ALTER TABLE \(qualifiedTable(table, schema: schema)) ENABLE TRIGGER USER"]
+    }
+
     // MARK: - Maintenance
 
     func supportedMaintenanceOperations() -> [String]? {

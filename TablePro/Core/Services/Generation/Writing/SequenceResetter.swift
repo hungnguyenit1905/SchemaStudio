@@ -19,13 +19,38 @@ struct SequenceResetter {
         self.driver = driver
     }
 
-    func reset(table: TablePlan) async throws {
+    /// A failure resetting one column is reported back as a warning rather than
+    /// thrown, so one column's failure never stops another column's reset in the
+    /// same table, and never turns a run whose rows already committed into a
+    /// failed run.
+    func reset(table: TablePlan) async -> [GenerationWarning] {
+        var warnings: [GenerationWarning] = []
         for backed in table.sequenceBackedColumns {
-            try await driver.resetSequence(
-                table: table.reference,
-                column: backed.column,
-                sequenceName: backed.sequenceName
-            )
+            do {
+                try await driver.resetSequence(
+                    table: table.reference,
+                    column: backed.column,
+                    sequenceName: backed.sequenceName
+                )
+            } catch {
+                warnings.append(
+                    GenerationWarning(
+                        column: "\(table.qualifiedName).\(backed.column)",
+                        message: String(
+                            format: String(
+                                localized: """
+                                Resetting the sequence for %@.%@ failed: %@. Without it the next insert your \
+                                application makes may collide with a generated row.
+                                """
+                            ),
+                            table.qualifiedName,
+                            backed.column,
+                            error.localizedDescription
+                        )
+                    )
+                )
+            }
         }
+        return warnings
     }
 }

@@ -33,6 +33,31 @@ private final class CyclingTextGenerator: ValueGenerator {
     }
 }
 
+private final class CyclingDecimalTextGenerator: ValueGenerator {
+    static let identifier = "test.cyclingDecimalText"
+
+    private let values: [String]
+    private var position = 0
+
+    init(values: [String]) {
+        self.values = values
+    }
+
+    init(params: Data, column: GenerationColumn, seed: UInt64) throws {
+        values = []
+    }
+
+    func next(row: RowContext, index: Int) throws -> PluginCellValue {
+        guard !values.isEmpty else { return .null }
+        defer { position += 1 }
+        return .decimalText(values[position % values.count])
+    }
+
+    func reset() {
+        position = 0
+    }
+}
+
 private final class CountingIntGenerator: ValueGenerator {
     static let identifier = "test.countingInt"
 
@@ -249,6 +274,27 @@ struct DecoratedGeneratorTests {
             common: CommonParams(prefix: "p", suffix: "s", textCase: .uppercase)
         )
         #expect(try take(generator, 3) == [.int(0), .int(1), .int(2)])
+    }
+
+    @Test("decimalText is decorated and truncated exactly like text")
+    func decimalTextIsDecorated() throws {
+        let generator = decorated(
+            inner: CyclingDecimalTextGenerator(values: ["12.5"]),
+            column: column(dataType: "varchar(6)"),
+            common: CommonParams(prefix: "$", suffix: "!")
+        )
+        let value = try generator.next(row: row, index: 0)
+        #expect(value == .decimalText("$12.5!"))
+    }
+
+    @Test("decimalText is truncated to the column's length like text")
+    func decimalTextIsTruncated() throws {
+        let generator = decorated(
+            inner: CyclingDecimalTextGenerator(values: ["1234.56"]),
+            column: column(dataType: "varchar(4)")
+        )
+        let value = try generator.next(row: row, index: 0)
+        #expect(value == .decimalText("1234"))
     }
 
     @Test("Two decorators built from the same seed emit identical sequences")

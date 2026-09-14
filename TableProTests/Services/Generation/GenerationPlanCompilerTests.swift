@@ -57,6 +57,16 @@ struct ColumnDependencySorterTests {
             _ = try ColumnDependencySorter.sort(columns: ["a"], dependencies: ["a": ["a"]], table: "t")
         }
     }
+
+    @Test("A column named twice does not trap building the in-degree map")
+    func duplicateColumnDoesNotTrap() throws {
+        let sorted = try ColumnDependencySorter.sort(
+            columns: ["a", "b", "a"],
+            dependencies: [:],
+            table: "t"
+        )
+        #expect(sorted == ["a", "b"])
+    }
 }
 
 @Suite("GenerationPlanCompiler")
@@ -172,6 +182,15 @@ struct GenerationPlanCompilerTests {
         #expect(plan.seed == 4_242)
         #expect(plan.tables.first?.rowCount == 250)
         #expect(plan.tables.first?.emptyFirst == true)
+    }
+
+    @Test("A table named twice in the profile compiles without trapping")
+    func duplicateTableDoesNotTrap() throws {
+        let schema = [Fixtures.table("t", columns: [PluginColumnInfo(name: "a", dataType: "text")])]
+        var profile = Fixtures.autoProfile(for: schema)
+        profile.tables.append(profile.tables[0])
+        let plan = try GenerationPlanCompiler().compile(profile: profile, schema: schema)
+        #expect(plan.tables.map(\.reference.table) == ["t"])
     }
 
     @Test("A table in the profile that the schema no longer has is dropped from the plan")

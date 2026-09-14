@@ -22,7 +22,11 @@ enum GenerationError: Error, Equatable {
     case unknownColumn(table: String, column: String)
     case referencePoolTooSmall(table: String, columns: [String], poolCount: Int, rowCount: Int)
     case destructiveOperationBlocked(table: String)
+    case safeModeBlocksWrites
     case writeFailed(table: String, reason: String)
+    case duplicateTableReference(table: String)
+    case duplicateColumnReference(table: String, column: String)
+    case generatorUnsuitableForColumn(table: String, column: String, generator: String)
 }
 
 extension GenerationError: LocalizedError {
@@ -125,8 +129,25 @@ extension GenerationError: LocalizedError {
                 format: String(localized: "This connection does not allow emptying %@."),
                 table
             )
+        case .safeModeBlocksWrites:
+            return String(localized: "This connection's Safe Mode level is read-only, so nothing can be written.")
         case .writeFailed(let table, let reason):
             return String(format: String(localized: "Writing rows into %@ failed: %@"), table, reason)
+        case .duplicateTableReference(let table):
+            return String(format: String(localized: "%@ appears more than once in this profile."), table)
+        case .duplicateColumnReference(let table, let column):
+            return String(
+                format: String(localized: "%@ names %@ more than once."),
+                table,
+                column
+            )
+        case .generatorUnsuitableForColumn(let table, let column, let generator):
+            return String(
+                format: String(localized: "%@ produces values %@.%@'s type cannot hold."),
+                generator,
+                table,
+                column
+            )
         }
     }
 
@@ -187,8 +208,18 @@ extension GenerationError: LocalizedError {
             return String(
                 localized: "Turn off Empty table before generating, or allow destructive operations on this connection."
             )
+        case .safeModeBlocksWrites:
+            return String(
+                localized: "Change the connection's Safe Mode level, or point the run at a different connection."
+            )
         case .writeFailed:
             return String(localized: "Check the server's error, then run the generation again.")
+        case .duplicateTableReference:
+            return String(localized: "Remove the repeated table from the profile before running it.")
+        case .duplicateColumnReference:
+            return String(localized: "Remove the repeated column from the profile before running it.")
+        case .generatorUnsuitableForColumn:
+            return String(localized: "Pick a generator whose output matches this column's type.")
         }
     }
 }

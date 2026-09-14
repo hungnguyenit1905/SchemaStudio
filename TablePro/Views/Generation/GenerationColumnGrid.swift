@@ -95,8 +95,10 @@ struct GenerationColumnGrid: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
+                let offeredIdentifiers = facts.map { GeneratorRegistry.standard.identifiers(suitableFor: $0.type.base) }
+                    ?? GeneratorRegistry.standard.identifiers
                 Picker("", selection: generatorBinding(for: columnProfile)) {
-                    ForEach(GeneratorRegistry.standard.identifiers, id: \.self) { identifier in
+                    ForEach(offeredIdentifiers, id: \.self) { identifier in
                         Text(identifier).tag(identifier)
                     }
                 }

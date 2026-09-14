@@ -10,6 +10,7 @@ struct GeneratorRegistry: Sendable {
         let identifier: String
         let paramSchema: ParamSchema
         let excludesColumnFromInsert: Bool
+        let producesKind: GenerationOutputKind
         let make: @Sendable (Data, GenerationColumn, UInt64) throws -> any ValueGenerator
     }
 
@@ -27,11 +28,24 @@ struct GeneratorRegistry: Sendable {
         entries[identifier]?.excludesColumnFromInsert ?? false
     }
 
+    func producesKind(for identifier: String) -> GenerationOutputKind? {
+        entries[identifier]?.producesKind
+    }
+
+    /// Every registered identifier whose declared output kind suits `base`.
+    /// This is the same predicate `GenerationProfileValidator` refuses an
+    /// unsuitable pairing with, so a generator the grid offers here never
+    /// fails validation for that reason alone.
+    func identifiers(suitableFor base: TransferBaseType) -> [String] {
+        entries.values.filter { $0.producesKind.suits(base) }.map(\.identifier).sorted()
+    }
+
     mutating func register<Generator: ValueGenerator>(_ type: Generator.Type) {
         entries[type.identifier] = Entry(
             identifier: type.identifier,
             paramSchema: type.paramSchema,
             excludesColumnFromInsert: type.excludesColumnFromInsert,
+            producesKind: type.producesKind,
             make: { params, column, seed in try type.init(params: params, column: column, seed: seed) }
         )
     }

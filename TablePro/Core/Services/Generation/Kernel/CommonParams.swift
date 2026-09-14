@@ -21,12 +21,6 @@ enum GenerationTextCase: String, Codable, Sendable, Hashable, CaseIterable {
     }
 }
 
-enum GenerationSortOrder: String, Codable, Sendable, Hashable, CaseIterable {
-    case unsorted
-    case ascending
-    case descending
-}
-
 struct CommonParams: Codable, Sendable, Hashable {
     var nullPercent: Int
     var blankPercent: Int
@@ -34,7 +28,6 @@ struct CommonParams: Codable, Sendable, Hashable {
     var prefix: String
     var suffix: String
     var textCase: GenerationTextCase
-    var sortOrder: GenerationSortOrder
 
     init(
         nullPercent: Int = 0,
@@ -42,8 +35,7 @@ struct CommonParams: Codable, Sendable, Hashable {
         unique: Bool = false,
         prefix: String = "",
         suffix: String = "",
-        textCase: GenerationTextCase = .unchanged,
-        sortOrder: GenerationSortOrder = .unsorted
+        textCase: GenerationTextCase = .unchanged
     ) {
         self.nullPercent = nullPercent
         self.blankPercent = blankPercent
@@ -51,12 +43,13 @@ struct CommonParams: Codable, Sendable, Hashable {
         self.prefix = prefix
         self.suffix = suffix
         self.textCase = textCase
-        self.sortOrder = sortOrder
     }
 
     /// Written by hand because a synthesized `init(from:)` ignores the property
     /// defaults above and throws `keyNotFound` for every key a saved profile
-    /// happens not to carry.
+    /// happens not to carry. `decodeIfPresent` is also what lets a profile
+    /// exported before `sortOrder` was removed keep importing: the key has no
+    /// `CodingKeys` case any more, so the decoder just ignores it.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         nullPercent = try container.decodeIfPresent(Int.self, forKey: .nullPercent) ?? 0
@@ -65,7 +58,6 @@ struct CommonParams: Codable, Sendable, Hashable {
         prefix = try container.decodeIfPresent(String.self, forKey: .prefix) ?? ""
         suffix = try container.decodeIfPresent(String.self, forKey: .suffix) ?? ""
         textCase = try container.decodeIfPresent(GenerationTextCase.self, forKey: .textCase) ?? .unchanged
-        sortOrder = try container.decodeIfPresent(GenerationSortOrder.self, forKey: .sortOrder) ?? .unsorted
     }
 
     static let none = CommonParams()

@@ -74,11 +74,28 @@ final class IntegerGenerator: ValueGenerator {
         let lastStep = Double(stepCount - 1)
         let lower = Double(lowerBound)
         let drawn = distribution.sample(in: lower...(lower + lastStep * Double(step)), using: &rng)
-        let offset = UInt64(min(max(((drawn - lower) / Double(step)).rounded(), 0), lastStep))
+        let offset = Self.saturatingOffset(
+            ((drawn - lower) / Double(step)).rounded(),
+            upperBound: stepCount - 1
+        )
         return .int(lowerBound &+ Int64(bitPattern: offset &* UInt64(step)))
     }
 
     func reset() {
         rng = SplitMix64(seed: seed)
+    }
+
+    /// A mean parked far outside the range exhausts `Distribution`'s redraw
+    /// budget and clamps to the range's own upper bound, which for a `bigint`
+    /// with no bounds is close enough to `Double`'s integer precision limit
+    /// that rounding it up lands on `2^64`: not representable as `UInt64`, and
+    /// the trapping initializer used to be handed exactly that value. Clamping
+    /// in the integer domain instead of the floating one is what
+    /// `GenerationValueMapper.saturatingCount` already does for the adjacent
+    /// problem.
+    private static func saturatingOffset(_ value: Double, upperBound: UInt64) -> UInt64 {
+        guard value.isFinite, value > 0 else { return 0 }
+        guard value < Double(UInt64.max) else { return upperBound }
+        return min(UInt64(value), upperBound)
     }
 }

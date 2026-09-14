@@ -51,8 +51,6 @@ final class SqlQueryGenerator: ValueGenerator, SqlQueryConsuming {
         var skew: Double?
     }
 
-    private static let readOnlyKeywords = ["select", "with"]
-
     private let columnName: String
     private let seed: UInt64
     private var picker: PoolValuePicker
@@ -115,26 +113,7 @@ final class SqlQueryGenerator: ValueGenerator, SqlQueryConsuming {
         picker.bind(count: values.count)
     }
 
-    /// Leading comments are stripped before the first keyword is read, because
-    /// `/* note */ DELETE ...` would otherwise pass a naive prefix check.
     static func isReadOnly(_ query: String) -> Bool {
-        var remainder = Substring(query.trimmingCharacters(in: .whitespacesAndNewlines))
-        while true {
-            if remainder.hasPrefix("--") {
-                guard let newline = remainder.firstIndex(of: "\n") else { return false }
-                remainder = remainder[remainder.index(after: newline)...]
-            } else if remainder.hasPrefix("/*") {
-                guard let close = remainder.range(of: "*/") else { return false }
-                remainder = remainder[close.upperBound...]
-            } else if let first = remainder.first, first.isWhitespace {
-                remainder = remainder.dropFirst()
-            } else {
-                break
-            }
-        }
-        let keyword = remainder.prefix { $0.isLetter }.lowercased()
-        guard readOnlyKeywords.contains(keyword) else { return false }
-        let body = remainder.hasSuffix(";") ? remainder.dropLast() : remainder
-        return !body.contains(";")
+        ReadOnlyQueryGate.isReadOnly(query)
     }
 }

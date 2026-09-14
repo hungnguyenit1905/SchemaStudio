@@ -17,6 +17,18 @@ struct GenerationRunOptions: Sendable {
     var referenceStrategy: ReferenceStrategy = .random
     var singleTransactionRowWarningThreshold = 1_000_000
 
+    /// Turns foreign key checks off for the whole run, not only for the cycle
+    /// `DependencyResolver` could not otherwise order. A driver that cannot
+    /// honour this reports it as unsupported rather than silently ignoring it.
+    var disablesForeignKeyChecks = false
+
+    /// Turns triggers off per table, for the tables this run writes to.
+    /// Reported as skipped on an engine that cannot do it (MySQL, SQLite).
+    /// Never issued while `singleTransaction` is on and the driver supports
+    /// transactions, since an `ALTER` there could commit the run's
+    /// transaction early on an engine whose trigger DDL is not transactional.
+    var disablesTriggers = false
+
     /// Records how far each table got so an interrupted run continues instead of
     /// starting over. Never used with `singleTransaction`, where an interruption
     /// rolls the whole run back and there is nothing on the server to resume onto.
@@ -38,8 +50,10 @@ actor GenerationEngine {
     private let registry: GeneratorRegistry
     private let truncator: GenerationStringTruncator
     private let options: GenerationRunOptions
-    private let maxBindParameters: Int
+    private let databaseType: DatabaseType
+    private let maxBindParameters: Int?
     private let checkpoints: GenerationCheckpointStore
+    private let onForeignKeyRestoreFailed: (@Sendable () async -> Void)?
 
     private var isCancelled = false
     private var harvested: [GenerationTableReference: HarvestedKeys] = [:]
@@ -58,20 +72,30 @@ actor GenerationEngine {
         }
     }
 
+    /// `maxBindParameters` is an explicit override for a caller that already
+    /// knows the right ceiling; leaving it `nil` computes it from `databaseType`
+    /// and whatever `serverLimits()` reports at run time, through the same
+    /// `TransferBindParameterLimits` Data Transfer uses, so SQLite and SQL
+    /// Server get their own ceiling instead of PostgreSQL's when the server
+    /// reports no limits of its own.
     init(
         driver: any GenerationDriver,
         registry: GeneratorRegistry = .standard,
         truncator: GenerationStringTruncator = GenerationStringTruncator(unit: .unicodeScalars),
-        maxBindParameters: Int = 65_535,
+        databaseType: DatabaseType = .postgresql,
+        maxBindParameters: Int? = nil,
         options: GenerationRunOptions = GenerationRunOptions(),
-        checkpoints: GenerationCheckpointStore = .shared
+        checkpoints: GenerationCheckpointStore = .shared,
+        onForeignKeyRestoreFailed: (@Sendable () async -> Void)? = nil
     ) {
         self.driver = driver
         self.registry = registry
         self.truncator = truncator
         self.options = options
+        self.databaseType = databaseType
         self.maxBindParameters = maxBindParameters
         self.checkpoints = checkpoints
+        self.onForeignKeyRestoreFailed = onForeignKeyRestoreFailed
     }
 
     func cancel() {
@@ -117,8 +141,16 @@ actor GenerationEngine {
         var transactionOpen = false
         do {
             try await hooks.preflight(plan: plan)
-            if plan.requiresConstraintDisable {
-                try await hooks.disableForeignKeyChecks()
+            if plan.requiresConstraintDisable || options.disablesForeignKeyChecks {
+                if driver.canDisableForeignKeyChecks {
+                    try await hooks.disableForeignKeyChecks()
+                } else {
+                    let message = String(
+                        localized: "Foreign key checks cannot be disabled by this engine. The run continues with them on."
+                    )
+                    warnings.append(GenerationWarning(column: "", message: message))
+                    continuation.yield(.warning(message))
+                }
             }
             if options.singleTransaction, driver.supportsTransactions {
                 try await driver.beginTransaction()
@@ -145,8 +177,8 @@ actor GenerationEngine {
                 try await driver.commitTransaction()
                 transactionOpen = false
             }
-            try await resetSequences(plan: plan)
-            await hooks.restoreForeignKeyChecks()
+            await resetSequences(plan: plan, warnings: &warnings, continuation: continuation)
+            await handleForeignKeyRestore(hooks: hooks, warnings: &warnings, continuation: continuation)
             await clearCheckpoints(plan: plan)
             continuation.yield(
                 .finished(
@@ -161,16 +193,31 @@ actor GenerationEngine {
             continuation.finish()
         } catch is CancellationError {
             if transactionOpen { try? await driver.rollbackTransaction() }
-            await hooks.restoreForeignKeyChecks()
+            await handleForeignKeyRestore(hooks: hooks, warnings: &warnings, continuation: continuation)
             let written = reports.reduce(0) { $0 + $1.rowsWritten }
             continuation.yield(.cancelled(rowsWritten: transactionOpen ? 0 : written))
             continuation.finish()
         } catch {
             if transactionOpen { try? await driver.rollbackTransaction() }
-            await hooks.restoreForeignKeyChecks()
+            await handleForeignKeyRestore(hooks: hooks, warnings: &warnings, continuation: continuation)
             Self.logger.error("Generation failed: \(error.localizedDescription, privacy: .public)")
             continuation.finish(throwing: error)
         }
+    }
+
+    /// A failed restore is never silently swallowed: the caller learns about it
+    /// through a warning, the driver-level flag stays true so nobody mistakes the
+    /// connection for clean, and whoever built the engine gets a chance to make
+    /// sure this connection is never handed out again with checks left off.
+    private func handleForeignKeyRestore(
+        hooks: GenerationTableHooks,
+        warnings: inout [GenerationWarning],
+        continuation: AsyncThrowingStream<GenerationEvent, Error>.Continuation
+    ) async {
+        guard let warning = await hooks.restoreForeignKeyChecks() else { return }
+        warnings.append(warning)
+        continuation.yield(.warning(warning.message))
+        await onForeignKeyRestoreFailed?()
     }
 
     private func generate(
@@ -185,9 +232,12 @@ actor GenerationEngine {
     ) async throws {
         let startedAt = Date()
         continuation.yield(.tableStarted(table: table.qualifiedName, rowCount: table.rowCount))
-        // A table the profile empties first has nothing worth resuming onto: the
-        // rows an earlier attempt wrote are the ones this run is about to delete.
-        let resume = table.emptyFirst ? nil : resume
+        // A table the profile empties first has nothing worth resuming onto only
+        // when an earlier attempt was interrupted: the rows it wrote are the ones
+        // this run is about to delete. A table that already finished is not being
+        // resumed at all, and discarding its checkpoint here would empty and
+        // regenerate a table the docs promise stays untouched.
+        let resume = (table.emptyFirst && resume?.isComplete != true) ? nil : resume
         if resume?.isComplete == true {
             reports.append(Self.skippedReport(table: table, startedAt: startedAt))
             continuation.yield(
@@ -200,6 +250,52 @@ actor GenerationEngine {
             return
         }
 
+        let managesTriggers = options.disablesTriggers && (!driver.supportsTransactions || !options.singleTransaction)
+        if managesTriggers, let warning = await hooks.disableTriggers(for: table) {
+            warnings.append(warning)
+            continuation.yield(.warning(warning.message))
+        }
+
+        do {
+            try await writeRows(
+                table: table,
+                plan: plan,
+                limits: limits,
+                resume: resume,
+                startedAt: startedAt,
+                hooks: hooks,
+                reports: &reports,
+                warnings: &warnings,
+                continuation: continuation
+            )
+        } catch {
+            if managesTriggers, let warning = await hooks.restoreTriggers(for: table) {
+                warnings.append(warning)
+                continuation.yield(.warning(warning.message))
+            }
+            throw error
+        }
+        if managesTriggers, let warning = await hooks.restoreTriggers(for: table) {
+            warnings.append(warning)
+            continuation.yield(.warning(warning.message))
+        }
+    }
+
+    /// The row loop and everything hung off it: building rows, routing to bulk
+    /// load or prepared batches, checkpointing and the table's final report.
+    /// Split out of `generate` so trigger disable and restore, which wrap this
+    /// whole thing, do not have to reach into the writer this creates.
+    private func writeRows(
+        table: TablePlan,
+        plan: GenerationPlan,
+        limits: PluginServerLimits?,
+        resume: GenerationCheckpoint?,
+        startedAt: Date,
+        hooks: GenerationTableHooks,
+        reports: inout [GenerationTableReport],
+        warnings: inout [GenerationWarning],
+        continuation: AsyncThrowingStream<GenerationEvent, Error>.Continuation
+    ) async throws {
         let firstRow = min(max(resume?.rowsWritten ?? 0, 0), table.rowCount)
         if firstRow == 0 {
             try await hooks.emptyTable(table)
@@ -238,7 +334,8 @@ actor GenerationEngine {
             columns: table.insertColumns,
             harvestColumns: harvestColumns,
             limits: limits,
-            maxBindParameters: maxBindParameters,
+            maxBindParameters: maxBindParameters
+                ?? TransferBindParameterLimits.maxBindParameters(for: databaseType, limits: limits),
             continueOnError: options.continueOnError,
             strategy: route.strategy,
             rowsAlreadyWritten: firstRow,
@@ -316,10 +413,24 @@ actor GenerationEngine {
     /// a sequence mid-run would end the run's transaction early and leave a later
     /// failure only half rolled back. A run that never commits needs no reset
     /// anyway: the rows it wrote are gone.
-    private func resetSequences(plan: GenerationPlan) async throws {
+    ///
+    /// The rows are already committed by the time this runs, so a reset failure
+    /// is a warning, never a run failure: reporting the run as failed for rows
+    /// that landed correctly would be a lie, and it would also skip
+    /// `clearCheckpoints`, leaving a resumed retry as a no-op that reports success
+    /// without ever resetting the sequence either.
+    private func resetSequences(
+        plan: GenerationPlan,
+        warnings: inout [GenerationWarning],
+        continuation: AsyncThrowingStream<GenerationEvent, Error>.Continuation
+    ) async {
         let resetter = SequenceResetter(driver: driver)
         for table in plan.tables where !table.sequenceBackedColumns.isEmpty {
-            try await resetter.reset(table: table)
+            let failures = await resetter.reset(table: table)
+            warnings.append(contentsOf: failures)
+            for failure in failures {
+                continuation.yield(.warning(failure.message))
+            }
         }
     }
 
@@ -333,7 +444,12 @@ actor GenerationEngine {
         let updater = SecondPassUpdater(driver: driver, poolLimit: options.referencePoolLimit)
         for table in plan.tables where !table.deferredColumns.isEmpty {
             try checkCancellation()
-            let outcome = try await updater.fill(table: table, runSeed: plan.seed)
+            let harvestedOwnKeys = harvested[table.reference]?.project(table.primaryKeyColumns)
+            let outcome = try await updater.fill(
+                table: table,
+                runSeed: plan.seed,
+                harvestedOwnKeys: harvestedOwnKeys
+            )
             warnings.append(contentsOf: outcome.warnings)
             for warning in outcome.warnings {
                 continuation.yield(.warning(warning.message))
@@ -395,10 +511,10 @@ actor GenerationEngine {
         let store = checkpoints
         let jobId = GenerationCheckpointStore.jobId(for: plan)
         let name = table.qualifiedName
-        return { rowsWritten in
+        return { rowsConsumed in
             await store.record(
                 jobId: jobId,
-                entry: GenerationCheckpoint(table: name, rowsWritten: rowsWritten)
+                entry: GenerationCheckpoint(table: name, rowsWritten: rowsConsumed)
             )
         }
     }
@@ -483,6 +599,13 @@ actor GenerationEngine {
                 for referenced in key.referencedColumns where !wanted.contains(referenced) {
                     wanted.append(referenced)
                 }
+            }
+        }
+        // A table with a deferred column has to find the rows it just wrote for
+        // its own second pass, whether or not any other table points at it.
+        if let owner = plan.tables.first(where: { $0.reference == table }), !owner.deferredColumns.isEmpty {
+            for column in owner.primaryKeyColumns where !wanted.contains(column) {
+                wanted.append(column)
             }
         }
         return wanted

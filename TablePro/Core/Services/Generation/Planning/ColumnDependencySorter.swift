@@ -14,6 +14,7 @@ enum ColumnDependencySorter {
         dependencies: [String: [String]],
         table: String
     ) throws -> [String] {
+        let columns = Self.distinctColumns(columns)
         let present = Set(columns)
         var inDegree = Dictionary(uniqueKeysWithValues: columns.map { ($0, 0) })
         var dependents: [String: [String]] = [:]
@@ -46,5 +47,16 @@ enum ColumnDependencySorter {
             )
         }
         return ordered
+    }
+
+    /// A profile that names the same column twice for one table reaches here
+    /// before the validator can refuse it in every path except an imported
+    /// profile, so the sorter has to survive the duplicate rather than trust
+    /// callers to have already removed it. `Dictionary(uniqueKeysWithValues:)`
+    /// traps on a repeat key, and letting the duplicate through would double
+    /// the column in the plan instead.
+    private static func distinctColumns(_ columns: [String]) -> [String] {
+        var seen: Set<String> = []
+        return columns.filter { seen.insert($0).inserted }
     }
 }

@@ -76,6 +76,40 @@ struct GenerationProfileExportTests {
         #expect(!text.lowercased().contains("\"scope\""))
     }
 
+    @Test("A profile exported before the Sort option was removed still imports")
+    func staleSortOrderKeyStillImports() throws {
+        let json = """
+        {
+            "version": 1,
+            "name": "legacy",
+            "seed": 7,
+            "tables": [
+                {
+                    "table": "users",
+                    "rowCount": 10,
+                    "columns": [
+                        {
+                            "column": "email",
+                            "generator": "Email",
+                            "common": {
+                                "nullPercent": 0,
+                                "blankPercent": 0,
+                                "unique": false,
+                                "prefix": "",
+                                "suffix": "",
+                                "textCase": "unchanged",
+                                "sortOrder": "descending"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+        """
+        let imported = try GenerationProfileExporter.importProfile(from: Data(json.utf8))
+        #expect(imported.tables.first?.columns.first?.common == CommonParams())
+    }
+
     @Test("Importing a profile saved by a newer version is refused, not half-read")
     func newerVersionIsRefused() throws {
         let json = """

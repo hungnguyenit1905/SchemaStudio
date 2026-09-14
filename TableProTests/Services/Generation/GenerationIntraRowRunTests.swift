@@ -196,6 +196,52 @@ struct GenerationIntraRowRunTests {
         }
     }
 
+    @Test("A relative offset that would overflow clamps instead of trapping, and warns")
+    func relativeOffsetOverflowClampsAndWarns() async throws {
+        let schema = [
+            GenerationPlanningFixtures.table("events", columns: [
+                PluginColumnInfo(name: "created_at", dataType: "timestamp", isNullable: false),
+                PluginColumnInfo(name: "updated_at", dataType: "timestamp", isNullable: false)
+            ])
+        ]
+        let profile = GenerationPlanningFixtures.profile(tables: [
+            GenerationPlanningFixtures.tableProfile("events", rowCount: 5, columns: [
+                GenerationRuntimeFixtures.columnProfile(
+                    "created_at",
+                    generator: "DateTime",
+                    params: .object(["from": .string("2038-01-01T00:00:00Z"), "to": .string("2038-01-01T00:00:01Z")])
+                ),
+                GenerationRuntimeFixtures.columnProfile(
+                    "updated_at",
+                    generator: "RelativeDateTime",
+                    params: .object([
+                        "baseColumn": .string("created_at"),
+                        "unit": .string("day"),
+                        "offsetMin": .int(Int.max - 10),
+                        "offsetMax": .int(Int.max)
+                    ])
+                )
+            ])
+        ])
+        let driver = FakeGenerationDriver()
+        let plan = try GenerationRuntimeFixtures.plan(profile: profile, schema: schema)
+
+        let events = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan)
+        )
+
+        let updated = try Self.values(driver, column: "updated_at")
+        #expect(updated.count == 5)
+        for value in updated {
+            guard case .timestamp = value else {
+                Issue.record("expected a timestamp, got \(value)")
+                continue
+            }
+        }
+        let report = try #require(GenerationRuntimeFixtures.report(in: events))
+        #expect(report.warnings.contains { $0.column == "updated_at" })
+    }
+
     @Test("The preview draws the same rows the run writes")
     func previewMatchesTheRun() async throws {
         let driver = FakeGenerationDriver()

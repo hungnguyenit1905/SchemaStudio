@@ -68,6 +68,8 @@ final class DataGenerationWizardModel {
     var emptyFirst = false
     var singleTransaction = GenerationDialogStorage.shared.loadSingleTransaction()
     var continueOnError = GenerationDialogStorage.shared.loadContinueOnError()
+    var disablesForeignKeyChecks = GenerationDialogStorage.shared.loadDisablesForeignKeyChecks()
+    var disablesTriggers = GenerationDialogStorage.shared.loadDisablesTriggers()
 
     /// Only reaches a composite foreign key's pool: a single-column `Reference`
     /// draws from its own seeded stream and ignores the strategy entirely. It is not
@@ -89,6 +91,14 @@ final class DataGenerationWizardModel {
     /// Facts read from the server, re-read at the start of every run. The profile
     /// remembers names; it never remembers shape.
     private(set) var schemaFacts: [GenerationTable] = []
+
+    /// How many rows a referenced, non-generated parent holds right now, for the
+    /// tables the current selection actually points a `NOT NULL` foreign key at.
+    /// Loaded once per selection change rather than read inside `validationErrors`,
+    /// which is a computed property and cannot await a query. A parent this run
+    /// does not know about yet keeps no entry, which `GenerationProfileValidator`
+    /// treats as "unknown" and never blocks on.
+    private(set) var referencedParentRowCounts: [GenerationTableReference: Int] = [:]
     private(set) var profile = GenerationProfile(name: "generation", seed: 0, tables: [])
     private(set) var mappingWarnings: [ValidationWarning] = []
 
@@ -102,12 +112,19 @@ final class DataGenerationWizardModel {
     var pendingDiff: GenerationProfileDiff?
     var pendingWarnings: [ValidationWarning] = []
 
-    /// Turns true once `blocksDestructiveOperations` lands on `DatabaseConnection`,
-    /// which belongs to the pending destructive-operation plan. Until then nothing
-    /// is gated here. It only decides whether the emptying option is *offered*: the
-    /// engine refuses an emptying run on a gated connection on its own, so the UI
+    /// Resolved from the connection's Safe Mode level whenever a connection is
+    /// selected. These only decide whether the emptying option is *offered* and
+    /// whether the wizard can even start: the engine refuses a blocked run on a
+    /// gated connection on its own (`GenerationTableHooks.preflight`), so this UI
     /// state is an affordance and never the enforcement.
     private(set) var blocksDestructiveOperations = false
+    private(set) var blocksAllWrites = false
+
+    /// Whether the connected engine can honour an explicit request to disable
+    /// foreign key checks, re-read whenever the scope changes. Gates the
+    /// checkbox rather than a `DatabaseType` switch, since the driver is the
+    /// capability's only source of truth.
+    private(set) var canDisableForeignKeyChecks = true
 
     private var engine: GenerationEngine?
 
@@ -130,7 +147,12 @@ final class DataGenerationWizardModel {
         databases = []
         schemas = []
         tables = []
-        guard let connectionId, let connection = connection(for: connectionId) else { return }
+        guard let connectionId, let connection = connection(for: connectionId) else {
+            blocksDestructiveOperations = false
+            blocksAllWrites = false
+            return
+        }
+        applySafeModeGates(for: connectionId)
 
         isLoadingScope = true
         defer { isLoadingScope = false }
@@ -182,6 +204,7 @@ final class DataGenerationWizardModel {
             }
             let names = listed.filter { Self.isFillable($0.type) }.map(\.name)
             schemaFacts = try await loadSchemaFacts(tables: names, scope: scope)
+            await refreshForeignKeyDisableCapability(scope: scope)
             tables = Self.ordered(schemaFacts).map { table in
                 GenerationTableSelection(
                     name: table.name,
@@ -190,9 +213,28 @@ final class DataGenerationWizardModel {
                     parents: Self.parents(of: table, among: Set(names))
                 )
             }
+            referencedParentRowCounts = [:]
         } catch {
             errorMessage = error.localizedDescription
             tables = []
+        }
+    }
+
+    /// Re-read whenever the scope changes: the same connection can point at
+    /// engines with different capabilities across databases, e.g. an
+    /// aggregator that fronts more than one vendor.
+    private func refreshForeignKeyDisableCapability(scope: DatabaseScope) async {
+        guard let type = connection(for: scope.connectionId)?.type else {
+            canDisableForeignKeyChecks = true
+            return
+        }
+        do {
+            canDisableForeignKeyChecks = try await DatabaseManager.shared.withMetadataDriver(scope: scope) { driver in
+                PluginGenerationDriver(driver: driver, databaseType: type, schema: scope.schema)?
+                    .canDisableForeignKeyChecks ?? true
+            }
+        } catch {
+            canDisableForeignKeyChecks = true
         }
     }
 
@@ -270,6 +312,7 @@ final class DataGenerationWizardModel {
     func setSelected(_ isSelected: Bool, for name: String) {
         guard let index = tables.firstIndex(where: { $0.name == name }) else { return }
         tables[index].isSelected = isSelected
+        Task { await refreshParentRowCounts() }
     }
 
     func setRowCount(_ rowCount: Int, for name: String) {
@@ -395,6 +438,7 @@ final class DataGenerationWizardModel {
         selectedTableName = profile.tables.first?.table
         selectedColumnName = profile.tables.first?.columns.first?.column
         preview = nil
+        Task { await refreshParentRowCounts() }
     }
 
     func columns(ofTable table: String) -> [GenerationColumnProfile] {
@@ -462,7 +506,8 @@ final class DataGenerationWizardModel {
         let facts = schemaFacts
         let options = runOptions
         do {
-            let plan = try GenerationPlanCompiler().compile(profile: profile, schema: facts)
+            let plan = try GenerationPlanCompiler(canDisableConstraints: options.disablesForeignKeyChecks)
+                .compile(profile: profile, schema: facts, scope: scope)
             let previewed = try await DatabaseManager.shared.withMetadataDriver(scope: scope) { driver in
                 guard
                     let generationDriver = PluginGenerationDriver(
@@ -486,7 +531,58 @@ final class DataGenerationWizardModel {
 
     var validationErrors: [GenerationError] {
         guard !profile.tables.isEmpty else { return [] }
-        return GenerationProfileValidator().validate(profile: profile, schema: schemaFacts)
+        let counts = referencedParentRowCounts
+        return GenerationProfileValidator(existingRowCount: { counts[$0] })
+            .validate(profile: profile, schema: schemaFacts)
+    }
+
+    /// Every non-generated table a `NOT NULL` foreign key in the current
+    /// selection points at, probed with `loadDistinctValues(limit: 1)` rather
+    /// than `COUNT(*)`, since only "empty or not" is what the pre-flight needs.
+    /// A parent already selected for generation is never probed: its rows do not
+    /// exist yet, and the run feeds them forward instead of reading the server.
+    private func refreshParentRowCounts() async {
+        guard let scope = currentScope, let type = connection(for: scope.connectionId)?.type else {
+            referencedParentRowCounts = [:]
+            return
+        }
+        let selectedNames = Set(selectedTableNames)
+        var targets: [GenerationTableReference: String] = [:]
+        for table in schemaFacts where selectedNames.contains(table.name) {
+            for column in table.columns {
+                guard !column.isNullable, let foreignKey = column.foreignKey else { continue }
+                guard !selectedNames.contains(foreignKey.referencedTable) else { continue }
+                let parent = GenerationTableReference(
+                    schema: foreignKey.referencedSchema ?? table.schema,
+                    table: foreignKey.referencedTable
+                )
+                targets[parent] = foreignKey.referencedColumn(forLocal: column.name) ?? foreignKey.referencedColumn
+            }
+        }
+        guard !targets.isEmpty else {
+            referencedParentRowCounts = [:]
+            return
+        }
+
+        var counts: [GenerationTableReference: Int] = [:]
+        do {
+            try await DatabaseManager.shared.withMetadataDriver(scope: scope) { driver in
+                guard
+                    let generationDriver = PluginGenerationDriver(driver: driver, databaseType: type, schema: scope.schema)
+                else { return }
+                for (target, column) in targets {
+                    let key = ReferenceKey(schema: target.schema, table: target.table, columns: [column])
+                    let rows = try await generationDriver.loadDistinctValues(key: key, limit: 1)
+                    counts[target] = rows.isEmpty ? 0 : 1
+                }
+            }
+        } catch {
+            Self.logger.warning(
+                "Could not check referenced parent row counts: \(error.localizedDescription, privacy: .public)"
+            )
+            return
+        }
+        referencedParentRowCounts = counts
     }
 
     var canStart: Bool {
@@ -511,7 +607,8 @@ final class DataGenerationWizardModel {
         saveDialogSettings()
 
         do {
-            let plan = try GenerationPlanCompiler().compile(profile: profile, schema: facts)
+            let plan = try GenerationPlanCompiler(canDisableConstraints: options.disablesForeignKeyChecks)
+                .compile(profile: profile, schema: facts, scope: scope)
             totalRows = plan.totalRowCount
             append(.info, String(format: String(localized: "Generating %d rows."), plan.totalRowCount))
             try await run(plan: plan, scope: scope, type: type, options: options)
@@ -528,14 +625,17 @@ final class DataGenerationWizardModel {
         type: DatabaseType,
         options: GenerationRunOptions
     ) async throws {
-        let blocked = blocksDestructiveOperations
+        let blockedDestructive = blocksDestructiveOperations
+        let blockedWrites = blocksAllWrites
+        let connectionId = scope.connectionId
         try await DatabaseManager.shared.withMetadataDriver(scope: scope, workload: .bulk) { [weak self] driver in
             guard
                 let generationDriver = PluginGenerationDriver(
                     driver: driver,
                     databaseType: type,
                     schema: scope.schema,
-                    blocksDestructiveOperations: blocked
+                    blocksDestructiveOperations: blockedDestructive,
+                    blocksAllWrites: blockedWrites
                 )
             else {
                 throw GenerationError.writeFailed(
@@ -546,7 +646,13 @@ final class DataGenerationWizardModel {
             let engine = GenerationEngine(
                 driver: generationDriver,
                 truncator: GenerationStringTruncator.forVendor(TransferVendor(type)),
-                options: options
+                databaseType: type,
+                options: options,
+                onForeignKeyRestoreFailed: {
+                    await MainActor.run {
+                        MetadataConnectionPool.shared.closeAll(connectionId: connectionId)
+                    }
+                }
             )
             await MainActor.run { self?.engine = engine }
 
@@ -645,7 +751,9 @@ final class DataGenerationWizardModel {
         GenerationRunOptions(
             singleTransaction: singleTransaction,
             continueOnError: continueOnError,
-            referenceStrategy: referenceStrategy
+            referenceStrategy: referenceStrategy,
+            disablesForeignKeyChecks: disablesForeignKeyChecks && canDisableForeignKeyChecks,
+            disablesTriggers: disablesTriggers
         )
     }
 
@@ -654,6 +762,8 @@ final class DataGenerationWizardModel {
         storage.saveLastRowCount(Int(defaultRowCountText) ?? 0)
         storage.saveSingleTransaction(singleTransaction)
         storage.saveContinueOnError(continueOnError)
+        storage.saveDisablesForeignKeyChecks(disablesForeignKeyChecks)
+        storage.saveDisablesTriggers(disablesTriggers)
     }
 
     var currentScope: DatabaseScope? {
@@ -671,8 +781,30 @@ final class DataGenerationWizardModel {
         return String(localized: "This connection does not allow emptying tables.")
     }
 
+    var disablesForeignKeyChecksDisabledReason: String? {
+        guard !canDisableForeignKeyChecks else { return nil }
+        return String(localized: "This connection cannot disable foreign key checks.")
+    }
+
     private func connectIfNeeded(_ connection: DatabaseConnection) async throws {
         guard DatabaseManager.shared.session(for: connection.id)?.driver == nil else { return }
         try await DatabaseManager.shared.connectToSession(connection)
+    }
+
+    /// Mirrors `DataTransferService.safeModeLevel(for:)`: the live session's level
+    /// when connected, the stored connection's otherwise. A read-only level blocks
+    /// every write; any level that would need a confirmation dialog blocks the
+    /// emptying step, since the run has no way to show one mid-batch.
+    private func applySafeModeGates(for connectionId: UUID) {
+        let level = Self.resolvedSafeModeLevel(for: connectionId)
+        blocksAllWrites = level.blocksAllWrites
+        blocksDestructiveOperations = level.blocksAllWrites || level.requiresConfirmation
+    }
+
+    private static func resolvedSafeModeLevel(for connectionId: UUID) -> SafeModeLevel {
+        if let session = DatabaseManager.shared.session(for: connectionId) {
+            return session.safeModeLevel
+        }
+        return ConnectionStorage.shared.loadConnections().first { $0.id == connectionId }?.safeModeLevel ?? .silent
     }
 }

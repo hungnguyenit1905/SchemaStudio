@@ -13,9 +13,16 @@ import Foundation
 /// A backreference or a lookaround cannot be produced by generating left to
 /// right, so they are refused rather than half-supported.
 struct RegexPatternParser {
+    /// A group nests by recursing into `parseAlternation`, so a pattern of
+    /// deeply nested `(` recurses the parser itself once per level. Refusing
+    /// past this depth is what keeps a pattern like 200 nested groups from
+    /// overflowing the stack while the user is still typing it into the form.
+    private static let maxGroupDepth = 32
+
     private let characters: [Character]
     private let repeatCap: Int
     private var position = 0
+    private var groupDepth = 0
 
     private init(pattern: String, repeatCap: Int) {
         characters = Array(pattern)
@@ -117,15 +124,23 @@ struct RegexPatternParser {
         return index < characters.count ? index : nil
     }
 
+    /// The cap only bounds a quantifier whose maximum is open: `{n,}` (and the
+    /// `*` / `+` forms, which never reach this function because
+    /// `parseQuantifier` builds their bounds directly). An explicit `{n}` or
+    /// `{n,m}` names both ends itself, so the user's numbers pass through
+    /// untouched; the synthesizer's own output budget is what keeps an
+    /// oversized explicit count from running away.
     private static func bounds(in body: String, cap: Int) -> (minimum: Int, maximum: Int)? {
         let parts = body.split(separator: ",", omittingEmptySubsequences: false).map(String.init)
         guard parts.count <= 2, let requestedMinimum = Int(parts[0]), requestedMinimum >= 0 else { return nil }
-        let minimum = Swift.min(requestedMinimum, cap)
-        guard parts.count == 2 else { return (minimum, minimum) }
-        guard !parts[1].isEmpty else { return (minimum, cap) }
+        guard parts.count == 2 else {
+            return (requestedMinimum, requestedMinimum)
+        }
+        guard !parts[1].isEmpty else {
+            return (Swift.min(requestedMinimum, cap), cap)
+        }
         guard let requestedMaximum = Int(parts[1]), requestedMaximum >= 0 else { return nil }
-        guard requestedMinimum <= requestedMaximum else { return (requestedMinimum, requestedMaximum) }
-        return (minimum, Swift.min(requestedMaximum, cap))
+        return (requestedMinimum, requestedMaximum)
     }
 
     private mutating func parseAtom() throws -> RegexPatternNode {
@@ -149,6 +164,11 @@ struct RegexPatternParser {
     }
 
     private mutating func parseGroup() throws -> RegexPatternNode {
+        groupDepth += 1
+        defer { groupDepth -= 1 }
+        guard groupDepth <= Self.maxGroupDepth else {
+            throw RegexPatternError.malformedPattern(reason: "the pattern nests too many groups")
+        }
         if peek() == "?" {
             guard peek(1) == ":" else {
                 let construct = "(?" + String(peek(1).map(String.init) ?? "")

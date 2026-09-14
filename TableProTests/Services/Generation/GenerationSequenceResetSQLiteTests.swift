@@ -124,6 +124,33 @@ struct GenerationSequenceResetSQLiteTests {
         #expect(fake.transactionCalls.contains("rollback"))
     }
 
+    @Test("A sequence-reset failure is a warning, not a failed run, and the checkpoints still clear")
+    func sequenceResetFailureIsAWarningNotAFailure() async throws {
+        let store = GenerationRuntimeFixtures.checkpointStore()
+        let fake = FakeGenerationDriver()
+        fake.failsSequenceReset = true
+        let plan = try GenerationPlanCompiler().compile(profile: Self.profile(rows: 5), schema: Self.schema())
+        let engine = GenerationEngine(
+            driver: fake,
+            truncator: GenerationStringTruncator.forVendor(.sqlite),
+            maxBindParameters: 32_766,
+            checkpoints: store
+        )
+
+        let events = try await GenerationRuntimeFixtures.collect(engine.run(plan: plan))
+
+        let report = try #require(GenerationRuntimeFixtures.report(in: events))
+        #expect(report.totalRowsWritten == 5)
+        #expect(!report.wasCancelled)
+        #expect(report.warnings.contains { $0.column == "tickets.id" })
+        let warningMessages = events.compactMap { event -> String? in
+            guard case .warning(let message) = event else { return nil }
+            return message
+        }
+        #expect(warningMessages.contains { $0.contains("tickets.id") })
+        #expect(await store.load(jobId: GenerationCheckpointStore.jobId(for: plan)).isEmpty)
+    }
+
     @Test("The sequence is reset for a column the run wrote, and left alone otherwise")
     func resetOnlyForWrittenKeys() async throws {
         let fake = FakeGenerationDriver()

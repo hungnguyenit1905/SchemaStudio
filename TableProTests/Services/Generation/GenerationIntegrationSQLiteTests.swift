@@ -371,6 +371,60 @@ struct GenerationIntegrationSQLiteTests {
         )
     }
 
+    @Test("An append-only second pass never touches rows this run did not create")
+    func secondPassLeavesPreexistingRowsUntouched() async throws {
+        let driver = try SQLiteGenerationTestDriver()
+        try driver.execute(Self.ddl)
+        try driver.execute(
+            """
+            INSERT INTO customers (id, email, status, manager_id, created_at) VALUES
+            (1, 'seed1@example.com', 'active', 1, '2020-01-01'),
+            (2, 'seed2@example.com', 'active', 1, '2020-01-01'),
+            (3, 'seed3@example.com', 'active', 2, '2020-01-01')
+            """
+        )
+
+        let profile = GenerationProfile(name: "append", seed: 20_260_913, tables: [
+            GenerationTableProfile(table: "customers", rowCount: 2, columns: [
+                GenerationColumnProfile(column: "id", generator: "Default"),
+                GenerationColumnProfile(
+                    column: "email",
+                    generator: "RandomString",
+                    params: .object(["minLength": .int(8), "maxLength": .int(12)]),
+                    common: CommonParams(unique: true, suffix: "@example.com")
+                ),
+                GenerationColumnProfile(
+                    column: "status",
+                    generator: "List",
+                    params: .object(["values": .array([.string("active"), .string("closed")])])
+                ),
+                GenerationColumnProfile(column: "manager_id", generator: "Reference"),
+                GenerationColumnProfile(
+                    column: "created_at",
+                    generator: "Fixed",
+                    params: .object(["value": .string("2024-05-01")])
+                )
+            ])
+        ])
+        let plan = try GenerationPlanCompiler().compile(profile: profile, schema: Self.schema())
+        let engine = GenerationRuntimeFixtures.engine(
+            driver: driver,
+            truncator: GenerationStringTruncator.forVendor(.sqlite),
+            maxBindParameters: 32_766
+        )
+        _ = try await GenerationRuntimeFixtures.collect(engine.run(plan: plan))
+
+        #expect(try driver.scalar("SELECT COUNT(*) FROM customers") == 5)
+        let seedManagerIds = try driver.query("SELECT manager_id FROM customers WHERE id IN (1, 2, 3) ORDER BY id")
+            .map(\.first?.textFallback)
+        #expect(seedManagerIds == ["1", "1", "2"])
+        #expect(
+            try driver.scalar(
+                "SELECT COUNT(*) FROM customers WHERE id NOT IN (1, 2, 3) AND manager_id IS NULL"
+            ) == 0
+        )
+    }
+
     @Test("The P1 acceptance run: 100k rows into a five-table schema with foreign keys")
     func acceptanceRunAtScale() async throws {
         let (driver, report) = try await Self.run(rows: 20_000)

@@ -20,6 +20,8 @@ final class GenerationDialogStorage {
         static let lastRowCount = "com.SchemaStudio.generation.dialog.lastRowCount"
         static let singleTransaction = "com.SchemaStudio.generation.dialog.singleTransaction"
         static let continueOnError = "com.SchemaStudio.generation.dialog.continueOnError"
+        static let disablesForeignKeyChecks = "com.SchemaStudio.generation.dialog.disablesForeignKeyChecks"
+        static let disablesTriggers = "com.SchemaStudio.generation.dialog.disablesTriggers"
     }
 
     init(userDefaults: UserDefaults = .standard) {
@@ -50,5 +52,21 @@ final class GenerationDialogStorage {
 
     func saveContinueOnError(_ isOn: Bool) {
         defaults.set(isOn, forKey: Keys.continueOnError)
+    }
+
+    func loadDisablesForeignKeyChecks() -> Bool {
+        defaults.bool(forKey: Keys.disablesForeignKeyChecks)
+    }
+
+    func saveDisablesForeignKeyChecks(_ isOn: Bool) {
+        defaults.set(isOn, forKey: Keys.disablesForeignKeyChecks)
+    }
+
+    func loadDisablesTriggers() -> Bool {
+        defaults.bool(forKey: Keys.disablesTriggers)
+    }
+
+    func saveDisablesTriggers(_ isOn: Bool) {
+        defaults.set(isOn, forKey: Keys.disablesTriggers)
     }
 }

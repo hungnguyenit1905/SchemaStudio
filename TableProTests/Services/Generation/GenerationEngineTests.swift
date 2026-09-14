@@ -169,6 +169,35 @@ struct GenerationEngineTests {
         #expect(driver.emptied.isEmpty)
     }
 
+    @Test("A connection under read-only Safe Mode refuses the whole run before anything is written")
+    func blocksAllWritesRefusesTheRun() async throws {
+        let driver = FakeGenerationDriver(blocksAllWrites: true)
+        driver.preloadedValues = Self.customerKeys()
+        let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
+
+        var sawTableStarted = false
+        await #expect(throws: GenerationError.safeModeBlocksWrites) {
+            for try await event in GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan) {
+                if case .tableStarted = event { sawTableStarted = true }
+            }
+        }
+        #expect(!sawTableStarted)
+        #expect(driver.batches.isEmpty)
+        #expect(driver.emptied.isEmpty)
+    }
+
+    @Test("A connection that only blocks destructive operations still accepts an append-only run")
+    func blocksDestructiveOperationsStillAllowsPlainInserts() async throws {
+        let driver = FakeGenerationDriver(blocksDestructiveOperations: true)
+        driver.preloadedValues = Self.customerKeys()
+        let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(emptyFirst: false), schema: Self.shopSchema())
+
+        _ = try await GenerationRuntimeFixtures.collect(GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan))
+
+        #expect(!driver.batches.isEmpty)
+        #expect(driver.emptied.isEmpty)
+    }
+
     @Test("Emptying a table uses DELETE when a foreign key points at it")
     func emptyFirstAvoidsTruncateUnderInboundKeys() async throws {
         let driver = FakeGenerationDriver()
@@ -259,6 +288,57 @@ struct GenerationEngineTests {
         #expect(driver.foreignKeyCheckCalls == [false, true])
     }
 
+    @Test("A failed foreign key restore is reported and never silently swallowed")
+    func failedForeignKeyRestoreProducesAWarning() async throws {
+        let driver = FakeGenerationDriver()
+        driver.failsForeignKeyRestore = true
+        let plan = try GenerationRuntimeFixtures.plan(
+            profile: Self.cycleProfile(),
+            schema: Self.cycleSchema(),
+            canDisableConstraints: true
+        )
+
+        let events = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan)
+        )
+
+        let report = try #require(GenerationRuntimeFixtures.report(in: events))
+        #expect(!report.warnings.isEmpty)
+        #expect(driver.foreignKeyCheckCalls == [false, true])
+    }
+
+    @Test("A failed restore leaves the disabled flag set rather than clearing it")
+    func failedForeignKeyRestoreLeavesTheFlagDisabled() async throws {
+        let driver = FakeGenerationDriver()
+        driver.failsForeignKeyRestore = true
+        let hooks = GenerationTableHooks(driver: driver)
+
+        try await hooks.disableForeignKeyChecks()
+        let warning = await hooks.restoreForeignKeyChecks()
+
+        #expect(warning != nil)
+        let stillDisabled = await hooks.foreignKeyChecksDisabled
+        #expect(stillDisabled)
+    }
+
+    @Test("A failed trigger restore is retried rather than forgotten")
+    func failedTriggerRestoreCanBeRetried() async throws {
+        let driver = FakeGenerationDriver()
+        driver.supportsTriggerDisable = true
+        driver.failsTriggerEnableFor = ["customers"]
+        let hooks = GenerationTableHooks(driver: driver)
+        let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
+        let customers = try #require(plan.tables.first { $0.reference.table == "customers" })
+
+        #expect(await hooks.disableTriggers(for: customers) == nil)
+        let firstAttempt = await hooks.restoreTriggers(for: customers)
+        #expect(firstAttempt != nil)
+
+        driver.failsTriggerEnableFor = []
+        let secondAttempt = await hooks.restoreTriggers(for: customers)
+        #expect(secondAttempt == nil)
+    }
+
     @Test("Foreign key checks are turned back on when the run is cancelled")
     func constraintsAreRestoredOnCancel() async throws {
         let driver = FakeGenerationDriver()
@@ -343,6 +423,129 @@ struct GenerationEngineTests {
         let position = try #require(driver.columns(for: "orders").firstIndex(of: "customer_id"))
         #expect(driver.rows(for: "orders").allSatisfy { $0[position].isNull })
         #expect(GenerationRuntimeFixtures.report(in: events) != nil)
+    }
+
+    @Test("The disable foreign key checks option left off leaves the driver untouched")
+    func disableForeignKeyChecksOptionOffLeavesDriverUntouched() async throws {
+        let driver = FakeGenerationDriver()
+        driver.preloadedValues = Self.customerKeys()
+        let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
+
+        _ = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: driver).run(plan: plan)
+        )
+
+        #expect(driver.foreignKeyCheckCalls.isEmpty)
+    }
+
+    @Test("The disable foreign key checks option is called false then true around the tables")
+    func disableForeignKeyChecksOptionIsHonoured() async throws {
+        let driver = FakeGenerationDriver()
+        driver.preloadedValues = Self.customerKeys()
+        var options = GenerationRunOptions()
+        options.disablesForeignKeyChecks = true
+        let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
+
+        _ = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: driver, options: options).run(plan: plan)
+        )
+
+        #expect(driver.foreignKeyCheckCalls == [false, true])
+    }
+
+    @Test("A driver that cannot disable foreign key checks reports the option as unsupported")
+    func disableForeignKeyChecksOptionReportsUnsupported() async throws {
+        let driver = FakeGenerationDriver()
+        driver.preloadedValues = Self.customerKeys()
+        driver.canDisableForeignKeyChecks = false
+        var options = GenerationRunOptions()
+        options.disablesForeignKeyChecks = true
+        let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
+
+        let events = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: driver, options: options).run(plan: plan)
+        )
+
+        let report = try #require(GenerationRuntimeFixtures.report(in: events))
+        #expect(driver.foreignKeyCheckCalls.isEmpty)
+        #expect(report.warnings.contains {
+            $0.message.localizedCaseInsensitiveContains("unsupported")
+                || $0.message.localizedCaseInsensitiveContains("cannot be disabled")
+        })
+    }
+
+    @Test("A driver that cannot disable triggers reports it as skipped and writes rows normally")
+    func triggerDisableUnsupportedIsSkipped() async throws {
+        let driver = FakeGenerationDriver()
+        driver.preloadedValues = Self.customerKeys()
+        var options = GenerationRunOptions()
+        options.disablesTriggers = true
+        let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
+
+        let events = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: driver, options: options).run(plan: plan)
+        )
+
+        let report = try #require(GenerationRuntimeFixtures.report(in: events))
+        #expect(report.totalRowsWritten == 12)
+        #expect(driver.triggerCheckCalls.isEmpty)
+        #expect(report.warnings.contains { $0.message.localizedCaseInsensitiveContains("cannot be disabled") })
+    }
+
+    @Test("A driver that supports it gets triggers disabled then enabled per table")
+    func triggerDisableSupportedRunsPerTable() async throws {
+        let driver = FakeGenerationDriver()
+        driver.preloadedValues = Self.customerKeys()
+        driver.supportsTriggerDisable = true
+        var options = GenerationRunOptions()
+        options.disablesTriggers = true
+        let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
+
+        _ = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: driver, options: options).run(plan: plan)
+        )
+
+        #expect(driver.triggerCheckCalls == [
+            .init(table: "customers", enabled: false),
+            .init(table: "customers", enabled: true),
+            .init(table: "orders", enabled: false),
+            .init(table: "orders", enabled: true)
+        ])
+    }
+
+    @Test("A driver whose trigger enable throws produces a warning naming the table")
+    func triggerEnableFailureNamesTheTable() async throws {
+        let driver = FakeGenerationDriver()
+        driver.preloadedValues = Self.customerKeys()
+        driver.supportsTriggerDisable = true
+        driver.failsTriggerEnableFor = ["customers"]
+        var options = GenerationRunOptions()
+        options.disablesTriggers = true
+        let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
+
+        let events = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: driver, options: options).run(plan: plan)
+        )
+
+        let report = try #require(GenerationRuntimeFixtures.report(in: events))
+        #expect(report.warnings.contains { $0.message.contains("customers") })
+    }
+
+    @Test("Disabling triggers is never attempted in a single transaction on a driver that supports transactions")
+    func triggerDisableIsGatedBySingleTransaction() async throws {
+        let driver = FakeGenerationDriver()
+        driver.preloadedValues = Self.customerKeys()
+        driver.supportsTriggerDisable = true
+        var options = GenerationRunOptions()
+        options.disablesTriggers = true
+        options.singleTransaction = true
+        let plan = try GenerationRuntimeFixtures.plan(profile: Self.shopProfile(), schema: Self.shopSchema())
+
+        _ = try await GenerationRuntimeFixtures.collect(
+            GenerationRuntimeFixtures.engine(driver: driver, options: options).run(plan: plan)
+        )
+
+        #expect(driver.triggerCheckCalls.isEmpty)
     }
 
     private static func cycleSchema() -> [GenerationTable] {

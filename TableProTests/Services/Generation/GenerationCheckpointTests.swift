@@ -109,6 +109,37 @@ struct GenerationCheckpointTests {
         #expect(Set(all).count == all.count)
     }
 
+    @Test("A checkpoint tracks what continueOnError consumed, not just what the server accepted")
+    func continueOnErrorChecksPointConsumedRows() async throws {
+        let store = GenerationRuntimeFixtures.checkpointStore()
+        let plan = try Self.plan(rows: 10_000)
+        var options = GenerationRunOptions()
+        options.continueOnError = true
+        let driver = FakeGenerationDriver()
+        driver.failInsertsOnAttempt = [2]
+
+        let events = try await Self.run(plan: plan, driver: driver, store: store, cancelAfterBatches: 3, options: options)
+
+        let checkpoint = try #require(
+            await store.resumePoint(jobId: GenerationCheckpointStore.jobId(for: plan), table: "public.customers")
+        )
+        let rowsWritten = Self.texts(driver).count
+        #expect(checkpoint.rowsWritten > rowsWritten, "the checkpoint has to be ahead of what the server accepted")
+        #expect(!checkpoint.isComplete)
+        #expect(GenerationRuntimeFixtures.batchFailures(in: events).count == 1)
+
+        let resumed = FakeGenerationDriver()
+        _ = try await Self.run(plan: plan, driver: resumed, store: store)
+
+        let all = Self.texts(driver) + Self.texts(resumed)
+        #expect(Set(all).count == all.count, "no row is written twice")
+        #expect(all.count < Self.rows(for: plan), "the batch continueOnError skipped is never retried by a resume")
+    }
+
+    private static func rows(for plan: GenerationPlan) -> Int {
+        plan.tables.first?.rowCount ?? 0
+    }
+
     @Test("A table the profile empties first always starts over")
     func emptyFirstTableIgnoresItsCheckpoint() async throws {
         let store = GenerationRuntimeFixtures.checkpointStore()
@@ -125,6 +156,24 @@ struct GenerationCheckpointTests {
         #expect(driver.rows(for: "customers").count == 2_000)
         let report = try #require(GenerationRuntimeFixtures.report(in: events))
         #expect(report.tables.first?.rowsWritten == 2_000)
+    }
+
+    @Test("A completed emptyFirst table is skipped, not re-emptied, on a resumed run")
+    func completedEmptyFirstTableIsNeverReEmptied() async throws {
+        let store = GenerationRuntimeFixtures.checkpointStore()
+        let plan = try Self.plan(rows: 2_000, emptyFirst: true)
+        await store.record(
+            jobId: GenerationCheckpointStore.jobId(for: plan),
+            entry: GenerationCheckpoint(table: "public.customers", rowsWritten: 2_000, isComplete: true)
+        )
+        let driver = FakeGenerationDriver()
+
+        let events = try await Self.run(plan: plan, driver: driver, store: store)
+
+        #expect(driver.emptied.isEmpty)
+        #expect(driver.rows(for: "customers").isEmpty)
+        let report = try #require(GenerationRuntimeFixtures.report(in: events))
+        #expect(report.totalRowsWritten == 2_000)
     }
 
     @Test("A table that finished is skipped rather than written twice")
@@ -217,6 +266,50 @@ struct GenerationCheckpointTests {
 
         let entries = await store.load(jobId: GenerationCheckpointStore.jobId(for: plan))
         #expect(entries.isEmpty)
+    }
+
+    @Test("The same plan against two different scopes gets two different job ids")
+    func differentScopesGetDifferentJobIds() throws {
+        let profile = Self.profile(rows: 100)
+        let schema = Self.schema()
+        let devScope = DatabaseScope(connectionId: UUID(), database: "dev", schema: "public")
+        let prodScope = DatabaseScope(connectionId: devScope.connectionId, database: "prod", schema: "public")
+
+        let dev = try GenerationPlanCompiler().compile(profile: profile, schema: schema, scope: devScope)
+        let prod = try GenerationPlanCompiler().compile(profile: profile, schema: schema, scope: prodScope)
+
+        #expect(GenerationCheckpointStore.jobId(for: dev) != GenerationCheckpointStore.jobId(for: prod))
+    }
+
+    @Test("Editing a generator's params changes the job id, even with the identifier unchanged")
+    func editedGeneratorParamsGetTheirOwnJob() throws {
+        let schema = Self.schema()
+        var original = Self.profile(rows: 100)
+        original.tables[0].columns[1] = GenerationRuntimeFixtures.columnProfile(
+            "email",
+            generator: "RandomString",
+            params: .object(["minLength": .int(4), "maxLength": .int(8)])
+        )
+        var edited = original
+        edited.tables[0].columns[1] = GenerationRuntimeFixtures.columnProfile(
+            "email",
+            generator: "RandomString",
+            params: .object(["minLength": .int(20), "maxLength": .int(40)])
+        )
+
+        let originalPlan = try GenerationPlanCompiler().compile(profile: original, schema: schema)
+        let editedPlan = try GenerationPlanCompiler().compile(profile: edited, schema: schema)
+
+        #expect(GenerationCheckpointStore.jobId(for: originalPlan) != GenerationCheckpointStore.jobId(for: editedPlan))
+    }
+
+    @Test("Changing nothing keeps the job id stable, since it is persisted as a filename")
+    func unchangedPlanKeepsTheSameJobId() throws {
+        let scope = DatabaseScope(connectionId: UUID(), database: "dev", schema: "public")
+        let first = try GenerationPlanCompiler().compile(profile: Self.profile(rows: 100), schema: Self.schema(), scope: scope)
+        let second = try GenerationPlanCompiler().compile(profile: Self.profile(rows: 100), schema: Self.schema(), scope: scope)
+
+        #expect(GenerationCheckpointStore.jobId(for: first) == GenerationCheckpointStore.jobId(for: second))
     }
 
     @Test("A finished run leaves no checkpoint behind")

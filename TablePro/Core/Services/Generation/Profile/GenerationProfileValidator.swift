@@ -28,6 +28,7 @@ struct GenerationProfileValidator {
         schema: [GenerationTable]
     ) -> [GenerationError] {
         var errors: [GenerationError] = []
+        errors.append(contentsOf: Self.validateNoDuplicates(profile))
         let generatedTables = Set(profile.tables.map(\.reference))
 
         for tableProfile in profile.tables {
@@ -44,6 +45,26 @@ struct GenerationProfileValidator {
                         generatedTables: generatedTables
                     )
                 )
+            }
+        }
+        return errors
+    }
+
+    /// A hand-edited or hand-crafted profile can name the same table, or the same
+    /// column within a table, more than once. Downstream planning dedupes rather
+    /// than trapping on it, but a duplicate is a mistake worth refusing loudly
+    /// instead of silently resolving.
+    private static func validateNoDuplicates(_ profile: GenerationProfile) -> [GenerationError] {
+        var errors: [GenerationError] = []
+        var seenTables: Set<GenerationTableReference> = []
+        for tableProfile in profile.tables {
+            let reference = tableProfile.reference
+            if !seenTables.insert(reference).inserted {
+                errors.append(.duplicateTableReference(table: reference.qualifiedName))
+            }
+            var seenColumns: Set<String> = []
+            for columnProfile in tableProfile.columns where !seenColumns.insert(columnProfile.column).inserted {
+                errors.append(.duplicateColumnReference(table: reference.qualifiedName, column: columnProfile.column))
             }
         }
         return errors
@@ -94,6 +115,15 @@ struct GenerationProfileValidator {
                 column: column,
                 seed: 0
             )
+            if let kind = registry.producesKind(for: columnProfile.generator), !kind.suits(column.type.base) {
+                errors.append(
+                    .generatorUnsuitableForColumn(
+                        table: tableName,
+                        column: column.name,
+                        generator: columnProfile.generator
+                    )
+                )
+            }
             errors.append(
                 contentsOf: validateCardinality(
                     generator: generator,
@@ -119,6 +149,12 @@ struct GenerationProfileValidator {
     /// The domain is checked only where it is computable. A lorem or random
     /// string generator has no closed form, so those fall through to the runtime
     /// `uniqueExhausted` error instead of being guessed at here.
+    ///
+    /// The domain is compared against the expected non-null count, not the full
+    /// row count: nulls are exempt from a unique constraint, and `DecoratedGenerator`
+    /// already returns `.null` before the tracker ever admits it. Rounded down, so
+    /// the check stays conservative when the null percentage does not divide the
+    /// row count evenly.
     private func validateCardinality(
         generator: any ValueGenerator,
         columnProfile: GenerationColumnProfile,
@@ -128,13 +164,15 @@ struct GenerationProfileValidator {
     ) -> [GenerationError] {
         let mustBeDistinct = columnProfile.common.unique || column.requiresUniqueValues
         guard mustBeDistinct, rowCount > 0, let distinctValues = generator.distinctValueCount else { return [] }
-        guard distinctValues < rowCount else { return [] }
+        let nullPercent = max(0, min(100, columnProfile.common.nullPercent))
+        let expectedNonNullCount = rowCount - (rowCount * nullPercent / 100)
+        guard distinctValues < expectedNonNullCount else { return [] }
         return [
             .uniqueDomainTooSmall(
                 table: tableName,
                 column: column.name,
                 distinctValues: distinctValues,
-                rowCount: rowCount
+                rowCount: expectedNonNullCount
             )
         ]
     }

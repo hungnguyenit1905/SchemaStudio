@@ -14,6 +14,10 @@ protocol GenerationDriver: Sendable {
     /// one; emptying a table first does not.
     var blocksDestructiveOperations: Bool { get }
 
+    /// A connection under a read-only Safe Mode level. Nothing may be written at
+    /// all, not just the emptying step `blocksDestructiveOperations` covers.
+    var blocksAllWrites: Bool { get }
+
     var supportsTransactions: Bool { get }
 
     /// Whether `bulkLoadWriter` can hand one back. Asking has to be possible
@@ -32,6 +36,17 @@ protocol GenerationDriver: Sendable {
     func rollbackTransaction() async throws
 
     func setForeignKeyChecks(enabled: Bool) async throws
+
+    /// Whether this connection can honour an explicit request to disable
+    /// foreign key checks. The capability probe for the option's checkbox and
+    /// for the engine's own "unsupported" warning, so neither has to switch on
+    /// `DatabaseType` to guess.
+    var canDisableForeignKeyChecks: Bool { get }
+
+    /// Attempts to disable, or re-enable, every trigger on one table. Returns
+    /// false when this engine cannot do it at all, which the caller reports as
+    /// skipped; true means the statement was issued.
+    func setTriggerChecks(table: GenerationTableReference, enabled: Bool) async throws -> Bool
 
     /// Tables that carry a foreign key pointing at `table`, which is what decides
     /// whether emptying it can use `TRUNCATE` at all.
@@ -87,11 +102,15 @@ protocol GenerationDriver: Sendable {
 
 extension GenerationDriver {
     var blocksDestructiveOperations: Bool { false }
+    var blocksAllWrites: Bool { false }
     var supportsTransactions: Bool { true }
     var supportsBulkLoad: Bool { false }
     var requiresLocalInfile: Bool { false }
+    var canDisableForeignKeyChecks: Bool { true }
 
     func serverLimits() async throws -> PluginServerLimits? { nil }
+
+    func setTriggerChecks(table: GenerationTableReference, enabled: Bool) async throws -> Bool { false }
 
     func bulkLoadWriter(
         table: GenerationTableReference,

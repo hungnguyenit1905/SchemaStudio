@@ -258,6 +258,16 @@ extension MSSQLPluginDriver {
         return "DROP TRIGGER \(quoteIdentifier(resolved)).\(quoteIdentifier(name))"
     }
 
+    func triggerDisableStatements(table: String, schema: String?) -> [String]? {
+        let resolved = effectiveSchema(schema)
+        return ["ALTER TABLE \(quoteIdentifier(resolved)).\(quoteIdentifier(table)) DISABLE TRIGGER ALL"]
+    }
+
+    func triggerEnableStatements(table: String, schema: String?) -> [String]? {
+        let resolved = effectiveSchema(schema)
+        return ["ALTER TABLE \(quoteIdentifier(resolved)).\(quoteIdentifier(table)) ENABLE TRIGGER ALL"]
+    }
+
     func fetchAllColumns(schema: String?) async throws -> [String: [PluginColumnInfo]] {
         let esc = effectiveSchemaEscaped(schema)
         let sql = """
