@@ -17,11 +17,18 @@ struct DatabaseOpenRegistry {
     private var inFlight: [ConnectionDatabaseKey: Task<DatabaseDriver, Error>] = [:]
     private var lastGeneration = 0
 
-    mutating func begin(_ key: ConnectionDatabaseKey, task: Task<DatabaseDriver, Error>) -> Int {
+    mutating func reserve(_ key: ConnectionDatabaseKey) -> Int {
         lastGeneration += 1
         generations[key] = lastGeneration
-        inFlight[key] = task
         return lastGeneration
+    }
+
+    mutating func attach(_ task: Task<DatabaseDriver, Error>, generation: Int, for key: ConnectionDatabaseKey) {
+        guard generations[key] == generation else {
+            task.cancel()
+            return
+        }
+        inFlight[key] = task
     }
 
     func task(for key: ConnectionDatabaseKey) -> Task<DatabaseDriver, Error>? {
@@ -97,24 +104,38 @@ extension DatabaseManager {
         let connectedAt = session.connectedAt
         let scope = DatabaseScope(connectionId: connectionId, database: database, schema: nil)
         let opener = databaseDriverOpener
-        let task = Task { @MainActor in
-            try await opener(scope)
+        let generation = databaseSessionOpens.reserve(key)
+        let task = Task { @MainActor [weak self] () throws -> DatabaseDriver in
+            let driver = try await opener(scope)
+            guard let self else {
+                driver.disconnect()
+                throw CancellationError()
+            }
+            return try self.adoptDatabaseDriver(driver, for: key, generation: generation, connectedAt: connectedAt)
         }
-        let generation = databaseSessionOpens.begin(key, task: task)
+        databaseSessionOpens.attach(task, generation: generation, for: key)
         defer { databaseSessionOpens.finish(generation, for: key) }
 
-        let driver = try await task.value
+        return try await task.value
+    }
+
+    private func adoptDatabaseDriver(
+        _ driver: DatabaseDriver,
+        for key: ConnectionDatabaseKey,
+        generation: Int,
+        connectedAt: Date
+    ) throws -> DatabaseDriver {
         guard databaseSessionOpens.isCurrent(generation, for: key),
-              activeSessions[connectionId]?.connectedAt == connectedAt else {
+              activeSessions[key.connectionId]?.connectedAt == connectedAt else {
             driver.disconnect()
             Self.databaseSessionLogger.info(
-                "Discarded a late database driver for \(database, privacy: .public) on \(connectionId, privacy: .public)"
+                "Discarded a late database driver for \(key.database, privacy: .public) on \(key.connectionId, privacy: .public)"
             )
             throw CancellationError()
         }
         databaseDrivers[key]?.disconnect()
         databaseDrivers[key] = driver
-        logDatabaseSessionCount(for: connectionId, opened: database)
+        logDatabaseSessionCount(for: key.connectionId, opened: key.database)
         return driver
     }
 
