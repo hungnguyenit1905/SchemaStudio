@@ -92,7 +92,7 @@ What happens on open:
 
 ## Connection Form
 
-The form is a sidebar with up to nine panes. Tunnel and SSL panes appear only for drivers that support them (see the matrix above). A warning triangle on a sidebar item marks missing required fields.
+The form is a sidebar with up to ten panes. Tunnel and SSL panes appear only for drivers that support them (see the matrix above). A warning triangle on a sidebar item marks missing required fields.
 
 | Pane | Contents |
 |------|----------|
@@ -102,6 +102,7 @@ The form is a sidebar with up to nine panes. Tunnel and SSL panes appear only fo
 | **Cloud SQL Auth Proxy** | Google Cloud SQL proxy for MySQL, PostgreSQL, SQL Server. See [Cloud SQL Auth Proxy](/databases/cloud-sql-proxy) |
 | **SOCKS Proxy** | Route the connection through a SOCKS5 proxy. See [SOCKS Proxy](/databases/socks-proxy) |
 | **SSL/TLS** | Encryption mode and certificates. See [SSL/TLS](/features/ssl) |
+| **Databases** | The databases the sidebar shows, and the ones that open when you connect. See [Databases](#databases) |
 | **Customization** | Color, tags, group, Safe Mode |
 | **Advanced** | Startup commands, pre-connect script, external access, plugin-specific fields |
 | **AI Rules** | Per-connection guidance the AI assistant sees on every chat turn. See [AI Assistant](/features/ai-assistant) |
@@ -137,6 +138,22 @@ File-based drivers (SQLite, DuckDB, Beancount) replace the host section with a f
 | **Local only** | Excludes this connection from iCloud Sync. See [iCloud Sync](/features/icloud-sync) |
 | **Plugin fields** | Driver-specific options like MongoDB `replicaSet` |
 
+### Databases
+
+The Databases pane appears for every engine with more than one database per server, PostgreSQL,
+SQL Server, MySQL, MariaDB, and MongoDB included, and not for file-based engines such as SQLite.
+
+| Setting | Description |
+|---------|-------------|
+| **Use a custom database list** | When on, the sidebar, the Objects tab, the Quick Switcher, and the query editor's picker show only the databases checked under **Show**. The connection's default database always shows |
+| **Show** | Whether a database appears in the sidebar while the custom list is on |
+| **Auto Open** | Opens the database each time the connection opens, on top of its default database. A database that fails to open stays closed and never fails the connect |
+
+The list shows the server's databases when the connection is open. Use **+** to add a database by
+name, for example one you cannot list, and **-** to remove the selected rows. The setting is saved
+with the connection, so Export and Duplicate keep it. A database filter set up in an earlier version
+of the sidebar moves into this list the first time you open the connection.
+
 ## Organizing Connections
 
 The **Customization** pane sets a color, tags, and a group per connection. The color tints the toolbar when connected, so production and development are easy to tell apart.
@@ -162,19 +179,18 @@ A connection can carry multiple tags, each with a name and color. When any conne
 
 Hover a connection row and click the star, or right-click and choose **Add to Favorites**. Favorites gather in a section at the top of the list, sorted alphabetically, while the connection stays in its group below. Favorites sync through iCloud unless the connection is marked local only.
 
-## Switching Connections and Databases
+## Working in Several Databases
 
-- **Switch Connection** (`Ctrl+Cmd+C`): a toolbar popover lists active sessions and saved connections. Type to filter, arrow keys to move, Return to switch
-- **Open Database** (`Cmd+K`): switch databases on the same server without reconnecting
+There is no active database to switch. Open databases in the sidebar instead: double-click a
+database, or select it and press `Return`. Several databases of one connection can be open at once,
+and every tab keeps the database it was opened on. See [Sidebar](/features/sidebar#opening-connections-and-databases).
 
-<Frame caption="Database switcher in toolbar">
-  <img className="block dark:hidden" src="/images/database-switcher-toolbar.png" alt="Database switcher in toolbar" />
-  <img className="hidden dark:block" src="/images/database-switcher-toolbar-dark.png" alt="Database switcher in toolbar" />
-</Frame>
+Leave the **Database** field empty when creating a connection to browse every database your user can
+access (MySQL, MariaDB, MongoDB, SQL Server, ClickHouse). PostgreSQL and Redshift need an initial
+database: connect to `postgres` (Redshift: `dev`), then open the others from the sidebar. Each one gets
+its own server connection; see [Cross-Database Tabs](/databases/postgresql#cross-database-tabs).
 
-Leave the **Database** field empty when creating a connection to browse every database your user can access (MySQL, MariaDB, MongoDB, SQL Server, ClickHouse). PostgreSQL and Redshift need an initial database; connect to `postgres` (Redshift: `dev`) and switch with `Cmd+K`.
-
-When the sidebar is in tree layout, the filter button in the sidebar footer limits the tree to checked databases. The choice is saved per connection.
+To limit which databases the sidebar shows, use the connection's [Databases](#databases) pane.
 
 ## Dock Menu
 

@@ -13,18 +13,14 @@ extension MainWindowToolbar: NSToolbarItemValidation {
         let hasPendingChanges: Bool
         let hasDataPendingChanges: Bool
         let blocksAllWrites: Bool
-        let fileBased: Bool
-        let supportsContainerSwitching: Bool
         let supportsImport: Bool
         let supportsServerDashboard: Bool
     }
 
     static func isEnabled(itemIdentifier: NSToolbarItem.Identifier, context: ValidationContext) -> Bool {
         switch itemIdentifier {
-        case connection, history:
+        case history:
             return true
-        case database:
-            return context.connected && !context.fileBased && context.supportsContainerSwitching
         case refresh, quickSwitcher, newTab, exportTables:
             return context.connected
         case saveChanges:
@@ -50,8 +46,6 @@ extension MainWindowToolbar: NSToolbarItemValidation {
             hasPendingChanges: state.hasPendingChanges,
             hasDataPendingChanges: state.hasDataPendingChanges,
             blocksAllWrites: state.safeModeLevel.blocksAllWrites,
-            fileBased: PluginManager.shared.connectionMode(for: state.databaseType) == .fileBased,
-            supportsContainerSwitching: PluginManager.shared.supportsContainerSwitching(for: state.databaseType),
             supportsImport: PluginManager.shared.supportsImport(for: state.databaseType),
             supportsServerDashboard: coordinator?.commandActions?.supportsServerDashboard ?? false
         )

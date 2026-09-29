@@ -68,7 +68,7 @@ private func drainMainActor(_ times: Int = 8) async {
 struct SessionDriverGateTests {
     @Test("A second caller for the same connection runs only after the first completes")
     func secondCallerWaitsForTheFirst() async throws {
-        let gate = SessionDriverGate()
+        let gate = SessionDriverGate<UUID>()
         let connectionId = UUID()
         let log = EventLog()
         let firstEntered = TestSignal()
@@ -102,7 +102,7 @@ struct SessionDriverGateTests {
 
     @Test("A held connection does not block a different connection")
     func differentConnectionsDoNotBlockEachOther() async throws {
-        let gate = SessionDriverGate()
+        let gate = SessionDriverGate<UUID>()
         let held = UUID()
         let other = UUID()
         let heldEntered = TestSignal()
@@ -129,7 +129,7 @@ struct SessionDriverGateTests {
 
     @Test("A throwing body still releases the gate")
     func throwingBodyReleasesTheGate() async throws {
-        let gate = SessionDriverGate()
+        let gate = SessionDriverGate<UUID>()
         let connectionId = UUID()
 
         await #expect(throws: GateBodyError.self) {
@@ -148,7 +148,7 @@ struct SessionDriverGateTests {
 
     @Test("A cancelled waiter throws and gives up its place in the queue")
     func cancelledWaiterLeavesTheQueue() async throws {
-        let gate = SessionDriverGate()
+        let gate = SessionDriverGate<UUID>()
         let connectionId = UUID()
         let log = EventLog()
         let holderEntered = TestSignal()
@@ -187,7 +187,7 @@ struct SessionDriverGateTests {
 
     @Test("draining a connection fails everyone still queued for it")
     func drainFailsQueuedWaiters() async throws {
-        let gate = SessionDriverGate()
+        let gate = SessionDriverGate<UUID>()
         let connectionId = UUID()
         let holderEntered = TestSignal()
         let releaseHolder = TestSignal()
@@ -219,9 +219,65 @@ struct SessionDriverGateTests {
         try await holder.value
     }
 
+    @Test("Draining never lets a new caller in beside a body that is still running")
+    func drainKeepsTheRunningHolder() async throws {
+        let gate = SessionDriverGate<UUID>()
+        let connectionId = UUID()
+        let holderEntered = TestSignal()
+        let releaseHolder = TestSignal()
+        let log = EventLog()
+
+        let holder = Task { @MainActor in
+            try await gate.withExclusiveAccess(connectionId) {
+                holderEntered.signal()
+                await releaseHolder.wait()
+                log.record("holder-done")
+            }
+        }
+        await holderEntered.wait()
+        gate.drain(connectionId: connectionId)
+
+        let latecomer = Task { @MainActor in
+            try await gate.withExclusiveAccess(connectionId) {
+                log.record("latecomer-ran")
+            }
+        }
+        await drainMainActor()
+        #expect(log.events.isEmpty)
+
+        releaseHolder.signal()
+        try await holder.value
+        try await latecomer.value
+        #expect(log.events == ["holder-done", "latecomer-ran"])
+    }
+
+    @Test("A try-acquire skips a key that is already held")
+    func tryAcquireSkipsHeldKey() async throws {
+        let gate = SessionDriverGate<UUID>()
+        let connectionId = UUID()
+        let holderEntered = TestSignal()
+        let releaseHolder = TestSignal()
+
+        let holder = Task { @MainActor in
+            try await gate.withExclusiveAccess(connectionId) {
+                holderEntered.signal()
+                await releaseHolder.wait()
+            }
+        }
+        await holderEntered.wait()
+
+        let skipped = await gate.withExclusiveAccessIfIdle(connectionId) { true }
+        #expect(skipped == nil)
+
+        releaseHolder.signal()
+        try await holder.value
+        let ran = await gate.withExclusiveAccessIfIdle(connectionId) { true }
+        #expect(ran == true)
+    }
+
     @Test("The body observes its own task's cancellation")
     func bodyObservesCallerCancellation() async throws {
-        let gate = SessionDriverGate()
+        let gate = SessionDriverGate<UUID>()
         let connectionId = UUID()
         let bodyEntered = TestSignal()
         let observedCancellation = BoolBox()
@@ -253,7 +309,7 @@ struct SessionDriverGateTests {
 
     @Test("Cancelling the holder still releases the gate for the next caller")
     func cancelledHolderReleasesTheGate() async throws {
-        let gate = SessionDriverGate()
+        let gate = SessionDriverGate<UUID>()
         let connectionId = UUID()
         let bodyEntered = TestSignal()
 

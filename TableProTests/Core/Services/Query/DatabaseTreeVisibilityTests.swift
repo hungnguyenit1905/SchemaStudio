@@ -13,7 +13,7 @@ struct DatabaseTreeVisibilityTests {
 
     @Test("Empty selection shows all non-system databases")
     func emptyShowsAll() {
-        let visible = DatabaseTreeVisibility.visible(databases: databases, selected: [], activeDatabase: nil)
+        let visible = DatabaseTreeVisibility.visible(databases: databases, selected: [], alwaysShown: nil)
         #expect(visible.map(\.name) == ["analytics", "billing", "legacy_2019"])
     }
 
@@ -22,7 +22,7 @@ struct DatabaseTreeVisibilityTests {
         let visible = DatabaseTreeVisibility.visible(
             databases: databases,
             selected: ["billing", "legacy_2019"],
-            activeDatabase: nil
+            alwaysShown: nil
         )
         #expect(visible.map(\.name) == ["billing", "legacy_2019"])
     }
@@ -32,7 +32,7 @@ struct DatabaseTreeVisibilityTests {
         let visible = DatabaseTreeVisibility.visible(
             databases: databases,
             selected: ["mysql", "analytics"],
-            activeDatabase: nil
+            alwaysShown: nil
         )
         #expect(visible.map(\.name) == ["analytics"])
     }
@@ -42,41 +42,63 @@ struct DatabaseTreeVisibilityTests {
         let visible = DatabaseTreeVisibility.visible(
             databases: databases,
             selected: ["dropped_db"],
-            activeDatabase: nil
+            alwaysShown: nil
         )
         #expect(visible.isEmpty)
     }
 
-    @Test("The active database stays visible even when it is a system database")
-    func activeSystemDatabaseStaysVisible() {
-        let visible = DatabaseTreeVisibility.visible(databases: databases, selected: [], activeDatabase: "mysql")
+    @Test("The default database stays visible even when it is a system database")
+    func defaultSystemDatabaseStaysVisible() {
+        let visible = DatabaseTreeVisibility.visible(databases: databases, selected: [], alwaysShown: "mysql")
         #expect(visible.map(\.name) == ["analytics", "billing", "legacy_2019", "mysql"])
     }
 
-    @Test("The active database stays visible when the filter excludes it")
-    func activeDatabaseSurvivesFilter() {
+    @Test("The default database stays visible when the filter excludes it")
+    func defaultDatabaseSurvivesFilter() {
         let visible = DatabaseTreeVisibility.visible(
             databases: databases,
             selected: ["billing"],
-            activeDatabase: "analytics"
+            alwaysShown: "analytics"
         )
         #expect(visible.map(\.name) == ["analytics", "billing"])
     }
 
-    @Test("The active database keeps its position in the list")
-    func activeDatabaseKeepsPosition() {
+    @Test("The default database keeps its position in the list")
+    func defaultDatabaseKeepsPosition() {
         let visible = DatabaseTreeVisibility.visible(
             databases: databases,
             selected: [],
-            activeDatabase: "information_schema"
+            alwaysShown: "information_schema"
         )
         #expect(visible.map(\.name) == ["analytics", "billing", "legacy_2019", "information_schema"])
     }
 
-    @Test("An empty active database name is treated as absent")
-    func emptyActiveDatabaseIgnored() {
-        let visible = DatabaseTreeVisibility.visible(databases: databases, selected: [], activeDatabase: "")
+    @Test("An empty default database name is treated as absent")
+    func emptyDefaultDatabaseIgnored() {
+        let visible = DatabaseTreeVisibility.visible(databases: databases, selected: [], alwaysShown: "")
         #expect(visible.map(\.name) == ["analytics", "billing", "legacy_2019"])
+    }
+
+    @Test("Show Hidden Items reveals system databases")
+    func showHiddenItemsRevealsSystemDatabases() {
+        let visible = DatabaseTreeVisibility.visible(
+            databases: databases,
+            selected: [],
+            alwaysShown: nil,
+            showsHiddenItems: true
+        )
+        #expect(visible.map(\.name) == ["analytics", "billing", "legacy_2019", "mysql", "information_schema"])
+    }
+
+    @Test("Show Hidden Items still respects the custom list")
+    func showHiddenItemsRespectsSelection() {
+        let visible = DatabaseTreeVisibility.visible(
+            databases: databases,
+            selected: ["mysql"],
+            alwaysShown: nil,
+            showsHiddenItems: true
+        )
+        #expect(visible.map(\.name) == ["mysql"])
     }
 
     @Test("isFiltering reflects whether a selection is active")

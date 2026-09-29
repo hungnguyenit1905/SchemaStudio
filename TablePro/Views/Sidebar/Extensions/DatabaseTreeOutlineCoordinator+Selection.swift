@@ -63,7 +63,7 @@ extension DatabaseTreeOutlineCoordinator {
             setExpanded(child, want)
             guard outlineView.isItemExpanded(child) else { continue }
             triggerLoad(for: child)
-            guard context.supportsSchemaLevel else {
+            guard context.listsSchemasUnderDatabase else {
                 restorePartitionExpansion(under: child)
                 continue
             }
@@ -161,8 +161,9 @@ extension DatabaseTreeOutlineCoordinator {
         case .connection(let connection):
             loadDatabases(connectionId: connection.id)
         case .database(let connectionId, let metadata):
-            guard let context = context(for: connectionId) else { return }
-            if context.supportsSchemaLevel {
+            guard let context = context(for: connectionId),
+                  isDatabaseOpen(metadata.name, connectionId: connectionId) else { return }
+            if context.listsSchemasUnderDatabase {
                 if isIdle(service.schemaListState(connectionId: connectionId, database: metadata.name)) {
                     Task { await service.loadSchemas(connectionId: connectionId, database: metadata.name) }
                 }
@@ -181,6 +182,11 @@ extension DatabaseTreeOutlineCoordinator {
 
     private func loadDatabases(connectionId: UUID) {
         guard let context = context(for: connectionId), context.isConnected else { return }
+        guard !context.hasDatabaseLevel else {
+            guard isIdle(service.databaseListState(for: connectionId)) else { return }
+            Task { await service.loadDatabases(connectionId: connectionId, databaseType: context.databaseType) }
+            return
+        }
         switch context.groupingStrategy {
         case .flat:
             loadObjects(connectionId: connectionId, database: container(for: context), schema: nil)
@@ -258,20 +264,38 @@ extension DatabaseTreeOutlineCoordinator {
         isSyncingSelection = false
     }
 
-    func open(_ ref: DatabaseTreeTableRef, activateGridFocus: Bool, forceNewWindowTab: Bool = false) {
+    func restoreOutlineFocus() {
+        guard let outlineView, let window = outlineView.window else { return }
+        window.makeFirstResponder(outlineView)
+    }
+
+    func restoreOutlineFocus(for generation: UInt) {
+        guard isCurrentNavigation(generation) else { return }
+        restoreOutlineFocus()
+    }
+
+    func open(
+        _ ref: DatabaseTreeTableRef,
+        activateGridFocus: Bool,
+        forceNewTab: Bool = false,
+        showStructure: Bool = false
+    ) {
+        let generation = nextNavigationGeneration()
         switch SidebarTabRouter.route(nodeConnectionId: ref.connectionId, windowConnectionId: connectionId) {
         case .currentWindowCoordinator:
-            Task { @MainActor in
-                await activate(ref)
-                mainCoordinator?.openTableTab(
-                    ref.table,
-                    schema: ref.schema,
-                    activateGridFocus: activateGridFocus,
-                    forceNewWindowTab: forceNewWindowTab
-                )
+            mainCoordinator?.openTableTab(
+                ref.table,
+                scope: DatabaseScope(connectionId: ref.connectionId, database: ref.database, schema: ref.schema),
+                showStructure: showStructure,
+                activateGridFocus: activateGridFocus,
+                forceNewTab: forceNewTab
+            )
+            guard !activateGridFocus else { return }
+            DispatchQueue.main.async { [weak self] in
+                self?.restoreOutlineFocus(for: generation)
             }
         case .newTabForNodeConnection:
-            openInNodeConnection(ref)
+            openInNodeConnection(ref, showStructure: showStructure)
         }
     }
 
@@ -280,7 +304,7 @@ extension DatabaseTreeOutlineCoordinator {
     /// would bind the tab to the wrong connection. The tab group is forced
     /// shared so the new tab lands beside the tree the user clicked in, which is
     /// what `groupAllConnectionTabs` cannot express.
-    private func openInNodeConnection(_ ref: DatabaseTreeTableRef) {
+    private func openInNodeConnection(_ ref: DatabaseTreeTableRef, showStructure: Bool) {
         if focusExistingTab(for: ref) { return }
         let payload = EditorTabPayload(
             connectionId: ref.connectionId,
@@ -288,12 +312,13 @@ extension DatabaseTreeOutlineCoordinator {
             tableName: ref.table.name,
             databaseName: ref.database,
             schemaName: ref.schema,
-            isView: !ref.table.type.allowsRowEditing
+            isView: !ref.table.type.allowsRowEditing,
+            showStructure: showStructure
         )
         WindowManager.shared.openTab(payload: payload, tabGroup: .shared, anchor: outlineView?.window)
     }
 
-    private func focusExistingTab(for ref: DatabaseTreeTableRef) -> Bool {
+    func focusExistingTab(for ref: DatabaseTreeTableRef) -> Bool {
         for coordinator in MainContentCoordinator.allActiveCoordinators()
             where coordinator.connectionId == ref.connectionId {
             guard let match = coordinator.tabManager.tabs.first(where: {
@@ -308,41 +333,8 @@ extension DatabaseTreeOutlineCoordinator {
         return false
     }
 
-    func activate(_ ref: DatabaseTreeTableRef) async {
-        if ref.database != activeDatabase {
-            await mainCoordinator?.switchDatabase(to: ref.database)
-        }
-        guard let schema = ref.schema,
-              PluginManager.shared.supportsSchemaSwitching(for: databaseType),
-              schema != sessionSchema else { return }
-        await mainCoordinator?.switchSchema(to: schema)
-    }
-
-    /// The live session schema, not the window's toolbar mirror. A database switch
-    /// moves the session schema without touching the toolbar, so comparing against
-    /// the toolbar skips the switch exactly when the session needs it.
-    private var sessionSchema: String? {
-        DatabaseManager.shared.session(for: connectionId)?.browseSchema
-    }
-
-    func setActiveDatabase(_ database: String) {
-        guard database != activeDatabase else { return }
-        Task { await mainCoordinator?.switchDatabase(to: database) }
-    }
-
-    func setActiveSchema(database: String, schema: String) {
-        Task { @MainActor in
-            if database != activeDatabase {
-                await mainCoordinator?.switchDatabase(to: database)
-            }
-            if schema != sessionSchema {
-                await mainCoordinator?.switchSchema(to: schema)
-            }
-        }
-    }
-
     func refreshDatabase(_ database: String, connectionId: UUID) {
-        if context(for: connectionId)?.supportsSchemaLevel == true {
+        if context(for: connectionId)?.listsSchemasUnderDatabase == true {
             Task { await service.refreshSchemas(connectionId: connectionId, database: database) }
         } else {
             Task { await service.refreshObjects(connectionId: connectionId, database: database, schema: nil) }
@@ -354,28 +346,93 @@ extension DatabaseTreeOutlineCoordinator {
     }
 
     @objc
-    func handleSingleClick() {
-        guard let outlineView, outlineView.clickedRow >= 0,
-              let node = outlineView.item(atRow: outlineView.clickedRow) as? DatabaseTreeNode,
-              let ref = node.recentTableRef else { return }
-        scheduleSingleClickOpen(ref)
-    }
-
-    @objc
     func handleDoubleClick() {
         guard let outlineView, outlineView.clickedRow >= 0,
               let node = outlineView.item(atRow: outlineView.clickedRow) as? DatabaseTreeNode else { return }
+        activate(node, activateGridFocus: true)
+    }
+
+    func activateSelectedNode() {
+        guard let outlineView, outlineView.selectedRow >= 0,
+              let node = outlineView.item(atRow: outlineView.selectedRow) as? DatabaseTreeNode else { return }
+        activate(node, activateGridFocus: false)
+    }
+
+    func activate(_ node: DatabaseTreeNode, activateGridFocus: Bool) {
         if let ref = node.tableRef ?? node.recentTableRef {
-            pendingSingleClickWork?.cancel()
-            pendingSingleClickWork = nil
-            open(ref, activateGridFocus: true, forceNewWindowTab: true)
+            openOrFocus(ref, activateGridFocus: activateGridFocus)
             return
         }
-        guard node.isExpandable else { return }
+        if isOpenable(node) {
+            openNode(node)
+            return
+        }
+        guard let outlineView, isExpandable(node) else { return }
         if outlineView.isItemExpanded(node) {
             outlineView.collapseItem(node)
         } else {
             outlineView.expandItem(node)
+        }
+    }
+
+    func openOrFocus(_ ref: DatabaseTreeTableRef, activateGridFocus: Bool) {
+        if navigatesInPlace(ref.connectionId) {
+            open(ref, activateGridFocus: activateGridFocus)
+            return
+        }
+        if focusExistingTab(for: ref) { return }
+        open(ref, activateGridFocus: activateGridFocus, forceNewTab: true)
+    }
+
+    private func navigatesInPlace(_ connectionId: UUID) -> Bool {
+        guard let type = context(for: connectionId)?.databaseType else { return false }
+        return PluginMetadataRegistry.shared.snapshot(forTypeId: type.pluginTypeId)?.navigationModel == .inPlace
+    }
+
+    func openNode(_ node: DatabaseTreeNode) {
+        switch node.kind {
+        case .connection(let connection):
+            connect(connection)
+        case .database(let connectionId, let metadata):
+            openDatabase(metadata.name, connectionId: connectionId)
+        default:
+            return
+        }
+    }
+
+    func openDatabase(_ database: String, connectionId: UUID) {
+        let key = ConnectionDatabaseKey(connectionId: connectionId, database: database)
+        Task { @MainActor in
+            do {
+                try await DatabaseManager.shared.markDatabaseOpen(database, for: connectionId)
+            } catch is CancellationError {
+                return
+            } catch {
+                AlertHelper.showErrorSheet(
+                    title: String(format: String(localized: "Could not open %@"), database),
+                    message: error.localizedDescription,
+                    window: outlineView?.window
+                )
+                return
+            }
+            windowState?.expandedTreeDatabases.insert(key)
+            refresh()
+            guard let node = nodeCache[DatabaseTreeNode.databaseId(connectionId: connectionId, database: database)]
+            else { return }
+            setExpanded(node, true)
+        }
+    }
+
+    func closeDatabase(_ database: String, connectionId: UUID) {
+        let key = ConnectionDatabaseKey(connectionId: connectionId, database: database)
+        Task { @MainActor in
+            await DatabaseCloseFlow.closeDatabase(database, connectionId: connectionId, anchor: outlineView?.window)
+            guard !DatabaseManager.shared.isDatabaseOpen(database, for: connectionId) else { return }
+            windowState?.expandedTreeDatabases.remove(key)
+            if let node = nodeCache[DatabaseTreeNode.databaseId(connectionId: connectionId, database: database)] {
+                setExpanded(node, false)
+            }
+            refresh()
         }
     }
 }
@@ -390,31 +447,27 @@ extension DatabaseTreeOutlineCoordinator: NSOutlineViewDelegate {
     }
 
     func outlineView(_ outlineView: NSOutlineView, shouldSelectItem item: Any) -> Bool {
-        (item as? DatabaseTreeNode)?.tableRef != nil
+        guard let node = item as? DatabaseTreeNode else { return false }
+        switch node.kind {
+        case .status, .folder, .connectionRoot, .recentSection:
+            return false
+        default:
+            return true
+        }
     }
 
-    /// The `isApplyingExpansion` guard is what keeps launch from connecting.
-    /// Restoring saved expansion runs through here too, and connecting from that
-    /// replay would fire one connect and one password sheet per remembered
-    /// connection before the user has touched anything.
+    /// The `isApplyingExpansion` guard keeps launch replay from recording expansion.
+    /// Expanding only loads metadata: opening a closed node is an explicit gesture.
     func outlineViewItemWillExpand(_ notification: Notification) {
         guard let node = notification.userInfo?["NSObject"] as? DatabaseTreeNode else { return }
         triggerLoad(for: node)
         guard !isApplyingExpansion else { return }
         recordExpansion(node, expanded: true)
-        adoptActiveConnection(node.connectionId)
-        if case .connection(let connection) = node.kind {
-            connect(connection)
-        }
     }
 
-    /// A root or folder node carries no connection, so it leaves the previous
-    /// choice alone: the bottom bar has nothing meaningful to show for a folder.
-    /// The choice is this window's, so a click here never retargets the tools
-    /// under another window's sidebar.
-    private func adoptActiveConnection(_ connectionId: UUID?) {
-        guard let connectionId else { return }
-        windowState?.activeConnectionId = connectionId
+    func adoptSelectedScope(of kind: DatabaseTreeNode.Kind) {
+        guard let scope = SidebarScope.resolve(kind) else { return }
+        windowState?.selectedScope = scope
     }
 
     func outlineViewItemWillCollapse(_ notification: Notification) {
@@ -423,37 +476,12 @@ extension DatabaseTreeOutlineCoordinator: NSOutlineViewDelegate {
     }
 
     func outlineViewSelectionDidChange(_ notification: Notification) {
-        guard !isSyncingSelection, !isReloading else { return }
-        let refs = Set(selectedRefs())
-        if let added = SelectionDelta.singleAddition(old: lastSelection, new: refs) {
-            adoptActiveConnection(added.connectionId)
-            if isKeyboardDrivenSelection {
-                pendingSingleClickWork?.cancel()
-                pendingSingleClickWork = nil
-                open(added, activateGridFocus: false)
-            } else {
-                scheduleSingleClickOpen(added)
-            }
-        }
-        lastSelection = refs
-    }
-
-    private var isKeyboardDrivenSelection: Bool {
-        guard let outlineView, outlineView.window?.firstResponder === outlineView else { return false }
-        switch NSApp.currentEvent?.type {
-        case .keyDown, .keyUp:
-            return true
-        default:
-            return false
-        }
-    }
-
-    func scheduleSingleClickOpen(_ ref: DatabaseTreeTableRef) {
-        pendingSingleClickWork?.cancel()
-        let work = DispatchWorkItem { [weak self] in
-            self?.open(ref, activateGridFocus: false)
-        }
-        pendingSingleClickWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + NSEvent.doubleClickInterval, execute: work)
+        guard !isSyncingSelection, !isReloading, let outlineView else { return }
+        lastSelection = Set(selectedRefs())
+        let row = outlineView.selectedRowIndexes.contains(outlineView.clickedRow)
+            ? outlineView.clickedRow
+            : outlineView.selectedRow
+        guard row >= 0, let node = outlineView.item(atRow: row) as? DatabaseTreeNode else { return }
+        adoptSelectedScope(of: node.kind)
     }
 }

@@ -57,6 +57,7 @@ struct MainEditorContentView: View {
     @State private var erDiagramViewModels: [UUID: ERDiagramViewModel] = [:]
     @State private var serverDashboardViewModels: [UUID: ServerDashboardViewModel] = [:]
     @State private var usersRolesViewModels: [UUID: UsersRolesViewModel] = [:]
+    @State private var objectsViewModels: [UUID: ObjectsTabViewModel] = [:]
     @State private var dataTabDelegate = DataTabGridDelegate()
 
     @Bindable private var treeService = DatabaseTreeMetadataService.shared
@@ -138,6 +139,7 @@ struct MainEditorContentView: View {
             erDiagramViewModels = erDiagramViewModels.filter { openTabIds.contains($0.key) }
             serverDashboardViewModels = serverDashboardViewModels.filter { openTabIds.contains($0.key) }
             usersRolesViewModels = usersRolesViewModels.filter { openTabIds.contains($0.key) }
+            objectsViewModels = objectsViewModels.filter { openTabIds.contains($0.key) }
         }
         .onChange(of: tabManager.selectedTabId) { _, _ in
             updateHasQueryText()
@@ -217,6 +219,8 @@ struct MainEditorContentView: View {
             serverDashboardContent(tab: tab)
         case .usersRoles:
             usersRolesContent(tab: tab)
+        case .objects:
+            objectsContent(tab: tab)
         }
     }
 
@@ -236,6 +240,32 @@ struct MainEditorContentView: View {
                             databaseType: connection.type
                         )
                         usersRolesViewModels[tab.id] = vm
+                    }
+            }
+        }
+        .id(tab.id)
+    }
+
+    // MARK: - Objects Tab Content
+
+    private func objectsContent(tab: QueryTab) -> some View {
+        Group {
+            if let vm = objectsViewModels[tab.id] {
+                ObjectsTabView(viewModel: vm, coordinator: coordinator)
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .onAppear {
+                        guard objectsViewModels[tab.id] == nil else { return }
+                        objectsViewModels[tab.id] = ObjectsTabViewModel(
+                            connectionId: connection.id,
+                            windowState: coordinator.windowSidebarState,
+                            fallbackScope: SidebarScope(
+                                connectionId: connection.id,
+                                database: tab.tableContext.databaseName,
+                                schema: tab.tableContext.schemaName
+                            )
+                        )
                     }
             }
         }
@@ -278,7 +308,10 @@ struct MainEditorContentView: View {
                         let vm = ERDiagramViewModel(
                             connectionId: connection.id,
                             databaseName: tab.tableContext.databaseName,
-                            schemaKey: tab.display.erDiagramSchemaKey ?? tab.tableContext.databaseName
+                            schemaKey: tab.display.erDiagramSchemaKey ?? tab.tableContext.databaseName,
+                            openTab: { [weak coordinator] payload in
+                                coordinator?.openTabInCurrentWindow(payload)
+                            }
                         )
                         erDiagramViewModels[tab.id] = vm
                     }
@@ -300,13 +333,15 @@ struct MainEditorContentView: View {
         return DatabaseTreeVisibility.visible(
             databases: all,
             selected: selected,
-            activeDatabase: containerName(for: tab)
+            alwaysShown: containerName(for: tab),
+            showsHiddenItems: AppSettingsManager.shared.general.showHiddenItems
         )
     }
 
     private var isContainerSwitchReadOnly: Bool {
-        guard containerSwitchTarget == .database else { return false }
-        return PluginManager.shared.requiresReconnectForDatabaseSwitch(for: connection.type)
+        guard containerSwitchTarget == .database,
+              PluginManager.shared.requiresReconnectForDatabaseSwitch(for: connection.type) else { return false }
+        return !DatabaseManager.shared.canOpenDatabaseSession(for: connectionId)
     }
 
     private var containerEntityName: String {
@@ -322,11 +357,23 @@ struct MainEditorContentView: View {
     /// rest of its life and the sidebar's browse cursor stays where the user left it.
     private func changeContainer(for tab: QueryTab, to name: String) {
         let tabId = tab.id
-        guard tab.tableContext.databaseName != name,
-              tabManager.mutate(tabId: tabId, { $0.tableContext.databaseName = name }) else { return }
-        tabManager.markTabRenamed(tabId)
-        guard tabManager.selectedTabId == tabId else { return }
-        coordinator.runQuery()
+        guard tab.tableContext.databaseName != name else { return }
+        let connectionId = connectionId
+        Task { @MainActor in
+            do {
+                try await DatabaseManager.shared.markDatabaseOpen(name, for: connectionId)
+            } catch {
+                tabManager.mutate(tabId: tabId) { $0.execution.errorMessage = error.localizedDescription }
+                return
+            }
+            guard tabManager.mutate(tabId: tabId, {
+                $0.tableContext.databaseName = name
+                $0.tableContext.schemaName = nil
+            }) else { return }
+            tabManager.markTabRenamed(tabId)
+            guard tabManager.selectedTabId == tabId else { return }
+            coordinator.runQuery()
+        }
     }
 
     // MARK: - Query Tab Content

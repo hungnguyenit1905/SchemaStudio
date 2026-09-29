@@ -468,15 +468,15 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
         )
     }
 
-    private var sessionPendingTruncatesBinding: Binding<Set<String>> {
+    private var sessionPendingTruncatesBinding: Binding<Set<DatabaseTreeTableRef>> {
         createSessionBinding(get: { $0.pendingTruncates }, set: { $0.pendingTruncates = $1 }, defaultValue: [])
     }
 
-    private var sessionPendingDeletesBinding: Binding<Set<String>> {
+    private var sessionPendingDeletesBinding: Binding<Set<DatabaseTreeTableRef>> {
         createSessionBinding(get: { $0.pendingDeletes }, set: { $0.pendingDeletes = $1 }, defaultValue: [])
     }
 
-    private var sessionTableOperationOptionsBinding: Binding<[String: TableOperationOptions]> {
+    private var sessionTableOperationOptionsBinding: Binding<[DatabaseTreeTableRef: TableOperationOptions]> {
         createSessionBinding(
             get: { $0.tableOperationOptions },
             set: { $0.tableOperationOptions = $1 },
@@ -562,7 +562,7 @@ internal final class MainSplitViewController: NSSplitViewController, InspectorVi
         switch tabType {
         case .usersRoles:
             return UsersRolesLayoutMetrics.tabMinimumWidth
-        case .query, .table, .createTable, .erDiagram, .serverDashboard:
+        case .query, .table, .createTable, .erDiagram, .serverDashboard, .objects:
             return defaultDetailMinThickness
         }
     }

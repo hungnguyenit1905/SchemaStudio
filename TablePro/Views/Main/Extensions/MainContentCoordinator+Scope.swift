@@ -41,4 +41,21 @@ extension MainContentCoordinator {
     var browseScope: DatabaseScope? {
         services.databaseManager.browseScope(for: connectionId)
     }
+
+    var newWorkScope: DatabaseScope {
+        let defaultDatabase = services.databaseManager.session(for: connectionId)?.resolvedBrowseDatabase
+            ?? connection.database
+        if let selected = windowSidebarState.selectedScope, selected.connectionId == connectionId {
+            let manager = services.databaseManager
+            let usable = selected.resolved(
+                connectionExists: { _ in true },
+                isDatabaseOpen: { database, id in manager.session(for: id) == nil || manager.isDatabaseOpen(database, for: id) }
+            ) ?? selected
+            return usable.databaseScope(defaultDatabase: defaultDatabase)
+        }
+        if let tabScope = selectedTabScope {
+            return tabScope
+        }
+        return DatabaseScope(connectionId: connectionId, database: defaultDatabase, schema: nil)
+    }
 }

@@ -3,6 +3,7 @@
 //  TableProTests
 //
 
+import AppKit
 import Foundation
 import TableProPluginKit
 import Testing
@@ -12,6 +13,16 @@ import Testing
 @Suite("Database Tree Selection Identity")
 struct DatabaseTreeSelectionTests {
     private static let connection = UUID()
+
+    @MainActor
+    private final class FocusRecordingWindow: NSWindow {
+        private(set) var requestedResponder: NSResponder?
+
+        override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
+            requestedResponder = responder
+            return true
+        }
+    }
 
     private func makeTable(_ name: String, schema: String? = nil) -> TableInfo {
         TableInfo(name: name, type: .table, rowCount: nil, schema: schema)
@@ -65,6 +76,55 @@ struct DatabaseTreeSelectionTests {
 
         #expect(lhs == rhs)
         #expect(lhs.hashValue == rhs.hashValue)
+    }
+
+    @Test("Restoring outline focus keeps navigation in the database tree")
+    @MainActor
+    func restoringOutlineFocusMakesTreeFirstResponder() {
+        let window = FocusRecordingWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 200),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+        let outlineView = NSOutlineView()
+        let scrollView = NSScrollView()
+        scrollView.documentView = outlineView
+        window.contentView = scrollView
+        let coordinator = DatabaseTreeOutlineCoordinator()
+        coordinator.attach(outlineView: outlineView)
+
+        coordinator.restoreOutlineFocus()
+
+        #expect(window.requestedResponder === outlineView)
+    }
+
+    @Test("Superseded navigation cannot restore outline focus")
+    @MainActor
+    func supersededNavigationDoesNotRestoreOutlineFocus() {
+        let window = FocusRecordingWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 200),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+        let outlineView = NSOutlineView()
+        let scrollView = NSScrollView()
+        scrollView.documentView = outlineView
+        window.contentView = scrollView
+        let coordinator = DatabaseTreeOutlineCoordinator()
+        coordinator.attach(outlineView: outlineView)
+        let staleGeneration = coordinator.nextNavigationGeneration()
+        let currentGeneration = coordinator.nextNavigationGeneration()
+
+        coordinator.restoreOutlineFocus(for: staleGeneration)
+
+        #expect(window.requestedResponder == nil)
+        #expect(!coordinator.isCurrentNavigation(staleGeneration))
+
+        coordinator.restoreOutlineFocus(for: currentGeneration)
+
+        #expect(window.requestedResponder === outlineView)
     }
 }
 

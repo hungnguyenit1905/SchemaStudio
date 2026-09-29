@@ -35,7 +35,8 @@ final class DatabaseSwitcherViewModel {
         return DatabaseTreeVisibility.visible(
             databases: databases,
             selected: sidebarState?.databaseFilterSelected ?? [],
-            activeDatabase: currentDatabase
+            alwaysShown: currentDatabase,
+            showsHiddenItems: AppSettingsManager.shared.general.showHiddenItems
         )
     }
 
@@ -126,13 +127,16 @@ final class DatabaseSwitcherViewModel {
         }
         let request = CreateDatabaseRequest(name: name, values: values)
         try await driver.createDatabase(request)
+        await DatabaseTreeMetadataService.shared.refreshDatabases(
+            connectionId: connectionId,
+            databaseType: databaseType
+        )
     }
 
     func dropDatabase(name: String) async throws {
-        guard let driver = services.databaseManager.driver(for: connectionId) else {
-            throw DatabaseError.notConnected
-        }
-        try await driver.dropDatabase(name: name)
+        try await DatabaseTreeMetadataService.shared.dropDatabase(
+            DatabaseScope(connectionId: connectionId, database: name, schema: nil)
+        )
     }
 
     func moveUp() {

@@ -61,14 +61,14 @@ struct ScopedDriverRoutingTests {
         #expect(DatabaseManager.shared.metadataRoute(for: serverScoped) == .sessionDriver)
     }
 
-    @Test("A reconnect-required engine runs a foreign database on a pooled connection")
-    func reconnectRequiredEngineOnAForeignDatabasePools() {
+    @Test("A reconnect-required engine runs a foreign database on its own database driver")
+    func reconnectRequiredEngineOnAForeignDatabaseUsesADatabaseSession() {
         let connection = Self.makeSession(type: .postgresql, browseDatabase: "inventory")
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
 
         let foreign = Self.scope(connection, database: "orders")
 
-        #expect(DatabaseManager.shared.executionRoute(for: foreign) == .pooled)
+        #expect(DatabaseManager.shared.executionRoute(for: foreign) == .databaseSession)
     }
 
     @Test("An engine that can neither pin nor pool reports the tab's database instead of guessing")

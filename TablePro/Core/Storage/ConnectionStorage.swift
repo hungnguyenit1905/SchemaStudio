@@ -217,6 +217,22 @@ final class ConnectionStorage {
     }
 
     @discardableResult
+    func updateDatabaseListSettings(_ settings: DatabaseListSettings?, for connectionId: UUID) -> Bool {
+        var connections = loadConnections()
+        guard let index = connections.firstIndex(where: { $0.id == connectionId }) else { return false }
+        let normalized = settings.flatMap { $0.isEmpty ? nil : $0 }
+        guard connections[index].databaseListSettings != normalized else { return true }
+        connections[index].databaseListSettings = normalized
+        guard saveConnections(connections) else {
+            Self.logger.error(
+                "Aborted updateDatabaseListSettings: persistence failed for \(connectionId, privacy: .public)"
+            )
+            return false
+        }
+        return true
+    }
+
+    @discardableResult
     func updateSafeModeLevel(_ level: SafeModeLevel, for connectionId: UUID) -> Bool {
         var connections = loadConnections()
         guard let index = connections.firstIndex(where: { $0.id == connectionId }) else {
@@ -352,6 +368,8 @@ final class ConnectionStorage {
             aiPolicy: connection.aiPolicy,
             aiRules: connection.aiRules,
             aiAlwaysAllowedTools: connection.aiAlwaysAllowedTools,
+            diagnosticPolicy: connection.diagnosticPolicy,
+            databaseListSettings: connection.databaseListSettings,
             redisDatabase: connection.redisDatabase,
             startupCommands: connection.startupCommands,
             sortOrder: connection.sortOrder,

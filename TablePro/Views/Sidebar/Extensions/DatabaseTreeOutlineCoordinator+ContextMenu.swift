@@ -33,11 +33,10 @@ extension DatabaseTreeOutlineCoordinator {
         let nodeConnectionId = node.connectionId ?? connectionId
         return DatabaseTreeRowContext(
             databaseType: context?.databaseType ?? databaseType,
-            activeDatabase: activeDatabase(for: nodeConnectionId),
-            activeSchema: nodeConnectionId == connectionId ? activeSchema : nil,
+            defaultDatabase: activeDatabase(for: nodeConnectionId),
             systemSchemas: context?.systemSchemas ?? [],
-            pendingTruncates: pendingTruncates,
-            pendingDeletes: pendingDeletes,
+            pendingTruncates: pendingTableOperations(for: nodeConnectionId).truncates,
+            pendingDeletes: pendingTableOperations(for: nodeConnectionId).deletes,
             connectionStatus: context?.status ?? .disconnected,
             connectFailureMessage: connectFailure(for: nodeConnectionId),
             isExternalSchema: { database, schema in
@@ -46,6 +45,9 @@ extension DatabaseTreeOutlineCoordinator {
                     database: database,
                     schema: schema
                 )
+            },
+            isDatabaseOpen: { database in
+                DatabaseManager.shared.isDatabaseOpen(database, for: nodeConnectionId)
             }
         )
     }
@@ -61,14 +63,11 @@ extension DatabaseTreeOutlineCoordinator {
         return DatabaseTreeRowActions(
             coordinator: mainCoordinator,
             isReadOnly: isReadOnly,
-            selectedTables: { [weak self] connectionId in
-                Set((self?.selectedRefs() ?? []).filter { $0.connectionId == connectionId }.map(\.table))
+            selectedRefs: { [weak self] connectionId in
+                Set((self?.selectedRefs() ?? []).filter { $0.connectionId == connectionId })
             },
-            activate: { [weak self] ref in await self?.activate(ref) },
-            setActiveDatabase: { [weak self] in self?.setActiveDatabase($0) },
-            setActiveSchema: { [weak self] database, schema in
-                self?.setActiveSchema(database: database, schema: schema)
-            },
+            openDatabase: { [weak self] in self?.openDatabase($0, connectionId: nodeConnectionId) },
+            closeDatabase: { [weak self] in self?.closeDatabase($0, connectionId: nodeConnectionId) },
             refreshDatabase: { [weak self] in self?.refreshDatabase($0, connectionId: nodeConnectionId) },
             openDataTransfer: { [weak self] database in
                 self?.mainCoordinator?.openDataTransferWizard(
@@ -98,23 +97,27 @@ extension DatabaseTreeOutlineCoordinator {
                     )
                 )
             },
+            openStructure: { [weak self] ref in
+                self?.open(ref, activateGridFocus: true, showStructure: true)
+            },
             refreshObjects: { [weak self] database, schema in
                 self?.refreshObjects(database: database, schema: schema, connectionId: nodeConnectionId)
             },
             showRoutineDDL: { [weak self] routine in self?.mainCoordinator?.showRoutineDDL(routine) },
-            batchToggleTruncate: { [weak self] connectionId, tableNames in
-                self?.viewModel(for: connectionId)?
-                    .batchToggleTruncate(connectionId: connectionId, tableNames: tableNames)
+            batchToggleTruncate: { [weak self] refs in
+                self?.hostViewModel(for: refs)?.batchToggleTruncate(tables: refs)
             },
-            batchToggleDelete: { [weak self] connectionId, tableNames in
-                self?.viewModel(for: connectionId)?
-                    .batchToggleDelete(connectionId: connectionId, tableNames: tableNames)
+            batchToggleDelete: { [weak self] refs in
+                self?.hostViewModel(for: refs)?.batchToggleDelete(tables: refs)
             },
             connect: { [weak self] connection in self?.connect(connection) },
             disconnect: { [weak self] connection in self?.disconnect(connection) },
             refreshConnection: { [weak self] connection in self?.refreshConnection(connection) },
             editConnection: { [weak self] connection in self?.editConnection(connection) },
             newQuery: { [weak self] connection in self?.newQuery(connection) },
+            newDatabase: { [weak self] connection in
+                self?.mainCoordinator?.activeSheet = .createDatabase(connectionId: connection.id)
+            },
             removeRecent: { [weak self] ref in
                 self?.sidebarState(for: ref.connectionId)?
                     .removeRecentTable(database: ref.database, schema: ref.schema, name: ref.table.name)
@@ -125,6 +128,21 @@ extension DatabaseTreeOutlineCoordinator {
                     .clearRecentTables(inDatabase: self.activeDatabase(for: nodeConnectionId))
             }
         )
+    }
+
+    func pendingTableOperations(
+        for connectionId: UUID
+    ) -> (truncates: Set<DatabaseTreeTableRef>, deletes: Set<DatabaseTreeTableRef>) {
+        if connectionId == self.connectionId {
+            return (pendingTruncates[connectionId] ?? [], pendingDeletes[connectionId] ?? [])
+        }
+        let session = DatabaseManager.shared.session(for: connectionId)
+        return (session?.pendingTruncates ?? [], session?.pendingDeletes ?? [])
+    }
+
+    private func hostViewModel(for refs: [DatabaseTreeTableRef]) -> SidebarViewModel? {
+        if let viewModel { return viewModel }
+        return refs.first.flatMap { self.viewModel(for: $0.connectionId) }
     }
 
     func makeCell() -> DatabaseTreeCellView {
@@ -142,6 +160,7 @@ extension DatabaseTreeOutlineCoordinator {
     func connect(_ connection: DatabaseConnection) {
         guard DatabaseManager.shared.activeSessions[connection.id]?.driver == nil else { return }
         ConnectionTreeState.shared.clearConnectFailure(connection.id)
+        ConnectionTreeState.shared.expandedConnectionIds.insert(connection.id)
         Task { @MainActor in
             do {
                 try await DatabaseManager.shared.connectToSession(connection)
@@ -174,13 +193,13 @@ extension DatabaseTreeOutlineCoordinator {
     }
 
     func disconnect(_ connection: DatabaseConnection) {
-        ConnectionTreeState.shared.expandedConnectionIds.remove(connection.id)
-        ConnectionTreeState.shared.clearConnectFailure(connection.id)
-        if let node = nodeCache[DatabaseTreeNode.connectionNodeId(connection.id)] {
-            setExpanded(node, false)
-        }
         Task { @MainActor in
-            await DatabaseManager.shared.disconnectSession(connection.id)
+            guard await DatabaseCloseFlow.closeConnection(connection.id, anchor: outlineView?.window) else { return }
+            ConnectionTreeState.shared.expandedConnectionIds.remove(connection.id)
+            ConnectionTreeState.shared.clearConnectFailure(connection.id)
+            if let node = nodeCache[DatabaseTreeNode.connectionNodeId(connection.id)] {
+                setExpanded(node, false)
+            }
         }
     }
 

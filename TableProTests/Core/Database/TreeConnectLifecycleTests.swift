@@ -245,20 +245,11 @@ struct TreeConnectLifecycleTests {
         #expect(state.connectFailures[removed] == nil)
     }
 
-    // MARK: - The active connection is per window
+    // MARK: - The selected scope is per window
 
-    /// Both windows draw the same tree. A shared active connection let a click
-    /// in one window retarget the other window's schema picker, database filter
-    /// and create-object menu, so "New Table" could write to a connection the
-    /// user never selected there.
-    @Test("Selecting a connection in one window leaves another window's target alone")
-    func activeConnectionDoesNotBleedAcrossWindows() {
+    @Test("Selecting a node in one window leaves another window's scope alone")
+    func selectedScopeDoesNotBleedAcrossWindows() {
         let connection = TestFixtures.makeConnection(name: "Picked in A")
-        var session = ConnectionSession(connection: connection)
-        session.driver = MockDatabaseDriver()
-        DatabaseManager.shared.injectSession(session, for: connection.id)
-        defer { DatabaseManager.shared.removeSession(for: connection.id) }
-
         let windowA = WindowSidebarState()
         let windowB = WindowSidebarState()
         let treeInA = DatabaseTreeOutlineCoordinator()
@@ -266,21 +257,40 @@ struct TreeConnectLifecycleTests {
         let treeInB = DatabaseTreeOutlineCoordinator()
         treeInB.windowState = windowB
 
-        treeInA.outlineViewItemWillExpand(expansionNotification(for: connection))
-        defer { ConnectionTreeState.shared.forget(connectionId: connection.id) }
+        treeInA.adoptSelectedScope(of: .connection(connection))
 
-        #expect(windowA.activeConnectionId == connection.id)
-        #expect(windowB.activeConnectionId == nil)
-        #expect(treeInB.windowState?.activeConnectionId == nil)
+        #expect(windowA.selectedScope == SidebarScope(connectionId: connection.id))
+        #expect(windowB.selectedScope == nil)
+        #expect(treeInB.windowState?.selectedScope == nil)
     }
 
-    @Test("A tree drops its active connection once that connection no longer resolves")
-    func deletedConnectionStopsBeingTheActiveTarget() {
+    @Test("Expanding a connection does not change the window's scope")
+    func expansionLeavesTheScopeAlone() {
+        let connection = TestFixtures.makeConnection(name: "Expanded")
+        var session = ConnectionSession(connection: connection)
+        session.driver = MockDatabaseDriver()
+        DatabaseManager.shared.injectSession(session, for: connection.id)
+        defer { DatabaseManager.shared.removeSession(for: connection.id) }
+
+        let window = WindowSidebarState()
+        let previous = SidebarScope(connectionId: UUID(), database: "kept")
+        window.selectedScope = previous
+        let tree = DatabaseTreeOutlineCoordinator()
+        tree.windowState = window
+
+        tree.outlineViewItemWillExpand(expansionNotification(for: connection))
+        defer { ConnectionTreeState.shared.forget(connectionId: connection.id) }
+
+        #expect(window.selectedScope == previous)
+    }
+
+    @Test("A tree drops its selected scope once that connection no longer resolves")
+    func deletedConnectionStopsBeingTheSelectedScope() {
         let coordinator = DatabaseTreeOutlineCoordinator()
         let windowState = WindowSidebarState()
         let deleted = UUID()
         coordinator.windowState = windowState
-        windowState.activeConnectionId = deleted
+        windowState.selectedScope = SidebarScope(connectionId: deleted, database: "app")
         coordinator.contextResolver = SidebarNodeContextResolver(
             connection: { _ in nil },
             session: { _ in nil },
@@ -291,7 +301,7 @@ struct TreeConnectLifecycleTests {
         coordinator.attach(outlineView: NSOutlineView())
         coordinator.refresh()
 
-        #expect(windowState.activeConnectionId == nil)
+        #expect(windowState.selectedScope == nil)
     }
 
     // MARK: - Disconnect keeps the tree's state

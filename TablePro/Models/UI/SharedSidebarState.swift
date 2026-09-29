@@ -91,11 +91,23 @@ final class SharedSidebarState {
 
     var databaseFilterSelected: Set<String> {
         didSet {
+            guard !isReloadingDatabaseList, oldValue != databaseFilterSelected else { return }
             DatabaseTreeFilterStorage.shared.setSelectedDatabases(
                 databaseFilterSelected,
                 connectionId: connectionId
             )
         }
+    }
+
+    @ObservationIgnored private var isReloadingDatabaseList = false
+    @ObservationIgnored private var connectionsObserver: NSObjectProtocol?
+
+    func reloadDatabaseList() {
+        let stored = DatabaseTreeFilterStorage.shared.selectedDatabases(connectionId: connectionId)
+        guard stored != databaseFilterSelected else { return }
+        isReloadingDatabaseList = true
+        databaseFilterSelected = stored
+        isReloadingDatabaseList = false
     }
 
     var selectedFavorite: FavoriteSelection? {
@@ -128,6 +140,15 @@ final class SharedSidebarState {
         if AppSettingsManager.shared.general.showRecentTables {
             self.recentTables = RecentTablesStore.shared.entries(connectionId: connectionId)
         }
+        connectionsObserver = NotificationCenter.default.addObserver(
+            forName: .connectionsDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.reloadDatabaseList()
+            }
+        }
     }
 
     /// Default init for previews and tests
@@ -140,6 +161,9 @@ final class SharedSidebarState {
 
     deinit {
         pendingRecordTask?.cancel()
+        if let connectionsObserver {
+            NotificationCenter.default.removeObserver(connectionsObserver)
+        }
     }
 
     private static var registry: [UUID: SharedSidebarState] = [:]

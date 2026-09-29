@@ -16,9 +16,9 @@ final class SidebarViewModel {
         connectionId: UUID,
         databaseType: DatabaseType,
         selectedTables: Binding<Set<DatabaseTreeTableRef>>,
-        pendingTruncates: Binding<Set<String>>,
-        pendingDeletes: Binding<Set<String>>,
-        tableOperationOptions: Binding<[String: TableOperationOptions]>
+        pendingTruncates: Binding<Set<DatabaseTreeTableRef>>,
+        pendingDeletes: Binding<Set<DatabaseTreeTableRef>>,
+        tableOperationOptions: Binding<[DatabaseTreeTableRef: TableOperationOptions]>
     ) -> SidebarViewModel {
         if let existing = registry[connectionId] {
             existing.updateBindings(
@@ -47,9 +47,9 @@ final class SidebarViewModel {
 
     func updateBindings(
         selectedTables: Binding<Set<DatabaseTreeTableRef>>,
-        pendingTruncates: Binding<Set<String>>,
-        pendingDeletes: Binding<Set<String>>,
-        tableOperationOptions: Binding<[String: TableOperationOptions]>
+        pendingTruncates: Binding<Set<DatabaseTreeTableRef>>,
+        pendingDeletes: Binding<Set<DatabaseTreeTableRef>>,
+        tableOperationOptions: Binding<[DatabaseTreeTableRef: TableOperationOptions]>
     ) {
         selectedTablesBinding = selectedTables
         pendingTruncatesBinding = pendingTruncates
@@ -122,14 +122,14 @@ final class SidebarViewModel {
 
     var showOperationDialog = false
     var pendingOperationType: TableOperationType?
-    var pendingOperationTables: [String] = []
+    var pendingOperationTables: [DatabaseTreeTableRef] = []
 
     // MARK: - Binding Storage
 
     private var selectedTablesBinding: Binding<Set<DatabaseTreeTableRef>>
-    private var pendingTruncatesBinding: Binding<Set<String>>
-    private var pendingDeletesBinding: Binding<Set<String>>
-    private var tableOperationOptionsBinding: Binding<[String: TableOperationOptions]>
+    private var pendingTruncatesBinding: Binding<Set<DatabaseTreeTableRef>>
+    private var pendingDeletesBinding: Binding<Set<DatabaseTreeTableRef>>
+    private var tableOperationOptionsBinding: Binding<[DatabaseTreeTableRef: TableOperationOptions]>
     let databaseType: DatabaseType
 
     // MARK: - Dependencies
@@ -147,17 +147,17 @@ final class SidebarViewModel {
         set { selectedTablesBinding.wrappedValue = newValue }
     }
 
-    var pendingTruncates: Set<String> {
+    var pendingTruncates: Set<DatabaseTreeTableRef> {
         get { pendingTruncatesBinding.wrappedValue }
         set { pendingTruncatesBinding.wrappedValue = newValue }
     }
 
-    var pendingDeletes: Set<String> {
+    var pendingDeletes: Set<DatabaseTreeTableRef> {
         get { pendingDeletesBinding.wrappedValue }
         set { pendingDeletesBinding.wrappedValue = newValue }
     }
 
-    var tableOperationOptions: [String: TableOperationOptions] {
+    var tableOperationOptions: [DatabaseTreeTableRef: TableOperationOptions] {
         get { tableOperationOptionsBinding.wrappedValue }
         set { tableOperationOptionsBinding.wrappedValue = newValue }
     }
@@ -171,9 +171,9 @@ final class SidebarViewModel {
 
     init(
         selectedTables: Binding<Set<DatabaseTreeTableRef>>,
-        pendingTruncates: Binding<Set<String>>,
-        pendingDeletes: Binding<Set<String>>,
-        tableOperationOptions: Binding<[String: TableOperationOptions]>,
+        pendingTruncates: Binding<Set<DatabaseTreeTableRef>>,
+        pendingDeletes: Binding<Set<DatabaseTreeTableRef>>,
+        tableOperationOptions: Binding<[DatabaseTreeTableRef: TableOperationOptions]>,
         databaseType: DatabaseType,
         connectionId: UUID
     ) {
@@ -275,70 +275,95 @@ final class SidebarViewModel {
 
     // MARK: - Batch Operations
 
-    func batchToggleTruncate(connectionId: UUID, tableNames: [String]? = nil) {
-        guard connectionId == self.connectionId else { return }
-        let tablesToToggle = tableNames ?? (selectedTables.isEmpty ? [] : Array(selectedTables.map { $0.table.name }))
-        guard !tablesToToggle.isEmpty else { return }
-
-        let allAlreadyPending = tablesToToggle.allSatisfy { pendingTruncates.contains($0) }
-        if allAlreadyPending {
-            var updated = pendingTruncates
-            for name in tablesToToggle {
-                updated.remove(name)
-                tableOperationOptions.removeValue(forKey: name)
-            }
-            pendingTruncates = updated
-        } else {
-            pendingOperationType = .truncate
-            pendingOperationTables = tablesToToggle
-            showOperationDialog = true
-        }
+    func batchToggleTruncate(tables: [DatabaseTreeTableRef]? = nil) {
+        batchToggle(.truncate, tables: tables)
     }
 
-    func batchToggleDelete(connectionId: UUID, tableNames: [String]? = nil) {
-        guard connectionId == self.connectionId else { return }
-        let tablesToToggle = tableNames ?? (selectedTables.isEmpty ? [] : Array(selectedTables.map { $0.table.name }))
+    func batchToggleDelete(tables: [DatabaseTreeTableRef]? = nil) {
+        batchToggle(.drop, tables: tables)
+    }
+
+    private func batchToggle(_ operation: TableOperationType, tables: [DatabaseTreeTableRef]?) {
+        let tablesToToggle = tables ?? selectedTables.filter { $0.connectionId == connectionId }.sorted { $0.id < $1.id }
         guard !tablesToToggle.isEmpty else { return }
 
-        let allAlreadyPending = tablesToToggle.allSatisfy { pendingDeletes.contains($0) }
-        if allAlreadyPending {
-            var updated = pendingDeletes
-            for name in tablesToToggle {
-                updated.remove(name)
-                tableOperationOptions.removeValue(forKey: name)
-            }
-            pendingDeletes = updated
-        } else {
-            pendingOperationType = .drop
+        let allAlreadyPending = tablesToToggle.allSatisfy { ref in
+            let state = pendingState(for: ref.connectionId)
+            return operation == .truncate ? state.truncates.contains(ref) : state.deletes.contains(ref)
+        }
+        guard allAlreadyPending else {
+            pendingOperationType = operation
             pendingOperationTables = tablesToToggle
             showOperationDialog = true
+            return
+        }
+
+        for (connectionId, refs) in Dictionary(grouping: tablesToToggle, by: \.connectionId) {
+            var state = pendingState(for: connectionId)
+            for ref in refs {
+                if operation == .truncate {
+                    state.truncates.remove(ref)
+                } else {
+                    state.deletes.remove(ref)
+                }
+                state.options.removeValue(forKey: ref)
+            }
+            writePendingState(state, for: connectionId)
         }
     }
 
     func confirmOperation(options: TableOperationOptions) {
         guard let operationType = pendingOperationType else { return }
 
-        var updatedTruncates = pendingTruncates
-        var updatedDeletes = pendingDeletes
-        var updatedOptions = tableOperationOptions
-
-        for tableName in pendingOperationTables {
-            if operationType == .truncate {
-                updatedDeletes.remove(tableName)
-                updatedTruncates.insert(tableName)
-            } else {
-                updatedTruncates.remove(tableName)
-                updatedDeletes.insert(tableName)
+        for (connectionId, refs) in Dictionary(grouping: pendingOperationTables, by: \.connectionId) {
+            var state = pendingState(for: connectionId)
+            for ref in refs {
+                if operationType == .truncate {
+                    state.deletes.remove(ref)
+                    state.truncates.insert(ref)
+                } else {
+                    state.truncates.remove(ref)
+                    state.deletes.insert(ref)
+                }
+                state.options[ref] = options
             }
-            updatedOptions[tableName] = options
+            writePendingState(state, for: connectionId)
         }
-
-        pendingTruncates = updatedTruncates
-        pendingDeletes = updatedDeletes
-        tableOperationOptions = updatedOptions
 
         pendingOperationType = nil
         pendingOperationTables = []
+    }
+
+    private struct PendingTableState {
+        var truncates: Set<DatabaseTreeTableRef>
+        var deletes: Set<DatabaseTreeTableRef>
+        var options: [DatabaseTreeTableRef: TableOperationOptions]
+    }
+
+    private func pendingState(for connectionId: UUID) -> PendingTableState {
+        guard connectionId != self.connectionId else {
+            return PendingTableState(truncates: pendingTruncates, deletes: pendingDeletes, options: tableOperationOptions)
+        }
+        let session = DatabaseManager.shared.session(for: connectionId)
+        return PendingTableState(
+            truncates: session?.pendingTruncates ?? [],
+            deletes: session?.pendingDeletes ?? [],
+            options: session?.tableOperationOptions ?? [:]
+        )
+    }
+
+    private func writePendingState(_ state: PendingTableState, for connectionId: UUID) {
+        guard connectionId != self.connectionId else {
+            pendingTruncates = state.truncates
+            pendingDeletes = state.deletes
+            tableOperationOptions = state.options
+            return
+        }
+        DatabaseManager.shared.updateSession(connectionId) { session in
+            session.pendingTruncates = state.truncates
+            session.pendingDeletes = state.deletes
+            session.tableOperationOptions = state.options
+        }
     }
 
     // MARK: - Clipboard

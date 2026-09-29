@@ -84,7 +84,7 @@ extension MainContentCoordinator {
             initialQuery: loaded.content,
             sourceFileURL: favorite.fileURL
         )
-        WindowManager.shared.openTab(payload: payload)
+        openTabInCurrentWindow(payload)
     }
 
     private func registerWindowForSourceFile(_ url: URL) {
@@ -120,6 +120,6 @@ extension MainContentCoordinator {
             databaseName: browseDatabaseName,
             initialQuery: favorite.query
         )
-        WindowManager.shared.openTab(payload: payload)
+        openTabInCurrentWindow(payload)
     }
 }

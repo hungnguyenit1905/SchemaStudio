@@ -12,9 +12,11 @@ enum ConnectionFormPane: String, CaseIterable, Identifiable, Hashable {
     case cloudSQLProxy
     case socksProxy
     case ssl
+    case databases
     case customization
     case advanced
     case aiRules
+    case diagnostics
 
     var id: String { rawValue }
 
@@ -26,9 +28,11 @@ enum ConnectionFormPane: String, CaseIterable, Identifiable, Hashable {
         case .cloudSQLProxy: return String(localized: "Cloud SQL Auth Proxy")
         case .socksProxy: return String(localized: "SOCKS Proxy")
         case .ssl: return String(localized: "SSL/TLS")
+        case .databases: return String(localized: "Databases")
         case .customization: return String(localized: "Customization")
         case .advanced: return String(localized: "Advanced")
         case .aiRules: return String(localized: "AI Rules")
+        case .diagnostics: return String(localized: "Diagnostics")
         }
     }
 
@@ -40,9 +44,11 @@ enum ConnectionFormPane: String, CaseIterable, Identifiable, Hashable {
         case .cloudSQLProxy: return "cloud.fill"
         case .socksProxy: return "arrow.triangle.swap"
         case .ssl: return "lock.fill"
+        case .databases: return "cylinder.split.1x2"
         case .customization: return "paintbrush"
         case .advanced: return "gearshape.2"
         case .aiRules: return "sparkles"
+        case .diagnostics: return "stethoscope"
         }
     }
 
@@ -66,8 +72,10 @@ enum ConnectionFormPane: String, CaseIterable, Identifiable, Hashable {
             issues = coordinator.customization.validationIssues
         case .advanced:
             issues = coordinator.advanced.validationIssues
-        case .aiRules:
+        case .aiRules, .databases:
             issues = []
+        case .diagnostics:
+            issues = coordinator.diagnostics.validationIssues
         }
         return issues.isEmpty ? nil : "exclamationmark.triangle.fill"
     }

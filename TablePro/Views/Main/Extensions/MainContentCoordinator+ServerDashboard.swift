@@ -28,6 +28,6 @@ extension MainContentCoordinator {
             tabType: .serverDashboard,
             databaseName: browseDatabaseName
         )
-        WindowManager.shared.openTab(payload: payload)
+        openTabInCurrentWindow(payload)
     }
 }

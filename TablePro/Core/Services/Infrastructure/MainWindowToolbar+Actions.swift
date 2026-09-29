@@ -8,16 +8,6 @@ import Combine
 
 extension MainWindowToolbar {
     @objc
-    func performOpenConnectionSwitcher(_ sender: Any?) {
-        coordinator?.commandActions?.openConnectionSwitcher()
-    }
-
-    @objc
-    func performOpenDatabaseSwitcher(_ sender: Any?) {
-        coordinator?.commandActions?.openDatabaseSwitcher()
-    }
-
-    @objc
     func performRefresh(_ sender: Any?) {
         coordinator?.commandActions?.refresh()
     }

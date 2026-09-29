@@ -92,7 +92,7 @@ extension QueryExecutionCoordinator {
         if parent.currentQueryTask != nil {
             parent.currentQueryTask?.cancel()
             do {
-                try DatabaseManager.shared.cancelRunningQuery(for: parent.connectionId)
+                try DatabaseManager.shared.cancelRunningQuery(for: parent.connectionId, owner: parent.windowId)
             } catch {
                 paramLog.warning("cancelQuery failed: \(error.localizedDescription, privacy: .public)")
             }
@@ -142,7 +142,8 @@ extension QueryExecutionCoordinator {
                 let fetchResult = try await DatabaseManager.shared.withScopedDriver(
                     scope: scope,
                     route: DatabaseManager.shared.executionRoute(for: scope),
-                    tracksCancellation: true
+                    tracksCancellation: true,
+                    owner: parent.windowId
                 ) { [queryExecutor = parent.queryExecutor] driver in
                     try await queryExecutor.executeQuery(
                         driver: driver,
@@ -368,7 +369,8 @@ extension QueryExecutionCoordinator {
             return try await DatabaseManager.shared.withScopedDriver(
                 scope: scope,
                 route: DatabaseManager.shared.executionRoute(for: scope),
-                tracksCancellation: true
+                tracksCancellation: true,
+                owner: parent.windowId
             ) { driver in
                 await self.runPreparedStatements(
                     prepared,

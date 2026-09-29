@@ -18,7 +18,6 @@ private enum ToolbarPrincipalLayout {
 /// Displays environment badge, connection status, safe-mode badge, and execution indicator.
 struct ToolbarPrincipalContent: View {
     var state: ConnectionToolbarState
-    var onSwitchDatabase: (() -> Void)?
     var onCancelQuery: (() -> Void)?
     var onSafeModeChange: ((SafeModeLevel) -> Void)?
 
@@ -37,8 +36,7 @@ struct ToolbarPrincipalContent: View {
                 databaseGroupingStrategy: state.databaseGroupingStrategy,
                 connectionName: state.connectionName,
                 displayColor: state.displayColor,
-                safeModeLevel: state.safeModeLevel,
-                onSwitchDatabase: onSwitchDatabase
+                safeModeLevel: state.safeModeLevel
             )
 
             SafeModeBadgeView(safeModeLevel: Binding(

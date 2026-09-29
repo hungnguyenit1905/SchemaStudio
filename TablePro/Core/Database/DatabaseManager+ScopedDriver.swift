@@ -12,6 +12,7 @@ enum ScopedDriverRoute: Equatable {
     case sessionDriver
     /// A pooled connection already sitting on the scope's database.
     case pooled
+    case databaseSession
     case unavailable(String)
 }
 
@@ -26,42 +27,49 @@ extension DatabaseManager {
         return canPool(session) ? .pooled : .sessionDriver
     }
 
-    /// SQL the user owns stays on the session driver, which holds their transaction,
-    /// their temp tables and the handle Stop cancels. The pool is the fallback only for
-    /// engines that cannot change database on a live connection, where the alternative
-    /// is querying whichever database the connection happens to be on.
     func executionRoute(for scope: DatabaseScope) -> ScopedDriverRoute {
         guard let session = activeSessions[scope.connectionId] else {
             return .unavailable(String(localized: "Not connected to database"))
         }
-        guard !scope.isServerScoped else { return .sessionDriver }
-        let databaseType = session.connection.type
-        guard pluginManager.supportsDatabaseSwitching(for: databaseType),
-              pluginManager.requiresReconnectForDatabaseSwitch(for: databaseType),
-              scope.database != session.resolvedBrowseDatabase else {
+        guard !scope.isServerScoped, requiresDatabaseSession(scope.database, for: scope.connectionId) else {
             return .sessionDriver
         }
         guard canPool(session) else {
             return .unavailable(
                 String(
                     format: String(
-                        localized: "This tab is on %@. Switch the connection to that database to run it."
+                        localized: "%@ can only work with one database at a time. %@ is not its default database."
                     ),
+                    session.connection.type.rawValue,
                     scope.database
                 )
             )
         }
+        guard isDatabaseOpen(scope.database, for: scope.connectionId) else {
+            return .unavailable(
+                String(format: String(localized: "Open %@ in the sidebar to run this tab."), scope.database)
+            )
+        }
+        return .databaseSession
+    }
+
+    /// MCP never opens a database in the user's sidebar, so a database the user has not opened
+    /// runs on a pooled connection: it shares no transaction with the user's tabs.
+    func externalExecutionRoute(for scope: DatabaseScope) -> ScopedDriverRoute {
+        let route = executionRoute(for: scope)
+        guard case .unavailable = route,
+              let session = activeSessions[scope.connectionId],
+              requiresDatabaseSession(scope.database, for: scope.connectionId),
+              canPool(session) else { return route }
         return .pooled
     }
 
-    /// `tracksCancellation` registers the leased driver so Stop can reach it. Only user
-    /// SQL opts in: a metadata read shares the connection but must never become the handle
-    /// Stop aborts, and must never clear the handle a running query registered.
     func withScopedDriver<T: Sendable>(
         scope: DatabaseScope,
         route: ScopedDriverRoute,
         workload: MetadataConnectionPool.Workload = .interactive,
         tracksCancellation: Bool = false,
+        owner: UUID? = nil,
         _ body: @Sendable @escaping (DatabaseDriver) async throws -> T
     ) async throws -> T {
         let leased: @Sendable (DatabaseDriver) async throws -> T
@@ -70,7 +78,10 @@ extension DatabaseManager {
             let token = UUID()
             leased = { driver in
                 await MainActor.run {
-                    DatabaseManager.shared.runningDrivers[connectionId, default: [:]][token] = driver
+                    DatabaseManager.shared.runningDrivers[connectionId, default: [:]][token] = RunningDriver(
+                        driver: driver,
+                        owner: owner
+                    )
                 }
                 do {
                     let value = try await body(driver)
@@ -92,6 +103,8 @@ extension DatabaseManager {
             return try await MetadataConnectionPool.shared.withDriver(
                 scope: scope, workload: workload, leased
             )
+        case .databaseSession:
+            return try await withDatabaseSessionDriver(scope: scope, leased)
         case .sessionDriver:
             return try await withPinnedSessionDriver(scope: scope, leased)
         }
@@ -104,16 +117,39 @@ extension DatabaseManager {
         }
     }
 
-    /// Stop has to reach the handle the query is actually running on, which is no longer
-    /// always the session driver now that a cross-database tab runs on a pooled connection.
-    func cancelRunningQuery(for connectionId: UUID) throws {
-        let running = runningDrivers[connectionId] ?? [:]
+    func cancelRunningQuery(for connectionId: UUID, owner: UUID? = nil) throws {
+        let running = Array((runningDrivers[connectionId] ?? [:]).values)
         guard !running.isEmpty else {
+            guard owner == nil else { return }
             try driver(for: connectionId)?.cancelQuery()
             return
         }
-        for driver in running.values {
-            try driver.cancelQuery()
+        for entry in running where owner == nil || entry.owner == owner {
+            try entry.driver.cancelQuery()
+        }
+    }
+
+    private func withDatabaseSessionDriver<T: Sendable>(
+        scope: DatabaseScope,
+        _ body: @Sendable @escaping (DatabaseDriver) async throws -> T
+    ) async throws -> T {
+        let key = ConnectionDatabaseKey(connectionId: scope.connectionId, database: scope.database)
+        let databaseType = activeSessions[scope.connectionId]?.connection.type
+        return try await databaseDriverGate.withExclusiveAccess(key) {
+            try Task.checkCancellation()
+            guard isDatabaseOpen(scope.database, for: scope.connectionId) else {
+                throw DatabaseError.queryFailed(
+                    String(format: String(localized: "Open %@ in the sidebar to run this tab."), scope.database)
+                )
+            }
+            let driver = try await openDatabaseSession(scope.database, for: scope.connectionId)
+            let schema = scope.schema ?? databaseType.map { pluginManager.defaultSchemaName(for: $0) }
+            if let schema, !schema.isEmpty,
+               let schemaDriver = driver as? SchemaSwitchable,
+               schemaDriver.currentSchema != schema {
+                try await schemaDriver.switchSchema(to: schema)
+            }
+            return try await body(driver)
         }
     }
 
@@ -121,7 +157,7 @@ extension DatabaseManager {
     /// database field to reach it would authenticate as a different identity, and one
     /// whose database comes from a connection field rather than the database field would
     /// silently serve the wrong database entirely.
-    private func canPool(_ session: ConnectionSession) -> Bool {
+    func canPool(_ session: ConnectionSession) -> Bool {
         guard session.connection.type.supportsConnectionPooling else { return false }
         let actions = PluginMetadataRegistry.shared.snapshot(
             forTypeId: session.connection.type.pluginTypeId

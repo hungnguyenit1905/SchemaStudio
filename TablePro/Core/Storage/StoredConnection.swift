@@ -45,6 +45,10 @@ struct StoredConnection: Codable {
 
     let aiAlwaysAllowedTools: [String]?
 
+    let diagnosticPolicy: DiagnosticPolicy?
+
+    let databaseListSettings: DatabaseListSettings?
+
     let mongoAuthSource: String?
     let mongoReadPreference: String?
     let mongoWriteConcern: String?
@@ -132,6 +136,8 @@ struct StoredConnection: Codable {
         self.aiAlwaysAllowedTools = connection.aiAlwaysAllowedTools.isEmpty
             ? nil
             : Array(connection.aiAlwaysAllowedTools).sorted()
+        self.diagnosticPolicy = connection.diagnosticPolicy.isValid ? connection.diagnosticPolicy : .disabled
+        self.databaseListSettings = connection.databaseListSettings.flatMap { $0.isEmpty ? nil : $0 }
 
         self.mongoAuthSource = connection.mongoAuthSource
         self.mongoReadPreference = connection.mongoReadPreference
@@ -211,6 +217,8 @@ struct StoredConnection: Codable {
         case aiPolicy
         case aiRules
         case aiAlwaysAllowedTools
+        case diagnosticPolicy
+        case databaseListSettings
         case mongoAuthSource
         case mongoReadPreference
         case mongoWriteConcern
@@ -264,6 +272,8 @@ struct StoredConnection: Codable {
         try container.encodeIfPresent(aiPolicy, forKey: .aiPolicy)
         try container.encodeIfPresent(aiRules, forKey: .aiRules)
         try container.encodeIfPresent(aiAlwaysAllowedTools, forKey: .aiAlwaysAllowedTools)
+        try container.encodeIfPresent(diagnosticPolicy, forKey: .diagnosticPolicy)
+        try container.encodeIfPresent(databaseListSettings, forKey: .databaseListSettings)
         try container.encodeIfPresent(redisDatabase, forKey: .redisDatabase)
         try container.encodeIfPresent(startupCommands, forKey: .startupCommands)
         try container.encode(sortOrder, forKey: .sortOrder)
@@ -335,6 +345,8 @@ struct StoredConnection: Codable {
         aiPolicy = try container.decodeIfPresent(String.self, forKey: .aiPolicy)
         aiRules = try container.decodeIfPresent(String.self, forKey: .aiRules)
         aiAlwaysAllowedTools = try container.decodeIfPresent([String].self, forKey: .aiAlwaysAllowedTools)
+        diagnosticPolicy = try container.decodeIfPresent(DiagnosticPolicy.self, forKey: .diagnosticPolicy)
+        databaseListSettings = try container.decodeIfPresent(DatabaseListSettings.self, forKey: .databaseListSettings)
         mongoAuthSource = try container.decodeIfPresent(String.self, forKey: .mongoAuthSource)
         mongoReadPreference = try container.decodeIfPresent(String.self, forKey: .mongoReadPreference)
         mongoWriteConcern = try container.decodeIfPresent(String.self, forKey: .mongoWriteConcern)
@@ -475,6 +487,8 @@ struct StoredConnection: Codable {
             aiPolicy: parsedAIPolicy,
             aiRules: aiRules,
             aiAlwaysAllowedTools: Set(aiAlwaysAllowedTools ?? []),
+            diagnosticPolicy: diagnosticPolicy ?? .disabled,
+            databaseListSettings: databaseListSettings,
             externalAccess: ExternalAccessLevel(rawValue: externalAccess) ?? .readOnly,
             redisDatabase: redisDatabase,
             startupCommands: startupCommands,

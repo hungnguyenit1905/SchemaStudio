@@ -36,9 +36,10 @@ Use `:name` placeholders instead of hardcoding values; they bind via prepared st
 
 The editor toolbar shows a database picker (or schema picker, depending on the engine). Each SQL tab binds to its own database:
 
-- Changing the picker affects only that tab. Switching the active database elsewhere keeps existing tabs on their bound database.
-- The picker lists the databases visible in the sidebar, so it follows the sidebar database filter.
-- Databases whose driver reconnects the session to switch, PostgreSQL, Redshift, and CockroachDB, show a lock instead of a menu: there is no in-place way to change database from this picker. The tab still keeps the database it was opened with; on these engines a tab bound to a database other than the connection's active one runs on a separate connection for that database. See [Cross-Database Tabs](/databases/postgresql#cross-database-tabs).
+- Changing the picker affects only that tab. It never changes the connection's default database, the sidebar, or any other tab.
+- The picker lists the databases the sidebar shows, following the connection's [Databases setting](/databases/overview#databases) and **View > Show Hidden Items**. Picking a closed database opens it.
+- The picker works on every engine with databases, PostgreSQL, Redshift, and CockroachDB included. On those engines each open database has its own server connection, shared by the tabs on it, so a transaction started in a tab lasts across runs. See [Cross-Database Tabs](/databases/postgresql#cross-database-tabs).
+- Autocomplete stays per connection. In a tab on a database other than the connection's default, it may suggest objects from the default database.
 
 ## Find and Replace
 

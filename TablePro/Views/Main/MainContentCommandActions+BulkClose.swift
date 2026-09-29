@@ -87,7 +87,7 @@ extension MainContentCommandActions {
             return TabBatchClosePlanner.planCloseForOtherDatabases(
                 targets: targets,
                 currentWindowId: currentWindowId,
-                currentDatabaseName: browseDatabaseName
+                currentDatabaseName: focusedTabDatabaseName
             )
         }
     }
@@ -117,6 +117,6 @@ extension MainContentCommandActions {
 
 private extension MainContentCoordinator {
     var openTabDatabaseNames: Set<String> {
-        Set(tabManager.tabs.map(\.tableContext.databaseName).filter { !$0.isEmpty })
+        Set(tabManager.tabs.compactMap { scope(for: $0)?.database }.filter { !$0.isEmpty })
     }
 }

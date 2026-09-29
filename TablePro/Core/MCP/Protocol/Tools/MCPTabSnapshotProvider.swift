@@ -61,6 +61,7 @@ private extension TabType {
         case .erDiagram: "erDiagram"
         case .serverDashboard: "serverDashboard"
         case .usersRoles: "usersRoles"
+        case .objects: "objects"
         }
     }
 }

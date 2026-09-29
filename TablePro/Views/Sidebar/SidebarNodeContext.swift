@@ -17,8 +17,14 @@ struct SidebarNodeContext: Equatable {
     let safeModeLevel: SafeModeLevel
     let status: ConnectionStatus
 
+    var hasDatabaseLevel = false
+
     var supportsSchemaLevel: Bool {
         groupingStrategy == .bySchema
+    }
+
+    var listsSchemasUnderDatabase: Bool {
+        groupingStrategy == .bySchema || (hasDatabaseLevel && groupingStrategy == .hierarchicalSchema)
     }
 
     var isConnected: Bool {
@@ -34,6 +40,7 @@ struct SidebarNodeContextResolver {
     var session: (UUID) -> ConnectionSession?
     var groupingStrategy: (DatabaseType) -> GroupingStrategy
     var systemSchemas: (DatabaseType) -> Set<String>
+    var hasDatabaseLevel: (DatabaseType) -> Bool = { _ in false }
 
     static var live: SidebarNodeContextResolver {
         SidebarNodeContextResolver(
@@ -43,7 +50,8 @@ struct SidebarNodeContextResolver {
             },
             session: { DatabaseManager.shared.activeSessions[$0] },
             groupingStrategy: { PluginManager.shared.databaseGroupingStrategy(for: $0) },
-            systemSchemas: { Set(PluginManager.shared.systemSchemaNames(for: $0)) }
+            systemSchemas: { Set(PluginManager.shared.systemSchemaNames(for: $0)) },
+            hasDatabaseLevel: { DatabaseLevel.live.hasDatabaseLevel($0) }
         )
     }
 
@@ -61,7 +69,8 @@ struct SidebarNodeContextResolver {
             groupingStrategy: groupingStrategy(type),
             systemSchemas: systemSchemas(type),
             safeModeLevel: liveSession?.safeModeLevel ?? connection.safeModeLevel,
-            status: liveSession?.status ?? .disconnected
+            status: liveSession?.status ?? .disconnected,
+            hasDatabaseLevel: hasDatabaseLevel(type)
         )
     }
 }

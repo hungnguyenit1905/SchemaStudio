@@ -337,15 +337,23 @@ final class DataTransferWizardModel {
 
     func start() async {
         guard let sourceEndpoint, let targetEndpoint else { return }
-        pendingResume = await service.pendingResume(
-            source: sourceEndpoint,
-            target: targetEndpoint,
-            mode: mode
-        )
-        if let pendingResume, !pendingResume.entries.isEmpty {
-            resumePromptShown = true
-        } else {
-            await run(resume: false)
+        pendingResume = nil
+        resumePromptShown = false
+        errorMessage = nil
+        do {
+            pendingResume = try await service.pendingResume(
+                source: sourceEndpoint,
+                target: targetEndpoint,
+                mode: mode,
+                options: options
+            )
+            if let pendingResume, !pendingResume.entries.isEmpty {
+                resumePromptShown = true
+            } else {
+                await run(resume: false)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 

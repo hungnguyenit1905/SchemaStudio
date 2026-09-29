@@ -25,14 +25,27 @@ struct ConnectionToolbarStateTests {
         #expect(state.chipText == "myappdb")
     }
 
-    @Test("chipText returns currentSchema when grouping is bySchema and schema is set")
+    @Test("chipText shows the tab's database and schema when grouping is bySchema")
     func chipTextBySchemaWithSchema() {
         let state = ConnectionToolbarState()
         state.databaseGroupingStrategy = .bySchema
         state.currentDatabase = "Sales"
         state.currentSchema = "dbo"
 
-        #expect(state.chipText == "dbo")
+        #expect(state.chipText == "Sales · dbo")
+    }
+
+    @Test("The chip follows the focused tab, not the session")
+    func chipFollowsTheTab() {
+        let connection = TestFixtures.makeConnection(database: "Production", type: .postgresql)
+        let state = ConnectionToolbarState()
+        state.databaseGroupingStrategy = .bySchema
+
+        state.showTab(database: "reports", schema: "sales", connection: connection)
+
+        #expect(state.currentDatabase == "reports")
+        #expect(state.currentSchema == "sales")
+        #expect(state.chipText == "reports · sales")
     }
 
     @Test("chipText falls back to currentDatabase when grouping is bySchema and schema is nil")

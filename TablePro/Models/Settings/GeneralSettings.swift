@@ -71,6 +71,8 @@ struct GeneralSettings: Codable, Equatable {
     /// Whether to show database object comments in the sidebar and data grid headers
     var showObjectComments: Bool
 
+    var showHiddenItems: Bool
+
     static let `default` = GeneralSettings(
         startupBehavior: .reopenLast,
         language: .system,
@@ -78,7 +80,8 @@ struct GeneralSettings: Codable, Equatable {
         shareAnalytics: false,
         crashReporting: false,
         showRecentTables: false,
-        showObjectComments: true
+        showObjectComments: true,
+        showHiddenItems: false
     )
 
     init(
@@ -88,7 +91,8 @@ struct GeneralSettings: Codable, Equatable {
         shareAnalytics: Bool = false,
         crashReporting: Bool = false,
         showRecentTables: Bool = false,
-        showObjectComments: Bool = true
+        showObjectComments: Bool = true,
+        showHiddenItems: Bool = false
     ) {
         self.startupBehavior = startupBehavior
         self.language = language
@@ -97,6 +101,7 @@ struct GeneralSettings: Codable, Equatable {
         self.crashReporting = crashReporting
         self.showRecentTables = showRecentTables
         self.showObjectComments = showObjectComments
+        self.showHiddenItems = showHiddenItems
     }
 
     init(from decoder: Decoder) throws {
@@ -108,5 +113,6 @@ struct GeneralSettings: Codable, Equatable {
         crashReporting = try container.decodeIfPresent(Bool.self, forKey: .crashReporting) ?? false
         showRecentTables = try container.decodeIfPresent(Bool.self, forKey: .showRecentTables) ?? false
         showObjectComments = try container.decodeIfPresent(Bool.self, forKey: .showObjectComments) ?? true
+        showHiddenItems = try container.decodeIfPresent(Bool.self, forKey: .showHiddenItems) ?? false
     }
 }

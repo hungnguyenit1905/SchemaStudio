@@ -105,12 +105,16 @@ private struct ConnectionFormDetail: View {
                 SOCKSProxyPaneView(coordinator: coordinator)
             case .ssl:
                 SSLPaneView(coordinator: coordinator)
+            case .databases:
+                ConnectionDatabasesPane(coordinator: coordinator)
             case .customization:
                 CustomizationPaneView(coordinator: coordinator)
             case .advanced:
                 AdvancedPaneView(coordinator: coordinator)
             case .aiRules:
                 AIRulesPaneView(coordinator: coordinator)
+            case .diagnostics:
+                DiagnosticsPolicyPaneView(coordinator: coordinator)
             }
         }
         .navigationSplitViewColumnWidth(min: 480, ideal: 580)

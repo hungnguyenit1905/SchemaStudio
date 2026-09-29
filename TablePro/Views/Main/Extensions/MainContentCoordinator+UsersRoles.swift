@@ -20,6 +20,6 @@ extension MainContentCoordinator {
             tabType: .usersRoles,
             databaseName: browseDatabaseName
         )
-        WindowManager.shared.openTab(payload: payload)
+        openTabInCurrentWindow(payload)
     }
 }

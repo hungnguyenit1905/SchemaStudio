@@ -17,8 +17,6 @@ struct MainWindowToolbarValidationTests {
         hasPendingChanges: Bool = false,
         hasDataPendingChanges: Bool = false,
         blocksAllWrites: Bool = false,
-        fileBased: Bool = false,
-        supportsContainerSwitching: Bool = true,
         supportsImport: Bool = true,
         supportsServerDashboard: Bool = true
     ) -> MainWindowToolbar.ValidationContext {
@@ -28,8 +26,6 @@ struct MainWindowToolbarValidationTests {
             hasPendingChanges: hasPendingChanges,
             hasDataPendingChanges: hasDataPendingChanges,
             blocksAllWrites: blocksAllWrites,
-            fileBased: fileBased,
-            supportsContainerSwitching: supportsContainerSwitching,
             supportsImport: supportsImport,
             supportsServerDashboard: supportsServerDashboard
         )
@@ -69,22 +65,6 @@ struct MainWindowToolbarValidationTests {
         let onQuery = makeContext(connected: true, isTableTab: false)
         #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.results, context: onTable) == false)
         #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.results, context: onQuery) == true)
-    }
-
-    @Test("Database switcher disabled for file-based connections")
-    func databaseDisabledForFileBased() {
-        let fileBased = makeContext(connected: true, fileBased: true)
-        let networked = makeContext(connected: true, fileBased: false)
-        #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.database, context: fileBased) == false)
-        #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.database, context: networked) == true)
-    }
-
-    @Test("Database switcher requires plugin support")
-    func databaseRequiresPluginSupport() {
-        let unsupported = makeContext(connected: true, supportsContainerSwitching: false)
-        let supported = makeContext(connected: true, supportsContainerSwitching: true)
-        #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.database, context: unsupported) == false)
-        #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.database, context: supported) == true)
     }
 
     @Test("Import disabled when safe mode blocks writes")
@@ -133,11 +113,9 @@ struct MainWindowToolbarValidationTests {
         #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.dashboard, context: happy) == true)
     }
 
-    @Test("Connection and History stay enabled regardless of connection state")
+    @Test("History stays enabled regardless of connection state")
     func alwaysEnabledItems() {
         let disconnected = makeContext(connected: false)
-        #expect(MainWindowToolbar
-            .isEnabled(itemIdentifier: MainWindowToolbar.connection, context: disconnected) == true)
         #expect(MainWindowToolbar.isEnabled(itemIdentifier: MainWindowToolbar.history, context: disconnected) == true)
     }
 

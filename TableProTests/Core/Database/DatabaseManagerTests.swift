@@ -140,40 +140,29 @@ private final class DatabaseSwitchingDriver: DatabaseSwitchBaseDriver, PluginDat
     }
 }
 
-@Suite("DatabaseManager database switch")
+@Suite("DatabaseManager scoped database pin")
 @MainActor
 struct DatabaseManagerDatabaseSwitchTests {
-    @Test("bySchema engines move the driver to the plugin default and record what it is using")
-    func bySchemaSwitchResetsSchemaToDefault() async throws {
-        let connection = TestFixtures.makeConnection(type: .mssql)
-        let pluginDriver = DatabaseSwitchingDriver(currentSchema: "sales")
+    @Test("A run on another database moves the driver for that run and leaves the session default alone")
+    func scopedRunLeavesSessionDefault() async throws {
+        let connection = TestFixtures.makeConnection(database: "app", type: .mssql)
+        let pluginDriver = DatabaseSwitchingDriver(currentSchema: "dbo")
         let adapter = PluginDriverAdapter(connection: connection, pluginDriver: pluginDriver)
         var session = ConnectionSession(connection: connection, driver: adapter)
-        session.browseSchema = "sales"
+        session.browseSchema = "dbo"
         DatabaseManager.shared.injectSession(session, for: connection.id)
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
+        let scope = DatabaseScope(connectionId: connection.id, database: "other_db", schema: "sales")
 
-        try await DatabaseManager.shared.switchDatabase(to: "other_db", for: connection.id, persist: false)
+        try await DatabaseManager.shared.withScopedDriver(
+            scope: scope,
+            route: DatabaseManager.shared.executionRoute(for: scope)
+        ) { _ in }
 
         let updated = DatabaseManager.shared.session(for: connection.id)
         #expect(pluginDriver.switchedDatabases == ["other_db"])
-        #expect(updated?.browseDatabase == "other_db")
+        #expect(pluginDriver.currentSchema == "sales")
+        #expect(updated?.resolvedBrowseDatabase == "app")
         #expect(updated?.browseSchema == "dbo")
-        #expect(pluginDriver.currentSchema == "dbo")
-    }
-
-    @Test("A database switch never leaves the session and the driver on different schemas")
-    func sessionSchemaMatchesDriverAfterSwitch() async throws {
-        let connection = TestFixtures.makeConnection(type: .mssql)
-        let pluginDriver = DatabaseSwitchingDriver(currentSchema: "custom")
-        let adapter = PluginDriverAdapter(connection: connection, pluginDriver: pluginDriver)
-        var session = ConnectionSession(connection: connection, driver: adapter)
-        session.browseSchema = "custom"
-        DatabaseManager.shared.injectSession(session, for: connection.id)
-        defer { DatabaseManager.shared.removeSession(for: connection.id) }
-
-        try await DatabaseManager.shared.switchDatabase(to: "other_db", for: connection.id, persist: false)
-
-        #expect(DatabaseManager.shared.session(for: connection.id)?.browseSchema == adapter.currentSchema)
     }
 }

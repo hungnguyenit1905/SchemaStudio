@@ -19,9 +19,9 @@ struct CommandActionsFocusGateTests {
         let coordinator = state.coordinator
 
         var selectedTables: Set<DatabaseTreeTableRef> = []
-        var pendingTruncates: Set<String> = []
-        var pendingDeletes: Set<String> = []
-        var tableOperationOptions: [String: TableOperationOptions] = [:]
+        var pendingTruncates: Set<DatabaseTreeTableRef> = []
+        var pendingDeletes: Set<DatabaseTreeTableRef> = []
+        var tableOperationOptions: [DatabaseTreeTableRef: TableOperationOptions] = [:]
 
         return MainContentCommandActions(
             coordinator: coordinator,

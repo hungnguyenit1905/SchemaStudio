@@ -138,10 +138,12 @@ extension DatabaseManager {
                 if let passwordOverride, !connection.usesAWSIAM {
                     session.cachedPassword = passwordOverride
                 }
+                seedOpenDatabases(&session)
                 setSession(session, for: connection.id)
             }
 
             connectionAttempts.finish(attempt, for: connection.id)
+            openAutoOpenDatabases(for: connection.id)
 
             MacAnalyticsProvider.shared.markConnectionSucceeded()
             AppEvents.shared.databaseDidConnect.send(DatabaseDidConnect(connectionId: connection.id))
@@ -205,6 +207,7 @@ extension DatabaseManager {
 
     func finalizeConnectionFailure(for connectionId: UUID, cancelled: Bool) {
         guard !cancelled else { return }
+        closeAllDatabaseSessions(for: connectionId)
         removeSessionEntry(for: connectionId)
         if lastActiveSessionId == connectionId {
             lastActiveSessionId = activeSessions.keys.first
@@ -275,79 +278,6 @@ extension DatabaseManager {
         }
     }
 
-    // MARK: - Database / Schema Switching
-
-    func switchDatabase(to database: String, for connectionId: UUID, persist: Bool = true) async throws {
-        guard let driver = driver(for: connectionId) else {
-            throw DatabaseError.notConnected
-        }
-
-        let pm = PluginMetadataRegistry.shared.snapshot(
-            forTypeId: session(for: connectionId)?.connection.type.pluginTypeId ?? ""
-        )
-
-        if pm?.capabilities.requiresReconnectForDatabaseSwitch == true {
-            updateSession(connectionId) { session in
-                session.connection.database = database
-                session.browseDatabase = database
-                session.browseSchema = nil
-                session.status = .connecting
-            }
-            appSettingsStorage.saveLastSchema(nil, for: connectionId)
-            await SchemaService.shared.invalidate(connectionId: connectionId)
-            await reconnectSession(connectionId)
-        } else if let adapter = driver as? PluginDriverAdapter {
-            let grouping = pm?.schema.databaseGroupingStrategy ?? .byDatabase
-            try await sessionDriverGate.withExclusiveAccess(connectionId) {
-                try await adapter.switchDatabase(to: database)
-                if grouping == .bySchema {
-                    await resetSchema(on: adapter, to: pm?.schema.defaultSchemaName)
-                }
-            }
-            updateSession(connectionId) { session in
-                session.browseDatabase = database
-                if grouping == .bySchema {
-                    session.browseSchema = adapter.currentSchema
-                }
-            }
-        }
-
-        if persist {
-            appSettingsStorage.saveLastDatabase(database, for: connectionId)
-        }
-    }
-
-    /// Moves the driver to the engine's default schema after a database switch.
-    /// Writing the session's schema without moving the driver leaves object listings
-    /// (driver schema) and table queries (session schema) on different schemas.
-    private func resetSchema(on driver: any SchemaSwitchable, to defaultSchemaName: String?) async {
-        guard let defaultSchemaName, !defaultSchemaName.isEmpty else { return }
-        guard driver.currentSchema != defaultSchemaName else { return }
-        do {
-            try await driver.switchSchema(to: defaultSchemaName)
-        } catch {
-            Self.logger.warning(
-                "Failed to reset schema to '\(defaultSchemaName, privacy: .public)' after a database switch: \(error.localizedDescription, privacy: .public)"
-            )
-        }
-    }
-
-    func switchSchema(to schema: String, for connectionId: UUID) async throws {
-        guard let driver = driver(for: connectionId),
-              let schemaDriver = driver as? SchemaSwitchable else {
-            throw DatabaseError.unsupportedOperation
-        }
-
-        try await sessionDriverGate.withExclusiveAccess(connectionId) {
-            try await schemaDriver.switchSchema(to: schema)
-        }
-        updateSession(connectionId) { session in
-            session.browseSchema = schema
-        }
-        appSettingsStorage.saveLastSchema(schema, for: connectionId)
-        AppEvents.shared.currentSchemaChanged.send(connectionId)
-    }
-
     func switchToSession(_ sessionId: UUID) {
         guard activeSessions[sessionId] != nil else { return }
         lastActiveSessionId = sessionId
@@ -368,6 +298,8 @@ extension DatabaseManager {
         lifecycleLogger.info(
             "[close] disconnectSession start connId=\(sessionId, privacy: .public) name=\(session.connection.name, privacy: .public) hasSSH=\(session.connection.resolvedSSHConfig.enabled)"
         )
+
+        closeAllDatabaseSessions(for: sessionId)
 
         if let tunnelManager = activeTunnelManager(for: session.connection) {
             let tunnelStart = Date()

@@ -30,6 +30,34 @@ struct ConnectionExportDataTests {
         #expect(envelope.credentials == nil)
     }
 
+    @Test("diagnostic policy is omitted from exports and disabled on import")
+    func diagnosticPolicyRemainsDeviceLocal() throws {
+        let policy = DiagnosticPolicy(isEnabled: true, statementTimeoutSeconds: 10, totalRunBudgetSeconds: 30)
+        let connection = DatabaseConnection(
+            name: "Diagnostics",
+            host: "db.example.com",
+            port: 5_432,
+            database: "app",
+            username: "admin",
+            type: .postgresql,
+            diagnosticPolicy: policy
+        )
+        let data = try ConnectionExportService.exportData([connection])
+        let json = try #require(String(data: data, encoding: .utf8))
+        let envelope = try ConnectionImportDecoder.decodeData(data)
+        let exported = try #require(envelope.connections.first)
+        let restored = ConnectionExportService.buildDatabaseConnection(
+            id: UUID(),
+            from: exported,
+            name: exported.name,
+            tagIdsByName: [:],
+            groupIdsByName: [:]
+        )
+
+        #expect(!json.contains("diagnosticPolicy"))
+        #expect(restored.diagnosticPolicy == .disabled)
+    }
+
     @Test("exportEncryptedData decrypts with the right passphrase")
     func testEncryptedRoundTrip() throws {
         let connections = [makeConnection(name: "Secret")]

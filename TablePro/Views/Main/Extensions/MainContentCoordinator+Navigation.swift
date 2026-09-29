@@ -13,6 +13,11 @@ import TableProPluginKit
 private let navigationLogger = Logger(subsystem: "com.SchemaStudio", category: "MainContentCoordinator+Navigation")
 
 extension MainContentCoordinator {
+    func openTabInCurrentWindow(_ payload: EditorTabPayload, anchor: NSWindow? = nil) {
+        guard let anchor = anchor ?? contentWindow else { return }
+        openTabRequest(payload, .shared, anchor)
+    }
+
     // MARK: - Table Tab Opening
 
     func openTableTab(
@@ -21,7 +26,7 @@ extension MainContentCoordinator {
         showStructure: Bool = false,
         forceNonPreview: Bool = false,
         activateGridFocus: Bool = false,
-        forceNewWindowTab: Bool = false
+        forceNewTab: Bool = false
     ) {
         openTableTab(
             table.name,
@@ -30,7 +35,7 @@ extension MainContentCoordinator {
             isView: !table.type.allowsRowEditing,
             forceNonPreview: forceNonPreview,
             activateGridFocus: activateGridFocus,
-            forceNewWindowTab: forceNewWindowTab
+            forceNewTab: forceNewTab
         )
     }
 
@@ -41,7 +46,7 @@ extension MainContentCoordinator {
         isView: Bool = false,
         forceNonPreview: Bool = false,
         activateGridFocus: Bool = false,
-        forceNewWindowTab: Bool = false
+        forceNewTab: Bool = false
     ) {
         let navigationModel = PluginMetadataRegistry.shared.snapshot(
             forTypeId: connection.type.pluginTypeId
@@ -54,14 +59,73 @@ extension MainContentCoordinator {
             }
             currentDatabase = String(tableName.dropFirst(2))
         } else {
-            currentDatabase = browseDatabaseName
+            currentDatabase = selectedTabScope?.database ?? browseDatabaseName
         }
 
+        openTableTab(
+            tableName,
+            database: currentDatabase,
+            schema: schema,
+            navigationModel: navigationModel,
+            showStructure: showStructure,
+            isView: isView,
+            forceNonPreview: forceNonPreview,
+            activateGridFocus: activateGridFocus,
+            forceNewTab: forceNewTab
+        )
+    }
+
+    func openTableTab(
+        _ table: TableInfo,
+        scope: DatabaseScope,
+        showStructure: Bool = false,
+        forceNonPreview: Bool = false,
+        activateGridFocus: Bool = false,
+        forceNewTab: Bool = false
+    ) {
+        let navigationModel = PluginMetadataRegistry.shared.snapshot(
+            forTypeId: connection.type.pluginTypeId
+        )?.navigationModel ?? .standard
+        guard navigationModel != .inPlace else {
+            openTableTab(
+                table,
+                schema: scope.schema,
+                showStructure: showStructure,
+                forceNonPreview: forceNonPreview,
+                activateGridFocus: activateGridFocus,
+                forceNewTab: forceNewTab
+            )
+            return
+        }
+        openTableTab(
+            table.name,
+            database: scope.database,
+            schema: scope.schema ?? table.schema,
+            navigationModel: navigationModel,
+            showStructure: showStructure,
+            isView: !table.type.allowsRowEditing,
+            forceNonPreview: forceNonPreview,
+            activateGridFocus: activateGridFocus,
+            forceNewTab: forceNewTab
+        )
+    }
+
+    private func openTableTab(
+        _ tableName: String,
+        database currentDatabase: String,
+        schema: String?,
+        navigationModel: NavigationModel,
+        showStructure: Bool,
+        isView: Bool,
+        forceNonPreview: Bool,
+        activateGridFocus: Bool,
+        forceNewTab: Bool
+    ) {
         let resolvedSchema = DatabaseManager.shared.resolvedSchemaName(schema, for: connectionId)
-        let createAsPreview = !forceNonPreview && !forceNewWindowTab
+        let createAsPreview = !forceNonPreview && !forceNewTab
             && AppSettingsManager.shared.tabs.enablePreviewTabs
 
-        if !forceNewWindowTab, activateIfAlreadyOpen(
+        if !forceNewTab, activateIfAlreadyOpen(
             tableName: tableName,
             databaseName: currentDatabase,
             schemaName: resolvedSchema,
@@ -143,7 +207,7 @@ extension MainContentCoordinator {
             return
         }
 
-        if isActiveTabReusable, !forceNewWindowTab {
+        if isActiveTabReusable, !forceNewTab {
             reuseActiveTab(
                 for: tableName,
                 currentDatabase: currentDatabase,
@@ -166,7 +230,7 @@ extension MainContentCoordinator {
             showStructure: showStructure,
             isPreview: createAsPreview
         )
-        WindowManager.shared.openTab(payload: payload)
+        openTabInCurrentWindow(payload)
     }
 
     func activateIfAlreadyOpen(
@@ -343,7 +407,7 @@ extension MainContentCoordinator {
             tabType: .query,
             initialQuery: sql
         )
-        WindowManager.shared.openTab(payload: payload)
+        openTabInCurrentWindow(payload)
     }
 
     private func currentSchemaName(fallback: String) -> String {
@@ -379,96 +443,16 @@ extension MainContentCoordinator {
         return (driver as? PluginDriverAdapter)?.allTablesMetadataSQL(schema: schema)
     }
 
-    // MARK: - Database Switching
-
-    /// Moves the browse cursor: what the sidebar lists and which database a new tab
-    /// opens in. It never retargets an open tab, and an open tab never calls it.
-    /// `persist` records the database as the connection's saved default.
-    @discardableResult
-    func switchDatabase(to database: String, persist: Bool = true) async -> Bool {
+    func dropDatabase(_ scope: DatabaseScope) async {
+        if services.databaseManager.isDatabaseOpen(scope.database, for: scope.connectionId) {
+            guard await DatabaseCloseFlow.closeDatabase(
+                scope.database,
+                connectionId: scope.connectionId,
+                anchor: contentWindow
+            ) else { return }
+        }
         do {
-            try await DatabaseManager.shared.switchDatabase(to: database, for: connectionId, persist: persist)
-            toolbarState.currentDatabase = database
-            toolbarState.currentSchema = DatabaseManager.shared.session(for: connectionId)?.browseSchema
-
-            await SchemaService.shared.prepareForReload(connectionId: connectionId)
-
-            await refreshTables(currentDatabaseOnly: true)
-            return true
-        } catch {
-            navigationLogger.error("Failed to switch database: \(error.localizedDescription, privacy: .public)")
-            AlertHelper.showErrorSheet(
-                title: String(
-                    format: String(localized: "%@ Switch Failed"),
-                    PluginManager.shared.containerEntityName(for: connection.type)
-                ),
-                message: error.localizedDescription,
-                window: contentWindow
-            )
-            return false
-        }
-    }
-
-    /// Switch the active container (database, or schema for schema-switching-only
-    /// engines like BigQuery), routing by the plugin's container switch target.
-    func switchContainer(to container: String) async {
-        switch PluginManager.shared.containerSwitchTarget(for: connection.type) {
-        case .schema:
-            await switchSchema(to: container)
-        case .database, nil:
-            await switchDatabase(to: container)
-        }
-    }
-
-    private var schemaEntityName: String {
-        guard PluginManager.shared.containerSwitchTarget(for: connection.type) == .schema else {
-            return String(localized: "Schema")
-        }
-        return PluginManager.shared.containerEntityName(for: connection.type)
-    }
-
-    func switchSchema(to schema: String) async {
-        guard PluginManager.shared.supportsSchemaSwitching(for: connection.type) else {
-            navigationLogger.warning(
-                "switchSchema(to: \(schema, privacy: .public)) ignored: \(self.connection.type.rawValue, privacy: .public) does not support schema switching"
-            )
-            AlertHelper.showErrorSheet(
-                title: String(localized: "Schema Switching Not Supported"),
-                message: String(
-                    format: String(localized: "%@ does not support switching schemas in SchemaStudio."),
-                    connection.type.rawValue
-                ),
-                window: contentWindow
-            )
-            return
-        }
-
-        let previousSchema = toolbarState.currentSchema
-        toolbarState.currentSchema = schema
-
-        do {
-            try await DatabaseManager.shared.switchSchema(to: schema, for: connectionId)
-        } catch {
-            toolbarState.currentSchema = previousSchema
-
-            navigationLogger.error("Failed to switch schema: \(error.localizedDescription, privacy: .public)")
-            AlertHelper.showErrorSheet(
-                title: String(format: String(localized: "%@ Switch Failed"), schemaEntityName),
-                message: error.localizedDescription,
-                window: contentWindow
-            )
-        }
-    }
-
-    /// Drop a database. Called from the database switcher's confirmation dialog.
-    func dropDatabase(name: String) async {
-        guard let driver = DatabaseManager.shared.driver(for: connectionId) else {
-            navigationLogger.warning("dropDatabase(name: \(name, privacy: .public)) ignored: no active driver")
-            return
-        }
-
-        do {
-            try await driver.dropDatabase(name: name)
+            try await DatabaseTreeMetadataService.shared.dropDatabase(scope)
         } catch {
             navigationLogger.error("Failed to drop database: \(error.localizedDescription, privacy: .public)")
             AlertHelper.showErrorSheet(

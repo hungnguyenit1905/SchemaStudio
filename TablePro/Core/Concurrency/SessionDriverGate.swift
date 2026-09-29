@@ -14,17 +14,17 @@ import Foundation
 /// The body runs inline in the caller's own task rather than in a detached one, so
 /// cancellation still reaches the work.
 @MainActor
-final class SessionDriverGate {
+final class SessionDriverGate<Key: Hashable> {
     private struct Waiter {
         let ticket: UUID
         let continuation: CheckedContinuation<Void, Error>
     }
 
-    private var holders: Set<UUID> = []
-    private var waiters: [UUID: [Waiter]] = [:]
+    private var holders: Set<Key> = []
+    private var waiters: [Key: [Waiter]] = [:]
 
     func withExclusiveAccess<T>(
-        _ connectionId: UUID,
+        _ connectionId: Key,
         _ body: () async throws -> T
     ) async throws -> T {
         try await acquire(connectionId)
@@ -32,16 +32,26 @@ final class SessionDriverGate {
         return try await body()
     }
 
-    /// Releases a connection that is going away, failing everyone still queued for it.
-    func drain(connectionId: UUID) {
-        holders.remove(connectionId)
+    /// Fails everyone still queued for a connection that is going away. A body already running
+    /// keeps the gate until it returns, so nobody can start alongside it on the same driver.
+    func drain(connectionId: Key) {
         let pending = waiters.removeValue(forKey: connectionId) ?? []
         for waiter in pending {
             waiter.continuation.resume(throwing: CancellationError())
         }
     }
 
-    private func acquire(_ connectionId: UUID) async throws {
+    func withExclusiveAccessIfIdle<T>(
+        _ connectionId: Key,
+        _ body: () async throws -> T
+    ) async rethrows -> T? {
+        guard !holders.contains(connectionId) else { return nil }
+        holders.insert(connectionId)
+        defer { release(connectionId) }
+        return try await body()
+    }
+
+    private func acquire(_ connectionId: Key) async throws {
         guard holders.contains(connectionId) else {
             holders.insert(connectionId)
             return
@@ -57,7 +67,7 @@ final class SessionDriverGate {
         )
     }
 
-    private func enqueue(ticket: UUID, connectionId: UUID) async throws {
+    private func enqueue(ticket: UUID, connectionId: Key) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             guard !Task.isCancelled else {
                 continuation.resume(throwing: CancellationError())
@@ -71,7 +81,7 @@ final class SessionDriverGate {
 
     /// Removes the ticket before resuming it, so a cancellation racing a hand-off
     /// can only ever find one of them.
-    private func failWaiter(ticket: UUID, connectionId: UUID) {
+    private func failWaiter(ticket: UUID, connectionId: Key) {
         guard var pending = waiters[connectionId],
               let index = pending.firstIndex(where: { $0.ticket == ticket }) else {
             return
@@ -81,7 +91,7 @@ final class SessionDriverGate {
         waiter.continuation.resume(throwing: CancellationError())
     }
 
-    private func release(_ connectionId: UUID) {
+    private func release(_ connectionId: Key) {
         guard var pending = waiters[connectionId], !pending.isEmpty else {
             holders.remove(connectionId)
             waiters.removeValue(forKey: connectionId)

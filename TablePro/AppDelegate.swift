@@ -268,12 +268,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
               }) else { return }
 
         MainActor.assumeIsolated {
-            if let actions = MainContentCoordinator.allActiveCoordinators()
-                .first(where: { $0.connectionId == connectionId })?.commandActions {
+            if let actions = MainContentCoordinator.coordinator(forWindow: keyWindow)?.commandActions {
                 actions.newTab()
             } else {
                 WindowManager.shared.openTab(
-                    payload: EditorTabPayload(connectionId: connectionId, intent: .newEmptyTab)
+                    payload: EditorTabPayload(connectionId: connectionId, intent: .newEmptyTab),
+                    tabGroup: .shared,
+                    anchor: keyWindow
                 )
             }
         }

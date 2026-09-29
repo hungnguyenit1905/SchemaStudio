@@ -140,6 +140,51 @@ private final class CountingTargetDriver: PluginDatabaseDriver, @unchecked Senda
     }
 }
 
+/// Writes every row successfully but fails the transaction commit itself, the
+/// case where the target's own commit outcome cannot be trusted.
+private final class CommitFailingTargetDriver: PluginDatabaseDriver, @unchecked Sendable {
+    private(set) var preparedRows = 0
+    private(set) var commitAttempts = 0
+
+    var supportsSchemas: Bool { false }
+    var supportsTransactions: Bool { true }
+    var currentSchema: String? { nil }
+    var serverVersion: String? { nil }
+
+    func connect() async throws {}
+    func disconnect() {}
+    func ping() async throws {}
+
+    func execute(query: String) async throws -> PluginQueryResult {
+        PluginQueryResult(columns: [], columnTypeNames: [], rows: [], rowsAffected: 0, executionTime: 0)
+    }
+
+    func executeParameterized(query: String, parameters: [PluginCellValue]) async throws -> PluginQueryResult {
+        preparedRows += parameters.count / 2
+        return PluginQueryResult(columns: [], columnTypeNames: [], rows: [], rowsAffected: 0, executionTime: 0)
+    }
+
+    func commitTransaction() async throws {
+        commitAttempts += 1
+        throw DatabaseError.queryFailed("simulated commit failure")
+    }
+
+    func fetchTables(schema: String?) async throws -> [PluginTableInfo] { [] }
+    func fetchColumns(table: String, schema: String?) async throws -> [PluginColumnInfo] { [] }
+    func fetchIndexes(table: String, schema: String?) async throws -> [PluginIndexInfo] { [] }
+    func fetchForeignKeys(table: String, schema: String?) async throws -> [PluginForeignKeyInfo] { [] }
+    func fetchTableDDL(table: String, schema: String?) async throws -> String { "" }
+    func fetchViewDefinition(view: String, schema: String?) async throws -> String { "" }
+    func fetchTableMetadata(table: String, schema: String?) async throws -> PluginTableMetadata {
+        PluginTableMetadata(tableName: table)
+    }
+
+    func fetchDatabases() async throws -> [String] { [] }
+    func fetchDatabaseMetadata(_ database: String) async throws -> PluginDatabaseMetadata {
+        PluginDatabaseMetadata(name: database)
+    }
+}
+
 @MainActor
 @Suite("DataTransfer chunked pipeline")
 struct DataTransferPipelineTests {
@@ -279,5 +324,28 @@ struct DataTransferPipelineTests {
 
         #expect(result.written == 25_000)
         #expect(target.bulkRows == 25_000)
+    }
+
+    @Test("a commit that fails after rows were written surfaces as an unknown outcome, not a retry")
+    func commitFailureAfterWritingSurfacesAsUnknownOutcome() async throws {
+        var options = TransferOptions()
+        options.useSingleTransaction = false
+        let target = CommitFailingTargetDriver()
+        let service = DataTransferService()
+
+        await #expect(throws: TransferError.commitOutcomeUnknown) {
+            try await service.copyRows(
+                plan: plan(),
+                source: context(driver: StreamingSourceDriver(rowCount: 5_000), name: "Source", databaseType: .postgresql),
+                target: context(driver: target, name: "Target", databaseType: .postgresql),
+                options: options,
+                limits: nil,
+                checkpoint: nil,
+                jobId: UUID(),
+                resumeCursor: nil
+            )
+        }
+        #expect(target.commitAttempts == 1)
+        #expect(target.preparedRows > 0)
     }
 }

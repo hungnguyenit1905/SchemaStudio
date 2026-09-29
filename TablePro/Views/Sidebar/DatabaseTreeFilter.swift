@@ -25,9 +25,10 @@ enum DatabaseTreeFilter {
         _ schemas: [String],
         systemSchemas: Set<String>,
         searchText: String,
+        showsHiddenItems: Bool = false,
         contentMatches: (String) -> Bool
     ) -> [String] {
-        let nonSystem = schemas.filter { !systemSchemas.contains($0) }
+        let nonSystem = showsHiddenItems ? schemas : schemas.filter { !systemSchemas.contains($0) }
         let matched = searchText.isEmpty
             ? nonSystem
             : nonSystem.filter { matches(searchText, $0) || contentMatches($0) }

@@ -154,15 +154,15 @@ struct AppMenuCommands: Commands {
         )
     }
 
-    private func shortcut(for action: ShortcutAction) -> KeyboardShortcut? {
-        settingsManager.keyboard.keyboardShortcut(for: action)
+    private var showHiddenItemsBinding: Binding<Bool> {
+        Binding(
+            get: { settingsManager.general.showHiddenItems },
+            set: { settingsManager.general.showHiddenItems = $0 }
+        )
     }
 
-    private var openContainerMenuTitle: String {
-        let containerName = actions.map {
-            PluginManager.shared.containerEntityName(for: $0.currentDatabaseType)
-        } ?? "Database"
-        return String(format: String(localized: "Open %@..."), containerName)
+    private func shortcut(for action: ShortcutAction) -> KeyboardShortcut? {
+        settingsManager.keyboard.keyboardShortcut(for: action)
     }
 
     /// Prefers the focused scene value; falls back to the coordinator back-reference
@@ -277,12 +277,6 @@ struct AppMenuCommands: Commands {
                 actions?.createView()
             }
             .disabled(!(actions?.isConnected ?? false) || actions?.isReadOnly ?? false)
-
-            Button(openContainerMenuTitle) {
-                actions?.openDatabaseSwitcher()
-            }
-            .optionalKeyboardShortcut(shortcut(for: .openDatabase))
-            .disabled(!(actions?.isConnected ?? false) || !(actions?.supportsContainerSwitching ?? false))
 
             Button(String(localized: "Open File...")) {
                 actions?.openSQLFile()
@@ -545,12 +539,6 @@ struct AppMenuCommands: Commands {
             }
             .dataGridShortcut(.previewFKReference, keyboard: settingsManager.keyboard, yieldingTo: actions)
             .disabled(!(actions?.isConnected ?? false))
-
-            Button("Switch Connection...") {
-                actions?.openConnectionSwitcher()
-            }
-            .optionalKeyboardShortcut(shortcut(for: .switchConnection))
-            .disabled(!(actions?.isConnected ?? false))
         }
 
         CommandMenu("Tools") {
@@ -716,6 +704,7 @@ struct AppMenuCommands: Commands {
             Divider()
 
             Toggle(String(localized: "Show Object Comments"), isOn: showObjectCommentsBinding)
+            Toggle(String(localized: "Show Hidden Items"), isOn: showHiddenItemsBinding)
 
             Divider()
 
@@ -749,6 +738,12 @@ struct AppMenuCommands: Commands {
                 actions?.showSidebarTab(.favorites)
             }
             .optionalKeyboardShortcut(shortcut(for: .showSidebarFavorites))
+            .disabled(!(actions?.isConnected ?? false))
+
+            Button(String(localized: "Objects")) {
+                actions?.showObjects()
+            }
+            .optionalKeyboardShortcut(shortcut(for: .showObjects))
             .disabled(!(actions?.isConnected ?? false))
 
             Divider()

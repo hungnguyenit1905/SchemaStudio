@@ -52,9 +52,9 @@ struct CommandActionsDispatchTests {
         let coordinator = state.coordinator
 
         var selectedTables: Set<DatabaseTreeTableRef> = []
-        var pendingTruncates: Set<String> = []
-        var pendingDeletes: Set<String> = []
-        var tableOperationOptions: [String: TableOperationOptions] = [:]
+        var pendingTruncates: Set<DatabaseTreeTableRef> = []
+        var pendingDeletes: Set<DatabaseTreeTableRef> = []
+        var tableOperationOptions: [DatabaseTreeTableRef: TableOperationOptions] = [:]
         let rightPanelState = RightPanelState()
 
         let actions = MainContentCommandActions(
@@ -75,6 +75,28 @@ struct CommandActionsDispatchTests {
     }
 
     // MARK: - loadQueryIntoEditor
+
+    @Test("New tab joins the window that triggered it")
+    func newTabUsesCurrentWindowAsAnchor() {
+        let (actions, coordinator) = makeSUT()
+        defer { coordinator.teardown() }
+
+        coordinator.tabManager.addTab(databaseName: "testdb")
+        let sourceWindow = NSWindow()
+        coordinator.contentWindow = sourceWindow
+        actions.window = sourceWindow
+        var receivedTabGroup: TabGroupPolicy?
+        weak var receivedAnchor: NSWindow?
+        coordinator.openTabRequest = { _, tabGroup, anchor in
+            receivedTabGroup = tabGroup
+            receivedAnchor = anchor
+        }
+
+        actions.newTab()
+
+        #expect(receivedTabGroup == .shared)
+        #expect(receivedAnchor === sourceWindow)
+    }
 
     @Test("loadQueryIntoEditor forwards query to coordinator and updates tab")
     func loadQueryIntoEditor_forwardsToCoordinator() {

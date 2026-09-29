@@ -283,7 +283,8 @@ final class PaginationCoordinator {
                 let result = try await DatabaseManager.shared.withScopedDriver(
                     scope: scope,
                     route: route,
-                    tracksCancellation: true
+                    tracksCancellation: true,
+                    owner: parent.windowId
                 ) { driver in
                     try await driver.executeUserQuery(
                         query: baseQuery,

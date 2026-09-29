@@ -53,6 +53,18 @@ struct DatabaseTreeFilterTests {
         #expect(result == ["public", "sales"])
     }
 
+    @Test("Show Hidden Items keeps system schemas")
+    func visibleSchemasShowHidden() {
+        let result = DatabaseTreeFilter.visibleSchemas(
+            ["public", "pg_catalog"],
+            systemSchemas: ["pg_catalog"],
+            searchText: "",
+            showsHiddenItems: true,
+            contentMatches: { _ in false }
+        )
+        #expect(result == ["public", "pg_catalog"])
+    }
+
     @Test("visibleSchemas keeps a schema when its content matches even if the name does not")
     func visibleSchemasContentMatch() {
         let schemas = ["public", "sales"]

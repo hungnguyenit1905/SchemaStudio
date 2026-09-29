@@ -14,8 +14,8 @@ struct DatabaseTreeOutlineView: NSViewRepresentable {
     let windowState: WindowSidebarState
     let sidebarState: SharedSidebarState
     let viewModel: SidebarViewModel
-    let pendingTruncates: [UUID: Set<String>]
-    let pendingDeletes: [UUID: Set<String>]
+    let pendingTruncates: [UUID: Set<DatabaseTreeTableRef>]
+    let pendingDeletes: [UUID: Set<DatabaseTreeTableRef>]
     let searchText: String
     let connectionToken: String
     let activeDatabase: String?
@@ -26,7 +26,7 @@ struct DatabaseTreeOutlineView: NSViewRepresentable {
     }
 
     func makeNSView(context: Context) -> NSScrollView {
-        let outlineView = NSOutlineView()
+        let outlineView = DatabaseTreeNavigationOutlineView()
         outlineView.headerView = nil
         outlineView.style = .sourceList
         outlineView.rowSizeStyle = .default
@@ -46,8 +46,10 @@ struct DatabaseTreeOutlineView: NSViewRepresentable {
         outlineView.dataSource = context.coordinator
         outlineView.delegate = context.coordinator
         outlineView.target = context.coordinator
-        outlineView.action = #selector(DatabaseTreeOutlineCoordinator.handleSingleClick)
         outlineView.doubleAction = #selector(DatabaseTreeOutlineCoordinator.handleDoubleClick)
+        outlineView.onActivateSelection = { [weak coordinator = context.coordinator] in
+            coordinator?.activateSelectedNode()
+        }
 
         context.coordinator.attach(outlineView: outlineView)
         context.coordinator.update(from: self)
@@ -65,5 +67,22 @@ struct DatabaseTreeOutlineView: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSScrollView, context: Context) {
         context.coordinator.update(from: self)
+    }
+}
+
+final class DatabaseTreeNavigationOutlineView: NSOutlineView {
+    var onActivateSelection: (() -> Void)?
+
+    override func keyDown(with event: NSEvent) {
+        switch event.semanticKeyCode {
+        case .return, .enter:
+            guard event.modifierFlags.intersection(.deviceIndependentFlagsMask).isEmpty else {
+                super.keyDown(with: event)
+                return
+            }
+            onActivateSelection?()
+        default:
+            super.keyDown(with: event)
+        }
     }
 }

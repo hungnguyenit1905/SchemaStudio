@@ -230,10 +230,11 @@ final class QueryTabManager {
         return schema == defaultSchema ? name : "\(schema).\(name)"
     }
 
-    func addCreateTableTab(databaseName: String = "") {
+    func addCreateTableTab(databaseName: String = "", schemaName: String? = nil) {
         let tabTitle = String(localized: "Create Table")
         var newTab = QueryTab(title: tabTitle, tabType: .createTable)
         newTab.tableContext.databaseName = databaseName
+        newTab.tableContext.schemaName = schemaName
         newTab.tableContext.isEditable = false
         newTab.hasUserInteraction = true
         tabs.append(newTab)
@@ -259,6 +260,20 @@ final class QueryTabManager {
         let tabTitle = String(localized: "Server Dashboard")
         var newTab = QueryTab(title: tabTitle, tabType: .serverDashboard)
         newTab.tableContext.isEditable = false
+        newTab.hasUserInteraction = true
+        tabs.append(newTab)
+        selectedTabId = newTab.id
+    }
+
+    func addObjectsTab(databaseName: String = "", schemaName: String? = nil) {
+        if let existing = tabs.first(where: { $0.tabType == .objects }) {
+            selectedTabId = existing.id
+            return
+        }
+        var newTab = QueryTab(title: String(localized: "Objects"), tabType: .objects)
+        newTab.tableContext.isEditable = false
+        newTab.tableContext.databaseName = databaseName
+        newTab.tableContext.schemaName = schemaName
         newTab.hasUserInteraction = true
         tabs.append(newTab)
         selectedTabId = newTab.id

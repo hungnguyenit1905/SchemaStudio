@@ -142,10 +142,8 @@ internal final class TabRouter {
             sshPasswordOverride: sshPasswordOverride
         )
 
-        if let schema {
-            await switchSchemaOrDatabase(connectionId: connectionId, target: schema)
-        } else if let database {
-            await switchSchemaOrDatabase(connectionId: connectionId, target: database)
+        if let database, !database.isEmpty {
+            try await DatabaseManager.shared.markDatabaseOpen(database, for: connectionId)
         }
 
         if focusExistingTableTab(connectionId: connectionId, database: database, schema: schema, table: table) {
@@ -314,7 +312,11 @@ internal final class TabRouter {
         closeWelcomeWindows()
 
         if let schema = parsed.schema {
-            await switchSchemaOrDatabase(connectionId: connection.id, target: schema)
+            selectScope(SidebarScope(
+                connectionId: connection.id,
+                database: parsed.database.isEmpty ? nil : parsed.database,
+                schema: schema
+            ))
         }
     }
 
@@ -390,13 +392,14 @@ internal final class TabRouter {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    private func switchSchemaOrDatabase(connectionId: UUID, target: String) async {
-        guard let coordinator = MainContentCoordinator.allActiveCoordinators()
-            .first(where: { $0.connectionId == connectionId }) else { return }
-        if PluginManager.shared.supportsSchemaSwitching(for: coordinator.connection.type) {
-            await coordinator.switchSchema(to: target)
-        } else {
-            await coordinator.switchDatabase(to: target)
+    private func selectScope(_ scope: SidebarScope) {
+        for coordinator in MainContentCoordinator.allActiveCoordinators()
+            where coordinator.connectionId == scope.connectionId {
+            let defaultDatabase = DatabaseManager.shared.session(for: scope.connectionId)?.resolvedBrowseDatabase
+            let resolved = scope.database == nil
+                ? SidebarScope(connectionId: scope.connectionId, database: defaultDatabase, schema: scope.schema)
+                : scope
+            coordinator.windowSidebarState.selectedScope = resolved
         }
     }
 

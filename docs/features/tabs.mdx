@@ -23,9 +23,9 @@ Table tabs track cell edits as pending changes by default. Query tabs support [c
 
 ## Preview Tabs
 
-Single-clicking a table opens a preview tab that is reused when you click a different table, like VS Code's preview tabs. A tab with unsaved edits, an applied filter, or sorting is never replaced: the click opens a new tab instead. A preview tab becomes permanent when you double-click the table in the sidebar or interact with the tab (sort, filter, edit data). A preview tab still open at quit is restored as a permanent tab.
+Opening a table from the Quick Switcher or Favorites opens a preview tab that is reused when you open a different table, like VS Code's preview tabs. A tab with unsaved edits, an applied filter, or sorting is never replaced: the table opens in a new tab instead. A preview tab becomes permanent when you interact with it (sort, filter, edit data). A preview tab still open at quit is restored as a permanent tab. Tables opened from the sidebar always get a permanent tab: a single click in the sidebar only selects, and a double-click opens.
 
-Turn preview tabs off with **Settings > General > Tabs > Enable preview tabs** if you prefer every click to open a permanent tab.
+Turn preview tabs off with **Settings > General > Tabs > Enable preview tabs** if you prefer every table to open a permanent tab.
 
 ## Managing Tabs
 
@@ -33,8 +33,8 @@ Turn preview tabs off with **Settings > General > Tabs > Enable preview tabs** i
 
 | Action | How |
 |--------|-----|
-| New query tab | `Cmd+T` or the **+** button in the tab bar |
-| New table tab | Double-click a table in the sidebar (single-click reuses the preview tab) |
+| New query tab | `Cmd+T` or the **+** button in the tab bar. It opens on the connection, database, and schema selected in the sidebar |
+| New table tab | Double-click a table in the sidebar, or select it and press Return. A tab already showing that table comes to the front instead |
 | Close tab | `Cmd+W` or the tab's close button |
 | Close other tabs | **File > Close Other Tabs**, or Option-click the close button of the tab you want to keep |
 | Close every tab in the window | **File > Close All Tabs** |
@@ -44,7 +44,7 @@ The three bulk commands have no shortcut out of the box. Bind them in **Settings
 
 **Close All Tabs** leaves the window open and empty rather than closing it, so the connection stays live and you can carry on with `Cmd+T` or a click in the sidebar.
 
-**Close Tabs for Other Databases** closes only windows whose every tab was opened against a database other than the one the connection is on now. It never touches the tab you are looking at, and it is limited to the current connection. Tabs from different databases are meant to coexist, so switching databases never closes anything on its own. On engines that switch schemas instead of databases, such as BigQuery and Oracle, the command reads **Close Tabs for Other Schemas**.
+**Close Tabs for Other Databases** closes only windows whose every tab is on a database other than the one of the tab you are looking at. It never touches that tab, and it is limited to the current connection. Tabs from different databases are meant to coexist, so opening a table in another database never closes anything on its own. On engines that switch schemas instead of databases, such as BigQuery and Oracle, the command reads **Close Tabs for Other Schemas**.
 
 Closing a query tab keeps its SQL in Recently Closed, so an accidental close costs nothing, including when you close a whole group at once. SchemaStudio asks before closing only when unsaved work would be lost, such as pending data edits, pending structure changes, or unsaved edits to a `.sql` file on disk. A bulk close asks once per window that has something to lose, and cancelling stops the rest.
 
@@ -84,13 +84,13 @@ Every tab label is prefixed with the connection it is bound to, as in `Localhost
 
 New windows open at 1200x800; size and position are remembered across launches.
 
-Closing the last tab of a connection does not disconnect it if that connection is still expanded in the sidebar. See [Sidebar](/features/sidebar#staying-connected).
+Closing the last tab of a connection does not disconnect it if that connection is still open in the sidebar. Closing a database in the sidebar closes the tabs on that database. See [Sidebar](/features/sidebar#staying-connected).
 
 ## Database Binding
 
 A tab is bound to the connection, database, and schema it was opened on, fixed for the life of the tab. Every query, refresh, filter, sort, structure read, and structure save the tab performs uses that binding, not whatever the sidebar shows at the time.
 
-The sidebar's database selection only controls two things: what the sidebar lists, and which database a new tab opens into. Changing it does not touch tabs that are already open, and switching between tabs does not change the connection's saved default database either.
+There is no active database. The node selected in the sidebar only decides where a new tab opens. Selecting a node, opening a table in another database, restoring tabs after a relaunch, and following a link never change the database of a tab that is already open, and never change the connection's default database. The toolbar shows the connection, database, and schema of the tab in front.
 
 To point an existing tab somewhere else, use the database picker in the query editor's toolbar. It rebinds that one tab and reruns it, and leaves the sidebar and every other tab alone.
 
@@ -99,7 +99,7 @@ The window subtitle shows the database, and the schema on engines that have one,
 Dragging a tab out of its window or choosing **Window > Move Tab to New Window** does not change any of this: the tab keeps querying the database and schema it was opened on.
 
 <Note>
-PostgreSQL, Redshift, and CockroachDB can only change database by reconnecting. A tab bound to a database other than the connection's active one runs its queries on a separate connection for that database, so it does not share temp tables, session variables, or an open transaction with the query editor on the main connection. See [PostgreSQL](/databases/postgresql#cross-database-tabs).
+PostgreSQL, Redshift, and CockroachDB can only change database by reconnecting. Each open database other than the connection's default gets its own server connection, shared by every tab on that database. Tabs on the same database share temp tables, session variables, and an open transaction, the same way tabs on the default database do, and a transaction started in a tab lasts across runs until you commit or roll it back. See [PostgreSQL](/databases/postgresql#cross-database-tabs).
 </Note>
 
 ## Tab Persistence

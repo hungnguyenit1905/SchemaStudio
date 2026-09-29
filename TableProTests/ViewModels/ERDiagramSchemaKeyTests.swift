@@ -62,7 +62,8 @@ struct ERDiagramSchemaKeyTests {
         let viewModel = ERDiagramViewModel(
             connectionId: UUID(),
             databaseName: "app",
-            schemaKey: "app.reporting"
+            schemaKey: "app.reporting",
+            openTab: { _ in }
         )
         #expect(viewModel.schemaName == "reporting")
     }

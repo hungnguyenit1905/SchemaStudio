@@ -352,6 +352,83 @@ final class DatabaseTreeMetadataService {
         partitionsState = partitionsState.filter { $0.key.connectionId != connectionId }
     }
 
+    func dropDatabase(_ scope: DatabaseScope) async throws {
+        let manager = DatabaseManager.shared
+        guard let session = manager.session(for: scope.connectionId) else { throw DatabaseError.notConnected }
+        guard !scope.isServerScoped, !manager.isDefaultDatabase(scope.database, for: scope.connectionId) else {
+            throw DatabaseError.queryFailed(
+                String(format: String(localized: "%@ is the connection's default database and cannot be dropped."), scope.database)
+            )
+        }
+        guard !databases(for: scope.connectionId).contains(where: { $0.name == scope.database && $0.isSystemDatabase })
+        else {
+            throw DatabaseError.queryFailed(
+                String(format: String(localized: "%@ is a system database and cannot be dropped."), scope.database)
+            )
+        }
+        manager.markDatabaseClosed(scope.database, for: scope.connectionId)
+        let hostScope = DatabaseScope(
+            connectionId: scope.connectionId,
+            database: session.resolvedBrowseDatabase,
+            schema: nil
+        )
+        let connectionId = scope.connectionId
+        let database = scope.database
+        MetadataConnectionPool.shared.closeAll(connectionId: connectionId, database: database)
+        await MetadataConnectionPool.shared.waitUntilIdle(connectionId: connectionId, database: database)
+        try await manager.withScopedDriver(scope: hostScope, route: .sessionDriver) { driver in
+            try await driver.dropDatabase(name: database)
+        }
+        await finishDrop(database, connectionId: connectionId, databaseType: session.connection.type)
+    }
+
+    private func finishDrop(_ database: String, connectionId: UUID, databaseType: DatabaseType) async {
+        await refreshDatabases(connectionId: connectionId, databaseType: databaseType)
+        await purgeDatabase(connectionId: connectionId, database: database)
+        MetadataConnectionPool.shared.closeAll(connectionId: connectionId, database: database)
+    }
+
+    func dropDatabase(
+        _ database: String,
+        connectionId: UUID,
+        databaseType: DatabaseType,
+        using driver: DatabaseDriver
+    ) async throws {
+        MetadataConnectionPool.shared.closeAll(connectionId: connectionId, database: database)
+        try await driver.dropDatabase(name: database)
+        await finishDrop(database, connectionId: connectionId, databaseType: databaseType)
+    }
+
+    func closeDatabase(connectionId: UUID, database: String) async {
+        await purgeDatabase(connectionId: connectionId, database: database)
+    }
+
+    private func purgeDatabase(connectionId: UUID, database: String) async {
+        let schemaKey = DatabaseKey(connectionId: connectionId, database: database)
+        let objectKeys = Self.connectionObjectKeys(
+            tableKeys: tablesState.keys, routineKeys: routinesState.keys, connectionId: connectionId
+        ).filter { $0.database == database }
+        let partitionKeys = connectionPartitionKeys(connectionId).filter { $0.database == database }
+
+        await schemaDedup.cancel(key: schemaKey)
+        for key in objectKeys {
+            await tablesDedup.cancel(key: key)
+            await routinesDedup.cancel(key: key)
+        }
+        for key in partitionKeys {
+            await partitionsDedup.cancel(key: key)
+        }
+
+        schemaList.removeValue(forKey: schemaKey)
+        for key in objectKeys {
+            tablesState.removeValue(forKey: key)
+            routinesState.removeValue(forKey: key)
+        }
+        for key in partitionKeys {
+            partitionsState.removeValue(forKey: key)
+        }
+    }
+
     // MARK: - Private
 
     private func resetPending(connectionId: UUID) async {

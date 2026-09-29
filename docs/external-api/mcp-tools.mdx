@@ -23,7 +23,7 @@ Two per-connection settings gate every call on top of the token:
 - **External access**. `blocked` hides the connection entirely: `list_connections` omits it, `list_recent_tabs` filters its tabs, and any tool that targets it returns `403 forbidden`. `readOnly` blocks write SQL: `execute_query` with a write statement and any `confirm_destructive_operation` call return `403`, even with a `readWrite` token. The session-state tools `disconnect`, `switch_database`, and `switch_schema` are gated by token scope only.
 - **AI policy `askEachTime`**. The first tool call per session that targets the connection shows an in-app approval dialog. SchemaStudio waits up to 30 seconds. Deny returns `403 forbidden` with message "User denied MCP access to this connection"; no answer fails the call with a timeout error. An approval covers that connection for the rest of the session.
 
-`list_tables`, `list_schemas`, `describe_table`, `get_table_ddl`, and `execute_query` query exactly the `database` and `schema` you pass them and leave the app alone: the sidebar's selected database and every open tab stay where they are, and a tab keeps querying the database and schema it was opened on. `switch_database` and `switch_schema` are the only tools that move the app's selection, which is what they are for.
+`list_tables`, `list_schemas`, `describe_table`, `get_table_ddl`, and `execute_query` query exactly the `database` and `schema` you pass them and leave the app alone: the sidebar's selected database and every open tab stay where they are, and a tab keeps querying the database and schema it was opened on. `switch_database` and `switch_schema` set a default database and schema for MCP only: later MCP calls that name no database use it. They never reconnect PostgreSQL, never open a database in your sidebar, and never change where your new tabs open.
 
 ## Connection tools
 
@@ -93,7 +93,7 @@ Close a connection.
 
 ### `get_connection_status`
 
-Return status, active database, server version, connect time, and last-active time for a connection.
+Return status, the database MCP calls use by default (set by `switch_database`, or the connection's default), server version, connect time, and last-active time for a connection.
 
 **Input**: `{ "connection_id": "..." }`
 
@@ -317,7 +317,7 @@ Export query or table data as CSV, JSON, or SQL.
 
 **Output**: `{ "status": "switched", "current_database": "analytics" }` or `{ "status": "switched", "current_schema": "reporting" }`
 
-**Scope**: `readWrite` (moves the connection's selected database or schema, which the sidebar follows).
+**Scope**: `readWrite`. The name must exist on the connection, or the call fails with an invalid-argument error. The default lasts until MCP disconnects the connection. It changes nothing in the app.
 
 ## Navigation tools
 

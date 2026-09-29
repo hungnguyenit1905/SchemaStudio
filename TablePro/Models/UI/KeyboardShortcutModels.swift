@@ -62,8 +62,6 @@ enum ShortcutAction: String, Codable, CaseIterable, Identifiable {
     // Connections
     case manageConnections
     case newConnection
-    case openDatabase
-    case switchConnection
 
     // Editor & Query
     case openFile
@@ -127,6 +125,7 @@ enum ShortcutAction: String, Codable, CaseIterable, Identifiable {
     case focusSidebarSearch
     case showSidebarTables
     case showSidebarFavorites
+    case showObjects
     case showPreviousTab
     case showNextTab
 
@@ -134,7 +133,7 @@ enum ShortcutAction: String, Codable, CaseIterable, Identifiable {
 
     var category: ShortcutCategory {
         switch self {
-        case .manageConnections, .newConnection, .openDatabase, .switchConnection:
+        case .manageConnections, .newConnection:
             return .connections
         case .openFile, .saveChanges, .saveAs, .executeQuery, .executeAllStatements,
              .executeQueryWithoutLimit, .cancelQuery, .explainQuery, .formatQuery,
@@ -149,7 +148,7 @@ enum ShortcutAction: String, Codable, CaseIterable, Identifiable {
              .reopenClosedTab, .quickSwitcher, .toggleTableBrowser,
              .toggleInspector, .toggleFilters, .toggleHistory, .toggleResults, .previousResultTab,
              .nextResultTab, .pinResultTab, .closeResultTab, .focusSidebarSearch,
-             .showSidebarTables, .showSidebarFavorites, .showPreviousTab, .showNextTab:
+             .showSidebarTables, .showSidebarFavorites, .showObjects, .showPreviousTab, .showNextTab:
             return .navigation
         }
     }
@@ -187,9 +186,7 @@ enum ShortcutAction: String, Codable, CaseIterable, Identifiable {
         case .executeQueryWithoutLimit: return String(localized: "Execute Query Without Limit")
         case .cancelQuery: return String(localized: "Cancel Query")
         case .newTab: return String(localized: "New Tab")
-        case .openDatabase: return String(localized: "Open Database")
         case .openFile: return String(localized: "Open File")
-        case .switchConnection: return String(localized: "Switch Connection")
         case .saveChanges: return String(localized: "Save Changes")
         case .saveAs: return String(localized: "Save As")
         case .previewSQL: return String(localized: "Preview SQL")
@@ -239,6 +236,7 @@ enum ShortcutAction: String, Codable, CaseIterable, Identifiable {
         case .focusSidebarSearch: return String(localized: "Focus Sidebar Filter")
         case .showSidebarTables: return String(localized: "Show Tables Sidebar")
         case .showSidebarFavorites: return String(localized: "Show Favorites Sidebar")
+        case .showObjects: return String(localized: "Show Objects")
         case .showPreviousTab: return String(localized: "Show Previous Tab")
         case .showNextTab: return String(localized: "Show Next Tab")
         case .aiExplainQuery: return String(localized: "Explain with AI")
@@ -436,8 +434,6 @@ struct KeyboardSettings: Codable, Equatable {
     static let defaultShortcuts: [ShortcutAction: BoundKey] = [
         // Connections
         .newConnection: .character("n", command: true),
-        .openDatabase: .character("k", command: true),
-        .switchConnection: .character("c", command: true, control: true),
 
         // Editor & Query
         .openFile: .character("o", command: true),
@@ -498,6 +494,7 @@ struct KeyboardSettings: Codable, Equatable {
         .focusSidebarSearch: .character("f", command: true, option: true),
         .showSidebarTables: .character("1", command: true, option: true),
         .showSidebarFavorites: .character("2", command: true, option: true),
+        .showObjects: .character("3", command: true, option: true),
         .showPreviousTab: .character("[", command: true, shift: true),
         .showNextTab: .character("]", command: true, shift: true)
     ]
