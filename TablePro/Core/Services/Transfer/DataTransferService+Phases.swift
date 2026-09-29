@@ -21,6 +21,7 @@ extension DataTransferService {
         options: TransferOptions,
         resume: TransferResumeState?,
         jobId: UUID,
+        journal: (any PluginTransferCheckpointJournal)?,
         lanes: TransferLanePool?,
         consistency: inout TransferConsistency
     ) async throws -> TransferReport {
@@ -31,7 +32,21 @@ extension DataTransferService {
 
         let estimates = await estimatedRowCounts(for: preview.plans, source: source)
 
-        await runStructurePhase(preview.plans, target: target, options: options, run: &run, resume: resume)
+        let boundaries: [String: [String]]
+        if let resume {
+            boundaries = Dictionary(uniqueKeysWithValues: resume.manifest.tables.map { ($0.table, $0.boundaries) })
+        } else {
+            boundaries = await partitionBoundaryMap(preview.plans, source: source, options: options)
+        }
+        let manifest = PluginTransferCheckpointManifest(
+            sourceJobId: jobId,
+            tables: selections.map {
+                PluginTransferCheckpointTableManifest(table: $0.table, boundaries: boundaries[$0.table] ?? [])
+            }
+        )
+        let durableManifest = try await journal?.prepare(manifest: manifest) ?? manifest
+        let resolvedResume = resume ?? TransferResumeState(manifest: durableManifest, entries: [])
+        await runStructurePhase(preview.plans, target: target, options: options, run: &run, resume: resolvedResume)
         consistency = try await runDataPhase(
             preview.plans,
             source: source,
@@ -40,13 +55,14 @@ extension DataTransferService {
             inputs: TransferRunInputs(
                 estimates: estimates,
                 limits: preview.targetCapabilities.limits,
-                resume: resume,
+                resume: resolvedResume,
                 jobId: jobId,
+                journal: journal,
                 lanes: lanes
             ),
             run: &run
         )
-        await runConstraintPhase(preview.plans, target: target, run: &run, resume: resume)
+        await runConstraintPhase(preview.plans, target: target, run: &run, resume: resolvedResume)
 
         let counts = await verifyCounts(plans: preview.plans, source: source, target: target)
         return run.report(for: selections, counts: counts, consistency: consistency)
@@ -64,12 +80,49 @@ extension DataTransferService {
         resume: TransferResumeState? = nil
     ) async {
         state.statusMessage = String(localized: "Preparing target tables\u{2026}")
+        guard await removePostgreSQLForeignKeysBeforeCopy(plans, target: target, run: &run) else {
+            state.statusMessage = ""
+            return
+        }
         let foreignKeysDisabled = await disableForeignKeyChecks(on: target)
         await applyStructurePlans(plans, target: target, options: options, run: &run, resume: resume)
         if foreignKeysDisabled {
             await restoreForeignKeyChecks(on: target)
         }
         state.statusMessage = ""
+    }
+
+    private func removePostgreSQLForeignKeysBeforeCopy(
+        _ plans: [TransferTablePlan],
+        target: TransferDriverContext,
+        run: inout TransferRunState
+    ) async -> Bool {
+        guard target.databaseType == .postgresql else { return true }
+        let tablesToDrop = Set(plans.filter { $0.steps.contains(.dropTargetTable) }.map(\.table))
+        guard !tablesToDrop.isEmpty else { return true }
+
+        do {
+            let foreignKeys = try await target.fetchAllForeignKeys()
+            for table in tablesToDrop.sorted() {
+                let internalNames = Set((foreignKeys[table] ?? []).filter { foreignKey in
+                    tablesToDrop.contains(foreignKey.referencedTable)
+                        && (foreignKey.referencedSchema == nil || foreignKey.referencedSchema == target.schema)
+                }.map(\.name))
+                for name in internalNames.sorted() {
+                    guard let statement = target.dropForeignKeyStatement(table: table, constraintName: name) else {
+                        run.fail(table, message: String(localized: "The target cannot drop foreign key constraints."))
+                        run.stopped = true
+                        return false
+                    }
+                    try await target.execute(statement)
+                }
+            }
+        } catch {
+            run.fail(tablesToDrop.min() ?? "", message: error.localizedDescription)
+            run.stopped = true
+            return false
+        }
+        return true
     }
 
     private func applyStructurePlans(
@@ -184,10 +237,11 @@ extension DataTransferService {
             resume: resume,
             jobId: inputs.jobId,
             checkpoint: TransferCheckpointStore.shared,
+            journal: inputs.journal,
             snapshotToken: snapshotToken,
             gate: gate,
             lanes: inputs.lanes,
-            boundaries: await partitionBoundaryMap(pending, source: source, options: options),
+            boundaries: Dictionary(uniqueKeysWithValues: inputs.resume?.manifest.tables.map { ($0.table, $0.boundaries) } ?? []),
             parallelTables: parallelTables
         )
 
@@ -311,7 +365,7 @@ extension DataTransferService {
                             target: laneTarget,
                             options: options,
                             limits: limits,
-                            checkpoint: context.checkpoint,
+                            checkpoint: context.journal == nil ? nil : context.checkpoint,
                             jobId: context.jobId,
                             resumeCursor: context.resume?.entry(table: plan.table)?.cursor
                         )
@@ -324,7 +378,7 @@ extension DataTransferService {
                     target: target,
                     options: options,
                     limits: limits,
-                    checkpoint: context.checkpoint,
+                    checkpoint: context.journal == nil ? nil : context.checkpoint,
                     jobId: context.jobId,
                     resumeCursor: context.resume?.entry(table: plan.table)?.cursor
                 )
@@ -420,7 +474,7 @@ extension DataTransferService {
                                 target: laneTarget,
                                 options: options,
                                 limits: limits,
-                                checkpoint: context.checkpoint,
+                                checkpoint: context.journal == nil ? nil : context.checkpoint,
                                 jobId: context.jobId,
                                 resumeCursor: resumeCursor,
                                 partition: index,
@@ -718,6 +772,7 @@ private struct TransferRunInputs {
     let limits: PluginServerLimits?
     let resume: TransferResumeState?
     let jobId: UUID
+    let journal: (any PluginTransferCheckpointJournal)?
     let lanes: TransferLanePool?
 }
 
@@ -726,6 +781,7 @@ private struct TransferCopyContext {
     let resume: TransferResumeState?
     let jobId: UUID
     let checkpoint: TransferCheckpointStore
+    let journal: (any PluginTransferCheckpointJournal)?
     let snapshotToken: String?
     let gate: TransferRunGate
     let lanes: TransferLanePool?

@@ -244,13 +244,15 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
         let columnOrdering = versionedCapabilities.hasArrayPosition
             ? "ORDER BY array_position(ix.indkey, a.attnum)"
             : "ORDER BY a.attnum"
-        // indoption carries one bit per key column and bit 0 is DESC. Its
-        // subscript is zero-based while array_position counts from one, hence
-        // the offset. A server without array_position cannot line the two up,
-        // so it reports no direction rather than a guessed one.
         let descendingColumns = versionedCapabilities.hasArrayPosition
             ? "ARRAY_AGG(a.attname) FILTER (WHERE (ix.indoption[array_position(ix.indkey, a.attnum) - 1] & 1) = 1)"
             : "NULL"
+        let operatorClasses = versionedCapabilities.hasArrayPosition
+            ? "COALESCE(jsonb_object_agg(a.attname, opc.opcname) FILTER (WHERE NOT opc.opcdefault), '{}'::jsonb)::text"
+            : "'{}'::text"
+        let operatorClassJoin = versionedCapabilities.hasArrayPosition
+            ? "LEFT JOIN pg_opclass opc ON opc.oid = ix.indclass[array_position(ix.indkey, a.attnum) - 1]"
+            : ""
         let query = """
         SELECT
             i.relname AS index_name,
@@ -259,12 +261,14 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
             ix.indisprimary AS is_primary,
             am.amname AS index_type,
             pg_get_expr(ix.indpred, ix.indrelid) AS predicate,
-            \(descendingColumns) AS descending_columns
+            \(descendingColumns) AS descending_columns,
+            \(operatorClasses) AS operator_classes
         FROM pg_index ix
         JOIN pg_class i ON i.oid = ix.indexrelid
         JOIN pg_class t ON t.oid = ix.indrelid
         JOIN pg_am am ON am.oid = i.relam
         JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
+        \(operatorClassJoin)
         WHERE t.relname = '\(escapeLiteral(table))'
         GROUP BY i.relname, ix.indisunique, ix.indisprimary, am.amname, ix.indpred, ix.indrelid
         ORDER BY ix.indisprimary DESC, i.relname
@@ -277,6 +281,9 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
                 .components(separatedBy: ",")
             let whereClause = row.count > 5 ? row[5].asText : nil
             let descending = row.count > 6 ? Self.pgTextArray(row[6].asText) : nil
+            let operatorClasses = row.count > 7
+                ? (row[7].asText.flatMap { try? JSONDecoder().decode([String: String].self, from: Data($0.utf8)) })
+                : nil
             return PluginIndexInfo(
                 name: name,
                 columns: columns,
@@ -285,7 +292,8 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
                 type: row[4].asText?.uppercased() ?? "BTREE",
                 columnPrefixes: nil,
                 whereClause: whereClause,
-                descendingColumns: descending
+                descendingColumns: descending,
+                operatorClasses: operatorClasses
             )
         }
     }
@@ -1207,7 +1215,9 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
     private func pgDefaultValue(_ value: String) -> String {
         let upper = value.uppercased()
         if upper == "NULL" || upper == "TRUE" || upper == "FALSE"
-            || upper == "CURRENT_TIMESTAMP" || upper == "NOW()"
+            || upper.hasPrefix("NULL::")
+            || upper == "CURRENT_TIMESTAMP" || upper == "CURRENT_DATE" || upper == "CURRENT_TIME"
+            || upper == "NOW()" || PostgreSQLDefaultExpression.isFunctionCall(value)
             || value.hasPrefix("'") || Int64(value) != nil || Double(value) != nil
             || upper.hasSuffix("::REGCLASS") {
             return value
@@ -1218,7 +1228,9 @@ class PostgreSQLPluginDriver: LibPQBackedDriver, @unchecked Sendable {
     private func pgIndexDefinition(_ index: PluginIndexDefinition, qualifiedTable: String) -> String {
         let cols = index.columns.map { column -> String in
             let quoted = quoteIdentifier(column)
-            return index.descendingColumns.contains(column) ? "\(quoted) DESC" : quoted
+            let operatorClass = index.operatorClasses?[column].map { " \(quoteIdentifier($0))" } ?? ""
+            let direction = index.descendingColumns.contains(column) ? " DESC" : ""
+            return quoted + operatorClass + direction
         }.joined(separator: ", ")
         let unique = index.isUnique ? "UNIQUE " : ""
         var def = "CREATE \(unique)INDEX \(quoteIdentifier(index.name)) ON \(qualifiedTable)"

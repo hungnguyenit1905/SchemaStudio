@@ -117,6 +117,7 @@ public struct PluginIndexDefinition: Sendable {
     /// report sort direction leaves this empty, which reads as "every column
     /// ascending" and matches how the index was treated before.
     public let descendingColumns: Set<String>
+    public let operatorClasses: [String: String]?
 
     /// Kept at its published signature so plugins built against an earlier
     /// PluginKit keep resolving the symbol their witness table references.
@@ -137,8 +138,10 @@ public struct PluginIndexDefinition: Sendable {
         self.columnPrefixes = columnPrefixes
         self.whereClause = whereClause
         descendingColumns = []
+        operatorClasses = nil
     }
 
+    @_disfavoredOverload
     public init(
         name: String,
         columns: [String],
@@ -155,6 +158,27 @@ public struct PluginIndexDefinition: Sendable {
         self.columnPrefixes = columnPrefixes
         self.whereClause = whereClause
         self.descendingColumns = descendingColumns
+        operatorClasses = nil
+    }
+
+    public init(
+        name: String,
+        columns: [String],
+        isUnique: Bool,
+        indexType: String?,
+        columnPrefixes: [String: Int]?,
+        whereClause: String?,
+        descendingColumns: Set<String>,
+        operatorClasses: [String: String]?
+    ) {
+        self.name = name
+        self.columns = columns
+        self.isUnique = isUnique
+        self.indexType = indexType
+        self.columnPrefixes = columnPrefixes
+        self.whereClause = whereClause
+        self.descendingColumns = descendingColumns
+        self.operatorClasses = operatorClasses
     }
 }
 

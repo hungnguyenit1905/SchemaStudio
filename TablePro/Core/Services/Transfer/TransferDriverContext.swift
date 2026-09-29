@@ -91,6 +91,10 @@ struct TransferDriverContext: Sendable {
         adapter.generateAddForeignKeySQL(table: table, fk: foreignKey)
     }
 
+    func dropForeignKeyStatement(table: String, constraintName: String) -> String? {
+        adapter.generateDropForeignKeySQL(table: table, constraintName: constraintName)
+    }
+
     func resetSequenceStatement(table: String, column: String) -> String? {
         pluginDriver.generateResetSequenceSQL(table: table, schema: schema, column: column)
     }
@@ -110,6 +114,10 @@ struct TransferDriverContext: Sendable {
 
     func constraintDisableCapability() async -> PluginConstraintDisableCapability {
         await pluginDriver.constraintDisableCapability()
+    }
+
+    func transferCheckpointJournal() async throws -> (any PluginTransferCheckpointJournal)? {
+        try await pluginDriver.transferCheckpointJournal()
     }
 
     func dropTableStatement(_ table: String) -> String {

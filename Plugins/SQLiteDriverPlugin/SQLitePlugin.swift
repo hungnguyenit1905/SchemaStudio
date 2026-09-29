@@ -509,6 +509,10 @@ final class SQLitePluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         await connectionActor.applyBusyTimeout(Int32(seconds * 1_000))
     }
 
+    func transferCheckpointJournal() async throws -> (any PluginTransferCheckpointJournal)? {
+        PluginSQLTransferCheckpointJournal(driver: self, dialect: .sqlite)
+    }
+
     // MARK: - Query Execution
 
     func execute(query: String) async throws -> PluginQueryResult {

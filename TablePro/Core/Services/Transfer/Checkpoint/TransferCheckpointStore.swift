@@ -5,6 +5,7 @@
 
 import CryptoKit
 import Foundation
+import TableProPluginKit
 
 /// The resume point of one table's data phase, stored as JSON in Application
 /// Support. A checkpoint is written only after the target commit it describes
@@ -32,6 +33,18 @@ actor TransferCheckpointStore {
             self.cursor = cursor
             self.isComplete = isComplete
             self.updatedAt = updatedAt
+        }
+    }
+
+    struct State: Codable, Sendable, Equatable {
+        let version: Int
+        let manifest: PluginTransferCheckpointManifest
+        let entries: [Entry]
+
+        init(manifest: PluginTransferCheckpointManifest, entries: [Entry]) {
+            version = 1
+            self.manifest = manifest
+            self.entries = entries
         }
     }
 
@@ -76,20 +89,21 @@ actor TransferCheckpointStore {
     }
 
     func load(jobId: UUID) -> [Entry] {
-        let url = fileURL(for: jobId)
-        guard let data = try? Data(contentsOf: url),
-              let entries = try? decoder.decode([Entry].self, from: data) else {
-            return []
-        }
-        return entries
+        loadState(jobId: jobId)?.entries ?? []
     }
 
-    func record(jobId: UUID, mode: TransferMode, entry: Entry) {
+    func loadState(jobId: UUID) -> State? {
+        let url = fileURL(for: jobId)
+        guard let data = try? Data(contentsOf: url),
+              let state = try? decoder.decode(State.self, from: data) else {
+            return nil
+        }
+        return state
+    }
+
+    func cache(jobId: UUID, mode: TransferMode, state: State) {
         guard mode == .emptyThenTransfer else { return }
-        var entries = load(jobId: jobId)
-        entries.removeAll { $0.table == entry.table && $0.partition == entry.partition }
-        entries.append(entry)
-        guard let data = try? encoder.encode(entries) else { return }
+        guard let data = try? encoder.encode(state) else { return }
         try? data.write(to: fileURL(for: jobId), options: .atomic)
     }
 

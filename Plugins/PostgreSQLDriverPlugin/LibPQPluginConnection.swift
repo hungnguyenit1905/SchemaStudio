@@ -89,6 +89,8 @@ private func pgOidToTypeName(_ oid: UInt32) -> String {
 // MARK: - Connection Class
 
 final class LibPQPluginConnection: @unchecked Sendable {
+    private static let sqlStateDiagnosticField: Int32 = 67
+    private static let detailDiagnosticField: Int32 = 68
     private static let connectTimeoutMicroseconds: Int64 = 10_000_000
     private static let pollSliceMicroseconds: Int64 = 100_000
 
@@ -696,29 +698,9 @@ final class LibPQPluginConnection: @unchecked Sendable {
 
                     if status == PGRES_SINGLE_TUPLE {
                         if !headerSent {
-                            let numFields = Int(PQnfields(result))
-                            var columns: [String] = []
-                            var columnTypeNames: [String] = []
-                            columns.reserveCapacity(numFields)
-                            columnOids.reserveCapacity(numFields)
-                            columnTypeNames.reserveCapacity(numFields)
-
-                            for i in 0 ..< numFields {
-                                if let namePtr = PQfname(result, Int32(i)) {
-                                    columns.append(String(cString: namePtr))
-                                } else {
-                                    columns.append("column_\(i)")
-                                }
-                                let oid = UInt32(PQftype(result, Int32(i)))
-                                columnOids.append(oid)
-                                columnTypeNames.append(pgOidToTypeName(oid))
-                            }
-
-                            continuation.yield(.header(PluginStreamHeader(
-                                columns: columns,
-                                columnTypeNames: columnTypeNames,
-                                estimatedRowCount: nil
-                            )))
+                            let metadata = streamMetadata(from: result)
+                            columnOids = metadata.oids
+                            continuation.yield(.header(metadata.header))
                             headerSent = true
                         }
 
@@ -754,6 +736,9 @@ final class LibPQPluginConnection: @unchecked Sendable {
                             return
                         }
                     } else if status == PGRES_TUPLES_OK {
+                        if !headerSent {
+                            continuation.yield(.header(streamMetadata(from: result).header))
+                        }
                         PQclear(result)
                         break
                     } else if status == PGRES_COMMAND_OK {
@@ -787,6 +772,32 @@ final class LibPQPluginConnection: @unchecked Sendable {
                 continuation.finish()
             }
         }
+    }
+
+    private func streamMetadata(from result: OpaquePointer) -> (header: PluginStreamHeader, oids: [UInt32]) {
+        let numFields = Int(PQnfields(result))
+        var columns: [String] = []
+        var columnTypeNames: [String] = []
+        var oids: [UInt32] = []
+        columns.reserveCapacity(numFields)
+        columnTypeNames.reserveCapacity(numFields)
+        oids.reserveCapacity(numFields)
+
+        for index in 0 ..< numFields {
+            if let name = PQfname(result, Int32(index)) {
+                columns.append(String(cString: name))
+            } else {
+                columns.append("column_\(index)")
+            }
+            let oid = UInt32(PQftype(result, Int32(index)))
+            oids.append(oid)
+            columnTypeNames.append(pgOidToTypeName(oid))
+        }
+
+        return (
+            PluginStreamHeader(columns: columns, columnTypeNames: columnTypeNames, estimatedRowCount: nil),
+            oids
+        )
     }
 
     // MARK: - COPY
@@ -1135,11 +1146,11 @@ final class LibPQPluginConnection: @unchecked Sendable {
             message = String(cString: msgPtr).trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
-        if let statePtr = PQresultErrorField(result, Int32(80)) {
+        if let statePtr = PQresultErrorField(result, Self.sqlStateDiagnosticField) {
             sqlState = String(cString: statePtr)
         }
 
-        if let detailPtr = PQresultErrorField(result, Int32(68)) {
+        if let detailPtr = PQresultErrorField(result, Self.detailDiagnosticField) {
             detail = String(cString: detailPtr)
         }
 

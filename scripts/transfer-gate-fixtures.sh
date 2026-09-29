@@ -205,6 +205,8 @@ seed_postgres() {
         postgres_schema "$database"
     done
 
+    pg -d ss_gate_src -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
+
     seed_postgres_bench bench "$BENCH_ROWS"
     seed_postgres_bench bench_small "$SMALL_ROWS"
 
@@ -230,6 +232,11 @@ seed_postgres() {
 }
 
 postgres_schema() {
+    pg -d "$1" -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+    if [ "$(pg -d "$1" -c "SELECT COUNT(*) FROM pg_type WHERE typname = 'transfer_enum_gate_type'")" -eq 0 ]; then
+        pg -d "$1" -c "CREATE TYPE transfer_enum_gate_type AS ENUM ('open', 'closed');"
+    fi
+
     pg -d "$1" -c "
         CREATE TABLE IF NOT EXISTS bench (
             id BIGSERIAL PRIMARY KEY,
@@ -242,6 +249,9 @@ postgres_schema() {
         CREATE INDEX IF NOT EXISTS by_recent ON bench (created_at DESC, name);
 
         CREATE TABLE IF NOT EXISTS bench_small (LIKE bench INCLUDING ALL);
+        CREATE SEQUENCE IF NOT EXISTS bench_small_id_seq;
+        ALTER TABLE bench_small ALTER COLUMN id SET DEFAULT nextval('bench_small_id_seq');
+        ALTER SEQUENCE bench_small_id_seq OWNED BY bench_small.id;
 
         CREATE TABLE IF NOT EXISTS gapped (
             id BIGINT PRIMARY KEY,
@@ -258,6 +268,40 @@ postgres_schema() {
             tag VARCHAR(64) NOT NULL
         );
     "
+
+    if [ "$1" = "ss_gate_src" ]; then
+        pg -d "$1" -c "
+            CREATE TABLE IF NOT EXISTS transfer_default_expression_gate (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                code TEXT NOT NULL DEFAULT left(replace((gen_random_uuid())::text, '-'::text, ''::text), 12),
+                optional_label TEXT DEFAULT NULL::text
+            );
+            INSERT INTO transfer_default_expression_gate (id)
+            SELECT gen_random_uuid()
+            WHERE NOT EXISTS (SELECT 1 FROM transfer_default_expression_gate);
+
+            CREATE TABLE IF NOT EXISTS transfer_enum_gate (
+                id INTEGER PRIMARY KEY,
+                state transfer_enum_gate_type NOT NULL DEFAULT 'open'::transfer_enum_gate_type
+            );
+            INSERT INTO transfer_enum_gate (id, state)
+            VALUES (1, 'closed') ON CONFLICT (id) DO NOTHING;
+
+            CREATE TABLE IF NOT EXISTS transfer_empty_gate (
+                id INTEGER PRIMARY KEY,
+                label TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS transfer_index_gate (
+                id INTEGER PRIMARY KEY,
+                label VARCHAR(120) NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS transfer_index_gate_label_gin
+                ON transfer_index_gate USING gin (label gin_trgm_ops);
+            INSERT INTO transfer_index_gate (id, label)
+            VALUES (1, 'searchable') ON CONFLICT (id) DO NOTHING;
+        "
+    fi
 
 }
 

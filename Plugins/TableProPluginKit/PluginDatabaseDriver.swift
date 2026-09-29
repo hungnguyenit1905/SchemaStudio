@@ -331,6 +331,8 @@ public protocol PluginDatabaseDriver: AnyObject, Sendable {
     /// not a capability claim: managed servers often refuse the `SET`.
     func constraintDisableCapability() async -> PluginConstraintDisableCapability
 
+    func transferCheckpointJournal() async throws -> (any PluginTransferCheckpointJournal)?
+
     /// Boundary values that split the primary key column into roughly equal
     /// ranges, one per partition. Keyset pagination is inherently sequential:
     /// finding chunk N+1 requires reading chunk N. Parallel reads inside one
@@ -714,6 +716,8 @@ public extension PluginDatabaseDriver {
     func serverLimits() async throws -> PluginServerLimits? { nil }
 
     func constraintDisableCapability() async -> PluginConstraintDisableCapability { .unknown }
+
+    func transferCheckpointJournal() async throws -> (any PluginTransferCheckpointJournal)? { nil }
 
     func primaryKeyRangeBoundaries(
         table: String,

@@ -14,6 +14,7 @@ public struct PluginIndexInfo: Codable, Sendable {
     /// existed still decodes, and so "the driver does not report direction"
     /// stays distinguishable from "every column is ascending".
     public let descendingColumns: Set<String>?
+    public let operatorClasses: [String: String]?
 
     /// Kept at its published signature so plugins built against an earlier
     /// PluginKit keep resolving the symbol their witness table references.
@@ -36,8 +37,10 @@ public struct PluginIndexInfo: Codable, Sendable {
         self.columnPrefixes = columnPrefixes
         self.whereClause = whereClause
         descendingColumns = nil
+        operatorClasses = nil
     }
 
+    @_disfavoredOverload
     public init(
         name: String,
         columns: [String],
@@ -56,5 +59,28 @@ public struct PluginIndexInfo: Codable, Sendable {
         self.columnPrefixes = columnPrefixes
         self.whereClause = whereClause
         self.descendingColumns = descendingColumns
+        operatorClasses = nil
+    }
+
+    public init(
+        name: String,
+        columns: [String],
+        isUnique: Bool,
+        isPrimary: Bool,
+        type: String,
+        columnPrefixes: [String: Int]?,
+        whereClause: String?,
+        descendingColumns: Set<String>?,
+        operatorClasses: [String: String]?
+    ) {
+        self.name = name
+        self.columns = columns
+        self.isUnique = isUnique
+        self.isPrimary = isPrimary
+        self.type = type
+        self.columnPrefixes = columnPrefixes
+        self.whereClause = whereClause
+        self.descendingColumns = descendingColumns
+        self.operatorClasses = operatorClasses
     }
 }

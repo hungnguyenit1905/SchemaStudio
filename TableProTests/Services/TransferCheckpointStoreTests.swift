@@ -1,5 +1,6 @@
 import Foundation
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("TransferCheckpointStore")
@@ -27,13 +28,23 @@ struct TransferCheckpointStoreTests {
         )
     }
 
-    @Test("an entry records and loads back with its cursor")
-    func recordAndLoadRoundTrip() async throws {
+    private func state(_ entries: [TransferCheckpointStore.Entry]) -> TransferCheckpointStore.State {
+        let tables = Array(Set(entries.map(\.table))).sorted().map {
+            PluginTransferCheckpointTableManifest(table: $0, boundaries: [])
+        }
+        return TransferCheckpointStore.State(
+            manifest: PluginTransferCheckpointManifest(sourceJobId: jobId, tables: tables),
+            entries: entries
+        )
+    }
+
+    @Test("cached journal state loads back with its cursor")
+    func cacheAndLoadRoundTrip() async throws {
         let (store, directory) = try makeStore()
         defer { try? FileManager.default.removeItem(at: directory) }
 
         let saved = entry(table: "users", lastKey: ["42"], rowsDone: 40)
-        await store.record(jobId: jobId, mode: .emptyThenTransfer, entry: saved)
+        await store.cache(jobId: jobId, mode: .emptyThenTransfer, state: state([saved]))
 
         let loaded = await store.load(jobId: jobId)
         #expect(loaded.count == 1)
@@ -47,11 +58,9 @@ struct TransferCheckpointStoreTests {
         let (store, directory) = try makeStore()
         defer { try? FileManager.default.removeItem(at: directory) }
 
-        await store.record(
-            jobId: jobId,
-            mode: .emptyThenTransfer,
-            entry: entry(table: "orders", lastKey: ["99"], rowsDone: 99)
-        )
+        await store.cache(jobId: jobId, mode: .emptyThenTransfer, state: state([
+            entry(table: "orders", lastKey: ["99"], rowsDone: 99)
+        ]))
 
         let loaded = await store.load(jobId: jobId)
         let resumeCursor = loaded.first(where: { $0.table == "orders" })?.cursor
@@ -64,31 +73,23 @@ struct TransferCheckpointStoreTests {
         let (store, directory) = try makeStore()
         defer { try? FileManager.default.removeItem(at: directory) }
 
-        await store.record(jobId: jobId, mode: .copy, entry: entry(table: "users"))
+        await store.cache(jobId: jobId, mode: .copy, state: state([entry(table: "users")]))
 
         #expect(await store.load(jobId: jobId).isEmpty)
     }
 
-    @Test("recording the same table and partition replaces the older entry")
-    func recordingReplacesSameTableAndPartition() async throws {
+    @Test("a newer journal snapshot replaces the older cache")
+    func newerSnapshotReplacesCache() async throws {
         let (store, directory) = try makeStore()
         defer { try? FileManager.default.removeItem(at: directory) }
 
-        await store.record(
-            jobId: jobId,
-            mode: .emptyThenTransfer,
-            entry: entry(table: "users", lastKey: ["10"], rowsDone: 10)
-        )
-        await store.record(
-            jobId: jobId,
-            mode: .emptyThenTransfer,
-            entry: entry(table: "users", lastKey: ["20"], rowsDone: 20)
-        )
-        await store.record(
-            jobId: jobId,
-            mode: .emptyThenTransfer,
-            entry: entry(table: "audit", lastKey: ["5"], rowsDone: 5)
-        )
+        await store.cache(jobId: jobId, mode: .emptyThenTransfer, state: state([
+            entry(table: "users", lastKey: ["10"], rowsDone: 10)
+        ]))
+        await store.cache(jobId: jobId, mode: .emptyThenTransfer, state: state([
+            entry(table: "users", lastKey: ["20"], rowsDone: 20),
+            entry(table: "audit", lastKey: ["5"], rowsDone: 5)
+        ]))
 
         let loaded = await store.load(jobId: jobId)
         #expect(loaded.count == 2)
@@ -100,11 +101,9 @@ struct TransferCheckpointStoreTests {
         let (store, directory) = try makeStore()
         defer { try? FileManager.default.removeItem(at: directory) }
 
-        await store.record(
-            jobId: jobId,
-            mode: .emptyThenTransfer,
-            entry: entry(table: "users", lastKey: ["40"], rowsDone: 40, isComplete: true)
-        )
+        await store.cache(jobId: jobId, mode: .emptyThenTransfer, state: state([
+            entry(table: "users", lastKey: ["40"], rowsDone: 40, isComplete: true)
+        ]))
 
         let loaded = await store.load(jobId: jobId)
         #expect(loaded.first { $0.table == "users" }?.isComplete == true)
@@ -125,7 +124,7 @@ struct TransferCheckpointStoreTests {
         let (store, directory) = try makeStore()
         defer { try? FileManager.default.removeItem(at: directory) }
 
-        await store.record(jobId: jobId, mode: .emptyThenTransfer, entry: entry(table: "users"))
+        await store.cache(jobId: jobId, mode: .emptyThenTransfer, state: state([entry(table: "users")]))
         await store.clear(jobId: jobId)
 
         #expect(await store.load(jobId: jobId).isEmpty)
