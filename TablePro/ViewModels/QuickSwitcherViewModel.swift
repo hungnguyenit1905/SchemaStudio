@@ -142,7 +142,8 @@ internal final class QuickSwitcherViewModel {
                 DatabaseTreeVisibility.visible(
                     databases: DatabaseTreeMetadataService.shared.databases(for: connectionId),
                     selected: databaseFilter,
-                    activeDatabase: activeDatabase
+                    alwaysShown: activeDatabase,
+                    showsHiddenItems: AppSettingsManager.shared.general.showHiddenItems
                 ).map(\.name)
             )
             : []

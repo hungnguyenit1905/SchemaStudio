@@ -34,12 +34,7 @@ internal final class WindowSidebarState {
 
     var selectedTables: Set<DatabaseTreeTableRef> = []
 
-    /// The connection the tools below this window's sidebar act on. Per window,
-    /// not per app: two windows show the same tree but each has its own
-    /// selection, and a shared value let a click in one window retarget the
-    /// other window's schema picker, database filter and create-object menu.
-    /// Not persisted, because it follows the live selection.
-    var activeConnectionId: UUID?
+    var selectedScope: SidebarScope?
     var expandedTreeSchemas: Set<String> = [] { didSet { persistExpansion() } }
     var expandedTreeDatabases: Set<ConnectionDatabaseKey> = [] { didSet { persistExpansion() } }
     var expandedTreeDatabaseSchemas: Set<ConnectionSchemaKey> = [] { didSet { persistExpansion() } }

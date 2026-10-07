@@ -57,6 +57,16 @@ struct TransferTypeMapperTests {
         #expect(mapper(.postgresql, .redshift).isSameDialect)
     }
 
+    @Test("A named PostgreSQL enum keeps its labels for cross-vendor mapping")
+    func namedPostgresEnum() {
+        let parsed = PostgreSqlNativeTypeParser().parse(
+            "\"order_status\"",
+            allowedValues: ["new", "done"]
+        )
+        #expect(parsed.base == .enumeration)
+        #expect(parsed.allowedValues == ["new", "done"])
+    }
+
     @Test("An unsupported vendor keeps the source type and warns")
     func unsupportedVendor() {
         let plan = mapper(.mysql, .mongodb).plan(for: column("value", "int"), table: "t")

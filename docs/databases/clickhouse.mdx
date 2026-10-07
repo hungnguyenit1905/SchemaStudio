@@ -16,7 +16,7 @@ Click **New Connection**, select **ClickHouse**, enter host, port, credentials, 
 | **Host** | `localhost` | |
 | **Port** | `8123` | HTTP port (not 9000 native TCP) |
 | **Username** | `default` | Leave empty and SchemaStudio sends `default`. Set a password in production |
-| **Database** | `default` | Leave empty and the server uses `default`. Switch with Cmd+K |
+| **Database** | `default` | Leave empty and the server uses `default`. Open other databases from the sidebar |
 
 **SSL/TLS**: Setting any non-Disabled SSL Mode switches the URL scheme to `https`. **Preferred** and **Required** skip certificate verification, **Verify CA** validates against the supplied CA file, **Verify Identity** uses system default HTTPS trust (certificate chain plus hostname). Use **Verify Identity** for ClickHouse Cloud (port 8443); its certificates chain to a public CA. Use **Required** only for a self-signed certificate you have no CA file for. See [SSL/TLS](/features/ssl).
 
@@ -34,7 +34,7 @@ See [Connection URL Reference](/databases/connection-urls) for all parameters.
 
 ### Database and Table Browsing
 
-The sidebar lists the current database's tables, views, and materialized views. Press Cmd+K or click the database name in the toolbar to switch databases. Choose **View > Sidebar as Tree** to list every database and expand them in place.
+The sidebar lists every database. Double-click one to open it and list its tables, views, and materialized views; several can be open at once.
 
 For each table, SchemaStudio shows:
 

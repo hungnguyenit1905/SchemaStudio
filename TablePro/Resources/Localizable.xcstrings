@@ -1563,34 +1563,6 @@
         }
       }
     },
-    "%@ does not support switching schemas in SchemaStudio." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ SchemaStudio'da şema değiştirmeyi desteklemiyor."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ không hỗ trợ chuyển schema trong SchemaStudio."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@在SchemaStudio中不支持切换Schema。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ 在 SchemaStudio 中不支援切換綱要。"
-          }
-        }
-      }
-    },
     "%@ download" : {
       "localizations" : {
         "tr" : {
@@ -2165,34 +2137,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ 秒"
-          }
-        }
-      }
-    },
-    "%@ Switch Failed" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ Değiştirilemedi"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chuyển %@ thất bại"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ 切换失败"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ 切換失敗"
           }
         }
       }
@@ -25000,34 +24944,6 @@
         }
       }
     },
-    "Create a new table or view" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yeni bir tablo veya görünüm oluştur"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tạo bảng hoặc view mới"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新建表或视图"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "建立新的資料表或檢視表"
-          }
-        }
-      }
-    },
     "Create all columns" : {
       "localizations" : {
         "tr" : {
@@ -25852,74 +25768,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "目前的%@"
-          }
-        }
-      }
-    },
-    "Current %@: %@ (⌘K to %@)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Current %1$@: %2$@ (⌘K to %3$@)"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geçerli %1$@: %2$@ (%3$@ için ⌘K)"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ hiện tại: %2$@ (⌘K để %3$@)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "当前%1$@：%2$@（⌘K 可%3$@）"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "目前的 %1$@：%2$@（⌘K 可%3$@）"
-          }
-        }
-      }
-    },
-    "Current %@: %@ (read only, ⌘K to %@)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Current %1$@: %2$@ (read only, ⌘K to %3$@)"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geçerli %1$@: %2$@ (salt okunur, %3$@ için ⌘K)"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ hiện tại: %2$@ (chỉ đọc, ⌘K để %3$@)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "当前%1$@：%2$@（只读，⌘K 可%3$@）"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "目前的 %1$@：%2$@（唯讀，⌘K 可%3$@）"
           }
         }
       }
@@ -39874,34 +39722,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "篩選欄位：%@"
-          }
-        }
-      }
-    },
-    "Filter databases" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veritabanlarını filtrele"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lọc cơ sở dữ liệu"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "筛选数据库"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "篩選資料庫"
           }
         }
       }
@@ -60754,34 +60574,6 @@
         }
       }
     },
-    "Open %@..." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ Aç..."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mở %@..."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开 %@..."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開啟 %@..."
-          }
-        }
-      }
-    },
     "Open a connection to apply" : {
       "localizations" : {
         "tr" : {
@@ -61097,34 +60889,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open database"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mở cơ sở dữ liệu"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开数据库"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開啟資料庫"
-          }
-        }
-      }
-    },
-    "Open Database" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Database"
           }
         },
         "vi" : {
@@ -70704,34 +70468,6 @@
         }
       }
     },
-    "Refreshing" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yenileniyor"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đang làm mới"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在刷新"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在重新整理"
-          }
-        }
-      }
-    },
     "Refreshing will discard all unsaved changes." : {
       "localizations" : {
         "tr" : {
@@ -76364,34 +76100,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "切換綱要失敗"
-          }
-        }
-      }
-    },
-    "Schema Switching Not Supported" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Şema Değiştirme Desteklenmiyor"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Không hỗ trợ chuyển schema"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "不支持切换 Schema"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "不支援切換綱要"
           }
         }
       }
@@ -85560,62 +85268,6 @@
         }
       }
     },
-    "Switch" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Değiştir"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chuyển"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "切换"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "切換"
-          }
-        }
-      }
-    },
-    "switch %@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ değiştir"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "chuyển %@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "切换 %@"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "切換 %@"
-          }
-        }
-      }
-    },
     "Switch %@" : {
       "localizations" : {
         "tr" : {
@@ -85726,34 +85378,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "切換連線 (⌘⌥C)"
-          }
-        }
-      }
-    },
-    "Switch Connection..." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Switch Connection..."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chuyển kết nối..."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "切换连接..."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "切換連線…"
           }
         }
       }
@@ -96590,34 +96214,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用 ~/.pgpass"
-          }
-        }
-      }
-    },
-    "Use as Active %@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Etkin %@ Olarak Kullan"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dùng làm %@ hiện hành"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "设为当前%@"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "設為使用中的%@"
           }
         }
       }

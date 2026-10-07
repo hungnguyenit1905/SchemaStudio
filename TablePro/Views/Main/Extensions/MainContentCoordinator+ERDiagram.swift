@@ -2,39 +2,28 @@ import AppKit
 import Foundation
 
 extension MainContentCoordinator {
-    /// Open (or focus) an ER Diagram tab for the current database/schema.
-    ///
-    /// Resolution order:
-    /// 1. If another window for this connection already hosts an ER Diagram
-    ///    tab with the same schema key, focus that window.
-    /// 2. If this window's tabManager is empty (fresh window with no restored
-    ///    tabs yet), add the ER Diagram tab locally.
-    /// 3. Otherwise open a new native window tab so the current tab's content
-    ///    (unsaved queries, filters, etc.) is preserved.
-    func showERDiagram() {
-        let dbName = browseDatabaseName
-        let schemaName = DatabaseManager.shared.session(for: connectionId)?.browseSchema
-        let schemaKey = "\(dbName).\(schemaName ?? "default")"
+    func showERDiagram(scope: DatabaseScope) {
+        let schemaKey = "\(scope.database).\(scope.schema ?? "default")"
 
-        if let existing = Self.coordinator(forConnection: connectionId, tabMatching: {
+        if let existing = Self.coordinator(forConnection: scope.connectionId, tabMatching: {
             $0.tabType == .erDiagram && $0.display.erDiagramSchemaKey == schemaKey
         }) {
             existing.contentWindow?.makeKeyAndOrderFront(nil)
             return
         }
 
-        if tabManager.tabs.isEmpty {
-            tabManager.addERDiagramTab(schemaKey: schemaKey, databaseName: dbName)
+        if scope.connectionId == connectionId, tabManager.tabs.isEmpty {
+            tabManager.addERDiagramTab(schemaKey: schemaKey, databaseName: scope.database)
             return
         }
 
         let payload = EditorTabPayload(
-            connectionId: connection.id,
+            connectionId: scope.connectionId,
             tabType: .erDiagram,
-            databaseName: dbName,
-            schemaName: schemaName,
+            databaseName: scope.database,
+            schemaName: scope.schema,
             erDiagramSchemaKey: schemaKey
         )
-        WindowManager.shared.openTab(payload: payload)
+        openTabInCurrentWindow(payload)
     }
 }

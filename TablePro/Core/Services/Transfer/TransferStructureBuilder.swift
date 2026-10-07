@@ -294,7 +294,8 @@ enum TransferStructureBuilder {
                     indexType: index.type,
                     columnPrefixes: index.columnPrefixes,
                     whereClause: index.whereClause,
-                    descendingColumns: index.descendingColumns ?? []
+                    descendingColumns: index.descendingColumns ?? [],
+                    operatorClasses: index.operatorClasses
                 )
             }
     }

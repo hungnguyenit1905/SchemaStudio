@@ -67,8 +67,10 @@ actor GenerationCheckpointStore {
     }
 
     private static func columnMaterial(_ column: ColumnPlan) -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
         let paramsDigest = column.params.base64EncodedString()
-        let commonDigest = (try? JSONEncoder().encode(column.common))?.base64EncodedString() ?? ""
+        let commonDigest = (try? encoder.encode(column.common))?.base64EncodedString() ?? ""
         return "\(column.name)=\(column.generator)|\(paramsDigest)|\(commonDigest)"
     }
 

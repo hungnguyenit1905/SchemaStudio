@@ -150,7 +150,8 @@ enum SessionStateFactory {
                     }
                 case .createTable:
                     tabMgr.addCreateTableTab(
-                        databaseName: payload.databaseName ?? browseDatabaseName
+                        databaseName: payload.databaseName ?? browseDatabaseName,
+                        schemaName: payload.schemaName
                     )
                 case .erDiagram:
                     tabMgr.addERDiagramTab(
@@ -161,6 +162,11 @@ enum SessionStateFactory {
                     tabMgr.addServerDashboardTab()
                 case .usersRoles:
                     tabMgr.addUsersRolesTab()
+                case .objects:
+                    tabMgr.addObjectsTab(
+                        databaseName: payload.databaseName ?? "",
+                        schemaName: payload.schemaName
+                    )
                 }
             case .newEmptyTab:
                 let allTabs = MainContentCoordinator.allTabs(for: connection.id)

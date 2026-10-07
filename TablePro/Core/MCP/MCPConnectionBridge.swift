@@ -5,7 +5,14 @@ import TableProPluginKit
 public actor MCPConnectionBridge {
     private static let logger = Logger(subsystem: "com.SchemaStudio", category: "MCPConnectionBridge")
 
+    private var defaultDatabases: [UUID: String] = [:]
+    private var defaultSchemas: [UUID: String] = [:]
+
     public init() {}
+
+    func defaultScope(connectionId: UUID) -> (database: String?, schema: String?) {
+        (defaultDatabases[connectionId], defaultSchemas[connectionId])
+    }
 
     func listConnections() async -> JsonValue {
         let (connections, activeSessions) = await MainActor.run {
@@ -46,8 +53,9 @@ public actor MCPConnectionBridge {
 
         if let existing = existingSession, existing.driver != nil {
             let serverVersion = existing.driver?.serverVersion
-            let currentDatabase = existing.resolvedBrowseDatabase
-            let currentSchema = existing.browseSchema
+            let mcpDefault = defaultScope(connectionId: connectionId)
+            let currentDatabase = mcpDefault.database ?? existing.resolvedBrowseDatabase
+            let currentSchema = mcpDefault.database == nil ? existing.browseSchema : mcpDefault.schema
 
             var result: [String: JsonValue] = [
                 "status": "connected",
@@ -94,6 +102,8 @@ public actor MCPConnectionBridge {
         guard sessionExists else {
             throw MCPDataLayerError.notConnected(connectionId)
         }
+        defaultDatabases.removeValue(forKey: connectionId)
+        defaultSchemas.removeValue(forKey: connectionId)
         await DatabaseManager.shared.disconnectSession(connectionId)
     }
 
@@ -133,13 +143,14 @@ public actor MCPConnectionBridge {
             ])
         }
 
+        let mcpDefault = defaultScope(connectionId: connectionId)
         var result: [String: JsonValue] = [
             "status": .string(statusString),
-            "current_database": .string(core.database),
+            "current_database": .string(mcpDefault.database ?? core.database),
             "connected_at": .string(ISO8601DateFormatter().string(from: meta.connectedAt)),
             "last_active_at": .string(ISO8601DateFormatter().string(from: meta.lastActiveAt))
         ]
-        if let schema = core.schema {
+        if let schema = mcpDefault.database == nil ? core.schema : mcpDefault.schema {
             result["current_schema"] = .string(schema)
         }
         if let version = meta.version {
@@ -152,15 +163,21 @@ public actor MCPConnectionBridge {
         return .object(result)
     }
 
-    /// The scope a tool operates on. A tool that names a database gets that database; one
-    /// that does not gets the connection's browse scope. Neither moves the user's cursor:
-    /// only `switch_database` does that.
+    /// The scope a tool operates on. A tool that names a database gets that database; one that
+    /// does not gets the MCP default set by `switch_database`, then the connection's default.
+    /// None of them changes the user's sidebar or the database their new tabs open in.
     func resolveScope(connectionId: UUID, database: String?, schema: String?) async throws -> DatabaseScope {
         try await ensureConnected(connectionId)
+        let requestedDatabase = database.flatMap { $0.isEmpty ? nil : $0 }
+        let mcpDatabase = defaultDatabases[connectionId]
+        let resolvedDatabase = requestedDatabase ?? mcpDatabase
+        let usesMCPDefault = requestedDatabase == nil || requestedDatabase == mcpDatabase
+        let resolvedSchema = schema.flatMap { $0.isEmpty ? nil : $0 }
+            ?? (usesMCPDefault ? defaultSchemas[connectionId] : nil)
         return try await MainActor.run {
             guard let scope = DatabaseManager.shared.resolvedScope(
-                database: database,
-                schema: schema,
+                database: resolvedDatabase,
+                schema: resolvedSchema,
                 for: connectionId
             ) else {
                 throw MCPDataLayerError.invalidArgument(
@@ -188,7 +205,7 @@ public actor MCPConnectionBridge {
 
         let startTime = CFAbsoluteTimeGetCurrent()
 
-        let route = await MainActor.run { DatabaseManager.shared.executionRoute(for: scope) }
+        let route = await MainActor.run { DatabaseManager.shared.externalExecutionRoute(for: scope) }
         let result: QueryResult = try await DatabaseManager.shared.withScopedDriver(
             scope: scope,
             route: route
@@ -372,7 +389,16 @@ public actor MCPConnectionBridge {
     }
 
     func switchDatabase(connectionId: UUID, database: String) async throws -> JsonValue {
-        try await DatabaseManager.shared.switchDatabase(to: database, for: connectionId)
+        try await ensureConnected(connectionId)
+        let databases = try await DatabaseManager.shared.withBrowseMetadataDriver(connectionId: connectionId) { driver in
+            try await driver.fetchDatabases()
+        }
+        guard databases.contains(database) else {
+            throw MCPDataLayerError.invalidArgument("Database '\(database)' does not exist on this connection.")
+        }
+        defaultDatabases[connectionId] = database
+        defaultSchemas.removeValue(forKey: connectionId)
+        Self.logger.info("MCP default database set to \(database, privacy: .public) for \(connectionId, privacy: .public)")
         return .object([
             "status": "switched",
             "current_database": .string(database)
@@ -380,39 +406,46 @@ public actor MCPConnectionBridge {
     }
 
     func switchSchema(connectionId: UUID, schema: String) async throws -> JsonValue {
-        try await DatabaseManager.shared.switchSchema(to: schema, for: connectionId)
+        let scope = try await resolveScope(connectionId: connectionId, database: nil, schema: nil)
+        let schemas = try await DatabaseManager.shared.withMetadataDriver(scope: scope) { driver in
+            try await driver.fetchSchemas()
+        }
+        guard schemas.contains(schema) else {
+            throw MCPDataLayerError.invalidArgument("Schema '\(schema)' does not exist in '\(scope.database)'.")
+        }
+        defaultDatabases[connectionId] = scope.database
+        defaultSchemas[connectionId] = schema
+        Self.logger.info("MCP default schema set to \(schema, privacy: .public) for \(connectionId, privacy: .public)")
         return .object([
             "status": "switched",
             "current_schema": .string(schema)
         ])
     }
 
-    /// A resource URI names no database, so the schema resource reports the connection's
-    /// browse scope. Reading it off the shared driver instead would report whichever
-    /// database a tab last executed against.
+    /// A resource URI names no database, so the schema resource reports the MCP default scope
+    /// set by `switch_database`, or the connection's default database. Reading it off the shared
+    /// driver instead would report whichever database a tab last executed against.
     func fetchSchemaResource(connectionId: UUID) async throws -> JsonValue {
-        try await ensureConnected(connectionId)
+        let scope = try await resolveScope(connectionId: connectionId, database: nil, schema: nil)
 
-        let cachedTables = await MainActor.run {
-            SchemaService.shared.tables(for: connectionId)
+        let cachedTables = await MainActor.run { () -> [TableInfo] in
+            guard DatabaseManager.shared.browseScope(for: connectionId) == scope else { return [] }
+            return SchemaService.shared.tables(for: connectionId)
         }
 
         let tables: [TableInfo]
         if !cachedTables.isEmpty {
             tables = cachedTables
         } else {
-            tables = try await DatabaseManager.shared.withBrowseMetadataDriver(
-                connectionId: connectionId,
-                workload: .bulk
-            ) { driver in
+            tables = try await DatabaseManager.shared.withMetadataDriver(scope: scope, workload: .bulk) { driver in
                 try await driver.fetchTables()
             }
         }
 
         let limitedTables = Array(tables.prefix(100))
 
-        let tableSchemas: [JsonValue] = try await DatabaseManager.shared.withBrowseMetadataDriver(
-            connectionId: connectionId,
+        let tableSchemas: [JsonValue] = try await DatabaseManager.shared.withMetadataDriver(
+            scope: scope,
             workload: .bulk
         ) { driver in
             var schemas: [JsonValue] = []

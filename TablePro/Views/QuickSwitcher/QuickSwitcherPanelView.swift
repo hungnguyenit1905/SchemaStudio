@@ -351,7 +351,7 @@ struct QuickSwitcherPanelContent: View {
         case .table, .view, .systemTable:
             return item.isOpenInTab ? String(localized: "Switch to Tab") : String(localized: "Open")
         case .database, .schema:
-            return String(localized: "Switch")
+            return String(localized: "Reveal")
         case .savedQuery, .queryHistory:
             return String(localized: "Load Query")
         }
@@ -375,7 +375,7 @@ struct QuickSwitcherPanelContent: View {
         if item.kind == .table || item.kind == .view || item.kind == .systemTable {
             Button(String(localized: "Open in New Tab")) {
                 viewModel.selectedItemId = item.id
-                onCommit(item, .openInNewWindowTab)
+                onCommit(item, .openInNewTab)
             }
             Button(String(localized: "Open Structure")) {
                 viewModel.selectedItemId = item.id
@@ -451,7 +451,7 @@ struct QuickSwitcherPanelContent: View {
     private func openSelectedItem() {
         guard let item = viewModel.selectedItem() else { return }
         let intent: QuickSwitcherCommitIntent = NSEvent.modifierFlags.contains(.option)
-            ? .openInNewWindowTab
+            ? .openInNewTab
             : .open
         onCommit(item, intent)
     }

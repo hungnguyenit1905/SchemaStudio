@@ -18,7 +18,7 @@ struct ConnectionRowView: View {
             Text(connection.name)
                 .fontWeight(status.isConnected ? .semibold : .regular)
                 .lineLimit(1)
-                .foregroundStyle(isEmphasized ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
+                .foregroundStyle(nameStyle)
 
             Spacer(minLength: 4)
 
@@ -43,6 +43,12 @@ struct ConnectionRowView: View {
                 .frame(width: 6, height: 6)
                 .accessibilityLabel(statusLabel)
         }
+    }
+
+    private var nameStyle: AnyShapeStyle {
+        if isEmphasized { return AnyShapeStyle(.white) }
+        if case .disconnected = status { return AnyShapeStyle(.secondary) }
+        return AnyShapeStyle(.primary)
     }
 
     private var statusColor: Color {
@@ -89,20 +95,27 @@ struct ConnectionNodeContextMenu: View {
     let connection: DatabaseConnection
     let status: ConnectionStatus
     let isReadOnly: Bool
+    var canCreateDatabase = false
+    var containerEntityName = String(localized: "Database")
     let onConnect: () -> Void
     let onDisconnect: () -> Void
     let onRefresh: () -> Void
     let onEdit: () -> Void
     let onNewQuery: () -> Void
+    var onNewDatabase: () -> Void = {}
 
     var body: some View {
         if status.isConnected {
             Button(String(localized: "New Query"), action: onNewQuery)
+            if canCreateDatabase {
+                Button(String(format: String(localized: "New %@\u{2026}"), containerEntityName), action: onNewDatabase)
+                    .disabled(isReadOnly)
+            }
             Button(String(localized: "Refresh"), action: onRefresh)
             Divider()
-            Button(String(localized: "Disconnect"), action: onDisconnect)
+            Button(String(localized: "Close Connection"), action: onDisconnect)
         } else {
-            Button(String(localized: "Connect"), action: onConnect)
+            Button(String(localized: "Open Connection"), action: onConnect)
         }
         Divider()
         Button(String(localized: "Edit Connection"), action: onEdit)

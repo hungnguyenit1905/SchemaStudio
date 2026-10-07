@@ -256,6 +256,10 @@ extension LibPQBackedDriver {
         _ = try await execute(query: postgresBeginTransactionStatement(mode: mode))
     }
 
+    func transferCheckpointJournal() async throws -> (any PluginTransferCheckpointJournal)? {
+        PluginSQLTransferCheckpointJournal(driver: self, dialect: .postgresql)
+    }
+
     var serverVersion: String? { core.serverVersion }
     var parameterStyle: ParameterStyle { .dollar }
 

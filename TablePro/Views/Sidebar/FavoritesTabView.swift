@@ -18,21 +18,59 @@ internal struct FavoritesTabView: View {
     private var coordinator: MainContentCoordinator?
 
     private var searchText: String { sharedSidebarState.favoritesSearchText }
-    private var activeDatabase: String? {
+    struct FavoriteTableItem: Identifiable {
+        let database: String?
+        let table: TableInfo
+
+        var id: String { "\(database ?? "")\u{1}\(table.id)" }
+    }
+
+    private var defaultDatabase: String? {
         let name = coordinator?.browseDatabaseName ?? ""
         return name.isEmpty ? nil : name
     }
 
-    private var availableFavoriteTables: [TableInfo] {
-        let database = activeDatabase
+    private var availableFavoriteTables: [FavoriteTableItem] {
+        let defaultDatabase = defaultDatabase
         let tablesByKey = Dictionary(
             tables.map { (Self.tableKey(schema: $0.schema, name: $0.name), $0) },
             uniquingKeysWith: { first, _ in first }
         )
-        return favoriteTables.compactMap { entry in
-            guard entry.database == database else { return nil }
-            return tablesByKey[Self.tableKey(schema: entry.schema, name: entry.name)]
-        }
+        return favoriteTables
+            .filter { $0.connectionId == connectionId }
+            .map { entry in
+                let key = Self.tableKey(schema: entry.schema, name: entry.name)
+                let known = entry.database == defaultDatabase
+                    ? tablesByKey[key]
+                    : loadedTables(database: entry.database, schema: entry.schema).first { $0.name == entry.name }
+                let table = known ?? TableInfo(name: entry.name, type: .table, rowCount: nil, schema: entry.schema)
+                return FavoriteTableItem(database: entry.database, table: table)
+            }
+            .sorted { lhs, rhs in
+                if lhs.database != rhs.database {
+                    if lhs.database == defaultDatabase { return true }
+                    if rhs.database == defaultDatabase { return false }
+                    return (lhs.database ?? "") < (rhs.database ?? "")
+                }
+                return lhs.table.name < rhs.table.name
+            }
+    }
+
+    private func loadedTables(database: String?, schema: String?) -> [TableInfo] {
+        guard let database else { return [] }
+        return DatabaseTreeMetadataService.shared.tables(connectionId: connectionId, database: database, schema: schema)
+    }
+
+    private func scope(of item: FavoriteTableItem) -> DatabaseScope {
+        DatabaseScope(
+            connectionId: connectionId,
+            database: item.database ?? defaultDatabase ?? "",
+            schema: item.table.schema
+        )
+    }
+
+    private func open(_ item: FavoriteTableItem) {
+        coordinator?.openTableTab(item.table, scope: scope(of: item), activateGridFocus: true)
     }
 
     private static func tableKey(schema: String?, name: String) -> String {
@@ -58,7 +96,7 @@ internal struct FavoritesTabView: View {
                 let items = viewModel.filteredNodes(searchText: searchText)
                 let filteredTables = searchText.isEmpty
                     ? availableFavoriteTables
-                    : availableFavoriteTables.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+                    : availableFavoriteTables.filter { $0.table.name.localizedCaseInsensitiveContains(searchText) }
 
                 if !viewModel.isInitialLoadComplete, viewModel.nodes.isEmpty, filteredTables.isEmpty {
                     ProgressView()
@@ -279,13 +317,13 @@ internal struct FavoritesTabView: View {
 
     private func favoritesList(
         _ items: [FavoriteNode],
-        filteredTables: [TableInfo]
+        filteredTables: [FavoriteTableItem]
     ) -> some View {
         List(selection: $sharedSidebarState.selectedFavorite) {
-            if !filteredTables.isEmpty {
-                Section(String(localized: "Tables")) {
-                    ForEach(filteredTables) { table in
-                        favoriteTableRow(table: table)
+            ForEach(tableGroups(filteredTables), id: \.title) { group in
+                Section(group.title) {
+                    ForEach(group.items) { item in
+                        favoriteTableRow(item)
                     }
                 }
             }
@@ -317,36 +355,59 @@ internal struct FavoritesTabView: View {
         }
     }
 
-    private func favoriteTableRow(table: TableInfo) -> some View {
+    private struct FavoriteTableGroup {
+        let title: String
+        let items: [FavoriteTableItem]
+    }
+
+    private func tableGroups(_ items: [FavoriteTableItem]) -> [FavoriteTableGroup] {
+        guard !items.isEmpty else { return [] }
+        let databases = Set(items.map(\.database))
+        guard databases.count > 1 else {
+            return [FavoriteTableGroup(title: String(localized: "Tables"), items: items)]
+        }
+        var order: [String?] = []
+        for item in items where !order.contains(item.database) {
+            order.append(item.database)
+        }
+        return order.map { database in
+            FavoriteTableGroup(
+                title: database ?? String(localized: "Tables"),
+                items: items.filter { $0.database == database }
+            )
+        }
+    }
+
+    private func favoriteTableRow(_ item: FavoriteTableItem) -> some View {
         Label {
-            Text(table.name)
+            Text(item.table.name)
         } icon: {
-            Image(systemName: TableRowLogic.iconName(for: table.type))
+            Image(systemName: TableRowLogic.iconName(for: item.table.type))
                 .sidebarTint(Color.accentColor)
         }
-        .tag(FavoriteSelection.table(database: activeDatabase, schema: table.schema, name: table.name))
+        .tag(FavoriteSelection.table(database: item.database, schema: item.table.schema, name: item.table.name))
         .accessibilityLabel(
-            TableRowLogic.accessibilityLabel(table: table, isPendingDelete: false, isPendingTruncate: false)
+            TableRowLogic.accessibilityLabel(table: item.table, isPendingDelete: false, isPendingTruncate: false)
         )
     }
 
     @ViewBuilder
-    private func favoriteTableContextMenu(_ table: TableInfo) -> some View {
+    private func favoriteTableContextMenu(_ item: FavoriteTableItem) -> some View {
         Button(String(localized: "Open Table")) {
-            coordinator?.openTableTab(table, activateGridFocus: true)
+            open(item)
         }
 
         Button(String(localized: "Show ER Diagram")) {
-            coordinator?.showERDiagram()
+            coordinator?.showERDiagram(scope: scope(of: item))
         }
 
         Divider()
 
         Button(role: .destructive) {
             FavoriteTablesStorage.shared.removeFavorite(
-                name: table.name,
-                schema: table.schema,
-                database: activeDatabase,
+                name: item.table.name,
+                schema: item.table.schema,
+                database: item.database,
                 connectionId: connectionId
             )
         } label: {
@@ -354,17 +415,18 @@ internal struct FavoritesTabView: View {
         }
     }
 
-    private func favoriteTable(database: String?, schema: String?, name: String) -> TableInfo? {
-        guard database == activeDatabase else { return nil }
-        return availableFavoriteTables.first { $0.name == name && $0.schema == schema }
+    private func favoriteTable(database: String?, schema: String?, name: String) -> FavoriteTableItem? {
+        availableFavoriteTables.first {
+            $0.database == database && $0.table.name == name && $0.table.schema == schema
+        }
     }
 
     @ViewBuilder
     private func contextMenu(for selection: FavoriteSelection) -> some View {
         switch selection {
         case .table(let database, let schema, let name):
-            if let table = favoriteTable(database: database, schema: schema, name: name) {
-                favoriteTableContextMenu(table)
+            if let item = favoriteTable(database: database, schema: schema, name: name) {
+                favoriteTableContextMenu(item)
             }
         case .node(let id):
             if let node = viewModel.node(forId: id) {
@@ -387,8 +449,8 @@ internal struct FavoritesTabView: View {
     private func handlePrimaryAction(_ selection: FavoriteSelection) {
         switch selection {
         case .table(let database, let schema, let name):
-            if let table = favoriteTable(database: database, schema: schema, name: name) {
-                coordinator?.openTableTab(table, activateGridFocus: true)
+            if let item = favoriteTable(database: database, schema: schema, name: name) {
+                open(item)
             }
         case .node(let id):
             guard let node = viewModel.node(forId: id) else { return }
@@ -407,9 +469,9 @@ internal struct FavoritesTabView: View {
         guard let selection = sharedSidebarState.selectedFavorite else { return }
         switch selection {
         case .table(let database, let schema, let name):
-            if let table = favoriteTable(database: database, schema: schema, name: name) {
+            if let item = favoriteTable(database: database, schema: schema, name: name) {
                 FavoriteTablesStorage.shared.removeFavorite(
-                    name: table.name, schema: table.schema, database: activeDatabase, connectionId: connectionId
+                    name: item.table.name, schema: item.table.schema, database: item.database, connectionId: connectionId
                 )
             }
         case .node(let id):

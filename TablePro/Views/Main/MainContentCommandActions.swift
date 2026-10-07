@@ -36,9 +36,9 @@ final class MainContentCommandActions {
 
     @ObservationIgnored private let selectionState: GridSelectionState
     @ObservationIgnored private let selectedTables: Binding<Set<DatabaseTreeTableRef>>
-    @ObservationIgnored private let pendingTruncates: Binding<Set<String>>
-    @ObservationIgnored private let pendingDeletes: Binding<Set<String>>
-    @ObservationIgnored private let tableOperationOptions: Binding<[String: TableOperationOptions]>
+    @ObservationIgnored private let pendingTruncates: Binding<Set<DatabaseTreeTableRef>>
+    @ObservationIgnored private let pendingDeletes: Binding<Set<DatabaseTreeTableRef>>
+    @ObservationIgnored private let tableOperationOptions: Binding<[DatabaseTreeTableRef: TableOperationOptions]>
     @ObservationIgnored private let rightPanelState: RightPanelState
 
     /// The window this instance belongs to — used for key-window guards.
@@ -73,9 +73,9 @@ final class MainContentCommandActions {
         connection: DatabaseConnection,
         selectionState: GridSelectionState,
         selectedTables: Binding<Set<DatabaseTreeTableRef>>,
-        pendingTruncates: Binding<Set<String>>,
-        pendingDeletes: Binding<Set<String>>,
-        tableOperationOptions: Binding<[String: TableOperationOptions]>,
+        pendingTruncates: Binding<Set<DatabaseTreeTableRef>>,
+        pendingDeletes: Binding<Set<DatabaseTreeTableRef>>,
+        tableOperationOptions: Binding<[DatabaseTreeTableRef: TableOperationOptions]>,
         rightPanelState: RightPanelState
     ) {
         self.coordinator = coordinator
@@ -229,12 +229,11 @@ final class MainContentCommandActions {
             var updatedTruncates = pendingTruncates.wrappedValue
 
             for ref in selectedTables.wrappedValue where ref.connectionId == connection.id {
-                let name = ref.table.name
-                updatedTruncates.remove(name)
-                if updatedDeletes.contains(name) {
-                    updatedDeletes.remove(name)
+                updatedTruncates.remove(ref)
+                if updatedDeletes.contains(ref) {
+                    updatedDeletes.remove(ref)
                 } else {
-                    updatedDeletes.insert(name)
+                    updatedDeletes.insert(ref)
                 }
             }
 
@@ -293,6 +292,8 @@ final class MainContentCommandActions {
     var connectionId: UUID { connection.id }
 
     var browseDatabaseName: String { coordinator?.browseDatabaseName ?? "" }
+
+    var focusedTabDatabaseName: String { coordinator?.selectedTabScope?.database ?? browseDatabaseName }
 
     var openTabCount: Int { coordinator?.tabManager.tabs.count ?? 0 }
 
@@ -376,20 +377,40 @@ final class MainContentCommandActions {
     // MARK: - Tab Operations (Group A — Called Directly)
 
     func newTab(initialQuery: String? = nil) {
-        if let coordinator, coordinator.tabManager.tabs.isEmpty {
+        let target = newTabTarget
+        if let coordinator, coordinator.tabManager.tabs.isEmpty, target.connectionId == coordinator.connectionId {
             coordinator.tabManager.addTab(
                 initialQuery: initialQuery,
-                databaseName: coordinator.browseDatabaseName,
+                databaseName: target.database ?? coordinator.browseDatabaseName,
                 claimFocus: true
             )
             return
         }
         let payload = EditorTabPayload(
-            connectionId: connection.id,
+            connectionId: target.connectionId,
+            databaseName: target.database,
+            schemaName: target.schema,
             initialQuery: initialQuery,
             intent: .newEmptyTab
         )
-        WindowManager.shared.openTab(payload: payload)
+        if let coordinator {
+            coordinator.openTabInCurrentWindow(payload, anchor: window)
+        } else {
+            WindowManager.shared.openTab(payload: payload)
+        }
+    }
+
+    var newTabTarget: SidebarScope {
+        guard let selected = coordinator?.windowSidebarState.selectedScope else {
+            return SidebarScope(connectionId: connection.id)
+        }
+        let manager = DatabaseManager.shared
+        return selected.resolved(
+            connectionExists: { ConnectionStorage.shared.loadConnection(id: $0) != nil || manager.session(for: $0) != nil },
+            isDatabaseOpen: { database, connectionId in
+                manager.session(for: connectionId) == nil || manager.isDatabaseOpen(database, for: connectionId)
+            }
+        ) ?? SidebarScope(connectionId: connection.id)
     }
 
     func closeTab() {
@@ -620,6 +641,12 @@ final class MainContentCommandActions {
         }
     }
 
+    func closeWindowDiscarding(asBatchSurvivor: Bool) {
+        coordinator?.changeManager.clearChangesAndUndoHistory()
+        rightPanelState.editState.clearEdits()
+        finish(asBatchSurvivor: asBatchSurvivor)
+    }
+
     private func discardAndClose(asBatchSurvivor: Bool?) {
         coordinator?.changeManager.clearChangesAndUndoHistory()
         pendingTruncates.wrappedValue.removeAll()
@@ -634,19 +661,22 @@ final class MainContentCommandActions {
 
     func truncateTables() {
         guard !(selectedTables.wrappedValue.isEmpty) else { return }
-        coordinator?.sidebarViewModel?.batchToggleTruncate(connectionId: connection.id)
+        coordinator?.sidebarViewModel?.batchToggleTruncate()
     }
 
     func createView() {
-        coordinator?.createView()
+        guard let coordinator else { return }
+        coordinator.createView(scope: coordinator.newWorkScope)
     }
 
     func createNewTable() {
-        coordinator?.createNewTable()
+        guard let coordinator else { return }
+        coordinator.createNewTable(scope: coordinator.newWorkScope)
     }
 
     func showERDiagram() {
-        coordinator?.showERDiagram()
+        guard let coordinator else { return }
+        coordinator.showERDiagram(scope: coordinator.newWorkScope)
     }
 
     func showServerDashboard() {
@@ -660,6 +690,10 @@ final class MainContentCommandActions {
 
     func showUsersAndRoles() {
         coordinator?.showUsersAndRoles()
+    }
+
+    func showObjects() {
+        coordinator?.showObjects()
     }
 
     var supportsUserManagement: Bool {
@@ -796,7 +830,8 @@ final class MainContentCommandActions {
     }
 
     func exportTables() {
-        coordinator?.openExportDialog()
+        guard let coordinator else { return }
+        coordinator.openExportDialog(scope: coordinator.newWorkScope)
     }
 
     func exportQueryResults() {
@@ -812,7 +847,8 @@ final class MainContentCommandActions {
     }
 
     func importTables(formatId: String) {
-        coordinator?.openImportDialog(formatId: formatId)
+        guard let coordinator else { return }
+        coordinator.openImportDialog(formatId: formatId, scope: coordinator.newWorkScope)
     }
 
     var availableImportFormats: [ImportFormatOption] {
@@ -983,22 +1019,8 @@ final class MainContentCommandActions {
 
     // MARK: - Database Operations (Group A — Called Directly)
 
-    func openDatabaseSwitcher() {
-        guard let coordinator else { return }
-        let type = coordinator.connection.type
-        guard PluginManager.shared.supportsContainerSwitching(for: type) else { return }
-        guard PluginManager.shared.connectionMode(for: type) != .fileBased else { return }
-        coordinator.contentWindow?.makeFirstResponder(nil)
-        coordinator.isDatabaseSwitcherShown = true
-    }
-
     func openQuickSwitcher() {
         coordinator?.showQuickSwitcher()
-    }
-
-    func openConnectionSwitcher() {
-        coordinator?.contentWindow?.makeFirstResponder(nil)
-        coordinator?.isConnectionSwitcherShown = true
     }
 
     // MARK: - Undo/Redo (Group A — Called Directly)

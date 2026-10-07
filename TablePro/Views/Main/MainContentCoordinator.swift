@@ -39,8 +39,8 @@ enum ActiveSheet: Identifiable {
     case exportQueryResults
     case backupDatabase
     case restoreDatabase(fileURL: URL)
-    case maintenance(operation: String, tableName: String)
-    case createDatabase
+    case maintenance(operation: String, tableName: String, scope: DatabaseScope)
+    case createDatabase(connectionId: UUID)
     case dataTransfer
     case dataGeneration
     case duplicateTable(scope: DatabaseScope, table: String)
@@ -54,8 +54,9 @@ enum ActiveSheet: Identifiable {
         case .exportQueryResults: "exportQueryResults"
         case .backupDatabase: "backupDatabase"
         case .restoreDatabase(let fileURL): "restoreDatabase-\(fileURL.path)"
-        case .maintenance(let operation, let tableName): "maintenance-\(operation)-\(tableName)"
-        case .createDatabase: "createDatabase"
+        case .maintenance(let operation, let tableName, let scope):
+            "maintenance-\(operation)-\(scope.connectionId)-\(scope.qualifiedDescription)-\(tableName)"
+        case .createDatabase(let connectionId): "createDatabase-\(connectionId)"
         case .dataTransfer: "dataTransfer"
         case .dataGeneration: "dataGeneration"
         case .duplicateTable(let scope, let table):
@@ -182,12 +183,12 @@ final class MainContentCoordinator {
     var cursorPositions: [CursorPosition] = []
     var tableMetadata: TableMetadata?
     var activeSheet: ActiveSheet?
-    var isDatabaseSwitcherShown = false
-    var isConnectionSwitcherShown = false
     var sessionContexts: [PluginSessionContext] = []
-    var databaseToDrop: String?
+    var databaseToDrop: DatabaseScope?
     var importFileURL: URL?
+    var importScope: DatabaseScope?
     var exportPreselectedTableNames: Set<String>?
+    var exportScope: DatabaseScope?
     var dataTransferPreselectedScope: DatabaseScope?
     var dataGenerationPreselectedScope: DatabaseScope?
     var pendingLoadTrigger: TableLoadTrigger?
@@ -200,8 +201,11 @@ final class MainContentCoordinator {
 
     @ObservationIgnored var pendingScrollToTopAfterReplace: Set<UUID> = []
 
-    @ObservationIgnored var openTabInNewWindow: (EditorTabPayload) -> Void = {
-        WindowManager.shared.openTab(payload: $0)
+    @ObservationIgnored var openTabRequest: (EditorTabPayload, TabGroupPolicy, NSWindow) -> Void = {
+        payload,
+        tabGroup,
+        anchor in
+        WindowManager.shared.openTab(payload: payload, tabGroup: tabGroup, anchor: anchor)
     }
 
     // MARK: - Internal State
@@ -671,7 +675,7 @@ final class MainContentCoordinator {
             )
             return
         }
-        Task { [connectionId = connection.id, routine] in
+        Task { [weak self, connectionId = connection.id, routine] in
             do {
                 let ddl = try await adapter.fetchRoutineDDL(routine: routine)
                 let titleFormat: String = routine.kind == .procedure
@@ -684,9 +688,7 @@ final class MainContentCoordinator {
                     skipAutoExecute: true,
                     tabTitle: String(format: titleFormat, routine.name)
                 )
-                await MainActor.run {
-                    WindowManager.shared.openTab(payload: payload)
-                }
+                self?.openTabInCurrentWindow(payload)
             } catch {
                 await MainActor.run {
                     AlertHelper.showErrorSheet(
@@ -695,33 +697,6 @@ final class MainContentCoordinator {
                         window: nil
                     )
                 }
-            }
-        }
-    }
-
-    /// Drop sidebar state for tables that no longer exist. The selection lives in this
-    /// window's sidebar, so it is pruned per window.
-    private func pruneStaleSidebarState() {
-        guard case .loaded = services.schemaService.state(for: connectionId) else { return }
-        let tables = services.schemaService.allLoadedTables(for: connectionId)
-        guard let vm = sidebarViewModel else { return }
-        let validNames = Set(tables.map(\.name))
-        let staleSelections = vm.selectedTables.filter { !validNames.contains($0.table.name) }
-        if !staleSelections.isEmpty {
-            vm.selectedTables.subtract(staleSelections)
-        }
-        let stalePendingDeletes = vm.pendingDeletes.subtracting(validNames)
-        if !stalePendingDeletes.isEmpty {
-            vm.pendingDeletes.subtract(stalePendingDeletes)
-            for name in stalePendingDeletes {
-                vm.tableOperationOptions.removeValue(forKey: name)
-            }
-        }
-        let stalePendingTruncates = vm.pendingTruncates.subtracting(validNames)
-        if !stalePendingTruncates.isEmpty {
-            vm.pendingTruncates.subtract(stalePendingTruncates)
-            for name in stalePendingTruncates {
-                vm.tableOperationOptions.removeValue(forKey: name)
             }
         }
     }
@@ -1027,7 +1002,7 @@ final class MainContentCoordinator {
                 tabType: .query,
                 initialQuery: query
             )
-            WindowManager.shared.openTab(payload: payload)
+            openTabInCurrentWindow(payload)
         }
     }
 
@@ -1050,7 +1025,7 @@ final class MainContentCoordinator {
                 tabType: .query,
                 initialQuery: query
             )
-            WindowManager.shared.openTab(payload: payload)
+            openTabInCurrentWindow(payload)
         }
     }
 
@@ -1234,7 +1209,8 @@ final class MainContentCoordinator {
                 let fetchResult = try await services.databaseManager.withScopedDriver(
                     scope: scope,
                     route: services.databaseManager.executionRoute(for: scope),
-                    tracksCancellation: true
+                    tracksCancellation: true,
+                    owner: windowId
                 ) { [queryExecutor] driver in
                     try await queryExecutor.executeQuery(
                         driver: driver,
@@ -1337,7 +1313,7 @@ final class MainContentCoordinator {
         guard currentQueryTask != nil else { return }
         currentQueryTask?.cancel()
         do {
-            try services.databaseManager.cancelRunningQuery(for: connectionId)
+            try services.databaseManager.cancelRunningQuery(for: connectionId, owner: windowId)
         } catch {
             Self.logger.warning("cancelQuery failed: \(error.localizedDescription, privacy: .public)")
         }

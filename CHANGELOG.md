@@ -35,25 +35,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CSV export can write UTF-8 with a byte order mark, so Vietnamese and CJK text opens correctly in Windows Excel. Plain UTF-8 stays the default and its output is unchanged.
 - Import Excel workbooks: File > Import > From Excel reads an `.xlsx` file into a new or existing table, with a sheet picker for multi-sheet workbooks. Formulas import as their last calculated value, dates import as dates including 1904-system workbooks, long identifiers keep their exact digits, and gaps in a row keep their column position. Password-protected, `.xls` and `.xlsm` workbooks are refused with a clear message.
 - Optional crash reporting, off by default. Turn it on in Settings > General > Diagnostics. Crash reports carry the stack trace, app and OS version, and nothing about your connections, queries, or data.
+- Drop a MySQL or PostgreSQL database directly from the sidebar's right-click menu. The sidebar's database list updates as soon as a database is dropped or created. Dropping closes that database first, and the connection's default database cannot be dropped.
+- Open and close databases in the sidebar. Double-click a database or press Return to open it, and several databases of one connection can be open at the same time. Close Database closes that database's tabs after one confirmation that lists unsaved changes, pending truncates and deletes, and running queries. The connection's default database offers Close Connection instead.
+- A connection's Databases setting, in the connection form: pick the databases the sidebar shows, and mark the ones to open automatically each time you connect. Export and Duplicate keep it, and an existing sidebar database filter moves into it.
+- View > Show Hidden Items shows system databases and schemas in the sidebar.
+- The query editor's database picker now works on PostgreSQL. Each open database gets its own server connection, shared by the tabs on it, so a transaction started in a tab lasts across runs, and Stop only stops the query of the tab you pressed it in.
+- An Objects tab, from View > Objects (⌥⌘3), lists the objects of the database or schema selected in the sidebar with their type, row count, size, and comment. It follows the selection, filters by Tables, Views, and Functions, and opens a table on double-click.
+- MongoDB and Snowflake connections list their databases in the sidebar.
+- Right-clicking a database or schema offers New Table and New View, and right-clicking a connection offers New Database.
 
 ### Changed
 
-- Switching connection from the toolbar now opens the connection as a tab in the window you switched from, instead of a new window. A connection that already has a window still comes to the front.
+- Actions opened from an existing editor now always add a native tab to that window, including table navigation, new queries, database tools, favorites, and reopened tabs.
 - Tab labels now start with the connection name, as in `Localhost: users`, so tabs on the same table across two connections are easy to tell apart. Renaming a connection updates its open tab labels right away.
 - Database drivers installed from the plugin registry need to be updated for this release. Open Settings > Plugins and update them; a driver still on the old version shows as outdated instead of loading.
 - The "Share anonymous usage data" setting is back in Settings > General, now off by default.
-- The sidebar lists every saved connection, grouped into the same folders as the welcome window. Expanding a connection connects it and loads its databases. A connect that fails shows the reason on the connection with a retry button, and reopening the app connects nothing until you expand something yourself.
-- Right-clicking a connection in the sidebar offers Connect, Disconnect, Refresh, New Query, and Edit Connection.
+- The sidebar lists every saved connection, grouped into the same folders as the welcome window. Double-click a connection or press Return to open it; a closed connection or database has an outline icon and no disclosure arrow. A connect that fails shows the reason on the connection with a retry button, and reopening the app opens nothing until you do.
+- There is no active database any more. Nothing in the sidebar is bold or tinted, and the node you select is where ⌘T, New Table, and New View create things. A single click on a table only selects it; double-click or Return opens it, or brings its open tab forward.
+- Every tab keeps its own database and schema. Opening a table, restoring tabs after a relaunch, and following a link never move another tab or the connection to a different database. The toolbar shows the focused tab's database and schema.
+- The Recent section lists recent tables from every open database of the connection, with the database name next to tables outside the default one.
+- Favorites lists favorite tables from every database of the connection, grouped by database.
+- The Quick Switcher reveals and opens a database or schema in the sidebar instead of switching to it.
+- MCP `switch_database` and `switch_schema` now set a default for MCP tools only. They no longer reconnect PostgreSQL or change where your new tabs open.
+- Right-clicking a connection in the sidebar offers Open Connection, Close Connection, New Query, New Database, Refresh, and Edit Connection. Close Connection closes the connection's tabs after one confirmation when any of them has unsaved work.
 - Adding, editing, or deleting a connection or folder in the welcome window now shows up in the sidebar right away, with no restart.
-- Closing the last tab of a connection that is still expanded in the sidebar keeps it connected. Collapse it first, or use Disconnect, to end the session.
+- Closing the last tab of a connection that is still open in the sidebar keeps it connected. Use Close Connection to end the session.
 - Disconnecting a connection keeps its recent tables and sidebar search text, so reconnecting picks up where you left off.
-- Opening a table under a different connection in the sidebar creates a tab for that connection next to the tabs already open, instead of a separate window. The tools below the sidebar follow the connection selected in the tree.
+- Opening a table under a different connection in the sidebar creates a tab for that connection next to the tabs already open, instead of a separate window.
 - The app is now SchemaStudio, a fork of TablePro. Stored settings, connections, and window state start fresh because the app now uses its own storage location and no data is migrated from TablePro.
 - New app icon, with light, dark, and tinted variants.
 - Sidebar connection rows no longer show the database type logo before the name.
 
 ### Fixed
 
+- Actions in the sidebar's right-click menu on a table of another connection, or another database of the same connection, now run on that table's own connection and database. They used to act on the connection and database of the window the sidebar was in.
+- A pending truncate or delete now applies only to the table it was marked on. A table with the same name in another database of the connection showed the mark too, and saving from a tab on another database ran the operation there.
 - With "Group all connections in one window" off, opening a tab into a shared group no longer stops later tabs for other connections from joining their own window.
 - PostgreSQL reported the wrong estimated row count for a table outside the connection's current schema, reading a same-named table in the search path instead.
 - Saving on a read-only connection now says the connection is read-only instead of reporting that the SQL could not be generated.
@@ -71,6 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- The Open Database (⌘K) and Switch Connection (⌃⌘C) commands, the database and connection switchers in the toolbar, and the bar below the sidebar with its new-object menu, database filter, and schema picker. The database filter is now the Databases setting of each connection.
+- The "Use as Active" items in the sidebar's right-click menu.
 - The "Sidebar as List" and "Sidebar as Tree" options, along with the default layout setting. Every connection now uses one tree.
 - Automatic updates. The app no longer checks for or installs updates, and the "Check for Updates" command is gone.
 - Anonymous usage reporting, along with the "Share anonymous usage data" setting. The app sends no telemetry.
@@ -82,7 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Selecting a range of cells in a number column shows the count, sum, average, smallest, and largest value in the status bar. Cells that are empty are counted separately and left out of the totals.
 - Confirming an UPDATE or DELETE written in the editor now says how many rows currently match its WHERE clause, or says the number could not be worked out for that statement. A statement with no WHERE clause is called out as affecting the whole table.
-- Data Transfer, a tool that copies tables, indexes and foreign keys between two connections of the same database type. Preparing a target table turns foreign key checks off first, so emptying a table that other tables point at no longer fails. PostgreSQL and MySQL transfers use a native bulk load, and write batches are sized by the target server's limits so one large row no longer fails the whole batch. Large tables are copied in primary key order one bounded chunk at a time, with the reader and writer running ahead of each other, so memory stays flat no matter how big the table is; an interrupted transfer can resume from its last committed chunk instead of starting over, and tables with a numeric primary key past a million rows can split into parallel ranges, each holding the same number of rows even when the key has gaps. An index that sorts a column descending keeps that order, and a target version that cannot store one says so on the table instead of building an ascending index silently. The result report compares the row count of every table at the source and the target, and says whether the run read a consistent snapshot or each table on its own. Open it from the Tools menu or by right-clicking a database in the sidebar.
+- Data Transfer, a tool that copies tables, indexes and foreign keys between two connections of the same database type. Preparing a target table turns foreign key checks off first, so emptying a table that other tables point at no longer fails. PostgreSQL Copy removes foreign keys between selected target tables before recreating them and restores them after the rows arrive. PostgreSQL and MySQL transfers use a native bulk load, and write batches are sized by the target server's limits so one large row no longer fails the whole batch. Large tables are copied in primary key order one bounded chunk at a time, with the reader and writer running ahead of each other, so memory stays flat no matter how big the table is. PostgreSQL transfers preserve function defaults, named enum columns, empty tables, and index operator classes. Empty-target transfers with per-chunk commits require a primary key and can resume from the last committed chunk in the target's journal; the local checkpoint is only a cache. Copy and single-transaction runs start over without a journal. Tables with a numeric primary key past a million rows can split into parallel ranges, each holding the same number of rows even when the key has gaps. PostgreSQL primary keys created with a table are not recreated as indexes or reported as warnings. An index that sorts a column descending keeps that order, and a target version that cannot store one says so on the table instead of building an ascending index silently. The result report compares the row count of every table at the source and the target, and says whether the run read a consistent snapshot or each table on its own. Open it from the Tools menu or by right-clicking a database in the sidebar.
 - Redshift external schemas now list their tables. Spectrum, federated query, cross-database, and datashare schemas showed up empty because their tables are not in the standard catalog.
 - External schemas are marked in the sidebar, and their tables show an external icon. External tables open read-only, because Redshift rejects `UPDATE` and `DELETE` on them.
 

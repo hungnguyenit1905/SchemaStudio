@@ -30,8 +30,9 @@ extension DatabaseTreeOutlineCoordinator {
                 self.node(id: DatabaseTreeNode.recentTableId($0), kind: .recentTable($0))
             }
         case .database(let connectionId, let metadata):
-            guard let context = context(for: connectionId) else { return [] }
-            return context.supportsSchemaLevel
+            guard let context = context(for: connectionId), isDatabaseOpen(metadata.name, connectionId: connectionId)
+            else { return [] }
+            return context.listsSchemasUnderDatabase
                 ? schemaNodes(context: context, database: metadata.name)
                 : objectNodes(context: context, database: metadata.name, schema: nil)
         case .schema(let connectionId, let database, let schema):
@@ -118,6 +119,7 @@ extension DatabaseTreeOutlineCoordinator {
     /// the session's own browse database as the cache key, so the whole tree
     /// stays on one metadata cache.
     private func objectLevelNodes(context: SidebarNodeContext) -> [DatabaseTreeNode] {
+        guard !context.hasDatabaseLevel else { return databaseNodes(context: context) }
         switch context.groupingStrategy {
         case .flat:
             return objectNodes(context: context, database: container(for: context), schema: nil)
@@ -137,7 +139,8 @@ extension DatabaseTreeOutlineCoordinator {
         let visible = DatabaseTreeVisibility.visible(
             databases: service.databases(for: connectionId),
             selected: sidebarState(for: connectionId)?.databaseFilterSelected ?? [],
-            activeDatabase: activeDatabase(for: connectionId)
+            alwaysShown: activeDatabase(for: connectionId),
+            showsHiddenItems: AppSettingsManager.shared.general.showHiddenItems
         )
         let matched = searchText.isEmpty ? visible : visible.filter { databaseMatchesSearch(context: context, $0) }
         var seen = Set<String>()
@@ -177,12 +180,50 @@ extension DatabaseTreeOutlineCoordinator {
     private func recentTableRefs(connectionId: UUID) -> [DatabaseTreeTableRef] {
         guard let sidebarState = sidebarState(for: connectionId),
               AppSettingsManager.shared.general.showRecentTables else { return [] }
-        let database = activeDatabase(for: connectionId) ?? ""
-        return sidebarState.recentEntries(inDatabase: database).compactMap { entry -> DatabaseTreeTableRef? in
-            if !searchText.isEmpty, !DatabaseTreeFilter.matches(searchText, entry.name) { return nil }
-            return DatabaseTreeTableRef(
-                connectionId: connectionId, database: database, schema: entry.schema, table: entry.tableInfo
-            )
+        return recentDatabases(connectionId: connectionId).flatMap { database in
+            sidebarState.recentEntries(inDatabase: database).compactMap { entry -> DatabaseTreeTableRef? in
+                if !searchText.isEmpty, !DatabaseTreeFilter.matches(searchText, entry.name) { return nil }
+                return DatabaseTreeTableRef(
+                    connectionId: connectionId, database: database, schema: entry.schema, table: entry.tableInfo
+                )
+            }
+        }
+    }
+
+    private func recentDatabases(connectionId: UUID) -> [String] {
+        let open = DatabaseManager.shared.openDatabases(for: connectionId)
+        guard open.isEmpty else {
+            let defaultDatabase = activeDatabase(for: connectionId)
+            return open.sorted { lhs, rhs in
+                if lhs == defaultDatabase { return rhs != defaultDatabase }
+                if rhs == defaultDatabase { return false }
+                return lhs < rhs
+            }
+        }
+        return [activeDatabase(for: connectionId) ?? ""]
+    }
+
+    func isDatabaseOpen(_ database: String, connectionId: UUID) -> Bool {
+        DatabaseManager.shared.isDatabaseOpen(database, for: connectionId)
+    }
+
+    func isExpandable(_ node: DatabaseTreeNode) -> Bool {
+        switch node.kind {
+        case .connection(let connection):
+            return context(for: connection.id)?.isConnected ?? false
+        case .database(let connectionId, let metadata):
+            return isDatabaseOpen(metadata.name, connectionId: connectionId)
+        default:
+            return node.isExpandable
+        }
+    }
+
+    func isOpenable(_ node: DatabaseTreeNode) -> Bool {
+        switch node.kind {
+        case .connection, .database:
+            return !isExpandable(node)
+        default:
+            return false
         }
     }
 
@@ -199,6 +240,7 @@ extension DatabaseTreeOutlineCoordinator {
                 schemas,
                 systemSchemas: context.systemSchemas,
                 searchText: searchText,
+                showsHiddenItems: AppSettingsManager.shared.general.showHiddenItems,
                 contentMatches: {
                     schemaContentMatchesSearch(connectionId: connectionId, database: database, schema: $0)
                 }
@@ -330,6 +372,7 @@ extension DatabaseTreeOutlineCoordinator: NSOutlineViewDataSource {
     }
 
     func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
-        (item as? DatabaseTreeNode)?.isExpandable ?? false
+        guard let node = item as? DatabaseTreeNode else { return false }
+        return isExpandable(node)
     }
 }

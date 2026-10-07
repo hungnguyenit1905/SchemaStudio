@@ -96,17 +96,18 @@ table that could not be created or whose rows could not be copied.
 A table with a primary key is copied in bounded chunks, each one a keyset read over the key, never
 an `OFFSET` scan, so chunk 1000 costs the same as chunk 1. The reader and the writer run ahead of
 each other through a buffer that holds a handful of chunks, so memory stays flat no matter how big
-the table is. A table without a primary key is read in one sequential pass with a warning that it
-cannot resume at chunk level.
+the table is. *Empty target then transfer* with **Use a single transaction** off requires a primary
+key, because each committed chunk needs a stable position for recovery. Copy and single-transaction
+runs can read a table without a primary key sequentially.
 
-Every chunk is committed on its own when **Use a single transaction** is off, and the position of
-the last committed chunk is written to a checkpoint file after each commit. If the app quits or the
-run fails, the next transfer of the same tables asks whether to resume from that checkpoint or
-start over. Chunks committed before the interruption are skipped, and nothing is written twice. The
-checkpoint only applies to *Empty target then transfer*; *Copy (drop and recreate target)* always
-starts over, because it recreates the table. Stopping a run leaves the checkpoint in place, so the
-next launch can pick up where it stopped. A checkpoint is cleared only when the run finishes every
-table without a failure.
+For *Empty target then transfer* with **Use a single transaction** off, each chunk's rows and its
+position are committed together in a journal on the target. If the app quits or the run fails, the
+next transfer of the same tables asks whether to resume from that target journal or start over.
+Previously committed chunks are skipped. The local checkpoint file is a cache, not the source of
+recovery: if the target journal is unavailable, the transfer does not resume from the file. Copy
+always starts over because it recreates the table; single-transaction runs also have no per-chunk
+checkpoint. Stopping a resumable run leaves its target journal in place. It is cleared only after
+every table finishes without a failure or row-count mismatch.
 
 Deadlocks, lock timeouts and dropped connections are retried a few times with a backoff. A row that
 violates a constraint is dropped and logged with its key, instead of failing the whole table, when
@@ -116,8 +117,10 @@ right away.
 ## The result report
 
 The report compares the actual `COUNT(*)` of every copied table at the source and the target and
-flags a mismatch, instead of trusting the estimated row counts shown in the table picker. It also
-says how consistent the reads were: a PostgreSQL run pins one snapshot that every connection reads,
+flags a mismatch, instead of trusting the estimated row counts shown in the table picker. For a
+resumable run, a mismatch keeps the target journal for investigation; resuming alone does not repair
+a count difference. The report also says how consistent the reads were: a PostgreSQL run pins one
+snapshot that every connection reads,
 reported as consistent across the whole database. Every other engine has no way to share a snapshot
 across connections, so the report says the run is consistent per table only, and a table read on
 two connections can see two different points in time.
@@ -136,5 +139,6 @@ interrupted, so a large batch finishes first. An open transaction is rolled back
 shows which tables completed, which failed, and which never ran. A table whose rows had already
 landed when you pressed Stop is listed as **Done, with warnings**, because its rows are at the
 target but its indexes and foreign keys were never added. What the run already committed stays at
-the target and is kept in the checkpoint, so the next transfer of the same tables can resume from
-it.
+the target and is recorded in its journal for per-chunk runs, so the next transfer of the same tables
+can resume. With **Use a single transaction** on, an interrupted table's row loading rolls back and
+starts over on the next run.

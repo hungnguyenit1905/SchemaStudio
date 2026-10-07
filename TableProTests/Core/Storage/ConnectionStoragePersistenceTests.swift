@@ -144,6 +144,30 @@ struct ConnectionStoragePersistenceTests {
         #expect(reloaded?.passwordSource == .file(path: "~/.config/tablepro/db.pw"))
     }
 
+    @Test("diagnostic policy survives local storage and duplication")
+    func diagnosticPolicySurvivesStorageAndDuplication() {
+        let policy = DiagnosticPolicy(isEnabled: true, statementTimeoutSeconds: 10, totalRunBudgetSeconds: 30)
+        let connection = DatabaseConnection(name: "Diagnostics", type: .postgresql, diagnosticPolicy: policy)
+        storage.addConnection(connection)
+
+        let loaded = storage.loadConnections().first { $0.id == connection.id }
+        #expect(loaded?.diagnosticPolicy == policy)
+
+        let duplicate = storage.duplicateConnection(connection)
+        #expect(duplicate.diagnosticPolicy == policy)
+        #expect(storage.loadConnections().first { $0.id == duplicate.id }?.diagnosticPolicy == policy)
+    }
+
+    @Test("invalid diagnostic policy cannot persist")
+    func invalidDiagnosticPolicyIsDisabledWhenPersisted() {
+        let invalid = DiagnosticPolicy(isEnabled: true, statementTimeoutSeconds: 0)
+        let connection = DatabaseConnection(name: "Invalid Diagnostics", type: .postgresql, diagnosticPolicy: invalid)
+
+        #expect(storage.saveConnections([connection]))
+        storage.invalidateCache()
+        #expect(storage.loadConnections().first?.diagnosticPolicy == .disabled)
+    }
+
     @Test("connections default to not favorited")
     func defaultsToNotFavorited() {
         let connection = DatabaseConnection(name: "Plain Test")

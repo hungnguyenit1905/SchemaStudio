@@ -31,6 +31,10 @@ struct PostgreSqlNativeTypeParser: NativeTypeParsing {
             )
         }
 
+        if let allowedValues, !allowedValues.isEmpty {
+            return type(.enumeration, values: allowedValues)
+        }
+
         switch normalized(syntax) {
         case "boolean", "bool":
             return type(.bool)

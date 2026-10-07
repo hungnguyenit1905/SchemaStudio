@@ -107,6 +107,10 @@ final class MySQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         _ = try await execute(query: mysqlBeginTransactionStatement(mode: mode))
     }
 
+    func transferCheckpointJournal() async throws -> (any PluginTransferCheckpointJournal)? {
+        PluginSQLTransferCheckpointJournal(driver: self, dialect: .mysql)
+    }
+
     // MARK: - Query Execution
 
     func execute(query: String) async throws -> PluginQueryResult {

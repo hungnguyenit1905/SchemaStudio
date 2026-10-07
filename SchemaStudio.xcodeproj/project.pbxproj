@@ -5076,7 +5076,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.9;
-				TEST_TARGET_NAME = TablePro;
+				TEST_TARGET_NAME = SchemaStudio;
 			};
 			name = Debug;
 		};
@@ -5097,7 +5097,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.9;
-				TEST_TARGET_NAME = TablePro;
+				TEST_TARGET_NAME = SchemaStudio;
 			};
 			name = Release;
 		};

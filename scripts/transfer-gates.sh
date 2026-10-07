@@ -30,6 +30,11 @@ for target in "${TARGETS[@]}"; do
     only_testing+=("-only-testing:TableProTests/$target")
 done
 
+build_settings=()
+if [ -n "${CODE_SIGNING_ALLOWED:-}" ]; then
+    build_settings+=("CODE_SIGNING_ALLOWED=$CODE_SIGNING_ALLOWED")
+fi
+
 touch "$MARKER"
 trap 'rm -f "$MARKER"' EXIT
 
@@ -40,6 +45,7 @@ xcodebuild test \
     -scheme "$SCHEME" \
     -skipPackagePluginValidation \
     "${only_testing[@]}" \
+    "${build_settings[@]}" \
     -parallel-testing-enabled NO \
     -resultBundlePath "$RESULT_BUNDLE" \
     >"${TMPDIR:-/tmp}/transfer-gates.log" 2>&1

@@ -139,8 +139,6 @@ extension MainContentView {
         applyRestoredGroup(
             [firstTab],
             selectedTabId: firstTab.id,
-            activeDatabase: result.lastActiveDatabase,
-            activeSchema: result.lastActiveSchema,
             loadTiming: frontTabId == firstTab.id ? .immediate : .deferred
         )
 
@@ -159,8 +157,6 @@ extension MainContentView {
     private func applyRestoredGroup(
         _ tabs: [QueryTab],
         selectedTabId: UUID?,
-        activeDatabase: String? = nil,
-        activeSchema: String? = nil,
         loadTiming: RestoreLoadTiming = .immediate,
         consumeDeferredWhenKey: Bool = false
     ) {
@@ -178,16 +174,14 @@ extension MainContentView {
 
         restoreConnectionContext(
             for: selected,
-            activeDatabase: activeDatabase,
-            activeSchema: activeSchema,
             loadTiming: loadTiming,
             consumeDeferredWhenKey: consumeDeferredWhenKey
         )
     }
 
-    /// Restore the connection's database and schema, then load the selected tab, in a single
-    /// sequenced task so the database and schema switches never race each other. A deferred
-    /// tab records its id and loads only when its window becomes key from a user switch.
+    /// Open the selected tab's own database, then load the tab. The session's default database
+    /// never moves. A deferred tab records its id and loads only when its window becomes key
+    /// from a user switch.
     ///
     /// `consumeDeferredWhenKey` is true only for sibling windows opened by restoration, which
     /// may already be key because the user is showing them. The initial window is transiently
@@ -195,8 +189,6 @@ extension MainContentView {
     /// its deferred tab through `windowDidBecomeKey` when the user switches back to it.
     private func restoreConnectionContext(
         for selected: QueryTab,
-        activeDatabase: String?,
-        activeSchema: String?,
         loadTiming: RestoreLoadTiming,
         consumeDeferredWhenKey: Bool
     ) {
@@ -218,14 +210,18 @@ extension MainContentView {
             return
         }
 
-        let targetDatabase = activeDatabase.flatMap { $0.isEmpty ? nil : $0 }
+        let tabDatabase = coordinator.scope(for: selected)?.database
+        let targetDatabase = tabDatabase.flatMap { $0.isEmpty ? nil : $0 }
 
         Task {
             if let targetDatabase, targetDatabase != session.resolvedBrowseDatabase {
-                await coordinator.switchDatabase(to: targetDatabase)
-            }
-            if let activeSchema, !activeSchema.isEmpty, activeSchema != session.browseSchema {
-                await coordinator.switchSchema(to: activeSchema)
+                do {
+                    try await DatabaseManager.shared.markDatabaseOpen(targetDatabase, for: connection.id)
+                } catch {
+                    MainContentView.lifecycleLogger.warning(
+                        "Opening \(targetDatabase, privacy: .public) for a restored tab failed: \(error.localizedDescription, privacy: .public)"
+                    )
+                }
             }
             if isTableTab {
                 coordinator.lazyLoadCurrentTabIfNeeded(trigger: .restore)
@@ -290,6 +286,8 @@ extension MainContentView {
             )
         }
         windowSubtitle = WindowTitleResolver.resolveSubtitle(tab: selectedTab, connection: connection)
+        let tabScope = selectedTab.flatMap { coordinator.scope(for: $0) }
+        toolbarState.showTab(database: tabScope?.database, schema: tabScope?.schema, connection: connection)
         coordinator.splitViewController?.updateDetailMinimumThickness(for: selectedTab?.tabType)
         viewWindow?.representedURL = selectedTab?.content.sourceFileURL
         viewWindow?.isDocumentEdited = selectedTab?.showsUnsavedIndicator ?? false
@@ -371,13 +369,5 @@ extension MainContentView {
         actions.window = viewWindow
         coordinator.commandActions = actions
         commandActions = actions
-    }
-
-    // MARK: - Database Switcher
-
-    func switchDatabase(to database: String) {
-        Task {
-            await coordinator.switchDatabase(to: database)
-        }
     }
 }

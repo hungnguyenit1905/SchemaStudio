@@ -59,6 +59,8 @@ final class MetadataConnectionPool {
 
     private var entries: [Key: Entry] = [:]
     private var pending: [Key: Task<Void, Error>] = [:]
+    private var draining: [ObjectIdentifier: (scope: DatabaseScope, entry: Entry)] = [:]
+    private var idleWaiters: [(matches: (DatabaseScope) -> Bool, continuation: CheckedContinuation<Void, Never>)] = []
     private static let maxPerConnection = 6
     private let operationTimeoutSeconds: Double = 15
 
@@ -87,20 +89,50 @@ final class MetadataConnectionPool {
     }
 
     func closeAll(connectionId: UUID) {
-        for key in pending.keys where key.scope.connectionId == connectionId {
+        closeEntries { $0.connectionId == connectionId }
+    }
+
+    func closeAll(connectionId: UUID, database: String) {
+        closeEntries { $0.connectionId == connectionId && $0.database == database }
+    }
+
+    private func closeEntries(matching matches: (DatabaseScope) -> Bool) {
+        for key in pending.keys where matches(key.scope) {
             pending[key]?.cancel()
             pending.removeValue(forKey: key)
         }
-        for key in entries.keys where key.scope.connectionId == connectionId {
+        for key in entries.keys where matches(key.scope) {
             closeOrDeferEntry(forKey: key)
+        }
+    }
+
+    func waitUntilIdle(connectionId: UUID, database: String) async {
+        let matches: (DatabaseScope) -> Bool = { $0.connectionId == connectionId && $0.database == database }
+        guard draining.values.contains(where: { matches($0.scope) }) else { return }
+        await withCheckedContinuation { continuation in
+            idleWaiters.append((matches, continuation))
         }
     }
 
     private func releaseEntry(_ entry: Entry) {
         entry.inFlightCount -= 1
-        if entry.inFlightCount == 0, entry.closeWhenIdle {
-            entry.driver.disconnect()
+        guard entry.inFlightCount == 0, entry.closeWhenIdle else { return }
+        entry.driver.disconnect()
+        draining.removeValue(forKey: ObjectIdentifier(entry))
+        resumeIdleWaiters()
+    }
+
+    private func resumeIdleWaiters() {
+        let busy = draining.values.map(\.scope)
+        var stillWaiting: [(matches: (DatabaseScope) -> Bool, continuation: CheckedContinuation<Void, Never>)] = []
+        for waiter in idleWaiters {
+            if busy.contains(where: waiter.matches) {
+                stillWaiting.append(waiter)
+            } else {
+                waiter.continuation.resume()
+            }
         }
+        idleWaiters = stillWaiting
     }
 
     private func closeOrDeferEntry(forKey key: Key) {
@@ -109,6 +141,7 @@ final class MetadataConnectionPool {
             entry.driver.disconnect()
         } else {
             entry.closeWhenIdle = true
+            draining[ObjectIdentifier(entry)] = (key.scope, entry)
         }
     }
 
@@ -148,38 +181,7 @@ final class MetadataConnectionPool {
     }
 
     private func openEntry(key: Key) async throws -> Entry {
-        guard let session = DatabaseManager.shared.session(for: key.scope.connectionId) else {
-            throw DatabaseError.notConnected
-        }
-        var connection = session.effectiveConnection ?? session.connection
-        let plan = Self.planConnection(
-            configuredDatabase: connection.database,
-            targetDatabase: key.scope.database,
-            authenticationIsDatabaseScoped: connection.type.authenticationIsDatabaseScoped
-        )
-        connection.database = plan.connectDatabase
-
-        let driver = try await DatabaseDriverFactory.createDriver(
-            for: connection,
-            passwordOverride: session.cachedPassword,
-            awaitPlugins: true
-        )
-        do {
-            try await Self.connect(driver, database: plan.connectDatabase, timeoutSeconds: operationTimeoutSeconds)
-            try? await driver.applyQueryTimeout(AppSettingsManager.shared.general.queryTimeoutSeconds)
-            await DatabaseManager.shared.executeStartupCommands(
-                session.connection.startupCommands, on: driver, connectionName: session.connection.name
-            )
-            if let database = plan.switchDatabase {
-                try await Self.switchDatabase(driver, to: database, timeoutSeconds: operationTimeoutSeconds)
-            }
-            if let schema = key.scope.schema {
-                try await Self.switchSchema(driver, to: schema, timeoutSeconds: operationTimeoutSeconds)
-            }
-        } catch {
-            driver.disconnect()
-            throw error
-        }
+        let driver = try await ScopedDriverFactory.openDriver(scope: key.scope, timeoutSeconds: operationTimeoutSeconds)
         return Entry(driver: driver)
     }
 

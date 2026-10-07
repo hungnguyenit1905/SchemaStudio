@@ -136,3 +136,67 @@ struct DatabaseTreeMetadataServiceRefreshTests {
         #expect(tables.isEmpty)
     }
 }
+
+@Suite("DatabaseTreeMetadataService dropDatabase")
+@MainActor
+struct DatabaseTreeMetadataServiceDropTests {
+    private func connectedSession() -> (DatabaseConnection, MockDatabaseDriver) {
+        let connection = TestFixtures.makeConnection(type: .pglite)
+        let driver = MockDatabaseDriver(connection: connection)
+        driver.schemaTablesToReturn = ["public": [TestFixtures.makeTableInfo(name: "users")]]
+        var session = ConnectionSession(connection: connection, driver: driver)
+        session.status = .connected
+        DatabaseManager.shared.injectSession(session, for: connection.id)
+        return (connection, driver)
+    }
+
+    private func tearDown(_ connection: DatabaseConnection) async {
+        await DatabaseTreeMetadataService.shared.handleDisconnect(connectionId: connection.id)
+        DatabaseManager.shared.removeSession(for: connection.id)
+    }
+
+    private func isIdle<Value>(_ state: MetadataLoadState<Value>) -> Bool {
+        if case .idle = state { return true }
+        return false
+    }
+
+    @Test("dropping a database clears its loaded tables and refetches the database list")
+    func dropClearsTablesAndRefetchesList() async throws {
+        let (connection, driver) = connectedSession()
+        let service = DatabaseTreeMetadataService.shared
+        let dropped = connection.database
+
+        driver.databasesToReturn = [dropped, "archive"]
+        await service.loadDatabases(connectionId: connection.id, databaseType: connection.type)
+        await service.loadTables(connectionId: connection.id, database: dropped, schema: "public")
+        let loaded = service.tables(connectionId: connection.id, database: dropped, schema: "public")
+        #expect(loaded.map(\.name) == ["users"])
+
+        driver.databasesToReturn = ["archive"]
+        try await service.dropDatabase(
+            dropped, connectionId: connection.id, databaseType: connection.type, using: driver
+        )
+
+        #expect(service.databases(for: connection.id).map(\.name) == ["archive"])
+        #expect(isIdle(service.tablesLoadState(connectionId: connection.id, database: dropped, schema: "public")))
+
+        await tearDown(connection)
+    }
+
+    @Test("dropping one database keeps the tables loaded for another")
+    func dropKeepsOtherDatabases() async throws {
+        let (connection, driver) = connectedSession()
+        let service = DatabaseTreeMetadataService.shared
+        let kept = connection.database
+
+        await service.loadTables(connectionId: connection.id, database: kept, schema: "public")
+        try await service.dropDatabase(
+            "archive", connectionId: connection.id, databaseType: connection.type, using: driver
+        )
+
+        let tables = service.tables(connectionId: connection.id, database: kept, schema: "public")
+        #expect(tables.map(\.name) == ["users"])
+
+        await tearDown(connection)
+    }
+}

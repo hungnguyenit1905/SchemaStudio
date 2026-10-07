@@ -32,6 +32,7 @@ extension DataTransferService {
         var written = 0
         var bulkRowsRecorded = 0
         let commitPerChunk = !options.useSingleTransaction
+        let journal = commitPerChunk && checkpoint != nil ? try await target.transferCheckpointJournal() : nil
         var lastCursor: TransferChunkCursor?
 
         do {
@@ -59,6 +60,7 @@ extension DataTransferService {
                             options: options,
                             generatedColumns: generatedColumns,
                             checkpoint: checkpoint,
+                            journal: journal,
                             jobId: jobId,
                             state: &state
                         )
@@ -200,11 +202,15 @@ extension DataTransferService {
         options: TransferOptions,
         generatedColumns: Set<String>,
         checkpoint: TransferCheckpointStore?,
+        journal: (any PluginTransferCheckpointJournal)?,
         jobId: UUID,
         state: inout TransferWriterState
     ) async throws -> Int {
-        try await TransferErrorClassifier.withRetry {
+        let (written, checkpointReplaced) = try await TransferErrorClassifier.withRetry {
             var written = 0
+            var rowsWritten = false
+            var commitAttempted = false
+            var checkpointReplaced = false
             try await target.driver.beginTransaction(mode: .readWrite)
             do {
                 written = try await writeChunkRows(
@@ -225,41 +231,64 @@ extension DataTransferService {
                     written = try await writer.finish()
                     state.bulkWriter = nil
                 }
+                rowsWritten = true
+                if checkpoint != nil, chunk.cursor != nil || chunk.isLast {
+                    guard let journal else {
+                        throw TransferError.resumeUnsupported(target.databaseType.displayName)
+                    }
+                    try await journal.replace(
+                        jobId: jobId,
+                        entry: PluginTransferCheckpointEntry(
+                            table: plan.table,
+                            partition: chunk.partition,
+                            lastKey: chunk.cursor?.lastKey,
+                            rowsDone: chunk.cursor?.rowsDone ?? 0,
+                            isComplete: chunk.isLast
+                        )
+                    )
+                    checkpointReplaced = true
+                }
+                commitAttempted = true
                 try await target.driver.commitTransaction()
             } catch {
                 try? await target.driver.rollbackTransaction()
                 await state.bulkWriter?.abort()
                 state.bulkWriter = nil
-                guard TransferErrorClassifier.classify(error) == .constraintViolation,
+                if commitAttempted {
+                    Self.logger.error("Chunk commit outcome unknown: \(error.localizedDescription, privacy: .public)")
+                    throw TransferError.commitOutcomeUnknown
+                }
+                guard !rowsWritten, TransferErrorClassifier.classify(error) == .constraintViolation,
                       options.continueOnError else {
                     throw error
                 }
+                state.pending.removeAll()
+                state.splitter?.reset()
                 written = try await salvageChunk(
                     chunk,
                     plan: plan,
                     target: target,
                     limits: limits,
                     generatedColumns: generatedColumns,
+                    journal: journal,
+                    jobId: jobId,
                     state: &state
                 )
+                checkpointReplaced = journal != nil && (chunk.cursor != nil || chunk.isLast)
             }
-            // Only keyset chunks carry a cursor to resume from; a table without
-            // a primary key records nothing until its final chunk marks it
-            // complete, so a crash re-runs it instead of duplicating rows.
-            if chunk.cursor != nil || chunk.isLast {
-                await checkpoint?.record(
-                    jobId: jobId,
-                    mode: .emptyThenTransfer,
-                    entry: TransferCheckpointStore.Entry(
-                        table: plan.table,
-                        partition: chunk.partition,
-                        cursor: chunk.cursor ?? TransferChunkCursor.start,
-                        isComplete: chunk.isLast
-                    )
-                )
-            }
-            return written
+            return (written, checkpointReplaced)
         }
+        if checkpointReplaced, let journal {
+            guard let durableState = try await journal.load(jobId: jobId) else {
+                throw TransferError.resumeStateUnavailable
+            }
+            await checkpoint?.cache(
+                jobId: jobId,
+                mode: .emptyThenTransfer,
+                state: TransferCheckpointStore.State(durableState)
+            )
+        }
+        return written
     }
 
     private func writeBufferedChunk(
@@ -297,19 +326,14 @@ extension DataTransferService {
             written = try await flush(&state.pending, into: sink, columns: state.targetColumns)
         }
         if state.transactionOpen {
-            try await target.driver.commitTransaction()
+            do {
+                try await target.driver.commitTransaction()
+            } catch {
+                Self.logger.error("Table commit outcome unknown: \(error.localizedDescription, privacy: .public)")
+                throw TransferError.commitOutcomeUnknown
+            }
             state.transactionOpen = false
         }
-        await checkpoint?.record(
-            jobId: jobId,
-            mode: .emptyThenTransfer,
-            entry: TransferCheckpointStore.Entry(
-                table: plan.table,
-                partition: partition,
-                cursor: cursor ?? TransferChunkCursor.start,
-                isComplete: true
-            )
-        )
         return written
     }
 
@@ -376,6 +400,8 @@ extension DataTransferService {
         target: TransferDriverContext,
         limits: PluginServerLimits?,
         generatedColumns: Set<String>,
+        journal: (any PluginTransferCheckpointJournal)?,
+        jobId: UUID,
         state: inout TransferWriterState
     ) async throws -> Int {
         try await target.driver.beginTransaction(mode: .readWrite)
@@ -394,18 +420,45 @@ extension DataTransferService {
             guard let sink = state.sink else { throw TransferError.structureUnavailable(plan.table) }
             for row in chunk.rows {
                 let dictionary = Self.rowDictionary(row, columns: chunk.headerColumns)
+                if target.databaseType == .postgresql {
+                    try await target.execute("SAVEPOINT schema_studio_transfer_row")
+                }
                 do {
                     try await sink.insertRows([dictionary])
                     written += 1
                 } catch {
+                    guard TransferErrorClassifier.classify(error) == .constraintViolation else { throw error }
+                    if target.databaseType == .postgresql {
+                        try await target.execute("ROLLBACK TO SAVEPOINT schema_studio_transfer_row")
+                    }
                     let keys = plan.structure.primaryKeyColumns
                         .compactMap { dictionary[$0].flatMap(TransferChunkPlanner.keyText) }
                     Self.logger.warning(
                         "Dropped row \(keys.joined(separator: ","), privacy: .public) in \(plan.table, privacy: .public) chunk \(chunk.index, privacy: .public): \(error.localizedDescription, privacy: .public)"
                     )
                 }
+                if target.databaseType == .postgresql {
+                    try await target.execute("RELEASE SAVEPOINT schema_studio_transfer_row")
+                }
             }
-            try await target.driver.commitTransaction()
+            if let journal, chunk.cursor != nil || chunk.isLast {
+                try await journal.replace(
+                    jobId: jobId,
+                    entry: PluginTransferCheckpointEntry(
+                        table: plan.table,
+                        partition: chunk.partition,
+                        lastKey: chunk.cursor?.lastKey,
+                        rowsDone: chunk.cursor?.rowsDone ?? 0,
+                        isComplete: chunk.isLast
+                    )
+                )
+            }
+            do {
+                try await target.driver.commitTransaction()
+            } catch {
+                Self.logger.error("Salvaged chunk commit outcome unknown: \(error.localizedDescription, privacy: .public)")
+                throw TransferError.commitOutcomeUnknown
+            }
             return written
         } catch {
             try? await target.driver.rollbackTransaction()

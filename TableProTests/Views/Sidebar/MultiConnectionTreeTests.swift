@@ -85,24 +85,39 @@ struct MultiConnectionTreeTests {
     func pendingMarksDoNotLeakAcrossConnections() {
         let first = UUID()
         let second = UUID()
-        let context = DatabaseTreeRowContext(
-            databaseType: .mysql,
-            activeDatabase: "shop",
-            activeSchema: nil,
-            systemSchemas: [],
-            pendingTruncates: [first: ["users"]],
-            pendingDeletes: [first: ["orders"]]
-        )
-
         let inFirst = TestFixtures.makeTableRef(name: "users", connectionId: first)
         let inSecond = TestFixtures.makeTableRef(name: "users", connectionId: second)
         let deleteInFirst = TestFixtures.makeTableRef(name: "orders", connectionId: first)
         let deleteInSecond = TestFixtures.makeTableRef(name: "orders", connectionId: second)
+        let context = DatabaseTreeRowContext(
+            databaseType: .mysql,
+            defaultDatabase: "shop",
+            systemSchemas: [],
+            pendingTruncates: [inFirst],
+            pendingDeletes: [deleteInFirst]
+        )
 
         #expect(context.isPendingTruncate(inFirst))
         #expect(!context.isPendingTruncate(inSecond))
         #expect(context.isPendingDelete(deleteInFirst))
         #expect(!context.isPendingDelete(deleteInSecond))
+    }
+
+    @Test("A pending truncate in one database does not mark the same table in another database")
+    func pendingMarksDoNotLeakAcrossDatabases() {
+        let connectionId = UUID()
+        let inShop = TestFixtures.makeTableRef(name: "users", database: "shop", connectionId: connectionId)
+        let inReports = TestFixtures.makeTableRef(name: "users", database: "reports", connectionId: connectionId)
+        let context = DatabaseTreeRowContext(
+            databaseType: .mysql,
+            defaultDatabase: "shop",
+            systemSchemas: [],
+            pendingTruncates: [inReports],
+            pendingDeletes: []
+        )
+
+        #expect(context.isPendingTruncate(inReports))
+        #expect(!context.isPendingTruncate(inShop))
     }
 
     // MARK: - Tree shape

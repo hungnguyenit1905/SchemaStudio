@@ -33,9 +33,9 @@ struct MainContentView: View {
     @Binding var windowSubtitle: String
     @Bindable var schemaService = SchemaService.shared
     var sidebarState: SharedSidebarState
-    @Binding var pendingTruncates: Set<String>
-    @Binding var pendingDeletes: Set<String>
-    @Binding var tableOperationOptions: [String: TableOperationOptions]
+    @Binding var pendingTruncates: Set<DatabaseTreeTableRef>
+    @Binding var pendingDeletes: Set<DatabaseTreeTableRef>
+    @Binding var tableOperationOptions: [DatabaseTreeTableRef: TableOperationOptions]
     var rightPanelState: RightPanelState
 
     private var tables: [TableInfo] {
@@ -70,9 +70,9 @@ struct MainContentView: View {
         windowTitle: Binding<String>,
         windowSubtitle: Binding<String>,
         sidebarState: SharedSidebarState,
-        pendingTruncates: Binding<Set<String>>,
-        pendingDeletes: Binding<Set<String>>,
-        tableOperationOptions: Binding<[String: TableOperationOptions]>,
+        pendingTruncates: Binding<Set<DatabaseTreeTableRef>>,
+        pendingDeletes: Binding<Set<DatabaseTreeTableRef>>,
+        tableOperationOptions: Binding<[DatabaseTreeTableRef: TableOperationOptions]>,
         rightPanelState: RightPanelState,
         tabManager: QueryTabManager,
         changeManager: DataChangeManager,
@@ -106,9 +106,9 @@ struct MainContentView: View {
                 isPresented: dropConfirmationBinding,
                 titleVisibility: .visible,
                 presenting: coordinator.databaseToDrop
-            ) { name in
+            ) { scope in
                 Button(String(format: String(localized: "Drop %@"), containerEntityName), role: .destructive) {
-                    Task { await dropDatabase(name: name) }
+                    Task { await dropDatabase(scope) }
                 }
                 Button(String(localized: "Cancel"), role: .cancel) {
                     coordinator.databaseToDrop = nil
@@ -129,23 +129,42 @@ struct MainContentView: View {
     }
 
     private var dropConfirmationTitle: String {
-        if let name = coordinator.databaseToDrop {
+        if let scope = coordinator.databaseToDrop {
             return String(
                 format: String(localized: "Drop %1$@ “%2$@”?"),
                 containerEntityName.lowercased(),
-                name
+                scope.database
             )
         }
         return ""
     }
 
     private var containerEntityName: String {
-        PluginManager.shared.containerEntityName(for: coordinator.connection.type)
+        let type = coordinator.databaseToDrop
+            .flatMap { SidebarActionTarget(scope: $0, host: coordinator).databaseType }
+            ?? coordinator.connection.type
+        return PluginManager.shared.containerEntityName(for: type)
     }
 
-    private func dropDatabase(name: String) async {
-        await coordinator.dropDatabase(name: name)
+    private func dropDatabase(_ scope: DatabaseScope) async {
+        await coordinator.dropDatabase(scope)
         coordinator.databaseToDrop = nil
+    }
+
+    private func scopedConnection(_ scope: DatabaseScope?) -> DatabaseConnection {
+        guard let scope,
+              let scoped = SidebarActionTarget(scope: scope, host: coordinator).connectionScoped(to: scope.database)
+        else { return connectionWithCurrentDatabase }
+        return scoped
+    }
+
+    private func scopedTables(_ scope: DatabaseScope?) -> [TableInfo] {
+        guard let scope, scope != coordinator.browseScope else { return tables }
+        return DatabaseTreeMetadataService.shared.tables(
+            connectionId: scope.connectionId,
+            database: scope.database,
+            schema: scope.schema
+        )
     }
 
     // MARK: - Sheet Content
@@ -171,6 +190,7 @@ struct MainContentView: View {
                 if !$0 {
                     coordinator.activeSheet = nil
                     coordinator.exportPreselectedTableNames = nil
+                    coordinator.exportScope = nil
                     coordinator.dataTransferPreselectedScope = nil
                     coordinator.dataGenerationPreselectedScope = nil
                 }
@@ -197,21 +217,28 @@ struct MainContentView: View {
                 source: DuplicateTableRef(schema: scope.schema, name: table),
                 onCompleted: { result in coordinator.finishDuplicate(result, scope: scope) }
             )
-        case .createDatabase:
+        case .createDatabase(let connectionId):
+            let databaseType = DatabaseManager.shared.session(for: connectionId)?.connection.type ?? connection.type
             let viewModel = DatabaseSwitcherViewModel(
-                connectionId: connection.id,
+                connectionId: connectionId,
                 currentDatabase: nil,
-                databaseType: connection.type
+                databaseType: databaseType
             )
             CreateDatabaseSheet(
-                databaseType: connection.type,
+                databaseType: databaseType,
                 viewModel: viewModel,
                 onCreated: { newDatabaseName in
-                    Task { await coordinator.switchContainer(to: newDatabaseName) }
+                    Task {
+                        await DatabaseTreeMetadataService.shared.refreshDatabases(
+                            connectionId: connectionId,
+                            databaseType: databaseType
+                        )
+                        coordinator.revealInSidebar(database: newDatabaseName, connectionId: connectionId)
+                    }
                 }
             )
         case .exportDialog:
-            let exportConnection = connectionWithCurrentDatabase
+            let exportConnection = scopedConnection(coordinator.exportScope)
             ExportDialog(
                 isPresented: dismissBinding,
                 mode: .tables(
@@ -219,7 +246,7 @@ struct MainContentView: View {
                     preselectedTables: coordinator.exportPreselectedTableNames
                         ?? Set(coordinator.windowSidebarState.selectedTables.map(\.table.name))
                 ),
-                sidebarTables: tables
+                sidebarTables: scopedTables(coordinator.exportScope)
             )
         case .exportQueryResults:
             if let tab = coordinator.tabManager.selectedTab {
@@ -238,12 +265,13 @@ struct MainContentView: View {
                 set: { if !$0 {
                     coordinator.activeSheet = nil
                     coordinator.importFileURL = nil
+                    coordinator.importScope = nil
                 }
                 }
             )
             ImportDialog(
                 isPresented: importDismiss,
-                connection: connection,
+                connection: scopedConnection(coordinator.importScope),
                 initialFileURL: coordinator.importFileURL,
                 initialFormatId: formatId
             )
@@ -253,13 +281,14 @@ struct MainContentView: View {
                 set: { if !$0 {
                     coordinator.activeSheet = nil
                     coordinator.importFileURL = nil
+                    coordinator.importScope = nil
                 }
                 }
             )
             if let url = coordinator.importFileURL {
                 RowImportSheet(
                     isPresented: rowDismiss,
-                    connection: connection,
+                    connection: scopedConnection(coordinator.importScope),
                     fileURL: url,
                     formatId: formatId
                 )
@@ -279,12 +308,19 @@ struct MainContentView: View {
                     ?? connection.database,
                 sourceURL: fileURL
             )
-        case .maintenance(let operation, let tableName):
+        case .maintenance(let operation, let tableName, let scope):
             MaintenanceSheet(
                 operation: operation,
                 tableName: tableName,
-                databaseType: connection.type,
-                onExecute: coordinator.executeMaintenance
+                databaseType: SidebarActionTarget(scope: scope, host: coordinator).databaseType ?? connection.type,
+                onExecute: { operation, tableName, options in
+                    coordinator.executeMaintenance(
+                        operation: operation,
+                        tableName: tableName,
+                        options: options,
+                        scope: scope
+                    )
+                }
             )
         case .sqlPreview:
             SQLReviewSheet(

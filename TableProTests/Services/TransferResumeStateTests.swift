@@ -1,5 +1,6 @@
 import Foundation
 @testable import SchemaStudio
+import TableProPluginKit
 import Testing
 
 @Suite("TransferResumeState")
@@ -19,9 +20,23 @@ struct TransferResumeStateTests {
         )
     }
 
+    private func state(_ entries: [TransferCheckpointStore.Entry]) -> TransferResumeState {
+        let tables = Set(entries.map(\.table)).sorted().map { table in
+            let lastPartition = entries.filter { $0.table == table }.map(\.partition).max() ?? 0
+            return PluginTransferCheckpointTableManifest(
+                table: table,
+                boundaries: (0 ..< lastPartition).map { String($0) }
+            )
+        }
+        return TransferResumeState(
+            manifest: PluginTransferCheckpointManifest(sourceJobId: UUID(), tables: tables),
+            entries: entries
+        )
+    }
+
     @Test("a table with one complete partition entry is complete")
     func singlePartitionComplete() {
-        let state = TransferResumeState(entries: [
+        let state = state([
             entry(table: "users", lastKey: ["100"], rowsDone: 100, isComplete: true),
         ])
         #expect(state.isComplete(table: "users"))
@@ -30,7 +45,7 @@ struct TransferResumeStateTests {
 
     @Test("a table is complete only when every partition is complete")
     func allPartitionsMustBeComplete() {
-        let state = TransferResumeState(entries: [
+        let state = state([
             entry(table: "orders", partition: 0, lastKey: ["500"], rowsDone: 500, isComplete: true),
             entry(table: "orders", partition: 1, lastKey: ["900"], rowsDone: 400, isComplete: false),
         ])
@@ -40,7 +55,7 @@ struct TransferResumeStateTests {
 
     @Test("a table with no entries has no progress")
     func noProgress() {
-        let state = TransferResumeState(entries: [])
+        let state = state([])
         #expect(state.hasProgress(table: "users") == false)
         #expect(state.isComplete(table: "users") == false)
         #expect(state.rowsDone(table: "users") == 0)
@@ -48,7 +63,7 @@ struct TransferResumeStateTests {
 
     @Test("rows done sums every partition of the table")
     func rowsDoneSumsPartitions() {
-        let state = TransferResumeState(entries: [
+        let state = state([
             entry(table: "orders", partition: 0, rowsDone: 500),
             entry(table: "orders", partition: 1, rowsDone: 400),
             entry(table: "audit", partition: 0, rowsDone: 7),
@@ -58,7 +73,7 @@ struct TransferResumeStateTests {
 
     @Test("each partition resumes from its own cursor")
     func perPartitionCursor() {
-        let state = TransferResumeState(entries: [
+        let state = state([
             entry(table: "orders", partition: 0, lastKey: ["500"], rowsDone: 500),
             entry(table: "orders", partition: 1, lastKey: ["900"], rowsDone: 400),
         ])

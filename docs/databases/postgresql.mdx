@@ -35,7 +35,7 @@ Connect to RDS or Aurora with your AWS identity instead of a static password: se
 
 ## Features
 
-**Schemas**: The sidebar shows all accessible schemas and tables. Cmd+K switches databases; pick the active schema from the schema menu at the bottom of the sidebar. Table info shows columns, indexes, constraints, and DDL.
+**Schemas**: The sidebar shows all accessible databases, schemas, and tables. Open other databases from the sidebar; each tab keeps the database and schema it was opened in. Table info shows columns, indexes, constraints, and DDL.
 
 **Databases**: Every database on the server is listed, including `postgres`. It is an ordinary database that `initdb` creates for users and applications, not a system database. `template0` and `template1` are not listed.
 
@@ -53,11 +53,17 @@ Connect to RDS or Aurora with your AWS identity instead of a static password: se
 
 ## Cross-Database Tabs
 
-A tab stays on the database and schema it was opened with for its whole life, even if the sidebar or another tab switches to a different one. See [Tabs](/features/tabs#database-binding). PostgreSQL, like Redshift and CockroachDB, changes database only by reconnecting: there is no in-place `USE` statement. So a tab bound to a database other than the connection's active one runs on a separate connection for that database instead.
+A tab stays on the database and schema it was opened with for its whole life. See [Tabs](/features/tabs#database-binding). PostgreSQL, like Redshift and CockroachDB, changes database only by reconnecting: there is no in-place `USE` statement.
 
-That separate connection means the tab does not share temp tables, session variables, or an open transaction with the query editor on the main connection. Keep session-scoped work, such as a multi-statement transaction or a `CREATE TEMP TABLE`, on tabs bound to the same database if they need to see each other's state.
+So each database you open in the sidebar, other than the connection's default, gets one server connection of its own. Every tab on that database shares it, just as tabs on the default database share the main connection. Tabs on the same database see each other's temp tables, session variables, and open transaction, and a `BEGIN` in one run stays open until a later run commits or rolls it back. Tabs on different databases never share any of that. **Stop** cancels only the query of the tab you pressed it in.
 
-[PGlite](/databases/pglite) cannot open a second connection at all, so a PGlite tab bound to a database the connection is not on reports an error naming that database instead of running the query against the wrong one.
+The query editor's database picker can move a tab to another database; picking a closed database opens it. Closing a database in the sidebar closes its tabs and its connection, and rolls back anything left open on it. With more than 8 databases open on one connection, the app logs a warning, because each one holds a server connection.
+
+After a dropped connection reconnects, including over an SSH tunnel that was rebuilt on a new port, every open database gets a fresh connection. Transactions that were open at the time are lost, as they are on the main connection.
+
+Autocomplete stays per connection: in a tab on another database, it may suggest objects from the default database.
+
+[PGlite](/databases/pglite) cannot open a second connection at all, so it works with one database at a time. Opening another database, or running a tab bound to one, reports an error naming that database instead of running the query against the wrong one.
 
 ## Advanced
 

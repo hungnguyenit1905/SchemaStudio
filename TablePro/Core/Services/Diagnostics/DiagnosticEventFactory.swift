@@ -128,6 +128,9 @@ enum DiagnosticEventFactory {
         case .emptyColumnMapping: return "emptyColumnMapping"
         case .columnMappingIncomplete: return "columnMappingIncomplete"
         case .chunkCursorUnavailable: return "chunkCursorUnavailable"
+        case .resumeUnsupported: return "resumeUnsupported"
+        case .resumeStateUnavailable: return "resumeStateUnavailable"
+        case .commitOutcomeUnknown: return "commitOutcomeUnknown"
         case .preflightFailed: return "preflightFailed"
         }
     }

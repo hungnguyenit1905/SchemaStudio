@@ -38,7 +38,7 @@ extension MainContentCoordinator {
                 showStructure: intent == .openStructure,
                 isView: item.isReadOnly,
                 activateGridFocus: true,
-                forceNewWindowTab: intent == .openInNewWindowTab
+                forceNewTab: intent == .openInNewTab
             )
 
         case .view:
@@ -47,18 +47,14 @@ extension MainContentCoordinator {
                 showStructure: intent == .openStructure,
                 isView: true,
                 activateGridFocus: true,
-                forceNewWindowTab: intent == .openInNewWindowTab
+                forceNewTab: intent == .openInNewTab
             )
 
         case .database:
-            Task {
-                await switchDatabase(to: item.name)
-            }
+            revealInSidebar(database: item.name)
 
         case .schema:
-            Task {
-                await switchSchema(to: item.name)
-            }
+            revealInSidebar(database: browseDatabaseName, schema: item.name)
 
         case .savedQuery:
             loadQueryIntoEditor(item.payload ?? item.name)

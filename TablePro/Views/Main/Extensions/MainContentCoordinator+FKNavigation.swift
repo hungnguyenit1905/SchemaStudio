@@ -73,7 +73,7 @@ extension MainContentCoordinator {
             databaseName: currentDatabase,
             schemaName: targetSchema
         )
-        openTabInNewWindow(payload)
+        openTabInCurrentWindow(payload)
     }
 
     func makeFKReferencePayload(

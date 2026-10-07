@@ -8,7 +8,12 @@ import Testing
 @MainActor
 struct ERDiagramCanvasContainerViewTests {
     private func makeContainer() -> (ERDiagramCanvasContainerView<Color>, ERDiagramViewModel) {
-        let viewModel = ERDiagramViewModel(connectionId: UUID(), databaseName: "test", schemaKey: "test")
+        let viewModel = ERDiagramViewModel(
+            connectionId: UUID(),
+            databaseName: "test",
+            schemaKey: "test",
+            openTab: { _ in }
+        )
         let view = ERDiagramCanvasContainerView(rootView: Color.clear, viewModel: viewModel)
         return (view, viewModel)
     }

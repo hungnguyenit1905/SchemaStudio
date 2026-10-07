@@ -2,10 +2,8 @@
 //  SwitchDatabaseTests.swift
 //  TableProTests
 //
-//  Tests for the "switch database" flow: switching databases (Cmd+K) does not
-//  create new macOS windows and does not close open tabs. Tabs carry their own
-//  database and coexist across databases (#1776); an earlier build wiped them
-//  and discarded unsaved SQL (#1669).
+//  Every tab owns its database. Opening a table in another database or moving a tab to
+//  another database never changes the session's default database or any other tab.
 //
 
 import Foundation
@@ -64,34 +62,41 @@ struct SwitchDatabaseTests {
         #expect(tabManager.tabs.count == tabCountBefore)
     }
 
-    // MARK: - Tab state after database switch
+    // MARK: - Tab-owned databases
 
-    @Test("switchDatabase keeps table and query tabs and their contents")
-    func switchDatabaseKeepsExistingTabs() async throws {
+    @Test("Opening a table in another database leaves the session default and other tabs alone")
+    func openingInAnotherDatabaseLeavesSessionAlone() async throws {
         try await withConnectedCoordinator { coordinator, tabManager in
-            try tabManager.addTableTab(tableName: "users", databaseType: .mysql, databaseName: "db_a")
             tabManager.addTab(initialQuery: "SELECT NOW()", databaseName: "db_a")
-            let idsBefore = tabManager.tabs.map(\.id)
-            let selectedBefore = tabManager.selectedTabId
+            let connectionId = coordinator.connectionId
 
-            let switched = await coordinator.switchDatabase(to: "db_b", persist: false)
+            coordinator.openTableTab(
+                TableInfo(name: "orders", type: .table, rowCount: nil, schema: nil),
+                scope: DatabaseScope(connectionId: connectionId, database: "db_b", schema: nil)
+            )
 
-            #expect(switched)
-            #expect(tabManager.tabs.map(\.id) == idsBefore)
-            #expect(tabManager.selectedTabId == selectedBefore)
-            #expect(tabManager.tabs.contains { $0.content.query == "SELECT NOW()" })
-            #expect(coordinator.toolbarState.currentDatabase == "db_b")
+            #expect(DatabaseManager.shared.session(for: connectionId)?.resolvedBrowseDatabase == "db_a")
+            #expect(tabManager.tabs.first?.tableContext.databaseName == "db_a")
         }
     }
 
-    @Test("switchDatabase leaves each tab bound to the database it was opened against")
-    func switchDatabaseKeepsPerTabDatabase() async throws {
+    @Test("A tab's scope follows the tab's own database, not the session")
+    func tabScopeFollowsTheTab() async throws {
         try await withConnectedCoordinator { coordinator, tabManager in
-            try tabManager.addTableTab(tableName: "users", databaseType: .mysql, databaseName: "db_a")
+            tabManager.addTab(initialQuery: "SELECT 1", databaseName: "db_b")
+            let tab = try #require(tabManager.tabs.first)
 
-            _ = await coordinator.switchDatabase(to: "db_b", persist: false)
+            #expect(coordinator.scope(for: tab)?.database == "db_b")
+            #expect(DatabaseManager.shared.session(for: coordinator.connectionId)?.resolvedBrowseDatabase == "db_a")
+        }
+    }
 
-            #expect(tabManager.tabs.allSatisfy { $0.tableContext.databaseName == "db_a" })
+    @Test("An unscoped open lands on the focused tab's database")
+    func unscopedOpenUsesFocusedTab() async throws {
+        try await withConnectedCoordinator { coordinator, tabManager in
+            tabManager.addTab(initialQuery: "SELECT 1", databaseName: "db_b")
+
+            #expect(coordinator.selectedTabScope?.database == "db_b")
         }
     }
 }

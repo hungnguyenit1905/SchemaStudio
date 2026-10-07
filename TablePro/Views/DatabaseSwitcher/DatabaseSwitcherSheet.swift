@@ -3,7 +3,6 @@ import SwiftUI
 import TableProPluginKit
 
 /// Database picker presented as a modal sheet for backup and restore flows.
-/// Quick database switching from the toolbar uses `DatabaseSwitcherPopover`.
 struct DatabaseSwitcherSheet: View {
     enum Mode {
         case backup

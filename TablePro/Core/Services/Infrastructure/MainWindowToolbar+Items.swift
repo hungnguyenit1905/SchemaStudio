@@ -9,31 +9,6 @@ import SwiftUI
 extension MainWindowToolbar {
     // MARK: - Subitem Builders
 
-    func subitemConnection() -> NSToolbarItem {
-        menuOnlyItem(
-            id: Self.connection,
-            label: String(localized: "Connection"),
-            symbol: "network",
-            action: #selector(performOpenConnectionSwitcher(_:)),
-            keyEquivalent: "c",
-            modifiers: [.command, .option]
-        )
-    }
-
-    func subitemDatabase() -> NSToolbarItem {
-        let containerName = coordinator.map {
-            PluginManager.shared.containerEntityName(for: $0.toolbarState.databaseType)
-        } ?? String(localized: "Database")
-        return menuOnlyItem(
-            id: Self.database,
-            label: containerName,
-            symbol: "cylinder",
-            action: #selector(performOpenDatabaseSwitcher(_:)),
-            keyEquivalent: "k",
-            modifiers: .command
-        )
-    }
-
     func subitemRefresh() -> NSToolbarItem {
         menuOnlyItem(
             id: Self.refresh,

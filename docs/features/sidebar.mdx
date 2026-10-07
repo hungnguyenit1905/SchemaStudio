@@ -18,20 +18,44 @@ My Connections
 ```
 
 Under a connection, the levels follow whatever the database engine uses. PostgreSQL shows
-databases, then schemas, then tables. MySQL shows databases, then tables. SQLite hangs its tables
-straight off the connection, because it has no container level.
+databases, then schemas, then tables. MySQL, MongoDB, and SQL Server show databases, then tables
+or schemas. Snowflake shows databases, then schemas. SQLite hangs its tables straight off the
+connection, because it has no database level.
 
-## Connecting
+## Opening connections and databases
 
-Expanding a connection connects it and loads its databases. A spinner shows while the connect runs.
+A connection, and each database under it, is either open or closed. A closed node has an outline
+icon and no disclosure arrow.
 
-Reopening the app restores the shape of the tree but connects nothing. Connections you had expanded
-come back showing **Not connected** until you connect them, so launching with a dozen saved
-connections never fires a dozen connects or asks for a dozen passwords.
+- **Double-click** a closed connection, or select it and press **Return**, to connect it. It
+  expands once the connect finishes.
+- **Double-click** a closed database, or press **Return** on it, to open it. Several databases of
+  one connection can be open at the same time.
+- Expanding an open node only loads its contents. It never connects anything.
+
+When a connection opens, its default database opens with it, along with any database marked Auto
+Open in the connection's [Databases setting](/databases/overview#databases). The default database
+is the one in the connection form, and it stays open for as long as the connection does.
+
+Reopening the app restores the shape of the tree but opens nothing. Connections come back closed
+until you open them, so launching with a dozen saved connections never fires a dozen connects or
+asks for a dozen passwords.
 
 When a connect fails, the connection shows the reason and a retry button. Point at the button to
 read the full message. Data that had already loaded stays where it is, so a failed refresh never
 empties a tree you were using.
+
+### Closing
+
+Right-click an open database and choose **Close Database** to close it and every tab on it. If any
+of those tabs has unsaved edits, a truncate or delete is waiting to be saved on that database, or
+a query is still running, one confirmation lists what will be lost. **Cancel** changes nothing.
+Closing stops running queries and rolls back open transactions on that database.
+
+The default database cannot be closed on its own. Its menu offers **Close Connection** instead,
+which closes the connection and all of its tabs with the same confirmation.
+
+Collapsing a node never closes it.
 
 ### Connection actions
 
@@ -39,31 +63,67 @@ Right-click a connection:
 
 | Action | What it does |
 |--------|--------------|
-| **Connect** | Connects without expanding |
-| **Disconnect** | Closes the session and collapses the connection |
-| **Refresh** | Reloads the database list |
+| **Open Connection** | Connects and expands the connection |
+| **Close Connection** | Closes its tabs and disconnects |
 | **New Query** | Opens a query tab on that connection |
+| **New Database…** | Creates a database on that connection |
+| **Refresh** | Reloads the database list |
 | **Edit Connection** | Opens the connection form |
 
-Connect, Disconnect, and Refresh appear according to whether the connection is currently connected.
+Right-click a database or schema for **New Table**, **New View**, **Refresh**, **Data Transfer**,
+and **Generate Data**. Every action runs on the node you clicked, even when it belongs to another
+connection than the window you are in.
 
-Collapsing a connection does not disconnect it. Disconnect is its own action, and it keeps the
-connection's recent tables and sidebar search text, so reconnecting picks up where you left off.
+## Selecting
+
+A single click selects a node and opens nothing. The selected connection, database, or schema is
+where new work goes: **⌘T**, **New Table**, **New View**, and the Objects tab all use it. There is
+no active database: nothing in the tree is bold or tinted, and selecting a node never changes the
+database of any tab.
 
 ## Staying connected
 
 A connection stays connected while either a tab or the sidebar is holding it:
 
-- Close the last tab of a connection that is still expanded in the tree, and it stays connected.
-  The tree is still showing it, so the session stays up.
-- Collapse it first, then close its last tab, and it disconnects.
+- Close the last tab of a connection that is still open in the tree, and it stays connected.
+- Use **Close Connection** to end the session.
 - Closing the last window disconnects everything, because no tree is left on screen.
 
 ## Opening tables
 
-Click a table to open it. Double-click, or click a table under a connection other than the one the
-window is bound to, and the tab opens beside the tabs you already have, bound to the table's own
-connection. See [Tabs](/features/tabs) for how that interacts with the window grouping setting.
+Double-click a table, or select it and press **Return**, to open it. If a tab already shows that
+exact table, it comes to the front instead. The tab keeps the table's own connection, database,
+and schema for the rest of its life, and opening it never changes any other tab.
+
+A table under a connection other than the one the window is bound to opens beside the tabs you
+already have. See [Tabs](/features/tabs) for how that interacts with the window grouping setting.
+
+Redis keeps its own behavior: opening a `dbN` row reuses the current tab and switches it to that
+Redis database in place.
+
+## Recent
+
+When **Show recent tables** is on in Settings > General, each connection has a Recent section. It
+lists recently opened tables from every open database of the connection, with the database name
+next to tables outside the default one.
+
+## Hidden items
+
+System databases and schemas, such as `information_schema` or `pg_catalog`, are hidden. Choose
+**View > Show Hidden Items** to show them in every window. To show only some databases, use the
+connection's [Databases setting](/databases/overview#databases).
+
+## Objects tab
+
+**View > Objects** (`Cmd+Option+3`) opens an Objects tab that lists what is inside the node
+selected in the sidebar: the databases of a connection, the schemas of a database, or the tables,
+views, and functions of a database or schema. Columns show the type, row count, size where the
+database reports it, and comment, and every column sorts. The segmented control filters by Tables,
+Views, and Functions.
+
+The tab follows your selection in the sidebar. Double-click or press `Return` on a database or
+schema to move into it, or on a table to open it. A closed database shows an **Open** button.
+There is at most one Objects tab per window, and it closes with `Cmd+W` like any other tab.
 
 ## Adding and removing connections
 
@@ -74,5 +134,5 @@ it.
 ## Searching
 
 The filter field matches connection and folder names from your saved list, plus the databases,
-schemas, and tables of connections that are currently expanded. It never connects a connection in
-order to search it, so a collapsed connection matches on its name alone.
+schemas, and tables of connections that are currently open. It never connects a connection in
+order to search it, so a closed connection matches on its name alone.

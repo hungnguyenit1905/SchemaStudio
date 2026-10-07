@@ -76,16 +76,6 @@ final class DataTransferService {
 
         let store = TransferCheckpointStore.shared
         let jobId = TransferCheckpointStore.jobId(source: source, target: target, mode: mode)
-        // A run that was told to start over drops whatever the previous run
-        // left behind; a run that resumes reads it instead.
-        if !resume {
-            await store.clear(jobId: jobId)
-        }
-        let resumeState = await Self.resolveResumeState(
-            resume: resume,
-            jobId: jobId,
-            store: store
-        )
 
         do {
             return try await withDriverProvider(
@@ -104,6 +94,22 @@ final class DataTransferService {
                 guard preview.isClean || options.continueOnError else {
                     throw TransferError.preflightFailed(preview.failures)
                 }
+                let usesCheckpointJournal = Self.shouldUseCheckpointJournal(mode: mode, options: options)
+                let journal = usesCheckpointJournal ? try await targetContext.transferCheckpointJournal() : nil
+                if usesCheckpointJournal, journal == nil {
+                    throw TransferError.resumeUnsupported(target.databaseType.displayName)
+                }
+                if !resume {
+                    try await journal?.clear(jobId: jobId)
+                    await store.clear(jobId: jobId)
+                }
+                let resumeState = try await Self.resolveResumeState(
+                    resume: resume,
+                    jobId: jobId,
+                    store: store,
+                    journal: journal,
+                    selectedTables: Set(selections.map(\.table))
+                )
                 self.state.statusMessage = ""
                 var consistency = TransferConsistency.perTable
                 let report = try await self.runPhases(
@@ -114,13 +120,15 @@ final class DataTransferService {
                     options: options,
                     resume: resumeState,
                     jobId: jobId,
+                    journal: journal,
                     lanes: lanes,
                     consistency: &consistency
                 )
                 // A checkpoint is only cleared when the job finished without
                 // failure or cancellation: an interrupted run leaves it for the
                 // next launch to resume from.
-                if !report.wasCancelled, report.failedCount == 0, report.notRunCount == 0 {
+                if Self.shouldClearCheckpoint(after: report) {
+                    try await journal?.clear(jobId: jobId)
                     await store.clear(jobId: jobId)
                 }
                 return report
@@ -134,29 +142,62 @@ final class DataTransferService {
         }
     }
 
+    static func shouldUseCheckpointJournal(mode: TransferMode, options: TransferOptions) -> Bool {
+        mode == .emptyThenTransfer && !options.useSingleTransaction
+    }
+
+    static func shouldClearCheckpoint(after report: TransferReport) -> Bool {
+        !report.wasCancelled && report.failedCount == 0 && report.notRunCount == 0 && report.mismatchedCounts.isEmpty
+    }
+
     /// What a previous run of the same source/target/mode left behind, for the
     /// wizard to offer resuming before a new run starts.
     func pendingResume(
         source: TransferEndpoint,
         target: TransferEndpoint,
-        mode: TransferMode
-    ) async -> TransferResumeState? {
-        guard mode == .emptyThenTransfer else { return nil }
-        let store = TransferCheckpointStore.shared
-        let entries = await store.load(
-            jobId: TransferCheckpointStore.jobId(source: source, target: target, mode: mode)
-        )
-        return entries.isEmpty ? nil : TransferResumeState(entries: entries)
+        mode: TransferMode,
+        options: TransferOptions
+    ) async throws -> TransferResumeState? {
+        guard Self.shouldUseCheckpointJournal(mode: mode, options: options) else { return nil }
+        let jobId = TransferCheckpointStore.jobId(source: source, target: target, mode: mode)
+        try await ensureConnected(target)
+        guard let driver = DatabaseManager.shared.driver(for: target.connectionId),
+              let context = TransferDriverContext(driver: driver, endpoint: target),
+              let journal = try await context.transferCheckpointJournal() else {
+            return nil
+        }
+        guard let journalState = try await journal.load(jobId: jobId) else { return nil }
+        let cache = TransferCheckpointStore.State(journalState)
+        await TransferCheckpointStore.shared.cache(jobId: jobId, mode: mode, state: cache)
+        return TransferResumeState(journalState)
     }
 
     private static func resolveResumeState(
         resume: Bool,
         jobId: UUID,
-        store: TransferCheckpointStore
-    ) async -> TransferResumeState? {
+        store: TransferCheckpointStore,
+        journal: (any PluginTransferCheckpointJournal)?,
+        selectedTables: Set<String>
+    ) async throws -> TransferResumeState? {
         guard resume else { return nil }
-        let entries = await store.load(jobId: jobId)
-        return entries.isEmpty ? nil : TransferResumeState(entries: entries)
+        guard let journal, let state = try await journal.load(jobId: jobId) else {
+            throw TransferError.resumeStateUnavailable
+        }
+        let resumeState = try validateResumeState(state, jobId: jobId, selectedTables: selectedTables)
+        await store.cache(jobId: jobId, mode: .emptyThenTransfer, state: TransferCheckpointStore.State(state))
+        return resumeState
+    }
+
+    static func validateResumeState(
+        _ state: PluginTransferCheckpointState,
+        jobId: UUID,
+        selectedTables: Set<String>
+    ) throws -> TransferResumeState {
+        guard state.manifest.sourceJobId == jobId,
+              Set(state.manifest.tables.map(\.table)) == selectedTables else {
+            throw TransferError.resumeStateUnavailable
+        }
+        return TransferResumeState(state)
     }
 
     // MARK: - Guards

@@ -37,6 +37,8 @@ final class ConnectionFormCoordinator {
     var customization: CustomizationPaneViewModel
     var advanced: AdvancedPaneViewModel
     var aiRules: AIRulesPaneViewModel
+    var diagnostics: DiagnosticsPolicyPaneViewModel
+    var databases: ConnectionDatabasesPaneViewModel
 
     var selectedPane: ConnectionFormPane = .general
     var hasLoadedData: Bool = false
@@ -80,9 +82,13 @@ final class ConnectionFormCoordinator {
         if services.pluginManager.supportsSSL(for: network.type) {
             panes.append(.ssl)
         }
+        if DatabaseLevel.live.hasDatabaseLevel(network.type) {
+            panes.append(.databases)
+        }
         panes.append(.customization)
         panes.append(.advanced)
         panes.append(.aiRules)
+        panes.append(.diagnostics)
         return panes
     }
 
@@ -96,6 +102,7 @@ final class ConnectionFormCoordinator {
             && ssl.validationIssues.isEmpty
             && customization.validationIssues.isEmpty
             && advanced.validationIssues.isEmpty
+            && diagnostics.validationIssues.isEmpty
     }
 
     private let pendingInitialType: DatabaseType?
@@ -121,6 +128,8 @@ final class ConnectionFormCoordinator {
         self.customization = CustomizationPaneViewModel()
         self.advanced = AdvancedPaneViewModel()
         self.aiRules = AIRulesPaneViewModel()
+        self.diagnostics = DiagnosticsPolicyPaneViewModel()
+        self.databases = ConnectionDatabasesPaneViewModel()
 
         let ref = WeakCoordinatorRef(self)
         network.coordinator = ref
@@ -133,6 +142,8 @@ final class ConnectionFormCoordinator {
         customization.coordinator = ref
         advanced.coordinator = ref
         aiRules.coordinator = ref
+        diagnostics.coordinator = ref
+        databases.coordinator = ref
     }
 
     /// Performs the one-time side-effecting setup: applying initial type
@@ -179,12 +190,23 @@ final class ConnectionFormCoordinator {
             customization.load(from: existing)
             advanced.load(from: existing)
             aiRules.load(from: existing)
+            diagnostics.load(from: existing)
+            databases.load(from: existing)
         }
         hasLoadedData = true
     }
 
     func cancel() {
         dismissAction?()
+    }
+
+    func loadLiveDatabases() async {
+        guard let id = connectionId, services.databaseManager.session(for: id)?.isConnected == true else { return }
+        let treeService = DatabaseTreeMetadataService.shared
+        if treeService.databases(for: id).isEmpty {
+            await treeService.loadDatabases(connectionId: id, databaseType: network.type)
+        }
+        databases.mergeLiveDatabases(treeService.databases(for: id).map(\.name))
     }
 
     func deleteCurrent() {
@@ -297,6 +319,8 @@ final class ConnectionFormCoordinator {
             safeModeLevel: customization.safeModeLevel,
             aiPolicy: advanced.aiPolicy,
             aiRules: aiRules.trimmedRules,
+            diagnosticPolicy: diagnostics.policy(for: network.type),
+            databaseListSettings: databases.settings(for: network.type),
             externalAccess: advanced.externalAccess,
             redisDatabase: advanced.additionalFieldValues["redisDatabase"].map { Int($0) ?? 0 },
             startupCommands: advanced.startupCommands.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

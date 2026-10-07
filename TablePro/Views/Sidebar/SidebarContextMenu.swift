@@ -67,23 +67,56 @@ enum SidebarContextMenuLogic {
         guard !isReadOnly, hasSelection else { return false }
         return !supportedOperations.isEmpty
     }
+
+    @MainActor
+    static func dropDatabaseVisible(
+        databaseType: DatabaseType,
+        metadata: DatabaseMetadata,
+        defaultDatabase: String?
+    ) -> Bool {
+        guard PluginManager.shared.supportsDropDatabase(for: databaseType) else { return false }
+        guard !metadata.isSystemDatabase else { return false }
+        guard metadata.name != defaultDatabase else { return false }
+        return true
+    }
+
+    static func tablesInScope(
+        of clicked: DatabaseTreeTableRef,
+        selected: Set<DatabaseTreeTableRef>
+    ) -> [DatabaseTreeTableRef] {
+        guard selected.contains(clicked) else { return [clicked] }
+        return selected
+            .filter { $0.connectionId == clicked.connectionId && $0.database == clicked.database }
+            .sorted { $0.id < $1.id }
+    }
 }
 
 struct SidebarContextMenu: View {
-    let clickedTable: TableInfo?
-    let selectedTables: Set<TableInfo>
-    let isReadOnly: Bool
-    let onBatchToggleTruncate: ([String]) -> Void
-    let onBatchToggleDelete: ([String]) -> Void
-    let coordinator: MainContentCoordinator?
-    var activateBeforeAction: (@MainActor () async -> Void)?
-
-    /// The clicked node's own connection type and duplicate action. The tree spans every saved
-    /// connection, so neither may be read from the window this menu happens to live in: a node
-    /// under another connection would be gated against the wrong dialect and duplicated on the
-    /// wrong server.
-    var duplicateDatabaseType: DatabaseType?
+    let clickedRef: DatabaseTreeTableRef
+    let selectedRefs: Set<DatabaseTreeTableRef>
+    let target: SidebarActionTarget
+    let onBatchToggleTruncate: ([DatabaseTreeTableRef]) -> Void
+    let onBatchToggleDelete: ([DatabaseTreeTableRef]) -> Void
+    let onOpenStructure: () -> Void
     var onDuplicateTable: (() -> Void)?
+
+    private var clickedTable: TableInfo? { clickedRef.table }
+
+    private var actedOn: [DatabaseTreeTableRef] {
+        SidebarContextMenuLogic.tablesInScope(of: clickedRef, selected: selectedRefs)
+    }
+
+    private var selectedTables: Set<TableInfo> {
+        Set(actedOn.map(\.table))
+    }
+
+    private var isReadOnly: Bool { target.isReadOnly }
+
+    private var databaseType: DatabaseType { target.databaseType ?? .mysql }
+
+    private var scope: DatabaseScope { target.scope }
+
+    private var host: MainContentCoordinator? { target.coordinator }
 
     private var hasSelection: Bool {
         SidebarContextMenuLogic.hasSelection(selectedTables: selectedTables, clickedTable: clickedTable)
@@ -94,75 +127,47 @@ struct SidebarContextMenu: View {
     }
 
     private var effectiveTableNames: [String] {
-        if selectedTables.isEmpty, let table = clickedTable {
-            return [table.name]
-        }
-        return selectedTables.map(\.name).sorted()
-    }
-
-    @MainActor
-    private func perform(_ action: @MainActor @escaping () -> Void) {
-        guard let activate = activateBeforeAction else {
-            action()
-            return
-        }
-        Task { @MainActor in
-            await activate()
-            action()
-        }
+        actedOn.map(\.table.name)
     }
 
     var body: some View {
         Button("Create New View...") {
-            perform { coordinator?.createView() }
+            host?.createView(scope: scope)
         }
         .disabled(isReadOnly)
 
         Divider()
 
-        if clickedTable != nil {
-            if isView {
-                Button("Edit View Definition") {
-                    perform {
-                        if let viewName = clickedTable?.name {
-                            coordinator?.editViewDefinition(viewName)
-                        }
-                    }
-                }
-                .disabled(isReadOnly)
+        if isView {
+            Button("Edit View Definition") {
+                host?.editViewDefinition(clickedRef.table.name, scope: scope)
             }
+            .disabled(isReadOnly)
+        }
 
-            Button("Show Structure") {
-                perform {
-                    if let clickedTable {
-                        coordinator?.openTableTab(clickedTable, showStructure: true, activateGridFocus: true)
-                    }
-                }
-            }
+        Button("Show Structure") {
+            onOpenStructure()
+        }
 
-            if let duplicateDatabaseType, let onDuplicateTable,
-               SidebarContextMenuLogic.duplicateVisible(
-                   clickedTable: clickedTable,
-                   databaseType: duplicateDatabaseType
-               ) {
-                let canDuplicate = SidebarContextMenuLogic.duplicateEnabled(
-                    clickedTable: clickedTable,
-                    selectedTables: selectedTables
-                )
-                Button("Duplicate Table...") {
-                    onDuplicateTable()
-                }
-                .disabled(isReadOnly || !canDuplicate)
-                .help(
-                    canDuplicate
-                        ? String(localized: "Copy this table's structure, and its rows if you ask for them.")
-                        : String(localized: "Select a single table to duplicate.")
-                )
+        if let onDuplicateTable,
+           SidebarContextMenuLogic.duplicateVisible(clickedTable: clickedTable, databaseType: databaseType) {
+            let canDuplicate = SidebarContextMenuLogic.duplicateEnabled(
+                clickedTable: clickedTable,
+                selectedTables: selectedTables
+            )
+            Button("Duplicate Table...") {
+                onDuplicateTable()
             }
+            .disabled(isReadOnly || !canDuplicate)
+            .help(
+                canDuplicate
+                    ? String(localized: "Copy this table's structure, and its rows if you ask for them.")
+                    : String(localized: "Select a single table to duplicate.")
+            )
         }
 
         Button("View ER Diagram") {
-            perform { coordinator?.showERDiagram() }
+            host?.showERDiagram(scope: scope)
         }
 
         if hasSelection {
@@ -171,25 +176,23 @@ struct SidebarContextMenu: View {
             }
 
             Button("Export...") {
-                perform { coordinator?.openExportDialog(preselectedTableNames: Set(effectiveTableNames)) }
+                host?.openExportDialog(preselectedTableNames: Set(effectiveTableNames), scope: scope)
             }
         }
 
         if SidebarContextMenuLogic.importVisible(
             clickedTable: clickedTable,
-            supportsImport: PluginManager.shared.supportsImport(
-                for: coordinator?.connection.type ?? .mysql
-            )
+            supportsImport: PluginManager.shared.supportsImport(for: databaseType)
         ) {
             ImportMenuItems(
-                formats: PluginManager.shared.importFormatOptions(for: coordinator?.connection.type ?? .mysql),
+                formats: PluginManager.shared.importFormatOptions(for: databaseType),
                 isDisabled: isReadOnly,
                 shortcut: nil,
-                action: { formatId in perform { coordinator?.openImportDialog(formatId: formatId) } }
+                action: { formatId in host?.openImportDialog(formatId: formatId, scope: scope) }
             )
         }
 
-        let maintenanceOps = coordinator?.supportedMaintenanceOperations() ?? []
+        let maintenanceOps = host?.supportedMaintenanceOperations(for: scope.connectionId) ?? []
         if SidebarContextMenuLogic.maintenanceGroupEnabled(
             isReadOnly: isReadOnly,
             hasSelection: hasSelection,
@@ -198,11 +201,7 @@ struct SidebarContextMenu: View {
             Menu(String(localized: "Maintenance")) {
                 ForEach(maintenanceOps, id: \.self) { op in
                     Button(op) {
-                        perform {
-                            if let table = clickedTable?.name {
-                                coordinator?.showMaintenanceSheet(operation: op, tableName: table)
-                            }
-                        }
+                        host?.showMaintenanceSheet(operation: op, tableName: clickedRef.table.name, scope: scope)
                     }
                 }
             }
@@ -213,7 +212,7 @@ struct SidebarContextMenu: View {
 
             if SidebarContextMenuLogic.truncateVisible(clickedTable: clickedTable) {
                 Button("Truncate") {
-                    perform { onBatchToggleTruncate(effectiveTableNames) }
+                    onBatchToggleTruncate(actedOn)
                 }
                 .disabled(isReadOnly)
             }
@@ -222,7 +221,7 @@ struct SidebarContextMenu: View {
                 SidebarContextMenuLogic.deleteLabel(for: clickedTable?.type),
                 role: .destructive
             ) {
-                perform { onBatchToggleDelete(effectiveTableNames) }
+                onBatchToggleDelete(actedOn)
             }
             .disabled(isReadOnly)
         }

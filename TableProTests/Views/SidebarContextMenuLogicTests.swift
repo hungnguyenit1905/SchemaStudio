@@ -286,4 +286,67 @@ struct SidebarContextMenuLogicTests {
             )
         )
     }
+
+    // MARK: - Drop Database Visibility
+
+    @Test("Drop database visible for a supported type and eligible database")
+    @MainActor
+    func dropDatabaseVisibleForEligibleDatabase() {
+        #expect(SidebarContextMenuLogic.dropDatabaseVisible(
+            databaseType: .postgresql,
+            metadata: DatabaseMetadata.minimal(name: "analytics"),
+            defaultDatabase: "main"
+        ))
+    }
+
+    @Test("Drop database hidden for a type without drop support")
+    @MainActor
+    func dropDatabaseHiddenForUnsupportedType() {
+        #expect(!SidebarContextMenuLogic.dropDatabaseVisible(
+            databaseType: .sqlite,
+            metadata: DatabaseMetadata.minimal(name: "analytics"),
+            defaultDatabase: "main"
+        ))
+    }
+
+    @Test("Drop database hidden for a system database")
+    @MainActor
+    func dropDatabaseHiddenForSystemDatabase() {
+        #expect(!SidebarContextMenuLogic.dropDatabaseVisible(
+            databaseType: .mysql,
+            metadata: DatabaseMetadata.minimal(name: "information_schema", isSystem: true),
+            defaultDatabase: "main"
+        ))
+    }
+
+    @Test("Drop database hidden for the connection's default database")
+    @MainActor
+    func dropDatabaseHiddenForDefaultDatabase() {
+        #expect(!SidebarContextMenuLogic.dropDatabaseVisible(
+            databaseType: .postgresql,
+            metadata: DatabaseMetadata.minimal(name: "main"),
+            defaultDatabase: "main"
+        ))
+    }
+
+    // MARK: - Acted-on tables
+
+    @Test("A clicked table outside the selection acts alone")
+    func clickedOutsideSelectionActsAlone() {
+        let clicked = TestFixtures.makeTableRef(name: "users")
+        let other = TestFixtures.makeTableRef(name: "orders")
+        #expect(SidebarContextMenuLogic.tablesInScope(of: clicked, selected: [other]) == [clicked])
+    }
+
+    @Test("A clicked table inside the selection acts on the selection in its database only")
+    func selectionIsLimitedToTheClickedDatabase() {
+        let clicked = TestFixtures.makeTableRef(name: "users", database: "shop")
+        let sameDatabase = TestFixtures.makeTableRef(name: "orders", database: "shop")
+        let otherDatabase = TestFixtures.makeTableRef(name: "users", database: "reports")
+        let acted = SidebarContextMenuLogic.tablesInScope(
+            of: clicked,
+            selected: [clicked, sameDatabase, otherDatabase]
+        )
+        #expect(Set(acted) == [clicked, sameDatabase])
+    }
 }

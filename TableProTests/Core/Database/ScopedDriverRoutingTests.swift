@@ -16,11 +16,13 @@ import Testing
 struct ScopedDriverRoutingTests {
     private static func makeSession(
         type: DatabaseType,
-        browseDatabase: String
+        browseDatabase: String,
+        openDatabases: Set<String> = []
     ) -> DatabaseConnection {
         let connection = TestFixtures.makeConnection(database: browseDatabase, type: type)
         var session = ConnectionSession(connection: connection)
         session.browseDatabase = browseDatabase
+        session.openDatabases.formUnion(openDatabases)
         DatabaseManager.shared.injectSession(session, for: connection.id)
         return connection
     }
@@ -61,14 +63,27 @@ struct ScopedDriverRoutingTests {
         #expect(DatabaseManager.shared.metadataRoute(for: serverScoped) == .sessionDriver)
     }
 
-    @Test("A reconnect-required engine runs a foreign database on a pooled connection")
-    func reconnectRequiredEngineOnAForeignDatabasePools() {
+    @Test("A reconnect-required engine runs an open foreign database on its own database driver")
+    func reconnectRequiredEngineOnAForeignDatabaseUsesADatabaseSession() {
+        let connection = Self.makeSession(type: .postgresql, browseDatabase: "inventory", openDatabases: ["orders"])
+        defer { DatabaseManager.shared.removeSession(for: connection.id) }
+
+        let foreign = Self.scope(connection, database: "orders")
+
+        #expect(DatabaseManager.shared.executionRoute(for: foreign) == .databaseSession)
+    }
+
+    @Test("A reconnect-required engine refuses a foreign database the user has not opened")
+    func reconnectRequiredEngineOnAnUnopenedForeignDatabaseIsUnavailable() {
         let connection = Self.makeSession(type: .postgresql, browseDatabase: "inventory")
         defer { DatabaseManager.shared.removeSession(for: connection.id) }
 
         let foreign = Self.scope(connection, database: "orders")
 
-        #expect(DatabaseManager.shared.executionRoute(for: foreign) == .pooled)
+        guard case .unavailable = DatabaseManager.shared.executionRoute(for: foreign) else {
+            Issue.record("An unopened foreign database must not get a database session")
+            return
+        }
     }
 
     @Test("An engine that can neither pin nor pool reports the tab's database instead of guessing")

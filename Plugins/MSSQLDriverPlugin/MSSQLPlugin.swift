@@ -386,6 +386,10 @@ final class MSSQLPluginDriver: PluginDatabaseDriver, @unchecked Sendable {
         _ = try await execute(query: "BEGIN TRANSACTION")
     }
 
+    func transferCheckpointJournal() async throws -> (any PluginTransferCheckpointJournal)? {
+        PluginSQLTransferCheckpointJournal(driver: self, dialect: .mssql)
+    }
+
     // MARK: - Query Execution
 
     func execute(query: String) async throws -> PluginQueryResult {

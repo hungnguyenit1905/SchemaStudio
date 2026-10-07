@@ -25,7 +25,7 @@ The opening shortcut is rebindable in **Settings > Keyboard**; see [Keyboard Sho
 
 ## Scopes
 
-Four scopes limit what the search covers: **All** (`Cmd+1`), **Tables** (`Cmd+2`, includes views and system tables), **Databases** (`Cmd+3`, includes schemas), and **Queries** (`Cmd+4`, saved queries and recent queries). Round buttons beside the field set the scope; they show while the field is empty and nothing is listed. Once the list fills, the active scope moves to a badge in the bar. Click the badge to return to All. With an empty search in a scope other than All, everything in that scope is listed under section headers. The database list follows the sidebar's database filter.
+Four scopes limit what the search covers: **All** (`Cmd+1`), **Tables** (`Cmd+2`, includes views and system tables), **Databases** (`Cmd+3`, includes schemas), and **Queries** (`Cmd+4`, saved queries and recent queries). Round buttons beside the field set the scope; they show while the field is empty and nothing is listed. Once the list fills, the active scope moves to a badge in the bar. Click the badge to return to All. With an empty search in a scope other than All, everything in that scope is listed under section headers. The database list follows the connection's [Databases setting](/databases/overview#databases).
 
 Saved queries come from your [favorites](/features/favorites) and also match on their keyword. Recent queries are the last 50 entries from [query history](/features/query-history) for the connection.
 
@@ -43,7 +43,7 @@ The list shows at most 200 results.
 
 Tables already open in a tab show an **Open** badge, and the selected row's hint reads **Switch to Tab**. Committing switches to the existing tab instead of opening a duplicate. `Option+Return` forces a new window tab.
 
-What opening does depends on the item: tables and views open a table tab, databases and schemas switch the active database or schema, and queries load into the SQL editor.
+What opening does depends on the item: tables and views open a table tab, databases and schemas open and reveal their node in the sidebar and select it (the row's hint reads **Reveal**), and queries load into the SQL editor. Revealing never changes the database of an open tab.
 
 ## Right-click actions
 

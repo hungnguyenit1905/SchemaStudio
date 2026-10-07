@@ -24,7 +24,12 @@ extension DatabaseManager {
     func resolvedScope(database: String?, schema: String?, for connectionId: UUID) -> DatabaseScope? {
         let resolvedSchema = resolvedSchemaName(schema, for: connectionId)
         if let database, !database.isEmpty {
-            return DatabaseScope(connectionId: connectionId, database: database, schema: resolvedSchema)
+            let isOtherDatabase = activeSessions[connectionId].map { $0.resolvedBrowseDatabase != database } ?? false
+            return DatabaseScope(
+                connectionId: connectionId,
+                database: database,
+                schema: isOtherDatabase ? schema : resolvedSchema
+            )
         }
         guard let session = activeSessions[connectionId] else { return nil }
         return DatabaseScope(

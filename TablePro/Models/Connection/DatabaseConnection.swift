@@ -382,6 +382,8 @@ struct DatabaseConnection: Identifiable, Hashable {
     var aiPolicy: AIConnectionPolicy?
     var aiRules: String?
     var aiAlwaysAllowedTools: Set<String> = []
+    var diagnosticPolicy: DiagnosticPolicy = .disabled
+    var databaseListSettings: DatabaseListSettings?
     var externalAccess: ExternalAccessLevel = .readOnly
     var additionalFields: [String: String] = [:]
     var redisDatabase: Int?
@@ -487,6 +489,8 @@ struct DatabaseConnection: Identifiable, Hashable {
         aiPolicy: AIConnectionPolicy? = nil,
         aiRules: String? = nil,
         aiAlwaysAllowedTools: Set<String> = [],
+        diagnosticPolicy: DiagnosticPolicy = .disabled,
+        databaseListSettings: DatabaseListSettings? = nil,
         externalAccess: ExternalAccessLevel = .readOnly,
         mongoAuthSource: String? = nil,
         mongoReadPreference: String? = nil,
@@ -532,6 +536,8 @@ struct DatabaseConnection: Identifiable, Hashable {
         self.aiPolicy = aiPolicy
         self.aiRules = aiRules
         self.aiAlwaysAllowedTools = aiAlwaysAllowedTools
+        self.diagnosticPolicy = diagnosticPolicy
+        self.databaseListSettings = databaseListSettings
         self.externalAccess = externalAccess
         self.redisDatabase = redisDatabase
         self.startupCommands = startupCommands
@@ -624,6 +630,8 @@ extension DatabaseConnection: Codable {
         case aiPolicy
         case aiRules
         case aiAlwaysAllowedTools
+        case diagnosticPolicy
+        case databaseListSettings
         case externalAccess
         case additionalFields
         case redisDatabase
@@ -659,6 +667,8 @@ extension DatabaseConnection: Codable {
         aiPolicy = try container.decodeIfPresent(AIConnectionPolicy.self, forKey: .aiPolicy)
         aiRules = try container.decodeIfPresent(String.self, forKey: .aiRules)
         aiAlwaysAllowedTools = try container.decodeIfPresent(Set<String>.self, forKey: .aiAlwaysAllowedTools) ?? []
+        diagnosticPolicy = try container.decodeIfPresent(DiagnosticPolicy.self, forKey: .diagnosticPolicy) ?? .disabled
+        databaseListSettings = try container.decodeIfPresent(DatabaseListSettings.self, forKey: .databaseListSettings)
         externalAccess = try container.decodeIfPresent(ExternalAccessLevel.self, forKey: .externalAccess) ?? .readOnly
         additionalFields = try container.decodeIfPresent([String: String].self, forKey: .additionalFields) ?? [:]
         redisDatabase = try container.decodeIfPresent(Int.self, forKey: .redisDatabase)
@@ -714,6 +724,8 @@ extension DatabaseConnection: Codable {
         if !aiAlwaysAllowedTools.isEmpty {
             try container.encode(aiAlwaysAllowedTools, forKey: .aiAlwaysAllowedTools)
         }
+        try container.encode(diagnosticPolicy, forKey: .diagnosticPolicy)
+        try container.encodeIfPresent(databaseListSettings, forKey: .databaseListSettings)
         try container.encode(externalAccess, forKey: .externalAccess)
         try container.encode(additionalFields, forKey: .additionalFields)
         try container.encodeIfPresent(redisDatabase, forKey: .redisDatabase)

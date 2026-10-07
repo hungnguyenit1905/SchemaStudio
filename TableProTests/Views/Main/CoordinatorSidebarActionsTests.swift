@@ -1,5 +1,3 @@
-// TODO: Re-enable when ActiveSheet conforms to Equatable or tests updated
-#if false
 //
 //  CoordinatorSidebarActionsTests.swift
 //  TableProTests
@@ -37,6 +35,11 @@ struct CoordinatorSidebarActionsTests {
         return (coordinator, tabManager)
     }
 
+    @MainActor
+    private func scope(of coordinator: MainContentCoordinator, database: String = "testdb") -> DatabaseScope {
+        DatabaseScope(connectionId: coordinator.connectionId, database: database, schema: nil)
+    }
+
     // MARK: - createView
 
     @Test("createView with readOnly safe mode returns early without crashing")
@@ -45,8 +48,7 @@ struct CoordinatorSidebarActionsTests {
         let (coordinator, _) = makeCoordinator(safeModeLevel: .readOnly)
         defer { coordinator.teardown() }
 
-        // Should return early due to safeModeLevel.blocksAllWrites
-        coordinator.createView()
+        coordinator.createView(scope: scope(of: coordinator))
     }
 
     @Test("createView does not crash for each database type", arguments: [
@@ -58,9 +60,7 @@ struct CoordinatorSidebarActionsTests {
         let (coordinator, _) = makeCoordinator(type: type)
         defer { coordinator.teardown() }
 
-        // Exercises the switch branch for each type; WindowOpener call
-        // is a side effect we can't assert on, but we verify no crash.
-        coordinator.createView()
+        coordinator.createView(scope: scope(of: coordinator))
     }
 
     // MARK: - openImportDialog
@@ -71,7 +71,7 @@ struct CoordinatorSidebarActionsTests {
         let (coordinator, _) = makeCoordinator(safeModeLevel: .readOnly)
         defer { coordinator.teardown() }
 
-        coordinator.openImportDialog(formatId: "sql")
+        coordinator.openImportDialog(formatId: "sql", scope: scope(of: coordinator))
     }
 
     @Test("openImportDialog with MongoDB returns early at type guard")
@@ -80,9 +80,7 @@ struct CoordinatorSidebarActionsTests {
         let (coordinator, _) = makeCoordinator(type: .mongodb)
         defer { coordinator.teardown() }
 
-        // Hits the MongoDB/Redis guard; shows an alert as side effect
-        // but should not crash.
-        coordinator.openImportDialog(formatId: "sql")
+        coordinator.openImportDialog(formatId: "sql", scope: scope(of: coordinator))
     }
 
     @Test("openImportDialog with Redis returns early at type guard")
@@ -91,7 +89,7 @@ struct CoordinatorSidebarActionsTests {
         let (coordinator, _) = makeCoordinator(type: .redis)
         defer { coordinator.teardown() }
 
-        coordinator.openImportDialog(formatId: "sql")
+        coordinator.openImportDialog(formatId: "sql", scope: scope(of: coordinator))
     }
 
     // MARK: - openExportDialog
@@ -102,9 +100,49 @@ struct CoordinatorSidebarActionsTests {
         let (coordinator, _) = makeCoordinator()
         defer { coordinator.teardown() }
 
-        coordinator.openExportDialog()
+        coordinator.openExportDialog(scope: scope(of: coordinator, database: "reports"))
 
-        #expect(coordinator.activeSheet == .exportDialog)
+        #expect(coordinator.activeSheet?.id == "exportDialog")
+        #expect(coordinator.exportScope == scope(of: coordinator, database: "reports"))
+    }
+
+    @Test("Maintenance carries the table's own scope")
+    @MainActor
+    func maintenanceCarriesScope() {
+        let (coordinator, _) = makeCoordinator()
+        defer { coordinator.teardown() }
+        let target = scope(of: coordinator, database: "reports")
+
+        coordinator.showMaintenanceSheet(operation: "OPTIMIZE", tableName: "users", scope: target)
+
+        guard case .maintenance(_, let tableName, let sheetScope) = coordinator.activeSheet else {
+            Issue.record("expected the maintenance sheet")
+            return
+        }
+        #expect(tableName == "users")
+        #expect(sheetScope == target)
+    }
+
+    @Test("A read-only connection cannot create a table on any of its databases")
+    @MainActor
+    func createTableBlockedByReadOnly() {
+        let (coordinator, tabManager) = makeCoordinator(safeModeLevel: .readOnly)
+        defer { coordinator.teardown() }
+        coordinator.setSafeModeLevel(.readOnly)
+
+        coordinator.createNewTable(scope: scope(of: coordinator, database: "reports"))
+
+        #expect(tabManager.tabs.isEmpty)
+    }
+
+    @Test("Creating a table on an empty window uses the scope's database")
+    @MainActor
+    func createTableUsesScopeDatabase() {
+        let (coordinator, tabManager) = makeCoordinator()
+        defer { coordinator.teardown() }
+
+        coordinator.createNewTable(scope: scope(of: coordinator, database: "reports"))
+
+        #expect(tabManager.tabs.first?.tableContext.databaseName == "reports")
     }
 }
-#endif

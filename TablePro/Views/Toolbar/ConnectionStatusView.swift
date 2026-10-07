@@ -18,7 +18,6 @@ struct ConnectionStatusView: View {
     let connectionName: String
     let displayColor: Color
     var safeModeLevel: SafeModeLevel = .silent
-    var onSwitchDatabase: (() -> Void)?
 
     @ScaledMetric private var engineIconSize: CGFloat = 14
 
@@ -56,19 +55,9 @@ struct ConnectionStatusView: View {
         .accessibilityLabel(connectionAccessibilityLabel)
     }
 
-    @ViewBuilder private var chipSection: some View {
-        if !PluginManager.shared.supportsContainerSwitching(for: databaseType) {
-            chipLabel
-                .help(staticChipTooltip)
-        } else {
-            Button {
-                onSwitchDatabase?()
-            } label: {
-                chipLabel
-            }
-            .buttonStyle(.plain)
-            .help(switchableChipTooltip)
-        }
+    private var chipSection: some View {
+        chipLabel
+            .help(chipTooltip)
     }
 
     private var chipLabel: some View {
@@ -93,26 +82,10 @@ struct ConnectionStatusView: View {
         }
     }
 
-    private var staticChipTooltip: String {
-        String(format: String(localized: "%@: %@"), chipKindLabel, chipText)
-    }
-
-    private var switchableChipTooltip: String {
-        let switchVerb = switch databaseGroupingStrategy {
-        case .bySchema: String(localized: "switch schema")
-        case .byDatabase, .flat, .hierarchicalSchema:
-            String(format: String(localized: "switch %@"), chipKindLabel.lowercased())
-        }
-        if safeModeLevel == .readOnly {
-            return String(
-                format: String(localized: "Current %@: %@ (read only, ⌘K to %@)"),
-                chipKindLabel.lowercased(), chipText, switchVerb
-            )
-        }
-        return String(
-            format: String(localized: "Current %@: %@ (⌘K to %@)"),
-            chipKindLabel.lowercased(), chipText, switchVerb
-        )
+    private var chipTooltip: String {
+        let tooltip = String(format: String(localized: "%@: %@"), chipKindLabel, chipText)
+        guard safeModeLevel == .readOnly else { return tooltip }
+        return String(format: String(localized: "%@ (read only)"), tooltip)
     }
 
     // MARK: - Computed Properties

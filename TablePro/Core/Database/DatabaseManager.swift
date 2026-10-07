@@ -75,12 +75,19 @@ final class DatabaseManager {
 
     /// Orders operations that move the shared driver, so two windows cannot interleave
     /// their pins and each run against the other's database.
-    @ObservationIgnored internal let sessionDriverGate = SessionDriverGate()
+    @ObservationIgnored internal let sessionDriverGate = SessionDriverGate<UUID>()
+
+    @ObservationIgnored internal let databaseDriverGate = SessionDriverGate<ConnectionDatabaseKey>()
+    @ObservationIgnored internal var databaseDrivers: [ConnectionDatabaseKey: DatabaseDriver] = [:]
+    @ObservationIgnored internal var databaseSessionOpens = DatabaseOpenRegistry()
+    @ObservationIgnored internal var databaseDriverOpener: @MainActor (DatabaseScope) async throws -> DatabaseDriver = {
+        try await ScopedDriverFactory.openDriver(scope: $0, timeoutSeconds: 15)
+    }
 
     /// The drivers each connection is currently executing user SQL on, keyed by an
     /// operation token so a finishing operation can only release its own handle. Stop
     /// reaches the right one even when a cross-database tab runs on a pooled connection.
-    @ObservationIgnored internal var runningDrivers: [UUID: [UUID: DatabaseDriver]] = [:]
+    @ObservationIgnored internal var runningDrivers: [UUID: [UUID: RunningDriver]] = [:]
 
     /// Session for `lastActiveSessionId`, subject to the same caveats.
     var lastActiveSession: ConnectionSession? {

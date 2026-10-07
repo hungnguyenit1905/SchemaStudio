@@ -143,7 +143,8 @@ enum ConnectionExportService {
                 additionalFields: additionalFields,
                 redisDatabase: connection.redisDatabase,
                 startupCommands: connection.startupCommands,
-                localOnly: connection.localOnly ? true : nil
+                localOnly: connection.localOnly ? true : nil,
+                databaseList: connection.databaseListSettings.map(Self.exportable)
             )
 
             exportableConnections.append(exportable)
@@ -718,10 +719,27 @@ enum ConnectionExportService {
             sshProfileId: parsedSSHProfileId,
             safeModeLevel: exportable.safeModeLevel.flatMap { SafeModeLevel(rawValue: $0) } ?? .silent,
             aiPolicy: exportable.aiPolicy.flatMap { AIConnectionPolicy(rawValue: $0) },
+            databaseListSettings: exportable.databaseList.map(Self.databaseListSettings),
             redisDatabase: exportable.redisDatabase,
             startupCommands: exportable.startupCommands,
             localOnly: exportable.localOnly ?? false,
             additionalFields: exportable.additionalFields
+        )
+    }
+
+    static func exportable(_ settings: DatabaseListSettings) -> ExportableDatabaseList {
+        ExportableDatabaseList(
+            useCustomList: settings.useCustomList,
+            shown: settings.shown.sorted(),
+            autoOpen: settings.autoOpen.sorted()
+        )
+    }
+
+    static func databaseListSettings(_ exportable: ExportableDatabaseList) -> DatabaseListSettings {
+        DatabaseListSettings(
+            useCustomList: exportable.useCustomList,
+            shown: Set(exportable.shown),
+            autoOpen: Set(exportable.autoOpen)
         )
     }
 

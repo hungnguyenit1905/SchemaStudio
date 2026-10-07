@@ -136,6 +136,7 @@ struct TransferReport: Sendable {
 /// Where a previous run of the same source/target/mode left off, loaded from
 /// the checkpoint store before the run starts.
 struct TransferResumeState: Sendable {
+    let manifest: PluginTransferCheckpointManifest
     let entries: [TransferCheckpointStore.Entry]
 
     func entry(table: String, partition: Int = 0) -> TransferCheckpointStore.Entry? {
@@ -144,8 +145,10 @@ struct TransferResumeState: Sendable {
 
     /// A table whose every partition recorded its final chunk is fully copied.
     func isComplete(table: String) -> Bool {
-        let tableEntries = entries.filter { $0.table == table }
-        return !tableEntries.isEmpty && tableEntries.allSatisfy(\.isComplete)
+        guard let tableManifest = manifest.tables.first(where: { $0.table == table }) else { return false }
+        return (0 ..< tableManifest.partitionCount).allSatisfy { partition in
+            entry(table: table, partition: partition)?.isComplete == true
+        }
     }
 
     /// Any recorded progress at all, which means the target already holds
@@ -156,6 +159,32 @@ struct TransferResumeState: Sendable {
 
     func rowsDone(table: String) -> Int {
         entries.filter { $0.table == table }.reduce(0) { $0 + $1.cursor.rowsDone }
+    }
+
+    func boundaries(table: String) -> [String]? {
+        manifest.tables.first(where: { $0.table == table })?.boundaries
+    }
+}
+
+extension TransferCheckpointStore.State {
+    init(_ state: PluginTransferCheckpointState) {
+        self.init(
+            manifest: state.manifest,
+            entries: state.entries.map {
+                TransferCheckpointStore.Entry(
+                    table: $0.table,
+                    partition: $0.partition,
+                    cursor: TransferChunkCursor(lastKey: $0.lastKey, rowsDone: $0.rowsDone),
+                    isComplete: $0.isComplete
+                )
+            }
+        )
+    }
+}
+
+extension TransferResumeState {
+    init(_ state: PluginTransferCheckpointState) {
+        self.init(manifest: state.manifest, entries: TransferCheckpointStore.State(state).entries)
     }
 }
 
@@ -204,6 +233,9 @@ enum TransferError: LocalizedError, Equatable {
     case emptyColumnMapping(String)
     case columnMappingIncomplete(String)
     case chunkCursorUnavailable(String)
+    case resumeUnsupported(String)
+    case resumeStateUnavailable
+    case commitOutcomeUnknown
     case preflightFailed([TransferPreflightFailure])
 
     var errorDescription: String? {
@@ -266,6 +298,15 @@ enum TransferError: LocalizedError, Equatable {
                 ),
                 table
             )
+        case .resumeUnsupported(let database):
+            return String(
+                format: String(localized: "%@ cannot safely resume per-chunk transfers."),
+                database
+            )
+        case .resumeStateUnavailable:
+            return String(localized: "The target checkpoint does not match this transfer. Start over to continue.")
+        case .commitOutcomeUnknown:
+            return String(localized: "The target did not confirm the last commit. Check its rows before retrying.")
         case .preflightFailed(let failures):
             let details = failures.map { "\($0.table): \($0.message)" }.joined(separator: "\n")
             return String(

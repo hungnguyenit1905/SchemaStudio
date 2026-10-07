@@ -43,8 +43,8 @@ struct DatabaseTreeView: View {
     let databaseType: DatabaseType
     let viewModel: SidebarViewModel
     let windowState: WindowSidebarState
-    @Binding var pendingTruncates: Set<String>
-    @Binding var pendingDeletes: Set<String>
+    @Binding var pendingTruncates: Set<DatabaseTreeTableRef>
+    @Binding var pendingDeletes: Set<DatabaseTreeTableRef>
     let coordinator: MainContentCoordinator?
     let sidebarState: SharedSidebarState
 

@@ -327,29 +327,29 @@ struct KeyboardSettingsMigrationTests {
 
 @Suite("Shortcut hint")
 struct ShortcutHintTests {
-    @Test("Switch Connection default hint shows Control+Command+C")
-    func switchConnectionDefaultHint() {
+    @Test("New Tab default hint shows Command+T")
+    func newTabDefaultHint() {
         let hint = KeyboardSettings.default.shortcutHint(
-            String(localized: "Switch Connection"),
-            for: .switchConnection
+            String(localized: "New Tab"),
+            for: .newTab
         )
-        #expect(hint == "Switch Connection (⌃⌘C)")
+        #expect(hint == "New Tab (⌘T)")
     }
 
     @Test("Hint reflects a user override")
     func hintReflectsOverride() {
         var settings = KeyboardSettings.default
-        settings.setShortcut(.character("j", command: true), for: .switchConnection)
-        let hint = settings.shortcutHint(String(localized: "Switch Connection"), for: .switchConnection)
-        #expect(hint == "Switch Connection (⌘J)")
+        settings.setShortcut(.character("j", command: true), for: .newTab)
+        let hint = settings.shortcutHint(String(localized: "New Tab"), for: .newTab)
+        #expect(hint == "New Tab (⌘J)")
     }
 
     @Test("Cleared shortcut shows label only")
     func clearedShortcutShowsLabelOnly() {
         var settings = KeyboardSettings.default
-        settings.clearShortcut(for: .switchConnection)
-        let hint = settings.shortcutHint(String(localized: "Switch Connection"), for: .switchConnection)
-        #expect(hint == "Switch Connection")
+        settings.clearShortcut(for: .newTab)
+        let hint = settings.shortcutHint(String(localized: "New Tab"), for: .newTab)
+        #expect(hint == "New Tab")
     }
 
     @Test("Action without a default shows label only")

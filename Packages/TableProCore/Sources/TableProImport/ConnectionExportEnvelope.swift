@@ -93,6 +93,7 @@ public struct ExportableConnection: Codable {
     public let redisDatabase: Int?
     public let startupCommands: String?
     public let localOnly: Bool?
+    public let databaseList: ExportableDatabaseList?
 
     public init(
         name: String,
@@ -113,7 +114,8 @@ public struct ExportableConnection: Codable {
         additionalFields: [String: String]?,
         redisDatabase: Int?,
         startupCommands: String?,
-        localOnly: Bool?
+        localOnly: Bool?,
+        databaseList: ExportableDatabaseList? = nil
     ) {
         self.name = name
         self.host = host
@@ -134,6 +136,7 @@ public struct ExportableConnection: Codable {
         self.redisDatabase = redisDatabase
         self.startupCommands = startupCommands
         self.localOnly = localOnly
+        self.databaseList = databaseList
     }
 
     public func renamed(to newName: String) -> ExportableConnection {
@@ -144,7 +147,8 @@ public struct ExportableConnection: Codable {
             groupName: groupName, sshProfileId: sshProfileId,
             safeModeLevel: safeModeLevel, aiPolicy: aiPolicy,
             additionalFields: additionalFields, redisDatabase: redisDatabase,
-            startupCommands: startupCommands, localOnly: localOnly
+            startupCommands: startupCommands, localOnly: localOnly,
+            databaseList: databaseList
         )
     }
 }
@@ -163,7 +167,8 @@ public extension ExportableConnection {
             groupName: groupName, sshProfileId: sshProfileId,
             safeModeLevel: safeModeLevel, aiPolicy: aiPolicy,
             additionalFields: allowed.isEmpty ? nil : allowed, redisDatabase: redisDatabase,
-            startupCommands: startupCommands, localOnly: localOnly
+            startupCommands: startupCommands, localOnly: localOnly,
+            databaseList: databaseList
         )
     }
 }
@@ -246,6 +251,18 @@ public struct ExportableSSLConfig: Codable {
 }
 
 // MARK: - Group & Tag
+
+public struct ExportableDatabaseList: Codable, Equatable, Sendable {
+    public let useCustomList: Bool
+    public let shown: [String]
+    public let autoOpen: [String]
+
+    public init(useCustomList: Bool, shown: [String], autoOpen: [String]) {
+        self.useCustomList = useCustomList
+        self.shown = shown
+        self.autoOpen = autoOpen
+    }
+}
 
 public struct ExportableGroup: Codable {
     public let name: String

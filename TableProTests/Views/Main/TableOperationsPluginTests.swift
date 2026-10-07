@@ -52,14 +52,24 @@ private final class StubTableOperationDriver: PluginDatabaseDriver {
 @Suite("TableOperations Plugin-First SQL")
 @MainActor
 struct TableOperationsPluginTests {
-    private func makeBuilder(tables: [TableInfo] = []) -> TableOperationSQLBuilder {
+    private let connectionId = UUID()
+
+    private func makeBuilder() -> TableOperationSQLBuilder {
         let connection = DatabaseConnection(name: "Test", type: .mysql)
         let adapter = PluginDriverAdapter(connection: connection, pluginDriver: StubTableOperationDriver())
         return TableOperationSQLBuilder(
-            connectionId: connection.id,
+            connectionId: connectionId,
             databaseType: .mysql,
-            tableInfoProvider: { Dictionary(uniqueKeysWithValues: tables.map { ($0.name, $0) }) },
             adapterProvider: { adapter }
+        )
+    }
+
+    private func table(_ name: String) -> DatabaseTreeTableRef {
+        DatabaseTreeTableRef(
+            connectionId: connectionId,
+            database: "testdb",
+            schema: nil,
+            table: TableInfo(name: name, type: .table, rowCount: nil, schema: nil)
         )
     }
 
@@ -92,7 +102,7 @@ struct TableOperationsPluginTests {
     @Test("Truncate quotes the table with the driver's identifier quoting")
     func truncateUsesDriverQuoting() {
         let stmts = makeBuilder().generate(
-            truncates: ["users"], deletes: [], options: [:], includeFKHandling: false
+            truncates: [table("users")], deletes: [], options: [:], includeFKHandling: false
         )
         #expect(stmts == ["TRUNCATE TABLE `users`"])
     }
@@ -100,9 +110,9 @@ struct TableOperationsPluginTests {
     @Test("Truncate appends CASCADE when the option is set")
     func truncateCascade() {
         let stmts = makeBuilder().generate(
-            truncates: ["orders"],
+            truncates: [table("orders")],
             deletes: [],
-            options: ["orders": TableOperationOptions(ignoreForeignKeys: false, cascade: true)],
+            options: [table("orders"): TableOperationOptions(ignoreForeignKeys: false, cascade: true)],
             includeFKHandling: false
         )
         #expect(stmts == ["TRUNCATE TABLE `orders` CASCADE"])
@@ -111,7 +121,7 @@ struct TableOperationsPluginTests {
     @Test("Drop quotes the table with the driver's identifier quoting")
     func dropUsesDriverQuoting() {
         let stmts = makeBuilder().generate(
-            truncates: [], deletes: ["users"], options: [:], includeFKHandling: false
+            truncates: [], deletes: [table("users")], options: [:], includeFKHandling: false
         )
         #expect(stmts == ["DROP TABLE `users`"])
     }
@@ -120,8 +130,8 @@ struct TableOperationsPluginTests {
     func dropCascade() {
         let stmts = makeBuilder().generate(
             truncates: [],
-            deletes: ["orders"],
-            options: ["orders": TableOperationOptions(ignoreForeignKeys: false, cascade: true)],
+            deletes: [table("orders")],
+            options: [table("orders"): TableOperationOptions(ignoreForeignKeys: false, cascade: true)],
             includeFKHandling: false
         )
         #expect(stmts == ["DROP TABLE `orders` CASCADE"])
@@ -132,11 +142,11 @@ struct TableOperationsPluginTests {
     @Test("FK handling wraps the whole batch")
     func combinedWithFKHandling() {
         let stmts = makeBuilder().generate(
-            truncates: ["alpha"],
-            deletes: ["beta"],
+            truncates: [table("alpha")],
+            deletes: [table("beta")],
             options: [
-                "alpha": TableOperationOptions(ignoreForeignKeys: true, cascade: false),
-                "beta": TableOperationOptions(ignoreForeignKeys: true, cascade: false)
+                table("alpha"): TableOperationOptions(ignoreForeignKeys: true, cascade: false),
+                table("beta"): TableOperationOptions(ignoreForeignKeys: true, cascade: false)
             ],
             includeFKHandling: true
         )
@@ -151,7 +161,7 @@ struct TableOperationsPluginTests {
     @Test("FK handling is skipped when no table asks to ignore foreign keys")
     func noFKHandlingWithoutOptIn() {
         let stmts = makeBuilder().generate(
-            truncates: ["alpha"], deletes: [], options: [:], includeFKHandling: true
+            truncates: [table("alpha")], deletes: [], options: [:], includeFKHandling: true
         )
         #expect(stmts == ["TRUNCATE TABLE `alpha`"])
     }
@@ -159,7 +169,7 @@ struct TableOperationsPluginTests {
     @Test("Tables are sorted for consistent execution order")
     func sortedOrder() {
         let stmts = makeBuilder().generate(
-            truncates: ["zebra", "apple"], deletes: [], options: [:], includeFKHandling: false
+            truncates: [table("zebra"), table("apple")], deletes: [], options: [:], includeFKHandling: false
         )
         #expect(stmts == ["TRUNCATE TABLE `apple`", "TRUNCATE TABLE `zebra`"])
     }
@@ -188,8 +198,8 @@ struct TableOperationsPluginTests {
         defer { coordinator.teardown() }
 
         let stmts = coordinator.generateTableOperationSQL(
-            truncates: ["users"],
-            deletes: ["orders"],
+            truncates: [table("users")],
+            deletes: [table("orders")],
             options: [:],
             includeFKHandling: true
         )

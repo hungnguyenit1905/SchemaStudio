@@ -23,8 +23,8 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     private var connectionToken = ""
     var activeDatabase: String?
     var activeSchema: String?
-    var pendingTruncates: [UUID: Set<String>] = [:]
-    var pendingDeletes: [UUID: Set<String>] = [:]
+    var pendingTruncates: [UUID: Set<DatabaseTreeTableRef>] = [:]
+    var pendingDeletes: [UUID: Set<DatabaseTreeTableRef>] = [:]
 
     var contextResolver = SidebarNodeContextResolver.live
     var contextCache: [UUID: SidebarNodeContext] = [:]
@@ -32,10 +32,10 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     var nodeCache: [String: DatabaseTreeNode] = [:]
     var childrenCache: [String: [DatabaseTreeNode]] = [:]
     var lastSelection: Set<DatabaseTreeTableRef> = []
-    var pendingSingleClickWork: DispatchWorkItem?
     var isApplyingExpansion = false
     var isSyncingSelection = false
     var isReloading = false
+    private var navigationGeneration: UInt = 0
     private var hasRenderedOnce = false
     private var reconcileScheduled = false
     private var observationGeneration = 0
@@ -52,6 +52,15 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     func attach(outlineView: NSOutlineView) {
         self.outlineView = outlineView
         observeConnectionListChanges()
+    }
+
+    func nextNavigationGeneration() -> UInt {
+        navigationGeneration &+= 1
+        return navigationGeneration
+    }
+
+    func isCurrentNavigation(_ generation: UInt) -> Bool {
+        generation == navigationGeneration
     }
 
     /// The connection and folder levels come from storage, not from any
@@ -148,6 +157,7 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
     /// transition, and each expanded connection contributes its own metadata.
     private func snapshotDependencies() {
         _ = DatabaseManager.shared.activeSessions
+        _ = AppSettingsManager.shared.general.showHiddenItems
         _ = ConnectionTreeState.shared.connectFailures
         for expandedId in ConnectionTreeState.shared.expandedConnectionIds {
             _ = service.databaseListState(for: expandedId)
@@ -179,7 +189,7 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         isReloading = true
         contextCache.removeAll()
         childrenCache.removeAll()
-        discardActiveConnectionIfDeleted()
+        discardSelectedScopeIfDeleted()
         outlineView.reloadData()
         applyDesiredExpansion()
         syncSelectionToModel()
@@ -187,14 +197,10 @@ final class DatabaseTreeOutlineCoordinator: NSObject {
         beginObserving()
     }
 
-    /// Deleting a connection cannot reach into every window's state, so each
-    /// tree drops its own pointer at the refresh the deletion triggers. Left
-    /// alone, the tools below the sidebar would keep aiming at an id that no
-    /// longer resolves to anything.
-    private func discardActiveConnectionIfDeleted() {
-        guard let active = windowState?.activeConnectionId,
-              contextResolver.context(for: active) == nil else { return }
-        windowState?.activeConnectionId = nil
+    private func discardSelectedScopeIfDeleted() {
+        guard let scope = windowState?.selectedScope,
+              contextResolver.context(for: scope.connectionId) == nil else { return }
+        windowState?.selectedScope = nil
     }
 
     // MARK: - Node building

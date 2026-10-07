@@ -19,6 +19,10 @@ extension DataTransferService {
         mode: TransferMode,
         options: TransferOptions
     ) async throws -> TransferPreview {
+        let requiresCheckpointJournal = mode == .emptyThenTransfer && !options.useSingleTransaction
+        if requiresCheckpointJournal, try await target.transferCheckpointJournal() == nil {
+            throw TransferError.resumeUnsupported(target.databaseType.displayName)
+        }
         let targetTables = try await target.fetchTableNames()
         let selectedTables = Set(selections.map(\.table))
         let inbound = mode == .copy ? try await inboundForeignKeys(at: target) : [:]
@@ -93,6 +97,10 @@ extension DataTransferService {
             mapper: mapper.isSameDialect ? nil : mapper,
             keepsDescendingIndex: keepsDescendingIndex
         )
+
+        if mode == .emptyThenTransfer, !options.useSingleTransaction, structure.primaryKeyColumns.isEmpty {
+            throw TransferError.chunkCursorUnavailable(table)
+        }
 
         let steps = TransferModePlanner.plan(mode: mode, options: options, targetExists: targetExists)
         if steps.contains(.failMissingTarget) { throw TransferError.missingTargetTable(table) }

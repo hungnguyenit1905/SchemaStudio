@@ -52,8 +52,6 @@ internal final class MainWindowToolbar: NSObject, NSToolbarDelegate {
     // MARK: - Identifiers
 
     static let connectionGroup = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.connectionGroup")
-    static let connection = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.connection")
-    static let database = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.database")
     static let refresh = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.refresh")
     static let saveChanges = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.saveChanges")
     static let principal = NSToolbarItem.Identifier("com.SchemaStudio.toolbar.principal")
@@ -113,10 +111,8 @@ internal final class MainWindowToolbar: NSObject, NSToolbarDelegate {
             let group = makeGroup(
                 id: itemIdentifier,
                 label: String(localized: "Connection"),
-                subitems: [subitemConnection(), subitemDatabase()],
+                subitems: [],
                 content: HStack(spacing: 4) {
-                    ConnectionToolbarButton(coordinator: coordinator)
-                    DatabaseToolbarButton(coordinator: coordinator)
                     SessionContextToolbarButton(coordinator: coordinator)
                 }
             )
@@ -132,7 +128,6 @@ internal final class MainWindowToolbar: NSObject, NSToolbarDelegate {
                 modifiers: [],
                 content: ToolbarPrincipalContent(
                     state: coordinator.toolbarState,
-                    onSwitchDatabase: { [weak coordinator] in coordinator?.commandActions?.openDatabaseSwitcher() },
                     onCancelQuery: { [weak coordinator] in coordinator?.cancelCurrentQuery() },
                     onSafeModeChange: { [weak coordinator] level in coordinator?.setSafeModeLevel(level) }
                 )

@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import TableProPluginKit
 import Testing
@@ -302,6 +303,38 @@ struct OpenTableTabTests {
         #expect(tabManager.tabs.count == 1)
         #expect(tabManager.selectedTab?.tableContext.tableName == "orders")
         #expect(tabManager.selectedTab?.isPreview == false)
+    }
+
+    @Test("Opening a permanent table tab keeps it beside the current window")
+    @MainActor
+    func forceNewTabUsesCurrentWindowAsAnchor() throws {
+        let connection = TestFixtures.makeConnection(database: "db_a")
+        let tabManager = QueryTabManager()
+        let coordinator = MainContentCoordinator(
+            connection: connection,
+            tabManager: tabManager,
+            changeManager: DataChangeManager(),
+            toolbarState: ConnectionToolbarState()
+        )
+        defer { coordinator.teardown() }
+
+        try tabManager.addTableTab(tableName: "users", databaseType: connection.type, databaseName: "db_a")
+        let sourceWindow = NSWindow()
+        coordinator.contentWindow = sourceWindow
+        var openedPayload: EditorTabPayload?
+        var receivedTabGroup: TabGroupPolicy?
+        weak var receivedAnchor: NSWindow?
+        coordinator.openTabRequest = { payload, tabGroup, anchor in
+            openedPayload = payload
+            receivedTabGroup = tabGroup
+            receivedAnchor = anchor
+        }
+
+        coordinator.openTableTab("orders", forceNewTab: true)
+
+        #expect(openedPayload?.tableName == "orders")
+        #expect(receivedTabGroup == .shared)
+        #expect(receivedAnchor === sourceWindow)
     }
 
     // MARK: - Activate already-open tab (issue #1613)

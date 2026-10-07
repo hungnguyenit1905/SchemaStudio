@@ -1,5 +1,5 @@
 {
-  "originHash" : "82a5a66895648ca2f4563a92a60bc4b0e7a39d1f1c4a3225dbc7a0588b9e149a",
+  "originHash" : "a5bcf0fdd1912a9411033e421c0c0410368ca88c4e2319454eca8889a8757d4b",
   "pins" : [
     {
       "identity" : "bigint",
@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ChimeHQ/Rearrange",
       "state" : {
-        "revision" : "f1d74e1642956f0300756ad8d1d64e9034857bc3",
-        "version" : "2.0.0"
+        "revision" : "4de8be41dba304192e87dc0a11e0aa39e72aa2e8",
+        "version" : "2.1.1"
       }
     },
     {
@@ -212,8 +212,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ChimeHQ/TextStory",
       "state" : {
-        "revision" : "91df6fc9bd817f9712331a4a3e826f7bdc823e1d",
-        "version" : "0.9.1"
+        "revision" : "a52db1a2eca74d37c8c19bf3165416941632ed45",
+        "version" : "0.9.2"
       }
     },
     {

@@ -105,15 +105,23 @@ final class ERDiagramViewModel {
     @ObservationIgnored private var nodeIdToName: [UUID: String] = [:]
 
     @ObservationIgnored private let services: AppServices
+    @ObservationIgnored private let openTab: (EditorTabPayload) -> Void
 
     // MARK: - Initialization
 
-    init(connectionId: UUID, databaseName: String, schemaKey: String, services: AppServices = .live) {
+    init(
+        connectionId: UUID,
+        databaseName: String,
+        schemaKey: String,
+        services: AppServices = .live,
+        openTab: @escaping (EditorTabPayload) -> Void
+    ) {
         self.connectionId = connectionId
         self.databaseName = databaseName
         self.schemaKey = schemaKey
         self.schemaName = Self.resolveSchemaName(fromSchemaKey: schemaKey, databaseName: databaseName)
         self.services = services
+        self.openTab = openTab
     }
 
     deinit {
@@ -318,7 +326,7 @@ final class ERDiagramViewModel {
                 skipAutoExecute: true,
                 tabTitle: String(localized: "Schema SQL")
             )
-            WindowManager.shared.openTab(payload: payload)
+            openTab(payload)
         } catch {
             Self.logger.error("Failed to export ER diagram as SQL: \(error.localizedDescription)")
             AlertHelper.showErrorSheet(

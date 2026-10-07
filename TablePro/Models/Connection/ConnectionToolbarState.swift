@@ -84,10 +84,12 @@ final class ConnectionToolbarState {
     /// Connection name for display
     var connectionName: String = ""
 
-    /// Active database (always meaningful). For schema-grouped engines like SQL Server,
-    /// this is the SQL Server database (e.g. "Sales"); the active schema lives in
-    /// `currentSchema` and is what the toolbar chip shows.
+    /// The focused tab's database. For schema-grouped engines like SQL Server this is the
+    /// database (e.g. "Sales") and the tab's schema lives in `currentSchema`.
     var currentDatabase: String = ""
+
+    var tabDatabase: String?
+    var tabSchema: String?
 
     /// Active schema for engines whose grouping strategy is `.bySchema`. Nil for
     /// `.byDatabase` and `.flat` engines, where the database is the primary unit.
@@ -196,10 +198,9 @@ final class ConnectionToolbarState {
     var chipText: String {
         switch databaseGroupingStrategy {
         case .bySchema:
-            if let schema = currentSchema, !schema.isEmpty {
-                return schema
-            }
-            return currentDatabase
+            guard let schema = currentSchema, !schema.isEmpty else { return currentDatabase }
+            guard !currentDatabase.isEmpty else { return schema }
+            return "\(currentDatabase) · \(schema)"
         case .byDatabase, .flat, .hierarchicalSchema:
             if PluginManager.shared.containerSwitchTarget(for: databaseType) == .schema,
                let schema = currentSchema, !schema.isEmpty {
@@ -247,6 +248,12 @@ final class ConnectionToolbarState {
         syncFromSession(for: connection)
     }
 
+    func showTab(database: String?, schema: String?, connection: DatabaseConnection) {
+        tabDatabase = database.flatMap { $0.isEmpty ? nil : $0 }
+        tabSchema = schema.flatMap { $0.isEmpty ? nil : $0 }
+        syncFromSession(for: connection)
+    }
+
     /// Resolve `currentDatabase` and `currentSchema` from the active session, falling
     /// back to the connection's configured database for `currentDatabase`. The chip
     /// updates automatically via the `chipText` computed property.
@@ -254,6 +261,8 @@ final class ConnectionToolbarState {
         let resolvedDatabase: String
         if PluginManager.shared.connectionMode(for: connection.type) == .fileBased {
             resolvedDatabase = (connection.database as NSString).lastPathComponent
+        } else if let tabDatabase {
+            resolvedDatabase = tabDatabase
         } else if let session = DatabaseManager.shared.session(for: connection.id),
                   let database = session.browseDatabase {
             resolvedDatabase = database
@@ -264,7 +273,9 @@ final class ConnectionToolbarState {
             currentDatabase = resolvedDatabase
         }
 
-        let resolvedSchema = DatabaseManager.shared.session(for: connection.id)?.browseSchema
+        let resolvedSchema = tabDatabase == nil
+            ? DatabaseManager.shared.session(for: connection.id)?.browseSchema
+            : tabSchema
         if currentSchema != resolvedSchema {
             currentSchema = resolvedSchema
         }
@@ -298,6 +309,8 @@ final class ConnectionToolbarState {
         connectionName = ""
         currentDatabase = ""
         currentSchema = nil
+        tabDatabase = nil
+        tabSchema = nil
         databaseGroupingStrategy = .byDatabase
         displayColor = databaseType.themeColor
         connectionState = .disconnected

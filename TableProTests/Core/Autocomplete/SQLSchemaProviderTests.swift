@@ -30,10 +30,12 @@ final class MockDatabaseDriver: DatabaseDriver, SchemaSwitchable, @unchecked Sen
     var fetchSchemaTablesCalls: [String] = []
     var applyQueryTimeoutValues: [Int] = []
     var cancelQueryCallCount = 0
+    var disconnectCallCount = 0
     var connectDelaySeconds: Double = 0
     var switchSchemaDelaySeconds: Double = 0
     var hangsUntilDisconnect = false
     var schemasToReturn: [String] = []
+    var databasesToReturn: [String] = []
     var fetchSchemasError: Error?
     private var hangContinuation: CheckedContinuation<Void, Never>?
 
@@ -51,6 +53,7 @@ final class MockDatabaseDriver: DatabaseDriver, SchemaSwitchable, @unchecked Sen
     }
 
     func disconnect() {
+        disconnectCallCount += 1
         hangContinuation?.resume()
         hangContinuation = nil
     }
@@ -116,7 +119,7 @@ final class MockDatabaseDriver: DatabaseDriver, SchemaSwitchable, @unchecked Sen
         )
     }
 
-    func fetchDatabases() async throws -> [String] { [] }
+    func fetchDatabases() async throws -> [String] { databasesToReturn }
     func fetchDatabaseMetadata(_ database: String) async throws -> DatabaseMetadata {
         DatabaseMetadata(
             id: database, name: database, tableCount: nil, sizeBytes: nil,
@@ -125,6 +128,8 @@ final class MockDatabaseDriver: DatabaseDriver, SchemaSwitchable, @unchecked Sen
     }
 
     func createDatabase(name: String, charset: String, collation: String?) async throws {}
+    func createDatabase(_ request: CreateDatabaseRequest) async throws {}
+    func dropDatabase(name: String) async throws {}
     func cancelQuery() throws { cancelQueryCallCount += 1 }
     func beginTransaction() async throws {}
     func commitTransaction() async throws {}

@@ -27,6 +27,7 @@ private final class RecordingStructureDriver: PluginDatabaseDriver, @unchecked S
 
     var supportsForeignKeyToggle = true
     var failingQueries: Set<String> = []
+    var foreignKeysByTable: [String: [PluginForeignKeyInfo]] = [:]
     private(set) var executedQueries: [String] = []
 
     func foreignKeyDisableStatements() -> [String]? {
@@ -66,6 +67,14 @@ private final class RecordingStructureDriver: PluginDatabaseDriver, @unchecked S
             + " REFERENCES `\(fk.referencedTable)` (\(fk.referencedColumns.joined(separator: ", ")))"
     }
 
+    func generateDropForeignKeySQL(table: String, constraintName: String) -> String? {
+        "ALTER TABLE `\(table)` DROP CONSTRAINT `\(constraintName)`"
+    }
+
+    func fetchAllForeignKeys(schema: String?) async throws -> [String: [PluginForeignKeyInfo]] {
+        foreignKeysByTable
+    }
+
     func fetchTables(schema: String?) async throws -> [PluginTableInfo] { [] }
     func fetchColumns(table: String, schema: String?) async throws -> [PluginColumnInfo] { [] }
     func fetchIndexes(table: String, schema: String?) async throws -> [PluginIndexInfo] { [] }
@@ -85,12 +94,15 @@ private final class RecordingStructureDriver: PluginDatabaseDriver, @unchecked S
 @MainActor
 @Suite("DataTransfer structure phase")
 struct DataTransferStructurePhaseTests {
-    private func makeContext(driver: RecordingStructureDriver) -> TransferDriverContext {
-        let connection = DatabaseConnection(name: "Target", type: .mysql)
+    private func makeContext(
+        driver: RecordingStructureDriver,
+        type: DatabaseType = .mysql
+    ) -> TransferDriverContext {
+        let connection = DatabaseConnection(name: "Target", type: type)
         let adapter = PluginDriverAdapter(connection: connection, pluginDriver: driver)
         let endpoint = TransferEndpoint(
             connectionId: connection.id,
-            databaseType: .mysql,
+            databaseType: type,
             database: "shop",
             schema: nil
         )
@@ -98,6 +110,42 @@ struct DataTransferStructurePhaseTests {
             fatalError("PluginDriverAdapter is always a valid transfer context")
         }
         return context
+    }
+
+    @Test("PostgreSQL copy removes selected foreign keys before dropping referenced tables")
+    func postgresCopyDropsInternalForeignKeysFirst() async {
+        let driver = RecordingStructureDriver()
+        driver.foreignKeysByTable = [
+            "child": [PluginForeignKeyInfo(
+                name: "child_parent_fk",
+                column: "parent_id",
+                referencedTable: "parent",
+                referencedColumn: "id"
+            )],
+            "unselected": [PluginForeignKeyInfo(
+                name: "unselected_parent_fk",
+                column: "parent_id",
+                referencedTable: "parent",
+                referencedColumn: "id"
+            )]
+        ]
+        let context = makeContext(driver: driver, type: .postgresql)
+        var run = TransferRunState()
+
+        await DataTransferService().runStructurePhase(
+            [
+                makePlan(table: "parent", steps: [.dropTargetTable]),
+                makePlan(table: "child", steps: [.dropTargetTable])
+            ],
+            target: context,
+            options: TransferOptions(),
+            run: &run
+        )
+
+        let dropForeignKey = "ALTER TABLE `child` DROP CONSTRAINT `child_parent_fk`"
+        #expect(driver.executedQueries.first == dropForeignKey)
+        #expect(driver.executedQueries.contains("DROP TABLE `parent`"))
+        #expect(!driver.executedQueries.contains("ALTER TABLE `unselected` DROP CONSTRAINT `unselected_parent_fk`"))
     }
 
     private func makePlan(

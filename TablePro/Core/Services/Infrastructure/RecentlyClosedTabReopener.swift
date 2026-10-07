@@ -27,8 +27,17 @@ internal enum RecentlyClosedTabReopener {
             return
         }
 
-        openWindowTab(for: entry)
+        openWindowTab(for: entry, anchor: editorWindow(for: entry.connectionId))
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private static func editorWindow(for connectionId: UUID) -> NSWindow? {
+        if let keyWindow = NSApp.keyWindow,
+           MainContentCoordinator.coordinator(forWindow: keyWindow) != nil {
+            return keyWindow
+        }
+        return MainContentCoordinator.allActiveCoordinators()
+            .first(where: { $0.connectionId == connectionId })?.contentWindow
     }
 
     private static func emptyWindowCoordinator(for connectionId: UUID) -> MainContentCoordinator? {
@@ -59,7 +68,7 @@ internal enum RecentlyClosedTabReopener {
         )
     }
 
-    internal static func openWindowTab(for entry: RecentlyClosedTabEntry) {
+    internal static func openWindowTab(for entry: RecentlyClosedTabEntry, anchor: NSWindow? = nil) {
         let tab = makeTab(for: entry)
         let payload = EditorTabPayload(
             connectionId: entry.connectionId,
@@ -78,6 +87,10 @@ internal enum RecentlyClosedTabReopener {
             .init(tabs: [tab], selectedTabId: tab.id, loadTiming: .immediate),
             for: payload.id
         )
-        WindowManager.shared.openTab(payload: payload)
+        WindowManager.shared.openTab(
+            payload: payload,
+            tabGroup: ConnectionSwitchPlacement.tabGroup(anchor: anchor),
+            anchor: anchor
+        )
     }
 }

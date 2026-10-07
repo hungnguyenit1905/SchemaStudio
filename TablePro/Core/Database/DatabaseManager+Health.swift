@@ -52,6 +52,7 @@ extension DatabaseManager {
                 }
                 do {
                     try await mainDriver.ping()
+                    await self.pingDatabaseSessions(for: connectionId)
                     return true
                 } catch {
                     Self.logger.debug("Ping failed for \(connectionId): \(error.localizedDescription)")
@@ -84,6 +85,7 @@ extension DatabaseManager {
                             session.cachedPassword = cachedPassword
                         }
                     }
+                    await self.rebuildDatabaseSessions(for: connectionId)
                     return .success
                 } catch {
                     Self.logger.debug("Reconnect failed: \(error.localizedDescription)")
@@ -246,6 +248,7 @@ extension DatabaseManager {
         updateSession(sessionId) { session in
             session.status = .connecting
         }
+        closeAllDatabaseSessions(for: sessionId)
 
         await SchemaService.shared.invalidate(connectionId: sessionId)
         await DatabaseTreeMetadataService.shared.handleReconnect(connectionId: sessionId)
@@ -310,6 +313,8 @@ extension DatabaseManager {
                     session.cachedPassword = cachedPassword
                 }
             }
+
+            rebuildDatabaseSessions(for: sessionId)
 
             // Restart health monitoring if the plugin supports it
             let supportsHealthReconnect = PluginMetadataRegistry.shared.snapshot(

@@ -23,15 +23,16 @@ struct ConnectionSession: Identifiable {
 
     // Per-connection state
     var selectedTables: Set<TableInfo> = []
-    var pendingTruncates: Set<String> = []
-    var pendingDeletes: Set<String> = []
-    var tableOperationOptions: [String: TableOperationOptions] = [:]
+    var pendingTruncates: Set<DatabaseTreeTableRef> = []
+    var pendingDeletes: Set<DatabaseTreeTableRef> = []
+    var tableOperationOptions: [DatabaseTreeTableRef: TableOperationOptions] = [:]
     /// Where the user is browsing: what the sidebar lists and where a new tab opens.
     /// It is not where an open tab queries. A tab carries its own database and schema,
     /// and resolving an operation through these instead is how a tab ends up running
     /// against another database.
     var browseSchema: String?
     var browseDatabase: String?
+    var openDatabases: Set<String> = []
 
     @MainActor var tables: [TableInfo] {
         SchemaService.shared.tables(for: id)
@@ -87,6 +88,7 @@ struct ConnectionSession: Identifiable {
         clearCachedData()
         browseDatabase = nil
         browseSchema = nil
+        openDatabases = []
     }
 
     /// Compares fields used by ContentView's body to avoid unnecessary SwiftUI re-renders.
@@ -102,5 +104,6 @@ struct ConnectionSession: Identifiable {
             && tableOperationOptions == other.tableOperationOptions
             && browseSchema == other.browseSchema
             && browseDatabase == other.browseDatabase
+            && openDatabases == other.openDatabases
     }
 }

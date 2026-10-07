@@ -4,12 +4,13 @@ enum DatabaseTreeVisibility {
     static func visible(
         databases: [DatabaseMetadata],
         selected: Set<String>,
-        activeDatabase: String?
+        alwaysShown: String?,
+        showsHiddenItems: Bool = false
     ) -> [DatabaseMetadata] {
-        let active = activeDatabase.flatMap { $0.isEmpty ? nil : $0 }
+        let pinned = alwaysShown.flatMap { $0.isEmpty ? nil : $0 }
         return databases.filter { database in
-            if database.name == active { return true }
-            guard !database.isSystemDatabase else { return false }
+            if database.name == pinned { return true }
+            if database.isSystemDatabase, !showsHiddenItems { return false }
             return selected.isEmpty || selected.contains(database.name)
         }
     }

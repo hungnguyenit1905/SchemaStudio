@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import TableProPluginKit
 import Testing
@@ -140,8 +141,10 @@ struct FKNavigationTests {
         tabManager.mutate(at: 0) { $0.execution.lastExecutedAt = Date() }
         let originalTabId = tabManager.selectedTab?.id
 
+        let sourceWindow = NSWindow()
+        coordinator.contentWindow = sourceWindow
         var opened: [EditorTabPayload] = []
-        coordinator.openTabInNewWindow = { opened.append($0) }
+        coordinator.openTabRequest = { payload, _, _ in opened.append(payload) }
 
         let fkInfo = TestFixtures.makeForeignKeyInfo(referencedTable: "users", referencedColumn: "id")
         coordinator.navigateToFKReference(value: "42", fkInfo: fkInfo, openInNewTab: false)
@@ -172,8 +175,10 @@ struct FKNavigationTests {
         tabManager.addTab(initialQuery: "SELECT 1", databaseName: coordinator.browseDatabaseName)
         let originalTabId = tabManager.selectedTab?.id
 
+        let sourceWindow = NSWindow()
+        coordinator.contentWindow = sourceWindow
         var opened: [EditorTabPayload] = []
-        coordinator.openTabInNewWindow = { opened.append($0) }
+        coordinator.openTabRequest = { payload, _, _ in opened.append(payload) }
 
         let fkInfo = TestFixtures.makeForeignKeyInfo(referencedTable: "users", referencedColumn: "id")
         coordinator.navigateToFKReference(value: "42", fkInfo: fkInfo, openInNewTab: false)
@@ -205,8 +210,10 @@ struct FKNavigationTests {
         )
         coordinator.changeManager.hasChanges = true
 
+        let sourceWindow = NSWindow()
+        coordinator.contentWindow = sourceWindow
         var opened: [EditorTabPayload] = []
-        coordinator.openTabInNewWindow = { opened.append($0) }
+        coordinator.openTabRequest = { payload, _, _ in opened.append(payload) }
 
         let fkInfo = TestFixtures.makeForeignKeyInfo(referencedTable: "users", referencedColumn: "id")
         coordinator.navigateToFKReference(value: "42", fkInfo: fkInfo, openInNewTab: false)
@@ -261,8 +268,10 @@ struct FKNavigationTests {
         }
         let existingTargetTabId = targetTabManager.selectedTab?.id
 
+        let sourceWindow = NSWindow()
+        originCoordinator.contentWindow = sourceWindow
         var opened: [EditorTabPayload] = []
-        originCoordinator.openTabInNewWindow = { opened.append($0) }
+        originCoordinator.openTabRequest = { payload, _, _ in opened.append(payload) }
 
         let fkInfo = TestFixtures.makeForeignKeyInfo(referencedTable: "users", referencedColumn: "id")
         originCoordinator.navigateToFKReference(value: "42", fkInfo: fkInfo, openInNewTab: false)
@@ -317,8 +326,10 @@ struct FKNavigationTests {
             $0.filterState.commit = .all
         }
 
+        let sourceWindow = NSWindow()
+        originCoordinator.contentWindow = sourceWindow
         var opened: [EditorTabPayload] = []
-        originCoordinator.openTabInNewWindow = { opened.append($0) }
+        originCoordinator.openTabRequest = { payload, _, _ in opened.append(payload) }
 
         let fkInfo = TestFixtures.makeForeignKeyInfo(referencedTable: "users", referencedColumn: "id")
         originCoordinator.navigateToFKReference(value: "99", fkInfo: fkInfo, openInNewTab: false)
@@ -358,8 +369,10 @@ struct FKNavigationTests {
             databaseName: originCoordinator.browseDatabaseName
         )
 
+        let sourceWindow = NSWindow()
+        originCoordinator.contentWindow = sourceWindow
         var opened: [EditorTabPayload] = []
-        originCoordinator.openTabInNewWindow = { opened.append($0) }
+        originCoordinator.openTabRequest = { payload, _, _ in opened.append(payload) }
 
         let fkInfo = TestFixtures.makeForeignKeyInfo(referencedTable: "users", referencedColumn: "id")
         originCoordinator.navigateToFKReference(value: "42", fkInfo: fkInfo, openInNewTab: true)
