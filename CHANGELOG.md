@@ -84,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Copying the connection URL for a connection that uses a saved SSH profile now includes that profile's SSH host and user instead of leaving the tunnel out of the URL.
 - AI tool schemas sent to GitHub Copilot now always declare a `required` field, which Copilot's tool-calling API expects even when nothing is required.
 - Consuming an expired MCP pairing code now reports it as expired instead of not found.
+- Saved connection passwords were not found by a copy of the app built and installed locally, so MySQL and PostgreSQL connections failed with Access denied until the password was typed again. The app now reads passwords from whichever Keychain it can use, moves older ones across on first use, and says so when the Keychain can't be read or written.
 
 ### Removed
 
