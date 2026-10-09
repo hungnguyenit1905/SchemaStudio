@@ -141,6 +141,118 @@
         }
       }
     },
+    "Access to the saved password in the Keychain was denied. Allow access when macOS asks, or enter the password again in the connection settings." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keychain'deki kayıtlı parolaya erişim reddedildi. macOS sorduğunda erişime izin verin veya parolayı bağlantı ayarlarında yeniden girin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quyền truy cập mật khẩu đã lưu trong Keychain bị từ chối. Hãy cho phép khi macOS hỏi, hoặc nhập lại mật khẩu trong cài đặt kết nối."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "访问钥匙串中已保存密码的请求被拒绝。请在 macOS 询问时允许访问，或在连接设置中重新输入密码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存取鑰匙圈中已儲存密碼的要求被拒絕。請在 macOS 詢問時允許存取，或在連線設定中重新輸入密碼。"
+          }
+        }
+      }
+    },
+    "Can't read the saved password from the Keychain (error %d). Enter it again in the connection settings." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıtlı parola Keychain'den okunamıyor (hata %d). Bağlantı ayarlarında yeniden girin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không đọc được mật khẩu đã lưu từ Keychain (lỗi %d). Hãy nhập lại trong cài đặt kết nối."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法从钥匙串读取已保存的密码（错误 %d）。请在连接设置中重新输入。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法從鑰匙圈讀取已儲存的密碼（錯誤 %d）。請在連線設定中重新輸入。"
+          }
+        }
+      }
+    },
+    "The Keychain is locked, so the saved password can't be read. Unlock it and try again." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keychain kilitli olduğu için kayıtlı parola okunamıyor. Kilidi açıp tekrar deneyin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keychain đang bị khóa nên không đọc được mật khẩu đã lưu. Hãy mở khóa rồi thử lại."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "钥匙串已锁定，无法读取已保存的密码。请解锁后重试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "鑰匙圈已鎖定，無法讀取已儲存的密碼。請解鎖後再試一次。"
+          }
+        }
+      }
+    },
+    "The password could not be saved to the Keychain. Check Keychain Access, then try again." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parola Keychain'e kaydedilemedi. Keychain Access'i kontrol edip tekrar deneyin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thể lưu mật khẩu vào Keychain. Hãy kiểm tra Keychain Access rồi thử lại."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法将密码保存到钥匙串。请检查“钥匙串访问”后重试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法將密碼儲存到鑰匙圈。請檢查「鑰匙圈存取」後再試一次。"
+          }
+        }
+      }
+    },
     "—" : {
       "extractionState" : "stale",
       "localizations" : {

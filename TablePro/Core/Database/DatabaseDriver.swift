@@ -607,7 +607,7 @@ enum DatabaseDriverFactory {
                 username: connection.username
             ) ?? ""
         }
-        return ConnectionStorage.shared.loadPassword(for: connection.id) ?? ""
+        return try ConnectionStorage.shared.loadPasswordResult(for: connection.id).passwordOrThrow()
     }
 
     private static func buildAdditionalFields(

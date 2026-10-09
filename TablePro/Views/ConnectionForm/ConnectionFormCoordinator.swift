@@ -333,7 +333,10 @@ final class ConnectionFormCoordinator {
         if auth.effectivePromptForPassword {
             storage.deletePassword(for: connectionToSave.id)
         } else if !auth.password.isEmpty {
-            storage.savePassword(auth.password, for: connectionToSave.id)
+            guard storage.savePassword(auth.password, for: connectionToSave.id) else {
+                saveError = KeychainPasswordError.saveFailed.localizedDescription
+                return
+            }
         }
 
         if ssh.state.enabled, ssh.state.profileId == nil {
@@ -534,7 +537,7 @@ final class ConnectionFormCoordinator {
         let sslClientKeyPath = ssl.clientKeyPath
         let additionalFieldValues = finalAdditionalFields
 
-        persistTestSecrets(
+        let persistedTestSecrets = persistTestSecrets(
             for: testConn.id,
             password: password,
             promptForPassword: promptForPassword,
@@ -544,6 +547,17 @@ final class ConnectionFormCoordinator {
             connectionType: connectionType,
             additionalFieldValues: additionalFieldValues
         )
+
+        guard persistedTestSecrets else {
+            cleanupTestSecrets(for: testConn.id)
+            isTesting = false
+            AlertHelper.showErrorSheet(
+                title: String(localized: "Connection Test Failed"),
+                message: KeychainPasswordError.saveFailed.localizedDescription,
+                window: window
+            )
+            return
+        }
 
         testTask = Task { [weak self] in
             do {
@@ -665,14 +679,15 @@ final class ConnectionFormCoordinator {
         sslClientKeyPath: String,
         connectionType: DatabaseType,
         additionalFieldValues: [String: String]
-    ) {
+    ) -> Bool {
         let sshState = tunnelStates.ssh
         let cloudflareState = tunnelStates.cloudflare
         let cloudSQLProxyState = tunnelStates.cloudSQLProxy
         let socksProxyState = tunnelStates.socksProxy
 
-        if !password.isEmpty, !promptForPassword {
-            services.connectionStorage.savePassword(password, for: testId)
+        if !password.isEmpty, !promptForPassword,
+           !services.connectionStorage.savePassword(password, for: testId) {
+            return false
         }
         if sshState.enabled, sshState.profileId == nil {
             if sshState.authMethod == .password || sshState.authMethod == .keyboardInteractive,
@@ -714,6 +729,7 @@ final class ConnectionFormCoordinator {
                 services.connectionStorage.savePluginSecureField(value, fieldId: field.id, for: testId)
             }
         }
+        return true
     }
 
     func cleanupTestSecrets(for testId: UUID) {

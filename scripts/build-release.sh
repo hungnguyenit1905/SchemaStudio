@@ -636,8 +636,9 @@ build_for_arch() {
         # keychain-access-groups resolves $(AppIdentifierPrefix) from the team
         # identifier. An ad-hoc signature has no team, so the group stays
         # unresolved and AMFI refuses to launch the app ("Launchd job spawn
-        # failed"). Drop it: the app then uses its default access group, which
-        # is all a locally signed build needs, and the Keychain still works.
+        # failed"). Drop it. The app then has no application-identifier either,
+        # so it picks the login keychain instead of the data protection keychain
+        # for saved passwords.
         ENTITLEMENTS_FILE="$BUILD_DIR/adhoc.entitlements"
         cp "TablePro/TablePro.entitlements" "$ENTITLEMENTS_FILE"
         /usr/libexec/PlistBuddy -c "Delete :keychain-access-groups" "$ENTITLEMENTS_FILE" >/dev/null 2>&1 || true

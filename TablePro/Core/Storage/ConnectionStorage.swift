@@ -429,14 +429,22 @@ final class ConnectionStorage {
 
     // MARK: - Keychain (Password Storage)
 
-    func savePassword(_ password: String, for connectionId: UUID) {
+    @discardableResult
+    func savePassword(_ password: String, for connectionId: UUID) -> Bool {
         let key = "com.SchemaStudio.password.\(connectionId.uuidString)"
-        keychain.writeString(password, forKey: key)
+        return keychain.writeString(password, forKey: key)
     }
 
     func loadPassword(for connectionId: UUID) -> String? {
         let key = "com.SchemaStudio.password.\(connectionId.uuidString)"
         return resolveString(.init(label: "Database password", connectionId: connectionId), forKey: key)
+    }
+
+    func loadPasswordResult(for connectionId: UUID) -> KeychainStringResult {
+        let key = "com.SchemaStudio.password.\(connectionId.uuidString)"
+        let result = keychain.readStringResult(forKey: key)
+        result.logFailure(label: "Database password (connId=\(connectionId.uuidString))", logger: Self.logger)
+        return result
     }
 
     func deletePassword(for connectionId: UUID) {
