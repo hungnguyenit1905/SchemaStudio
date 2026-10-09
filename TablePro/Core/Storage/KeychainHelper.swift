@@ -33,15 +33,53 @@ protocol KeychainStoring: Sendable {
 }
 
 final class KeychainHelper: KeychainStoring {
-    static let shared = KeychainHelper()
+    static let shared = KeychainHelper(
+        backend: KeychainBackendResolver.resolve(entitlements: ProcessKeychainEntitlements())
+    )
     static let passwordSyncEnabledKey = "com.SchemaStudio.keychainPasswordSyncEnabled"
 
-    private let service = "com.SchemaStudio"
-    private let accessGroup: String? = KeychainHelper.resolveAccessGroup()
+    private static let service = "com.SchemaStudio"
     private static let logger = Logger(subsystem: "com.SchemaStudio", category: "KeychainHelper")
 
     private static let accessGroupSuffix = ".com.SchemaStudio.shared"
     private static let teamPrefixedGroupPattern = #"^[A-Z0-9]{10}\..+"#
+
+    private let primary: any KeychainDataStore
+    private let legacy: (any KeychainDataStore)?
+    private let isPasswordSyncEnabled: @Sendable () -> Bool
+
+    init(
+        primary: any KeychainDataStore,
+        legacy: (any KeychainDataStore)?,
+        isPasswordSyncEnabled: @escaping @Sendable () -> Bool = KeychainHelper.passwordSyncPreference
+    ) {
+        self.primary = primary
+        self.legacy = legacy
+        self.isPasswordSyncEnabled = isPasswordSyncEnabled
+    }
+
+    convenience init(backend: KeychainBackend) {
+        let stores = Self.makeStores(for: backend)
+        self.init(primary: stores.primary, legacy: stores.legacy)
+        Self.logger.notice("Keychain backend: \(String(describing: backend), privacy: .public)")
+    }
+
+    static func makeStores(
+        for backend: KeychainBackend
+    ) -> (primary: any KeychainDataStore, legacy: (any KeychainDataStore)?) {
+        switch backend {
+        case .dataProtection:
+            let primary = SecItemKeychainStore(
+                service: service,
+                useDataProtection: true,
+                accessGroup: resolveAccessGroup()
+            )
+            let legacy = SecItemKeychainStore(service: service, useDataProtection: false, accessGroup: nil)
+            return (primary, legacy)
+        case .file:
+            return (SecItemKeychainStore(service: service, useDataProtection: false, accessGroup: nil), nil)
+        }
+    }
 
     private static func resolveAccessGroup() -> String? {
         guard let task = SecTaskCreateFromSelf(nil),
@@ -52,86 +90,34 @@ final class KeychainHelper: KeychainStoring {
         return candidate
     }
 
-    private var isPasswordSyncEnabled: Bool {
-        UserDefaults.standard.bool(forKey: Self.passwordSyncEnabledKey)
+    @Sendable
+    private static func passwordSyncPreference() -> Bool {
+        UserDefaults.standard.bool(forKey: passwordSyncEnabledKey)
     }
-
-    private init() {}
 
     // MARK: - Data API
 
     @discardableResult
     func write(_ data: Data, forKey key: String) -> Bool {
-        let synchronizable = isPasswordSyncEnabled
-        let accessible = accessibility(forSync: synchronizable)
-
-        var addQuery = baseQuery(forKey: key)
-        addQuery[kSecValueData as String] = data
-        addQuery[kSecAttrAccessible as String] = accessible
-        if synchronizable {
-            addQuery[kSecAttrSynchronizable as String] = true
-        }
-
-        var status = SecItemAdd(addQuery as CFDictionary, nil)
-
-        if status == errSecDuplicateItem {
-            var search = baseQuery(forKey: key)
-            search[kSecAttrSynchronizable as String] = kSecAttrSynchronizableAny
-            let attributes: [String: Any] = [
-                kSecValueData as String: data,
-                kSecAttrSynchronizable as String: synchronizable,
-                kSecAttrAccessible as String: accessible
-            ]
-            status = SecItemUpdate(search as CFDictionary, attributes as CFDictionary)
-        }
-
-        if status != errSecSuccess {
-            log(status: status, operation: "write", key: key)
-            return false
-        }
+        guard primary.write(data, forKey: key, synchronizable: isPasswordSyncEnabled()) else { return false }
+        legacy?.delete(forKey: key)
         return true
     }
 
     func read(forKey key: String) -> KeychainResult {
-        var query = baseQuery(forKey: key)
-        query[kSecAttrSynchronizable as String] = kSecAttrSynchronizableAny
-        query[kSecReturnData as String] = true
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
+        let primaryResult = primary.read(forKey: key)
+        guard primaryResult == .notFound, let legacy else { return primaryResult }
 
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        let legacyResult = legacy.read(forKey: key)
+        guard case .found(let data) = legacyResult else { return legacyResult }
 
-        switch status {
-        case errSecSuccess:
-            if let data = result as? Data {
-                return .found(data)
-            }
-            return .notFound
-        case errSecItemNotFound:
-            return .notFound
-        case errSecInteractionNotAllowed:
-            Self.logger.warning("Keychain locked (before first unlock) for '\(key, privacy: .public)'")
-            return .locked
-        case errSecUserCanceled:
-            Self.logger.notice("Keychain prompt cancelled for '\(key, privacy: .public)'")
-            return .userCancelled
-        case errSecAuthFailed:
-            Self.logger.warning("Keychain auth failed for '\(key, privacy: .public)'")
-            return .authFailed
-        default:
-            log(status: status, operation: "read", key: key)
-            return .error(status)
-        }
+        migrate(data, forKey: key, from: legacy)
+        return legacyResult
     }
 
     func delete(forKey key: String) {
-        var query = baseQuery(forKey: key)
-        query[kSecAttrSynchronizable as String] = kSecAttrSynchronizableAny
-
-        let status = SecItemDelete(query as CFDictionary)
-        if status != errSecSuccess, status != errSecItemNotFound {
-            log(status: status, operation: "delete", key: key)
-        }
+        primary.delete(forKey: key)
+        legacy?.delete(forKey: key)
     }
 
     // MARK: - String Convenience
@@ -170,45 +156,12 @@ final class KeychainHelper: KeychainStoring {
 
     // MARK: - Private
 
-    private func baseQuery(forKey key: String) -> [String: Any] {
-        var query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key
-        ]
-        if Self.canUseDataProtectionKeychain {
-            query[kSecUseDataProtectionKeychain as String] = true
+    private func migrate(_ data: Data, forKey key: String, from legacy: any KeychainDataStore) {
+        guard primary.write(data, forKey: key, synchronizable: isPasswordSyncEnabled()) else {
+            Self.logger.error("Keychain migration write failed for '\(key, privacy: .public)'; legacy item kept")
+            return
         }
-        if let accessGroup {
-            query[kSecAttrAccessGroup as String] = accessGroup
-        }
-        return query
-    }
-
-    private static let canUseDataProtectionKeychain: Bool = {
-        #if DEBUG
-        guard let task = SecTaskCreateFromSelf(nil),
-              SecTaskCopyValueForEntitlement(task, "com.apple.application-identifier" as CFString, nil) != nil else {
-            logger
-                .warning("No application-identifier entitlement; falling back to the file-based keychain (DEBUG build)")
-            return false
-        }
-        return true
-        #else
-        return true
-        #endif
-    }()
-
-    private func accessibility(forSync synchronizable: Bool) -> CFString {
-        synchronizable
-            ? kSecAttrAccessibleAfterFirstUnlock
-            : kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-    }
-
-    private func log(status: OSStatus, operation: String, key: String) {
-        let message = SecCopyErrorMessageString(status, nil) as String? ?? "OSStatus \(status)"
-        Self.logger.error(
-            "Keychain \(operation, privacy: .public) failed for '\(key, privacy: .public)': \(message, privacy: .public)"
-        )
+        legacy.delete(forKey: key)
+        Self.logger.notice("Migrated '\(key, privacy: .public)' from the file keychain")
     }
 }

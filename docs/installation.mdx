@@ -85,7 +85,7 @@ rm ~/Library/Preferences/com.SchemaStudio.plist
 ```
 
 <Note>
-Connection passwords are stored in the macOS Keychain and are not removed by these commands. Delete them in Keychain Access by searching for `com.SchemaStudio`. Data synced through iCloud stays in your iCloud account.
+Connection passwords are stored in the macOS Keychain and are not removed by these commands. Delete them in Keychain Access by searching for `com.SchemaStudio`. A copy you built and signed locally keeps passwords in your login keychain, and a Developer ID build keeps them in the app's own keychain. When you switch between the two, SchemaStudio moves existing passwords across the first time it reads them. Data synced through iCloud stays in your iCloud account.
 </Note>
 
 ## Troubleshooting
