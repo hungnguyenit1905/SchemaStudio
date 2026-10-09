@@ -29,9 +29,15 @@ struct KeychainBackendResolverTests {
         #expect(KeychainBackendResolver.resolve(entitlements: entitlements) == .file)
     }
 
-    @Test("keychain-access-groups alone selects the file keychain")
-    func accessGroupsAloneSelectsFile() {
+    @Test("keychain-access-groups alone selects the data protection keychain")
+    func accessGroupsAloneSelectsDataProtection() {
         let entitlements = StubEntitlements(granted: ["keychain-access-groups"])
+        #expect(KeychainBackendResolver.resolve(entitlements: entitlements) == .dataProtection)
+    }
+
+    @Test("unrelated entitlements select the file keychain")
+    func unrelatedEntitlementsSelectFile() {
+        let entitlements = StubEntitlements(granted: ["com.apple.security.cs.disable-library-validation"])
         #expect(KeychainBackendResolver.resolve(entitlements: entitlements) == .file)
     }
 

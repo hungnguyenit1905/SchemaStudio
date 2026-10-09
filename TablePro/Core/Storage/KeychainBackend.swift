@@ -24,8 +24,11 @@ struct ProcessKeychainEntitlements: KeychainEntitlementReading {
 
 enum KeychainBackendResolver {
     static let applicationIdentifierEntitlement = "com.apple.application-identifier"
+    static let accessGroupsEntitlement = "keychain-access-groups"
 
     static func resolve(entitlements: any KeychainEntitlementReading) -> KeychainBackend {
-        entitlements.hasValue(forEntitlement: applicationIdentifierEntitlement) ? .dataProtection : .file
+        let grantsDataProtection = entitlements.hasValue(forEntitlement: applicationIdentifierEntitlement)
+            || entitlements.hasValue(forEntitlement: accessGroupsEntitlement)
+        return grantsDataProtection ? .dataProtection : .file
     }
 }
